@@ -4,8 +4,8 @@
 #I "../../bin"
 
 (**
-F# Project Scaffold
-===================
+FSharpx.Async
+=============
 
 Documentation
 
@@ -20,18 +20,6 @@ Documentation
   <div class="span1"></div>
 </div>
 
-Example
--------
-
-This example demonstrates using a function defined in this sample library.
-
-*)
-#r "FSharpx.Async.dll"
-open FSharpx.Control
-
-printfn "hello = %i" <| Library.hello 0
-
-(**
 Some more info
 
 Samples & documentation

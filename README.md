@@ -5,7 +5,7 @@
 
 # FSharpx.Async [![NuGet Status](http://img.shields.io/nuget/v/FSharpx.Async.svg?style=flat)](https://www.nuget.org/packages/FSharpx.Async/)
 
-**FSharpx.Async** is a collections of async helpers for F#. 
+**FSharpx.Async** is a collection of asynchronous programming utilities for F#. 
 
 See [the home page](http://fsprojects.github.io/FSharpx.Async/) for details. The home page can be [edited, forked or cloned](https://github.com/fsprojects/FSharpx.Async/tree/gh-pages)
 Please contribute to this project. Don't ask for permission, just fork the repository and send pull requests.
