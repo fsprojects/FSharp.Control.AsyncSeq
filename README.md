@@ -15,6 +15,7 @@ Please also join the [F# Open Source Group](http://fsharp.github.com)
 # Maintainer(s)
 
 - [@forki](https://github.com/forki)
+- [@tpetricek](https://github.com/tpetricek)
 - [@mausch](https://github.com/mausch)
 - [@panesofglass](https://github.com/panesofglass)
 

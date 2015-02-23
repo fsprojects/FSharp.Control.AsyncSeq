@@ -8,3 +8,4 @@ nuget FAKE
 nuget SourceLink.Fake
 
 github fsharp/FAKE modules/Octokit/Octokit.fsx
+github fsprojects/FSharpx.Collections src/FSharpx.Collections/CircularBuffer.fs

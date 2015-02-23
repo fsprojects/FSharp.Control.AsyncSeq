@@ -25,3 +25,6 @@ GITHUB
   specs:
     modules/Octokit/Octokit.fsx (575e7ab5050d2ddec80ba8d3a98cfb10ba327965)
       Octokit
+  remote: fsprojects/FSharpx.Collections
+  specs:
+    src/FSharpx.Collections/CircularBuffer.fs (e8fdc9c6d61618bdcc5c4f143ecbbfbe785b8ec4)

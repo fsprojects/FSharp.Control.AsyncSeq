@@ -33,25 +33,6 @@
     <WarningLevel>3</WarningLevel>
     <DocumentationFile>..\..\bin\FSharpx.Async.xml</DocumentationFile>
   </PropertyGroup>
-  <ItemGroup>
-    <Reference Include="mscorlib" />
-    <Reference Include="FSharp.Core, Version=$(TargetFSharpCoreVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Numerics" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="Agent.fs" />
-    <Compile Include="AutoCancelAgent.fs" />
-    <Compile Include="BatchProcessingAgent.fs" />
-    <Compile Include="BlockingAgentQueue.fs" />
-    <Compile Include="SlidingWindowAgent.fs" />
-    <Compile Include="Observable.fs" />
-    <Compile Include="Async.fs" />
-    <Compile Include="AsyncSeq.fs" />
-  </ItemGroup>
   <PropertyGroup>
     <MinimumVisualStudioVersion Condition="'$(MinimumVisualStudioVersion)' == ''">11</MinimumVisualStudioVersion>
   </PropertyGroup>
@@ -76,4 +57,38 @@
   </Target>
   -->
   <Import Project="..\..\.paket\paket.targets" />
+  <ItemGroup>
+    <Compile Include="..\..\paket-files\fsprojects\FSharpx.Collections\src\FSharpx.Collections\CircularBuffer.fs">
+      <Paket>True</Paket>
+      <Link>CircularBuffer.fs</Link>
+    </Compile>
+    <Compile Include="Utils.fs" />
+    <Compile Include="Agent.fs" />
+    <Compile Include="AutoCancelAgent.fs" />
+    <Compile Include="BatchProcessingAgent.fs" />
+    <Compile Include="BlockingQueueAgent.fs" />
+    <Compile Include="CircularQueueAgent.fs" />
+    <Compile Include="ConcurrentSetAgent.fs" />
+    <Compile Include="SlidingWindowAgent.fs" />
+    <Compile Include="Observable.fs" />
+    <Compile Include="Async.fs" />
+    <Compile Include="AsyncOperations.fsi" />
+    <Compile Include="AsyncOperations.fs" />
+    <Compile Include="AsyncWorker.fsi" />
+    <Compile Include="AsyncWorker.fs" />
+    <Compile Include="AsyncStreamReader.fsi" />
+    <Compile Include="AsyncStreamReader.fs" />
+    <Compile Include="AsyncSeq.fs" />
+    <Compile Include="Async.IO.fs" />
+    <None Include="paket.references" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="mscorlib" />
+    <Reference Include="FSharp.Core, Version=$(TargetFSharpCoreVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Numerics" />
+  </ItemGroup>
 </Project>
