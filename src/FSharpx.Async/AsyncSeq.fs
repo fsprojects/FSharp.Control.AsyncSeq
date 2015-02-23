@@ -439,10 +439,10 @@ module AsyncSeq =
   let rec skipWhileAsync p (input : AsyncSeq<'T>) : AsyncSeq<_> = async {
     let! v = input
     match v with
-    | Cons(h, t) -> 
+    | Cons(h, t) ->
         let! res = p h
         if res then return! skipWhileAsync p t
-        else return! t
+        else return v
     | Nil -> return Nil }
 
   /// Returns elements from an asynchronous sequence while the specified 
