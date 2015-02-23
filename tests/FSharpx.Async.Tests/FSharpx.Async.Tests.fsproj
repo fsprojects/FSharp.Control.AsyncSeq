@@ -58,6 +58,7 @@
   <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
   <ItemGroup>
     <Compile Include="AsyncTest.fs" />
+    <Compile Include="AsyncSeqTests.fs" />
     <None Include="paket.references" />
   </ItemGroup>
   <ItemGroup>
