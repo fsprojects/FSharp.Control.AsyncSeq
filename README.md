@@ -1,31 +1,25 @@
-[![Issue Stats](http://issuestats.com/github/fsprojects/ProjectScaffold/badge/issue)](http://issuestats.com/github/fsprojects/ProjectScaffold)
-[![Issue Stats](http://issuestats.com/github/fsprojects/ProjectScaffold/badge/pr)](http://issuestats.com/github/fsprojects/ProjectScaffold)
+[![Issue Stats](http://issuestats.com/github/fsprojects/FSharpx.Async/badge/issue)](http://issuestats.com/github/fsprojects/FSharpx.Async)
+[![Issue Stats](http://issuestats.com/github/fsprojects/FSharpx.Async/badge/pr)](http://issuestats.com/github/fsprojects/FSharpx.Async)
 
-# ProjectScaffold
+# FSharpx:Async [![NuGet Status](http://img.shields.io/nuget/v/FSharpx.Async.svg?style=flat)](https://www.nuget.org/packages/FSharpx.Async/)
 
-This project can be used to scaffold a prototypical .NET solution including file system layout and tooling. This includes a build process that: 
+**FSharpx.Async** is a collections of async helpers for F#. 
 
-* updates all AssemblyInfo files
-* compiles the application and runs all test projects
-* generates [SourceLinks](https://github.com/ctaggart/SourceLink)
-* generates API docs based on XML document tags
-* generates [documentation based on Markdown files](http://fsprojects.github.io/ProjectScaffold/writing-docs.html)
-* generates [NuGet](http://www.nuget.org) packages
-* and allows a simple [one step release process](http://fsprojects.github.io/ProjectScaffold/release-process.html).
+See [the home page](http://fsprojects.github.io/FSharpx.Async/) for details. The home page can be [edited, forked or cloned](https://github.com/fsprojects/FSharpx.Async/tree/gh-pages)
+Please contribute to this project. Don't ask for permission, just fork the repository and send pull requests.
 
-In order to start the scaffolding process run 
+Please also join the [F# Open Source Group](http://fsharp.github.com)
 
-    $ build.cmd // on windows    
-    $ build.sh  // on mono
-    
-Read the [Getting started tutorial](http://fsprojects.github.io/ProjectScaffold/index.html#Getting-started) to learn more.
+# Build Status
 
-Documentation: http://fsprojects.github.io/ProjectScaffold
+Head (branch ``master``), Windows Server 2012 (Appveyor)  [![Build status](https://ci.appveyor.com/api/projects/status/jv6nki3vm2s6bmj6?svg=true)](https://ci.appveyor.com/project/SteffenForkmann/fsharpx-async)
 
-## Maintainer(s)
+Head (branch ``master``), OSX (Travis)  [![Build status](https://travis-ci.org/fsprojects/FSharpx.Async.svg?branch=master)](https://travis-ci.org/fsprojects/FSharpx.Async)
+
+# Maintainer(s)
 
 - [@forki](https://github.com/forki)
-- [@pblasucci](https://github.com/pblasucci)
-- [@sergey-tihon](https://github.com/sergey-tihon)
+- [@mausch](https://github.com/mausch)
+- [@panesofglass](https://github.com/panesofglass)
 
 The default maintainer account for projects under "fsprojects" is [@fsgit](https://github.com/fsgit) - F# Community Project Incubation Space (repo management)

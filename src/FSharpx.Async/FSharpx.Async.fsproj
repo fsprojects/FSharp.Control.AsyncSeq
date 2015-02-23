@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
@@ -43,8 +43,14 @@
     <Reference Include="System.Numerics" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Library.fs" />
-    <None Include="Script.fsx" />
+    <Compile Include="Agent.fs" />
+    <Compile Include="AutoCancelAgent.fs" />
+    <Compile Include="BatchProcessingAgent.fs" />
+    <Compile Include="BlockingAgentQueue.fs" />
+    <Compile Include="SlidingWindowAgent.fs" />
+    <Compile Include="Observable.fs" />
+    <Compile Include="Async.fs" />
+    <Compile Include="AsyncSeq.fs" />
   </ItemGroup>
   <PropertyGroup>
     <MinimumVisualStudioVersion Condition="'$(MinimumVisualStudioVersion)' == ''">11</MinimumVisualStudioVersion>

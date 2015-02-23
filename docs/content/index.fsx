@@ -27,7 +27,7 @@ This example demonstrates using a function defined in this sample library.
 
 *)
 #r "FSharpx.Async.dll"
-open FSharpx.Async
+open FSharpx.Control
 
 printfn "hello = %i" <| Library.hello 0
 
