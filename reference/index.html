@@ -36,6 +36,23 @@
 <h1>FSharpx.Async</h1>
 
 
+  <h2>FSharpx.Collections.Mutable Namespace</h2>
+    <div>
+      <table class="table table-bordered type-list">
+    <thead>
+      <tr><td>Type</td><td>Description</td></tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td class="type-name">
+            <a href="fsharpx-collections-mutable-circularbuffer-1.html">CircularBuffer<'T></a>
+          </td>
+          <td class="xmldoc"></td>
+        </tr>
+    </tbody>
+  </table>
+
+    </div>
   <h2>FSharpx.Control Namespace</h2>
     <div>
       <table class="table table-bordered type-list">
@@ -48,6 +65,21 @@
             <a href="fsharpx-control-agent-1.html">Agent<'T></a>
           </td>
           <td class="xmldoc"><p>Type alias for F# mailbox processor type</p>
+</td>
+        </tr>
+        <tr>
+          <td class="type-name">
+            <a href="fsharpx-control-asyncresult-1.html">AsyncResult<'T></a>
+          </td>
+          <td class="xmldoc"><p>Represents the reified result of an asynchronous computation</p>
+</td>
+        </tr>
+        <tr>
+          <td class="type-name">
+            <a href="fsharpx-control-asyncresultcell-1.html">AsyncResultCell<'T></a>
+          </td>
+          <td class="xmldoc"><p>A helper type to store a single result from an asynchronous computation and asynchronously
+access its result.</p>
 </td>
         </tr>
         <tr>
@@ -67,6 +99,20 @@ special value representing the end of the sequence (Nil)</p>
           <td class="xmldoc"><p>The interanl type that represents a value returned as a result of
 evaluating a step of an asynchronous sequence</p>
 </td>
+        </tr>
+        <tr>
+          <td class="type-name">
+            <a href="fsharpx-control-asyncstreamreader.html">AsyncStreamReader</a>
+          </td>
+          <td class="xmldoc"><p>Implements a TextReader-like API that asynchronously reads characters from 
+a byte stream in a particular encoding.</p>
+</td>
+        </tr>
+        <tr>
+          <td class="type-name">
+            <a href="fsharpx-control-asyncworker-1.html">AsyncWorker<'T></a>
+          </td>
+          <td class="xmldoc"></td>
         </tr>
         <tr>
           <td class="type-name">
@@ -95,6 +141,25 @@ size or after the timeout elapses.</p>
 and blocking get operation (this implements the producer-consumer 
 concurrent programming pattern). The constructor takes the maximal
 size of the buffer.</p>
+</td>
+        </tr>
+        <tr>
+          <td class="type-name">
+            <a href="fsharpx-control-circularqueueagent-1.html">CircularQueueAgent<'T></a>
+          </td>
+          <td class="xmldoc"><p>Agent that implements an asynchronous circular buffer with blocking
+enqueue and blocking dequeue operation (this implements the producer-consumer 
+concurrent programming pattern). The constructor takes the maximal
+size of the buffer.</p>
+</td>
+        </tr>
+        <tr>
+          <td class="type-name">
+            <a href="fsharpx-control-concurrentsetagent-1.html">ConcurrentSetAgent<'T></a>
+          </td>
+          <td class="xmldoc"><p>Agent that implements a simple concurrent set. The agent exposes a 
+member that adds value to the set and returns whether the value
+was already present.</p>
 </td>
         </tr>
         <tr>
@@ -168,6 +233,12 @@ size 3, the produced groups will be [1,2,3], [2,3,4], [3,4,5], ...</p>
         </tr>
         <tr>
           <td class="module-name">
+            <a href="fsharpx-control-fileextensions.html">FileExtensions</a>
+          </td>
+          <td class="xmldoc"></td>
+        </tr>
+        <tr>
+          <td class="module-name">
             <a href="fsharpx-control-observable.html">Observable</a>
           </td>
           <td class="xmldoc"></td>
@@ -175,6 +246,60 @@ size 3, the produced groups will be [1,2,3], [2,3,4], [3,4,5], ...</p>
         <tr>
           <td class="module-name">
             <a href="fsharpx-control-seq.html">Seq</a>
+          </td>
+          <td class="xmldoc"></td>
+        </tr>
+        <tr>
+          <td class="module-name">
+            <a href="fsharpx-control-streamreaderextensions.html">StreamReaderExtensions</a>
+          </td>
+          <td class="xmldoc"></td>
+        </tr>
+        <tr>
+          <td class="module-name">
+            <a href="fsharpx-control-utils.html">Utils</a>
+          </td>
+          <td class="xmldoc"></td>
+        </tr>
+        <tr>
+          <td class="module-name">
+            <a href="fsharpx-control-webclientextensions.html">WebClientExtensions</a>
+          </td>
+          <td class="xmldoc"></td>
+        </tr>
+        <tr>
+          <td class="module-name">
+            <a href="fsharpx-control-webrequestextensions.html">WebRequestExtensions</a>
+          </td>
+          <td class="xmldoc"></td>
+        </tr>
+    </tbody>
+  </table>
+
+    </div>
+  <h2>FSharpx.IO Namespace</h2>
+    <div>
+      <table class="table table-bordered type-list">
+    <thead>
+      <tr><td>Type</td><td>Description</td></tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td class="type-name">
+            <a href="fsharpx-io-circularstream.html">CircularStream</a>
+          </td>
+          <td class="xmldoc"></td>
+        </tr>
+    </tbody>
+  </table>
+  <table class="table table-bordered module-list">
+    <thead>
+      <tr><td>Module</td><td>Description</td></tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td class="module-name">
+            <a href="fsharpx-io-ioextensions.html">IOExtensions</a>
           </td>
           <td class="xmldoc"></td>
         </tr>

@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8"/>
-    <title>Seq - FSharpx.Async</title>
+    <title>AsyncResultCell<'T> - FSharpx.Async</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <meta name="description" content=""/>
     <meta name="author" content="Thomas Petricek, David Thomas, Steffen Forkmann"/>
@@ -35,35 +35,81 @@
 
 
 
-<h1>Seq</h1>
+<h1>AsyncResultCell<'T></h1>
 <div class="xmldoc">
+<p>A helper type to store a single result from an asynchronous computation and asynchronously
+access its result.</p>
 </div>
-
-<!-- Render nested types and modules, if there are any -->
-
-  <h3>Functions and values</h3>
+  <h3>Constructors</h3>
   <table class="table table-bordered member-list">
     <thead>
-      <tr><td>Function or value</td><td>Description</td></tr>
+      <tr><td>Constructor</td><td>Description</td></tr>
     </thead>
     <tbody>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '76', 76)" onmouseover="showTip(event, '76', 76)">
-            ofAsyncSeq input
+          <code onmouseout="hideTip(event, '125', 125)" onmouseover="showTip(event, '125', 125)">
+            new()
           </code>
-          <div class="tip" id="76">
-            <strong>Signature:</strong> input:AsyncSeq&lt;&#39;T&gt; -&gt; seq&lt;&#39;T&gt;<br />
-                          <strong>Type parameters:</strong> 'T          </div>
+          <div class="tip" id="125">
+            <strong>Signature:</strong> unit -&gt; AsyncResultCell&lt;&#39;T&gt;<br />
+                      </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharpx.Async/tree/master/src/FSharpx.Async/AsyncSeq.fs#L497-497" class="github-link">
+            <a href="http://github.com/fsprojects/FSharpx.Async/tree/master/src/FSharpx.Async/AsyncOperations.fs#L26-26" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
-          <p>Converts asynchronous sequence to a synchronous blocking sequence.
-The elements of the asynchronous sequence are consumed lazily.</p>
+          <p>Create a new result cell</p>
+
+        </td>
+      </tr>
+    </tbody>
+  </table>
+  <h3>Instance members</h3>
+  <table class="table table-bordered member-list">
+    <thead>
+      <tr><td>Instance member</td><td>Description</td></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '126', 126)" onmouseover="showTip(event, '126', 126)">
+            AsyncResult
+          </code>
+          <div class="tip" id="126">
+            <strong>Signature:</strong> Async&lt;&#39;T&gt;<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/fsprojects/FSharpx.Async/tree/master/src/FSharpx.Async/AsyncOperations.fs#L84-84" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Wait for the result and commit it</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '127', 127)" onmouseover="showTip(event, '127', 127)">
+            RegisterResult(arg1, reuseThread)
+          </code>
+          <div class="tip" id="127">
+            <strong>Signature:</strong> (AsyncResult&lt;&#39;T&gt; * reuseThread:bool option) -&gt; unit<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/fsprojects/FSharpx.Async/tree/master/src/FSharpx.Async/AsyncOperations.fs#L37-37" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Record the result in the AsyncResultCell. Subsequent sets of the result are ignored.</p>
+
+<p>This may result in the scheduled resumption of a waiting asynchronous operation</p>
 
         </td>
       </tr>

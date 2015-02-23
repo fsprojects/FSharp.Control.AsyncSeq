@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8"/>
-    <title>BlockingQueueAgent<'T> - FSharpx.Async</title>
+    <title>CircularBuffer<'T> - FSharpx.Async</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <meta name="description" content=""/>
     <meta name="author" content="Thomas Petricek, David Thomas, Steffen Forkmann"/>
@@ -35,12 +35,8 @@
 
 
 
-<h1>BlockingQueueAgent<'T></h1>
+<h1>CircularBuffer<'T></h1>
 <div class="xmldoc">
-<p>Agent that implements an asynchronous queue with blocking put
-and blocking get operation (this implements the producer-consumer 
-concurrent programming pattern). The constructor takes the maximal
-size of the buffer.</p>
 </div>
   <h3>Constructors</h3>
   <table class="table table-bordered member-list">
@@ -51,15 +47,15 @@ size of the buffer.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '173', 173)" onmouseover="showTip(event, '173', 173)">
-            new(maxLength)
+          <code onmouseout="hideTip(event, '95', 95)" onmouseover="showTip(event, '95', 95)">
+            new(bufferSize)
           </code>
-          <div class="tip" id="173">
-            <strong>Signature:</strong> maxLength:int -&gt; BlockingQueueAgent&lt;&#39;T&gt;<br />
+          <div class="tip" id="95">
+            <strong>Signature:</strong> bufferSize:int -&gt; CircularBuffer&lt;&#39;T&gt;<br />
                       </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharpx.Async/tree/master/src/FSharpx.Async/BlockingQueueAgent.fs#L21-21" class="github-link">
+            <a href="http://github.com/fsprojects/FSharpx.Async/tree/master/paket-files/fsprojects/FSharpx.Collections/src/FSharpx.Collections/CircularBuffer.fs#L10-10" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -77,104 +73,145 @@ size of the buffer.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '174', 174)" onmouseover="showTip(event, '174', 174)">
-            Add(v)
-          </code>
-          <div class="tip" id="174">
-            <strong>Signature:</strong> v:&#39;T -&gt; unit<br />
-                      </div>
-        </td>
-        <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharpx.Async/tree/master/src/FSharpx.Async/BlockingQueueAgent.fs#L84-84" class="github-link">
-              <img src="../content/img/github.png" class="normal" />
-              <img src="../content/img/github-blue.png" class="hover" />
-            </a>
-          <p>Asynchronously adds item to the queue. The operation ends when
-there is a place for the item. If the queue is full, the operation
-will block until some items are removed. This overload does not
-signal the caller that the item has been added.</p>
-
-        </td>
-      </tr>
-      <tr>
-        <td class="member-name">
-
-          <code onmouseout="hideTip(event, '175', 175)" onmouseover="showTip(event, '175', 175)">
-            AsyncAdd(v, timeout)
-          </code>
-          <div class="tip" id="175">
-            <strong>Signature:</strong> (v:&#39;T * timeout:int option) -&gt; Async&lt;unit&gt;<br />
-                      </div>
-        </td>
-        <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharpx.Async/tree/master/src/FSharpx.Async/BlockingQueueAgent.fs#L77-77" class="github-link">
-              <img src="../content/img/github.png" class="normal" />
-              <img src="../content/img/github-blue.png" class="hover" />
-            </a>
-          <p>Asynchronously adds item to the queue. The operation ends when
-there is a place for the item. If the queue is full, the operation
-will block until some items are removed.</p>
-
-        </td>
-      </tr>
-      <tr>
-        <td class="member-name">
-
-          <code onmouseout="hideTip(event, '176', 176)" onmouseover="showTip(event, '176', 176)">
-            AsyncGet(timeout)
-          </code>
-          <div class="tip" id="176">
-            <strong>Signature:</strong> (timeout:int option) -&gt; Async&lt;&#39;T&gt;<br />
-                      </div>
-        </td>
-        <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharpx.Async/tree/master/src/FSharpx.Async/BlockingQueueAgent.fs#L89-89" class="github-link">
-              <img src="../content/img/github.png" class="normal" />
-              <img src="../content/img/github-blue.png" class="hover" />
-            </a>
-          <p>Asynchronously gets item from the queue. If there are no items
-in the queue, the operation will block until items are added.</p>
-
-        </td>
-      </tr>
-      <tr>
-        <td class="member-name">
-
-          <code onmouseout="hideTip(event, '177', 177)" onmouseover="showTip(event, '177', 177)">
+          <code onmouseout="hideTip(event, '96', 96)" onmouseover="showTip(event, '96', 96)">
             Count
           </code>
-          <div class="tip" id="177">
+          <div class="tip" id="96">
             <strong>Signature:</strong> int<br />
                       </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharpx.Async/tree/master/src/FSharpx.Async/BlockingQueueAgent.fs#L99-99" class="github-link">
+            <a href="http://github.com/fsprojects/FSharpx.Async/tree/master/paket-files/fsprojects/FSharpx.Collections/src/FSharpx.Collections/CircularBuffer.fs#L28-28" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
-          <p>Gets the number of elements currently waiting in the queue.</p>
-
+          
         </td>
       </tr>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '178', 178)" onmouseover="showTip(event, '178', 178)">
-            Get(timeout)
+          <code onmouseout="hideTip(event, '97', 97)" onmouseover="showTip(event, '97', 97)">
+            Dequeue(count)
           </code>
-          <div class="tip" id="178">
-            <strong>Signature:</strong> (timeout:int option) -&gt; &#39;T<br />
+          <div class="tip" id="97">
+            <strong>Signature:</strong> count:int -&gt; &#39;T []<br />
                       </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharpx.Async/tree/master/src/FSharpx.Async/BlockingQueueAgent.fs#L95-95" class="github-link">
+            <a href="http://github.com/fsprojects/FSharpx.Async/tree/master/paket-files/fsprojects/FSharpx.Collections/src/FSharpx.Collections/CircularBuffer.fs#L30-30" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
-          <p>Synchronously gets item from the queue. If there are no items
-in the queue, the operation will block until items are added.
-This method blocks until value is available!</p>
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
 
+          <code onmouseout="hideTip(event, '98', 98)" onmouseover="showTip(event, '98', 98)">
+            Enqueue(value)
+          </code>
+          <div class="tip" id="98">
+            <strong>Signature:</strong> value:&#39;T -&gt; unit<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/fsprojects/FSharpx.Async/tree/master/paket-files/fsprojects/FSharpx.Collections/src/FSharpx.Collections/CircularBuffer.fs#L70-70" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '99', 99)" onmouseover="showTip(event, '99', 99)">
+            Enqueue(value)
+          </code>
+          <div class="tip" id="99">
+            <strong>Signature:</strong> value:ArraySegment&lt;&#39;T&gt; -&gt; unit<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/fsprojects/FSharpx.Async/tree/master/paket-files/fsprojects/FSharpx.Collections/src/FSharpx.Collections/CircularBuffer.fs#L67-67" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '100', 100)" onmouseover="showTip(event, '100', 100)">
+            Enqueue(value, offset)
+          </code>
+          <div class="tip" id="100">
+            <strong>Signature:</strong> (value:&#39;T [] * offset:int) -&gt; unit<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/fsprojects/FSharpx.Async/tree/master/paket-files/fsprojects/FSharpx.Collections/src/FSharpx.Collections/CircularBuffer.fs#L64-64" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '101', 101)" onmouseover="showTip(event, '101', 101)">
+            Enqueue(value)
+          </code>
+          <div class="tip" id="101">
+            <strong>Signature:</strong> (value:&#39;T []) -&gt; unit<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/fsprojects/FSharpx.Async/tree/master/paket-files/fsprojects/FSharpx.Collections/src/FSharpx.Collections/CircularBuffer.fs#L61-61" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '102', 102)" onmouseover="showTip(event, '102', 102)">
+            Enqueue(value, offset, count)
+          </code>
+          <div class="tip" id="102">
+            <strong>Signature:</strong> (value:&#39;T [] * offset:int * count:int) -&gt; unit<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/fsprojects/FSharpx.Async/tree/master/paket-files/fsprojects/FSharpx.Collections/src/FSharpx.Collections/CircularBuffer.fs#L43-43" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '103', 103)" onmouseover="showTip(event, '103', 103)">
+            GetEnumerator()
+          </code>
+          <div class="tip" id="103">
+            <strong>Signature:</strong> unit -&gt; IEnumerator&lt;&#39;T&gt;<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/fsprojects/FSharpx.Async/tree/master/paket-files/fsprojects/FSharpx.Collections/src/FSharpx.Collections/CircularBuffer.fs#L73-73" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
         </td>
       </tr>
     </tbody>

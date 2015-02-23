@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8"/>
-    <title>Seq - FSharpx.Async</title>
+    <title>IOExtensions - FSharpx.Async</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <meta name="description" content=""/>
     <meta name="author" content="Thomas Petricek, David Thomas, Steffen Forkmann"/>
@@ -35,35 +35,55 @@
 
 
 
-<h1>Seq</h1>
+<h1>IOExtensions</h1>
 <div class="xmldoc">
 </div>
 
 <!-- Render nested types and modules, if there are any -->
 
-  <h3>Functions and values</h3>
+  <h3>Type extensions</h3>
   <table class="table table-bordered member-list">
     <thead>
-      <tr><td>Function or value</td><td>Description</td></tr>
+      <tr><td>Type extension</td><td>Description</td></tr>
     </thead>
     <tbody>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '76', 76)" onmouseover="showTip(event, '76', 76)">
-            ofAsyncSeq input
+          <code onmouseout="hideTip(event, '93', 93)" onmouseover="showTip(event, '93', 93)">
+            AsyncReadSeq(?bufferSize)
           </code>
-          <div class="tip" id="76">
-            <strong>Signature:</strong> input:AsyncSeq&lt;&#39;T&gt; -&gt; seq&lt;&#39;T&gt;<br />
-                          <strong>Type parameters:</strong> 'T          </div>
+          <div class="tip" id="93">
+            <strong>Signature:</strong> (bufferSize:int option) -&gt; AsyncSeq&lt;byte []&gt;<br />
+                      </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharpx.Async/tree/master/src/FSharpx.Async/AsyncSeq.fs#L497-497" class="github-link">
+            <a href="http://github.com/fsprojects/FSharpx.Async/tree/master/src/FSharpx.Async/Async.IO.fs#L17-17" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
-          <p>Converts asynchronous sequence to a synchronous blocking sequence.
-The elements of the asynchronous sequence are consumed lazily.</p>
+          <p>Asynchronously reads the stream in chunks of a specified size
+and returns the result as an asynchronous sequence.</p>
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '94', 94)" onmouseover="showTip(event, '94', 94)">
+            AsyncWriteSeq(input)
+          </code>
+          <div class="tip" id="94">
+            <strong>Signature:</strong> (input:AsyncSeq&lt;byte []&gt;) -&gt; Async&lt;unit&gt;<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/fsprojects/FSharpx.Async/tree/master/src/FSharpx.Async/Async.IO.fs#L29-29" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Asynchronously writes all data specified by the 
+given asynchronous sequence to the stream.</p>
 
         </td>
       </tr>

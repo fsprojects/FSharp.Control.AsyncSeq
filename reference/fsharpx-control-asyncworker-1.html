@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8"/>
-    <title>SlidingWindowAgent<'T> - FSharpx.Async</title>
+    <title>AsyncWorker<'T> - FSharpx.Async</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <meta name="description" content=""/>
     <meta name="author" content="Thomas Petricek, David Thomas, Steffen Forkmann"/>
@@ -35,12 +35,8 @@
 
 
 
-<h1>SlidingWindowAgent<'T></h1>
+<h1>AsyncWorker<'T></h1>
 <div class="xmldoc">
-<p>Agent that implements the "sliding window" functionality. It collects
-messages added using the Enqueue method and emits them in overlapping 
-groups of the specified size. For example, given [1,2,3,4,5...] and a 
-size 3, the produced groups will be [1,2,3], [2,3,4], [3,4,5], ...</p>
 </div>
   <h3>Constructors</h3>
   <table class="table table-bordered member-list">
@@ -51,15 +47,15 @@ size 3, the produced groups will be [1,2,3], [2,3,4], [3,4,5], ...</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '214', 214)" onmouseover="showTip(event, '214', 214)">
-            new(windowSize, cancelToken)
+          <code onmouseout="hideTip(event, '146', 146)" onmouseover="showTip(event, '146', 146)">
+            new(arg1, asyncGroup)
           </code>
-          <div class="tip" id="214">
-            <strong>Signature:</strong> (windowSize:int * cancelToken:CancellationToken option) -&gt; SlidingWindowAgent&lt;&#39;T&gt;<br />
+          <div class="tip" id="146">
+            <strong>Signature:</strong> (Async&lt;&#39;T&gt; * asyncGroup:CancellationToken option) -&gt; AsyncWorker&lt;&#39;T&gt;<br />
                       </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharpx.Async/tree/master/src/FSharpx.Async/SlidingWindowAgent.fs#L15-15" class="github-link">
+            <a href="http://github.com/fsprojects/FSharpx.Async/tree/master/src/FSharpx.Async/AsyncWorker.fs#L15-15" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -77,83 +73,127 @@ size 3, the produced groups will be [1,2,3], [2,3,4], [3,4,5], ...</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '215', 215)" onmouseover="showTip(event, '215', 215)">
-            add_WindowProduced(arg1)
+          <code onmouseout="hideTip(event, '147', 147)" onmouseover="showTip(event, '147', 147)">
+            CancelAsync(message)
           </code>
-          <div class="tip" id="215">
-            <strong>Signature:</strong> (Handler&lt;&#39;T []&gt;) -&gt; unit<br />
+          <div class="tip" id="147">
+            <strong>Signature:</strong> (message:string option) -&gt; unit<br />
                       </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharpx.Async/tree/master/src/FSharpx.Async/SlidingWindowAgent.fs#L52-52" class="github-link">
+            <a href="http://github.com/fsprojects/FSharpx.Async/tree/master/src/FSharpx.Async/AsyncWorker.fs#L59-59" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
-          <p>The event is triggered when a group of messages is collected. 
-The size of the group is exactly 'count' and the values are
-returned in a fresh array.</p>
-
+          
         </td>
       </tr>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '216', 216)" onmouseover="showTip(event, '216', 216)">
-            Enqueue(v)
+          <code onmouseout="hideTip(event, '148', 148)" onmouseover="showTip(event, '148', 148)">
+            Canceled
           </code>
-          <div class="tip" id="216">
-            <strong>Signature:</strong> v:&#39;T -&gt; unit<br />
+          <div class="tip" id="148">
+            <strong>Signature:</strong> IEvent&lt;OperationCanceledException&gt;<br />
                       </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharpx.Async/tree/master/src/FSharpx.Async/SlidingWindowAgent.fs#L55-55" class="github-link">
+            <a href="http://github.com/fsprojects/FSharpx.Async/tree/master/src/FSharpx.Async/AsyncWorker.fs#L64-64" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
-          <p>Sends new message to the agent</p>
-
+          
         </td>
       </tr>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '217', 217)" onmouseover="showTip(event, '217', 217)">
-            remove_WindowProduced(arg1)
+          <code onmouseout="hideTip(event, '149', 149)" onmouseover="showTip(event, '149', 149)">
+            Completed
           </code>
-          <div class="tip" id="217">
-            <strong>Signature:</strong> (Handler&lt;&#39;T []&gt;) -&gt; unit<br />
+          <div class="tip" id="149">
+            <strong>Signature:</strong> IEvent&lt;&#39;T&gt;<br />
                       </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharpx.Async/tree/master/src/FSharpx.Async/SlidingWindowAgent.fs#L52-52" class="github-link">
+            <a href="http://github.com/fsprojects/FSharpx.Async/tree/master/src/FSharpx.Async/AsyncWorker.fs#L63-63" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
-          <p>The event is triggered when a group of messages is collected. 
-The size of the group is exactly 'count' and the values are
-returned in a fresh array.</p>
-
+          
         </td>
       </tr>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '218', 218)" onmouseover="showTip(event, '218', 218)">
-            WindowProduced
+          <code onmouseout="hideTip(event, '150', 150)" onmouseover="showTip(event, '150', 150)">
+            Error
           </code>
-          <div class="tip" id="218">
-            <strong>Signature:</strong> IEvent&lt;&#39;T []&gt;<br />
+          <div class="tip" id="150">
+            <strong>Signature:</strong> IEvent&lt;exn&gt;<br />
                       </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharpx.Async/tree/master/src/FSharpx.Async/SlidingWindowAgent.fs#L52-52" class="github-link">
+            <a href="http://github.com/fsprojects/FSharpx.Async/tree/master/src/FSharpx.Async/AsyncWorker.fs#L65-65" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
-          <p>The event is triggered when a group of messages is collected. 
-The size of the group is exactly 'count' and the values are
-returned in a fresh array.</p>
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
 
+          <code onmouseout="hideTip(event, '151', 151)" onmouseover="showTip(event, '151', 151)">
+            ProgressChanged
+          </code>
+          <div class="tip" id="151">
+            <strong>Signature:</strong> IEvent&lt;int&gt;<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/fsprojects/FSharpx.Async/tree/master/src/FSharpx.Async/AsyncWorker.fs#L62-62" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '152', 152)" onmouseover="showTip(event, '152', 152)">
+            ReportProgress(arg1)
+          </code>
+          <div class="tip" id="152">
+            <strong>Signature:</strong> int -&gt; unit<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/fsprojects/FSharpx.Async/tree/master/src/FSharpx.Async/AsyncWorker.fs#L44-44" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '153', 153)" onmouseover="showTip(event, '153', 153)">
+            RunAsync()
+          </code>
+          <div class="tip" id="153">
+            <strong>Signature:</strong> unit -&gt; bool<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/fsprojects/FSharpx.Async/tree/master/src/FSharpx.Async/AsyncWorker.fs#L47-47" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
         </td>
       </tr>
     </tbody>
