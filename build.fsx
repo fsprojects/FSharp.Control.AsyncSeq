@@ -330,10 +330,10 @@ Target "All" DoNothing
   =?> ("ReleaseDocs",isLocalBuild)
 
 "All" 
-#if MONO
-#else
-  =?> ("SourceLink", Pdbstr.tryFind().IsSome )
-#endif
+//#if MONO
+//#else
+//  =?> ("SourceLink", Pdbstr.tryFind().IsSome )
+//#endif
   ==> "NuGet"
   ==> "BuildPackage"
 
