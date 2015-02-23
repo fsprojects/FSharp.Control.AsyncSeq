@@ -10,8 +10,6 @@ namespace FSharpx.Control
     open Microsoft.FSharp.Control
     open Microsoft.FSharp.Collections
 
-#if FX_NO_SYNC_CONTEXT
-#else
     type AsyncWorker<'T>(p : Async<'T>,?cancellationToken) = 
 
         let cts =
@@ -63,6 +61,3 @@ namespace FSharpx.Control
         member x.Completed  = completed.Publish
         member x.Canceled   = canceled.Publish
         member x.Error      = error.Publish
-
-
-#endif

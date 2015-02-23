@@ -51,15 +51,11 @@ namespace FSharpx.Control
             |   [] -> ()
             |   [cont] when reuseThread -> cont res
             |   otherwise ->
-#if FX_NO_SYNC_CONTEXT
-                    let postOrQueue cont = ThreadPool.QueueUserWorkItem(fun _ -> cont res) |> ignore
-#else
                     let synchContext = System.Threading.SynchronizationContext.Current
                     let postOrQueue =
                         match synchContext with
                         |   null -> fun cont -> ThreadPool.QueueUserWorkItem(fun _ -> cont res) |> ignore
-                        |   sc -> fun cont -> sc.Post((fun _ -> cont res), state=null)
-#endif                        
+                        |   sc -> fun cont -> sc.Post((fun _ -> cont res), state=null)                 
                     grabbedConts |> List.iter postOrQueue
 
         /// Get the reified result 
@@ -108,39 +104,20 @@ namespace FSharpx.Control
             static member AsyncAppendText(path) = UnblockViaNewThread (fun () -> System.IO.File.AppendText(path))
             static member AsyncOpenRead(path)   = UnblockViaNewThread (fun () -> System.IO.File.OpenRead(path))
             static member AsyncOpenWrite(path)  = UnblockViaNewThread (fun () -> System.IO.File.OpenWrite(path))
-#if FX_NO_FILE_OPTIONS
-            static member AsyncOpen(path,mode,?access,?share,?bufferSize) =
-#else
             static member AsyncOpen(path,mode,?access,?share,?bufferSize,?options) =
-#endif
                 let access = match access with Some v -> v | None -> System.IO.FileAccess.ReadWrite
                 let share = match share with Some v -> v | None -> System.IO.FileShare.None
-#if FX_NO_FILE_OPTIONS
-#else
                 let options = match options with Some v -> v | None -> System.IO.FileOptions.None
-#endif
                 let bufferSize = match bufferSize with Some v -> v | None -> 0x1000
                 UnblockViaNewThread (fun () -> 
-#if FX_NO_FILE_OPTIONS
-                    new System.IO.FileStream(path,mode,access,share,bufferSize))
-#else
                     new System.IO.FileStream(path,mode,access,share,bufferSize, options))
-#endif
 
             static member OpenTextAsync(path)   = System.IO.File.AsyncOpenText(path)
             static member AppendTextAsync(path) = System.IO.File.AsyncAppendText(path)
             static member OpenReadAsync(path)   = System.IO.File.AsyncOpenRead(path)
             static member OpenWriteAsync(path)  = System.IO.File.AsyncOpenWrite(path)
-#if FX_NO_FILE_OPTIONS
-            static member OpenAsync(path,mode,?access,?share,?bufferSize) = 
-                System.IO.File.AsyncOpen(path, mode, ?access=access, ?share=share,?bufferSize=bufferSize)
-#else
             static member OpenAsync(path,mode,?access,?share,?bufferSize,?options) = 
                 System.IO.File.AsyncOpen(path, mode, ?access=access, ?share=share,?bufferSize=bufferSize,?options=options)
-#endif
-
-#if FX_NO_FILE_OPTIONS
-#else
 
             // Aims to take advantage of IO completion ports using FileStream.AsyncWrite and FileOptions.Asynchronous, so no FX_NO_FILE_OPTIONS version
             static member AsyncWriteAllBytes(path, bytes) =
@@ -196,12 +173,6 @@ namespace FSharpx.Control
 
 
 
-#endif
-
-
-
-
-
 
 
     [<AutoOpen>]
@@ -211,8 +182,6 @@ namespace FSharpx.Control
             member s.AsyncReadToEnd () = FileExtensions.UnblockViaNewThread (fun () -> s.ReadToEnd())
             member s.ReadToEndAsync () = s.AsyncReadToEnd ()
 
-#if FX_NO_WEB_REQUESTS
-#else
     [<AutoOpen>]
     module WebRequestExtensions =
         open System
@@ -224,10 +193,7 @@ namespace FSharpx.Control
         type System.Net.WebRequest with
             member req.AsyncGetResponse() = callFSharpCoreAsyncGetResponse req // this calls the FSharp.Core method
             member req.GetResponseAsync() = callFSharpCoreAsyncGetResponse req // this calls the FSharp.Core method
-#endif
      
-#if FX_NO_WEB_CLIENT
-#else
     [<AutoOpen>]
     module WebClientExtensions =
         open System.Net
@@ -319,5 +285,3 @@ namespace FSharpx.Control
                 this.buildAsyncAction(
                     this.DownloadDataCompleted,
                     (fun token -> this.DownloadDataAsync(address, token)))
-#endif
-

@@ -58,9 +58,6 @@ namespace FSharpx.Control
             /// Create an async that opens a <c>System.IO.FileStream</c> on the specified path, via a fresh I/O thread.
             /// Pass <c>options=FileOptions.Asynchronous</c> to enable further asynchronous read/write operations
             /// on the FileStream.
-#if FX_NO_FILE_OPTIONS
-            static member AsyncOpen: path:string * mode:FileMode * ?access: FileAccess * ?share: FileShare * ?bufferSize: int -> Async<FileStream>
-#else
             static member AsyncOpen: path:string * mode:FileMode * ?access: FileAccess * ?share: FileShare * ?bufferSize: int * ?options: FileOptions -> Async<FileStream>
 
             // Aims to take advantage of IO completion ports using FileStream.AsyncWrite and FileOptions.Asynchronous, so no FX_NO_FILE_OPTIONS version
@@ -71,20 +68,13 @@ namespace FSharpx.Control
             static member AsyncAppendAllText: path:string * txt:string * ?encoder:System.Text.Encoding -> Async<unit>
             static member AsyncAppendAllLines: path:string * lines:string array * ?encoder:System.Text.Encoding -> Async<unit>
 
-#endif
-
-#if FX_NO_WEB_REQUESTS
-#else
     [<AutoOpen>]
     module WebRequestExtensions =
         type System.Net.WebRequest with 
             /// Return an asynchronous computation that, when run, will wait for a response to the given WebRequest.
             [<System.Obsolete("The extension method now resides in the 'WebExtensions' module in the F# core library. Please add 'open Microsoft.FSharp.Control.WebExtensions' to access this method")>]
             member AsyncGetResponse : unit -> Async<System.Net.WebResponse>
-#endif
-    
-#if FX_NO_WEB_CLIENT
-#else
+
     [<AutoOpen>]
     module WebClientExtensions =
         type System.Net.WebClient with
@@ -122,4 +112,3 @@ namespace FSharpx.Control
 
             /// Returns an asynchronous computation that, when run, will wait for the download of the specified resource as a data buffer.
             member AsyncDownloadData : address: System.Uri -> Async<byte[]>
-#endif

@@ -34,14 +34,13 @@ type AsyncStreamReader(stream:Stream, encoding:Encoding, detectEncodingFromByteO
 
         if not stream.CanRead then
             invalidArg "stream" "stream not readable";
-#if FX_NO_FILESTREAM_ISASYNC
-#else
+
         match stream with 
         | :? System.IO.FileStream as fs when not fs.IsAsync -> 
             invalidArg "stream" "FileStream not asynchronous. AsyncStreamReader should only be used on FileStream if the IsAsync property returns true. Consider passing 'true' for the async flag in the FileStream constructor"
         | _ -> 
             ()
-#endif
+
         if (bufferSize <= 0) then
             raise <| new ArgumentOutOfRangeException("bufferSize");
 
@@ -125,8 +124,7 @@ type AsyncStreamReader(stream:Stream, encoding:Encoding, detectEncodingFromByteO
                 encoding <- new UnicodeEncoding(true, true); 
                 compressBuffer(2);
                 changedEncoding <- true; 
-#if FX_NO_UTF32ENCODING
-#else
+
             elif (byteBuffer.[0]=0xFFuy && byteBuffer.[1]=0xFEuy) then
                 // Little Endian Unicode, or possibly little endian UTF32
                 if (byteLen >= 4 && byteBuffer.[2] = 0uy && byteBuffer.[3] = 0uy) then
@@ -136,19 +134,17 @@ type AsyncStreamReader(stream:Stream, encoding:Encoding, detectEncodingFromByteO
                     encoding <- new UnicodeEncoding(false, true); 
                     compressBuffer(2);
                 changedEncoding <- true;
-#endif
             elif (byteLen >= 3 && byteBuffer.[0]=0xEFuy && byteBuffer.[1]=0xBBuy && byteBuffer.[2]=0xBFuy) then
                 // UTF-8 
                 encoding <- Encoding.UTF8; 
                 compressBuffer(3);
                 changedEncoding <- true; 
-#if FX_NO_UTF32ENCODING
-#else
+
             elif (byteLen >= 4 && byteBuffer.[0] = 0uy && byteBuffer.[1] = 0uy && byteBuffer.[2] = 0xFEuy && byteBuffer.[3] = 0xFFuy) then
                 // Big Endian UTF32 
                 encoding <- new UTF32Encoding(true, true);
                 changedEncoding <- true; 
-#endif
+
             elif (byteLen = 2) then
                 _detectEncoding <- true; 
             // Note: in the future, if we change this algorithm significantly,

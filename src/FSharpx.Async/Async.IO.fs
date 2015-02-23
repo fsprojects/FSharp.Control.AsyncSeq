@@ -31,11 +31,8 @@ module IOExtensions =
         do! x.AsyncWrite(data) }
 
 open System
-#if NET40
-open System.Diagnostics.Contracts
-#else
 open System.Diagnostics
-#endif
+open System.Diagnostics.Contracts
 
 // Loosely based on Stephen Toub's Stream Pipelines article in MSDN.
 // See http://msdn.microsoft.com/en-us/magazine/cc163290.aspx
@@ -59,15 +56,9 @@ type CircularStream(maxLength) =
     override x.SetLength(value) = raise <| new NotSupportedException()
 
     override x.Read(buffer, offset, count) =
-        #if NET40
         Contract.Requires(buffer <> null, "buffer cannot be null")
         Contract.Requires(offset >= 0 && offset < buffer.Length, "offset is out of range")
         Contract.Requires(count >= 0 && offset + count <= buffer.Length, "count is out of range")
-        #else
-        Debug.Assert(buffer <> null, "buffer cannot be null")
-        Debug.Assert(offset >= 0 && offset < buffer.Length, "offset is out of range")
-        Debug.Assert(count >= 0 && offset + count <= buffer.Length, "count is out of range")
-        #endif
 
         if count = 0 then 0 else
         let chunk = queue.Dequeue(count)
@@ -75,29 +66,17 @@ type CircularStream(maxLength) =
         chunk.Length
 
     override x.Write(buffer, offset, count) =
-        #if NET40
         Contract.Requires(buffer <> null, "buffer cannot be null")
         Contract.Requires(offset >= 0 && offset < buffer.Length, "offset is out of range")
         Contract.Requires(count >= 0 && offset + count <= buffer.Length, "count is out of range")
-        #else
-        Debug.Assert(buffer <> null, "buffer cannot be null")
-        Debug.Assert(offset >= 0 && offset < buffer.Length, "offset is out of range")
-        Debug.Assert(count >= 0 && offset + count <= buffer.Length, "count is out of range")
-        #endif
 
         if count = 0 then () else
         queue.Enqueue(buffer, offset, count)
 
     member x.AsyncRead(buffer: byte[], offset, count, ?timeout) =
-        #if NET40
         Contract.Requires(buffer <> null, "buffer cannot be null")
         Contract.Requires(offset >= 0 && offset < buffer.Length, "offset is out of range")
         Contract.Requires(count >= 0 && offset + count <= buffer.Length, "count is out of range")
-        #else
-        Debug.Assert(buffer <> null, "buffer cannot be null")
-        Debug.Assert(offset >= 0 && offset < buffer.Length, "offset is out of range")
-        Debug.Assert(count >= 0 && offset + count <= buffer.Length, "count is out of range")
-        #endif
 
         if count = 0 then async.Return(0) else
         async {
@@ -106,15 +85,9 @@ type CircularStream(maxLength) =
             return chunk.Length }
 
     member x.AsyncWrite(buffer: byte[], offset, count, ?timeout) =
-        #if NET40
         Contract.Requires(buffer <> null, "buffer cannot be null")
         Contract.Requires(offset >= 0 && offset < buffer.Length, "offset is out of range")
         Contract.Requires(count >= 0 && offset + count <= buffer.Length, "count is out of range")
-        #else
-        Debug.Assert(buffer <> null, "buffer cannot be null")
-        Debug.Assert(offset >= 0 && offset < buffer.Length, "offset is out of range")
-        Debug.Assert(count >= 0 && offset + count <= buffer.Length, "count is out of range")
-        #endif
 
         if count = 0 then async.Zero() else
         async { do! queue.AsyncEnqueue(buffer, offset, count, ?timeout = timeout) }
