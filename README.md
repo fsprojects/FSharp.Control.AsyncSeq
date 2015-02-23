@@ -1,7 +1,7 @@
 [![Issue Stats](http://issuestats.com/github/fsprojects/FSharpx.Async/badge/issue)](http://issuestats.com/github/fsprojects/FSharpx.Async)
 [![Issue Stats](http://issuestats.com/github/fsprojects/FSharpx.Async/badge/pr)](http://issuestats.com/github/fsprojects/FSharpx.Async)
 
-# FSharpx:Async [![NuGet Status](http://img.shields.io/nuget/v/FSharpx.Async.svg?style=flat)](https://www.nuget.org/packages/FSharpx.Async/)
+# FSharpx.Async [![NuGet Status](http://img.shields.io/nuget/v/FSharpx.Async.svg?style=flat)](https://www.nuget.org/packages/FSharpx.Async/)
 
 **FSharpx.Async** is a collections of async helpers for F#. 
 
