@@ -1,19 +1,13 @@
-(*** hide ***)
-// This block of code is omitted in the generated HTML documentation. Use 
-// it to define helpers that you do not want to show in the documentation.
-#I "../../bin"
-
-(**
 FSharpx.Async
 =============
 
-Documentation
+FSharpx.Async is a collection of asynchronous programming utilities for F#.
 
 <div class="row">
   <div class="span1"></div>
   <div class="span6">
     <div class="well well-small" id="nuget">
-      The F# ProjectTemplate library can be <a href="https://nuget.org/packages/FSharpx.Async">installed from NuGet</a>:
+      The FSharpx.Async library can be <a href="https://nuget.org/packages/FSharpx.Async">installed from NuGet</a>:
       <pre>PM> Install-Package FSharpx.Async</pre>
     </div>
   </div>
@@ -34,7 +28,7 @@ the project and submit pull requests. If you're adding a new public API, please 
 consider adding [samples][content] that can be turned into a documentation. You might
 also want to read the [library design notes][readme] to understand how it works.
 
-The library is available under Public Domain license, which allows modification and 
+The library is available under Apache 2.0 license, which allows modification and 
 redistribution for both commercial and non-commercial purposes. For more information see the 
 [License file][license] in the GitHub repository. 
 
@@ -43,4 +37,3 @@ redistribution for both commercial and non-commercial purposes. For more informa
   [issues]: https://github.com/fsprojects/FSharpx.Async/issues
   [readme]: https://github.com/fsprojects/FSharpx.Async/blob/master/README.md
   [license]: https://github.com/fsprojects/FSharpx.Async/blob/master/LICENSE.txt
-*)
