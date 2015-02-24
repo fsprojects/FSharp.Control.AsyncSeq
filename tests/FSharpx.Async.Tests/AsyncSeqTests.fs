@@ -44,6 +44,24 @@ let ``toList should collect the results into an array``() =
 
 
 [<Test>]
+let ``concatSeq should flatten a sequence``() =
+  
+  let s = asyncSeq {
+    yield [1;2]
+    yield [3;4]
+  }
+  
+  let s = 
+    s
+    |> AsyncSeq.concatSeq
+    |> AsyncSeq.toList
+    |> Async.RunSynchronously
+
+  Assert.True(([1;2;3;4] = s))
+
+
+
+[<Test>]
 let ``unfoldAsync should generate a sequence``() =
   
   let gen s = 

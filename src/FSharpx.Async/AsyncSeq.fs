@@ -496,6 +496,16 @@ module AsyncSeq =
       yield! unfoldAsync f s
     | None -> () }
 
+  /// Flattens an AsyncSeq of sequences.
+  let rec concatSeq (input:AsyncSeq<#seq<'T>>) : AsyncSeq<'T> = asyncSeq {
+    let! v = input
+    match v with
+    | Nil -> ()
+    | Cons (hd, tl) ->
+      for item in hd do 
+        yield item
+      yield! concatSeq tl }
+
 [<AutoOpen>]
 module AsyncSeqExtensions = 
   /// Builds an asynchronou sequence using the computation builder syntax
