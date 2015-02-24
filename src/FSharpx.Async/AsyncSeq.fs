@@ -506,6 +506,25 @@ module AsyncSeq =
         yield item
       yield! concatSeq tl }
 
+  /// Interleaves two async sequences into a resulting sequence. The provided
+  /// sequences are consumed in lock-step.
+  let interleave = 
+
+    let rec left (a:AsyncSeq<'a>) (b:AsyncSeq<'b>) : AsyncSeq<Choice<_,_>> = async {
+      let! a = a        
+      match a with
+      | Cons (a1, t1) -> return Cons (Choice1Of2 a1, right t1 b)
+      | Nil -> return! b |> map Choice2Of2 }
+
+    and right (a:AsyncSeq<'a>) (b:AsyncSeq<'b>) : AsyncSeq<Choice<_,_>> = async {
+      let! b = b        
+      match b with
+      | Cons (a2, t2) -> return Cons (Choice2Of2 a2, left a t2)
+      | Nil -> return! a |> map Choice1Of2 }
+
+    left
+
+
 [<AutoOpen>]
 module AsyncSeqExtensions = 
   /// Builds an asynchronou sequence using the computation builder syntax
