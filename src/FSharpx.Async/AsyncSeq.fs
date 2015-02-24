@@ -485,7 +485,9 @@ module AsyncSeq =
 
   /// Creates an async computation which iterates the AsyncSeq and collects the output into a list.
   let toList (input:AsyncSeq<'T>) : Async<'T list> =
-    input |> fold (fun arr a -> a::arr) []
+    input 
+    |> fold (fun arr a -> a::arr) []
+    |> Async.map List.rev
 
   /// Generates an async sequence using the specified generator function.
   let rec unfoldAsync (f:'State -> Async<('T * 'State) option>) (s:'State) : AsyncSeq<'T> = asyncSeq {        
@@ -523,6 +525,31 @@ module AsyncSeq =
       | Nil -> return! a |> map Choice1Of2 }
 
     left
+
+
+  /// Buffer items from the async sequence into buffers of a specified size.
+  /// The last buffer returned may be less than the specified buffer size.
+  let rec bufferByCount (bufferSize:int) (s:AsyncSeq<'T>) : AsyncSeq<'T[]> = 
+    if (bufferSize < 1) then invalidArg "bufferSize" "must be positive"
+    async {                  
+      let buffer = ResizeArray<_>()
+      let rec loop s = async {
+        let! step = s
+        match step with
+        | Nil ->
+          if (buffer.Count > 0) then return Cons(buffer.ToArray(),async.Return Nil)
+          else return Nil
+        | Cons(a,tl) ->
+          buffer.Add(a)
+          if buffer.Count = bufferSize then 
+            let buf = buffer.ToArray()
+            buffer.Clear()
+            return Cons(buf, loop tl)
+          else 
+            return! loop tl            
+      }
+      return! loop s
+    }    
 
 
 [<AutoOpen>]
