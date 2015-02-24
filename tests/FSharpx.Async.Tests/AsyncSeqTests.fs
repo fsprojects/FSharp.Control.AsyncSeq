@@ -13,3 +13,33 @@ let ``skipping should return all elements after the first non-match``() =
         |> AsyncSeq.toBlockingSeq 
         |> Seq.toList
     Assert.AreEqual(expected, result)
+
+
+[<Test>]
+let ``toArray should collect the results into an array``() =
+  
+  let s = asyncSeq {
+    yield 1
+    yield 2
+    yield 3
+  }
+
+  let a = s |> AsyncSeq.toArray |> Async.RunSynchronously |> Array.toList
+
+  Assert.True(([1;2;3] = a))
+
+[<Test>]
+let ``toList should collect the results into an array``() =
+  
+  let s = asyncSeq {
+    yield 1
+    yield 2
+    yield 3
+  }
+
+  let a = s |> AsyncSeq.toList |> Async.RunSynchronously
+
+  Assert.True(([1;2;3] = a))
+
+    
+

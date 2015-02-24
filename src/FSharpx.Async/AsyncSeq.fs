@@ -477,6 +477,17 @@ module AsyncSeq =
       | Nil -> return Nil 
     else return! input }
 
+  /// Creates an async computation which iterates the AsyncSeq and collects the output into an array.
+  let toArray (input:AsyncSeq<'T>) : Async<'T[]> =
+    input
+    |> fold (fun (arr:ResizeArray<_>) a -> arr.Add(a) ; arr) (new ResizeArray<_>()) 
+    |> Async.map (fun arr -> arr.ToArray())
+
+  /// Creates an async computation which iterates the AsyncSeq and collects the output into a list.
+  let toList (input:AsyncSeq<'T>) : Async<'T list> =
+    input |> fold (fun arr a -> a::arr) []
+
+
 [<AutoOpen>]
 module AsyncSeqExtensions = 
   /// Builds an asynchronou sequence using the computation builder syntax
