@@ -28,6 +28,7 @@ let ``toArray should collect the results into an array``() =
 
   Assert.True(([1;2;3] = a))
 
+
 [<Test>]
 let ``toList should collect the results into an array``() =
   
@@ -41,5 +42,19 @@ let ``toList should collect the results into an array``() =
 
   Assert.True(([1;2;3] = a))
 
-    
+
+[<Test>]
+let ``unfoldAsync should generate a sequence``() =
+  
+  let gen s = 
+    if s < 3 then (s,s + 1) |> Some |> async.Return
+    else None |> async.Return
+  
+  let s = 
+    AsyncSeq.unfoldAsync gen 0 
+    |> AsyncSeq.toList 
+    |> Async.RunSynchronously
+
+  Assert.True(([0;1;2] = s))
+
 

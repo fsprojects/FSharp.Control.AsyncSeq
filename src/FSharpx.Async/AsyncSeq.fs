@@ -487,6 +487,14 @@ module AsyncSeq =
   let toList (input:AsyncSeq<'T>) : Async<'T list> =
     input |> fold (fun arr a -> a::arr) []
 
+  /// Generates an async sequence using the specified generator function.
+  let rec unfoldAsync (f:'State -> Async<('T * 'State) option>) (s:'State) : AsyncSeq<'T> = asyncSeq {        
+    let! r = f s
+    match r with
+    | Some (a,s) -> 
+      yield a
+      yield! unfoldAsync f s
+    | None -> () }
 
 [<AutoOpen>]
 module AsyncSeqExtensions = 
