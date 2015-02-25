@@ -40,6 +40,26 @@ module AsyncExtensions =
           { new IDisposable with 
               member x.Dispose() = ct.Cancel() }
 
+      /// Creates an async computations which runs the specified computations
+      /// in parallel and returns their results.
+      static member Parallel(a:Async<'a>, b:Async<'b>) : Async<'a * 'b> = async {
+        let! a = a |> Async.StartChild
+        let! b = b |> Async.StartChild
+        let! a = a
+        let! b = b
+        return a,b }
+
+      /// Creates an async computations which runs the specified computations
+      /// in parallel and returns their results.
+      static member Parallel(a:Async<'a>, b:Async<'b>, c:Async<'c>) : Async<'a * 'b * 'c> = async {
+        let! a = a |> Async.StartChild
+        let! b = b |> Async.StartChild
+        let! c = c |> Async.StartChild
+        let! a = a
+        let! b = b
+        let! c = c
+        return a,b,c }
+
       /// An async computation which does nothing.
       static member inline unit = AsyncOps.unit
 
