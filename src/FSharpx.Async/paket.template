@@ -1,0 +1,21 @@
+﻿type project
+owners
+    Thomas Petricek, David Thomas, Ryan Riley, Steffen Forkmann
+authors 
+    Thomas Petricek, David Thomas, Ryan Riley, Steffen Forkmann
+projectUrl
+    http://fsprojects.github.io/FSharpx.Async/
+iconUrl
+    http://fsprojects.github.io/FSharpx.Async/img/logo.png
+licenseUrl
+    http://fsprojects.github.io/FSharpx.Async/license.html
+requireLicenseAcceptance
+    false
+copyright
+    Copyright 2015
+tags
+    F#, async, fsharpx
+summary
+    Async extensions for F#
+description
+    Async extensions for F#

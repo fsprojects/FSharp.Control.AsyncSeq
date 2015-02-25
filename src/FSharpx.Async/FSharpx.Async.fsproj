@@ -81,6 +81,7 @@
     <Compile Include="AsyncSeq.fs" />
     <Compile Include="Async.IO.fs" />
     <None Include="paket.references" />
+    <None Include="paket.template" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="mscorlib" />
