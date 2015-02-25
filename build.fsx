@@ -42,7 +42,7 @@ let description = "Async extensions for F#"
 let authors = [ "Thomas Petricek"; "David Thomas"; "Ryan Riley"; "Steffen Forkmann" ]
 
 // Tags for your project (for NuGet package)
-let tags = "F#, async, fsharp"
+let tags = "F#, async, fsharpx"
 
 // File system information 
 let solutionFile  = "FSharpx.Async.sln"
