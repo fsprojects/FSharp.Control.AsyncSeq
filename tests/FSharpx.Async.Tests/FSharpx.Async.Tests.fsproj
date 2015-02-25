@@ -59,6 +59,7 @@
   <ItemGroup>
     <Compile Include="AsyncTest.fs" />
     <Compile Include="AsyncSeqTests.fs" />
+    <Compile Include="AsyncStreamTests.fs" />
     <None Include="paket.references" />
   </ItemGroup>
   <ItemGroup>
