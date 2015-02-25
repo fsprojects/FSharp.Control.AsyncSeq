@@ -16,7 +16,7 @@ let ``skipping should return all elements after the first non-match``() =
 
 
 [<Test>]
-let ``toArray should collect the results into an array``() =
+let ``AsyncSeq.toArray``() =
   
   let s = asyncSeq {
     yield 1
@@ -30,7 +30,7 @@ let ``toArray should collect the results into an array``() =
 
 
 [<Test>]
-let ``toList should collect the results into an array``() =
+let ``AsyncSeq.toList``() =
   
   let s = asyncSeq {
     yield 1
@@ -44,7 +44,7 @@ let ``toList should collect the results into an array``() =
 
 
 [<Test>]
-let ``concatSeq should flatten a sequence``() =
+let ``AsyncSeq.concatSeq``() =
   
   let s = asyncSeq {
     yield [1;2]
@@ -62,7 +62,7 @@ let ``concatSeq should flatten a sequence``() =
 
 
 [<Test>]
-let ``unfoldAsync should generate a sequence``() =
+let ``AsyncSeq.unfoldAsync``() =
   
   let gen s = 
     if s < 3 then (s,s + 1) |> Some |> async.Return
@@ -78,7 +78,7 @@ let ``unfoldAsync should generate a sequence``() =
 
 
 [<Test>]
-let ``interleave should interleave two sequences``() =
+let ``AsyncSeq.interleave``() =
   let s1 = AsyncSeq.ofSeq ["a";"b";"c"]
   let s2 = AsyncSeq.ofSeq [1;2;3]
   let merged = AsyncSeq.interleave s1 s2 |> AsyncSeq.toList |> Async.RunSynchronously
@@ -87,7 +87,7 @@ let ``interleave should interleave two sequences``() =
 
 
 [<Test>]
-let ``bufferByCount should buffer``() =
+let ``AsyncSeq.bufferByCount``() =
   
   let s = asyncSeq {
     yield 1
