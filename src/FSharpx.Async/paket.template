@@ -1,7 +1,7 @@
 ﻿type project
 owners
     Thomas Petricek, David Thomas, Ryan Riley, Steffen Forkmann
-authors 
+authors
     Thomas Petricek, David Thomas, Ryan Riley, Steffen Forkmann
 projectUrl
     http://fsprojects.github.io/FSharpx.Async/
