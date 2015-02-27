@@ -79,6 +79,7 @@
     <Compile Include="AsyncStreamReader.fsi" />
     <Compile Include="AsyncStreamReader.fs" />
     <Compile Include="AsyncSeq.fs" />
+    <Compile Include="AsyncStream.fs" />
     <Compile Include="Async.IO.fs" />
     <None Include="paket.references" />
     <None Include="paket.template" />

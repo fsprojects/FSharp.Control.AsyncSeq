@@ -477,6 +477,81 @@ module AsyncSeq =
       | Nil -> return Nil 
     else return! input }
 
+  /// Creates an async computation which iterates the AsyncSeq and collects the output into an array.
+  let toArray (input:AsyncSeq<'T>) : Async<'T[]> =
+    input
+    |> fold (fun (arr:ResizeArray<_>) a -> arr.Add(a) ; arr) (new ResizeArray<_>()) 
+    |> Async.map (fun arr -> arr.ToArray())
+
+  /// Creates an async computation which iterates the AsyncSeq and collects the output into a list.
+  let toList (input:AsyncSeq<'T>) : Async<'T list> =
+    input 
+    |> fold (fun arr a -> a::arr) []
+    |> Async.map List.rev
+
+  /// Generates an async sequence using the specified generator function.
+  let rec unfoldAsync (f:'State -> Async<('T * 'State) option>) (s:'State) : AsyncSeq<'T> = asyncSeq {        
+    let! r = f s
+    match r with
+    | Some (a,s) -> 
+      yield a
+      yield! unfoldAsync f s
+    | None -> () }
+
+  /// Flattens an AsyncSeq of sequences.
+  let rec concatSeq (input:AsyncSeq<#seq<'T>>) : AsyncSeq<'T> = asyncSeq {
+    let! v = input
+    match v with
+    | Nil -> ()
+    | Cons (hd, tl) ->
+      for item in hd do 
+        yield item
+      yield! concatSeq tl }
+
+  /// Interleaves two async sequences into a resulting sequence. The provided
+  /// sequences are consumed in lock-step.
+  let interleave = 
+
+    let rec left (a:AsyncSeq<'a>) (b:AsyncSeq<'b>) : AsyncSeq<Choice<_,_>> = async {
+      let! a = a        
+      match a with
+      | Cons (a1, t1) -> return Cons (Choice1Of2 a1, right t1 b)
+      | Nil -> return! b |> map Choice2Of2 }
+
+    and right (a:AsyncSeq<'a>) (b:AsyncSeq<'b>) : AsyncSeq<Choice<_,_>> = async {
+      let! b = b        
+      match b with
+      | Cons (a2, t2) -> return Cons (Choice2Of2 a2, left a t2)
+      | Nil -> return! a |> map Choice1Of2 }
+
+    left
+
+
+  /// Buffer items from the async sequence into buffers of a specified size.
+  /// The last buffer returned may be less than the specified buffer size.
+  let rec bufferByCount (bufferSize:int) (s:AsyncSeq<'T>) : AsyncSeq<'T[]> = 
+    if (bufferSize < 1) then invalidArg "bufferSize" "must be positive"
+    async {                  
+      let buffer = ResizeArray<_>()
+      let rec loop s = async {
+        let! step = s
+        match step with
+        | Nil ->
+          if (buffer.Count > 0) then return Cons(buffer.ToArray(),async.Return Nil)
+          else return Nil
+        | Cons(a,tl) ->
+          buffer.Add(a)
+          if buffer.Count = bufferSize then 
+            let buf = buffer.ToArray()
+            buffer.Clear()
+            return Cons(buf, loop tl)
+          else 
+            return! loop tl            
+      }
+      return! loop s
+    }    
+
+
 [<AutoOpen>]
 module AsyncSeqExtensions = 
   /// Builds an asynchronou sequence using the computation builder syntax
