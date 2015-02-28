@@ -42,7 +42,7 @@ let description = "Async extensions for F#"
 let authors = [ "Thomas Petricek"; "David Thomas"; "Ryan Riley"; "Steffen Forkmann" ]
 
 // Tags for your project (for NuGet package)
-let tags = "F#, async, fsharp"
+let tags = "F#, async, fsharpx"
 
 // File system information 
 let solutionFile  = "FSharpx.Async.sln"
@@ -158,21 +158,16 @@ Target "SourceLink" (fun _ ->
 // Build a NuGet package
 
 Target "NuGet" (fun _ ->
-    NuGet (fun p ->
-        { p with
-            Authors = authors
-            Project = project
-            Summary = summary
-            Description = description
+    Paket.Pack(fun p -> 
+         { p with
             Version = release.NugetVersion
-            ReleaseNotes = String.Join(Environment.NewLine, release.Notes)
-            WorkingDir = "."
-            Tags = tags
-            OutputPath = "bin"
-            AccessKey = getBuildParamOrDefault "nugetkey" ""
-            Publish = hasBuildParam "nugetkey"
-            Dependencies = [] })
-        ("nuget/" + project + ".nuspec")
+            ReleaseNotes = toLines release.Notes})
+)
+
+Target "PublishNuget" (fun _ ->
+    Paket.Push(fun p -> 
+        { p with
+            WorkingDir = "./temp"  })
 )
 
 // --------------------------------------------------------------------------------------
@@ -352,6 +347,7 @@ Target "All" DoNothing
   ==> "Release"
 
 "BuildPackage"
+  ==> "PublishNuget"
   ==> "Release"
 
 RunTargetOrDefault "All"
