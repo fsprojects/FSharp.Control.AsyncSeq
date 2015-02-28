@@ -9,7 +9,7 @@ concepts and hopefully alleviate some confusion.
 
 ## Thread
 
-A thread in this context refers to a [managed thread](https://msdn.microsoft.com/en-us/library/6kac2kdh(v=vs.110).aspx). 
+A thread in this scope refers to a [managed thread](https://msdn.microsoft.com/en-us/library/6kac2kdh(v=vs.110).aspx). 
 A thread is a basic unit to which an OS allocates CPU resources. A **managed** thread usually maps directly to
 an OS thread, however it is possible for a CLR host to override this behavior. A thread has a corresponding context 
 consisting of a pointer to the code being executed as well as stack and register state. 
@@ -21,11 +21,11 @@ information about ordering.
 
 ## Context Switch
 
-A context switch occurs when the OS scheduler changes the thread to which it allocates CPU resources.
+A context switch occurs when the OS scheduler decides to the thread to which it allocates CPU resources.
 In order to do this, it must save the context of the thread which is giving up use of the CPU and reconstitute
-the context of the thread which will make use of the CPU. Context switches occur for a number of reasons. 
+the context of the thread which is next in line. Context switches occur for a number of reasons. 
 It occurs naturally as part of preemptive scheduling - threads run for a **time slice** or **quantum** until another
-thread is given a chance to run. Another reason is when a thread explicitly yields its time slice with a call to
+thread is given a chance to run. Another reason is when a thread explicitly yields its time slice, such as with a call to
 `Thread.Sleep`.
 
 ## Synchronous vs. Asynchronous

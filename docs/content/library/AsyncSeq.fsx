@@ -2,7 +2,7 @@
 
 # F# Async: AsyncSeq
 
-An AsyncSeq is an sequence in which individual elements are retrieved using an `Async` computation.
+An AsyncSeq is a sequence in which individual elements are retrieved using an `Async` computation.
 It is similar to `seq<'a>` in that subsequent elements are pulled lazily. Structurally it is
 similar to `list<'a>` with the difference being that each head and tail node or empty node is wrapped
 in `Async`. `AsyncSeq` also bears similarity to `IObservable<'a>` with the former being pull-based and the
@@ -31,7 +31,7 @@ let asyncS = asyncSeq {
 
 (**
 Another way to generate an asynchronous sequence is using the `Async.unfoldAsync` function. This
-function takes another function which can generate individual elements based on a state. It can 
+function takes another function which can generate individual elements based on a state and 
 signal completion of the sequence.
 
 For example, suppose that you're writing a program which consumes the Twitter API and stores tweets
@@ -64,8 +64,7 @@ The asynchronous sequence `tweetBatches` will when iterated consume the entire t
 
 Next, suppose that the tweet filtering function makes a call to a web service which determines
 whether a particular tweet should be stored in the database. This function can be modeled with
-type `Tweet -> Async<bool>`. We can flatten the `tweetBatches` sequence and then filter it using 
-this function:
+type `Tweet -> Async<bool>`. We can flatten the `tweetBatches` sequence and then filter it as follows:
 *)
 
 let filterTweet (t:Tweet) : Async<bool> =
@@ -95,7 +94,7 @@ let storeFilteredTweets : Async<unit> =
 Note that the value `storeFilteredTweets` is an asynchronous computation of type `Async<unit>`. At this point,
 it is a **representation** of the workflow which consists of reading batches of tweets, filtering them and storing them
 in the database. When executed, the workflow will consume the entire tweet stream. The entire workflow can be
-succinctly expressed and executed as follows:
+succinctly declared and executed as follows:
 *)
 
 AsyncSeq.unfoldAsync getTweetBatch 0
@@ -106,7 +105,7 @@ AsyncSeq.unfoldAsync getTweetBatch 0
 
 (**
 The above snippet effectively orchestrates several asynchronous request-reply interactions into a cohesive unit
-composed with familiar operations on sequences. Furthermore, it can be executed efficiently in a non-blocking manner.
+composed using familiar operations on sequences. Furthermore, it will be executed efficiently in a non-blocking manner.
 *)
 
 (**
@@ -136,7 +135,7 @@ let withTime' = asyncSeq {
 (**
 When the asynchronous sequence `withTime'` is iterated, the calls to `Async.Sleep` won't block threads. Instead,
 the **continuation** of the sequence will be scheduled by a `ThreadPool` thread, while the calling thread
-will be free to perform other work.
+will be free to perform other work. Overall, a `seq<'a>` can be viewed as a special case of an `AsyncSeq<'a>`.
 *)
 
 
@@ -149,19 +148,20 @@ and the latter is pull-based. Consumers of an `IObservable<'a>` **subscribe** to
 new items or completion. By contrast, consumers of an `AsyncSeq<'a>` **retrieve** subsequent items on their own
 terms. Some domains are more naturally modeled with one or the other, however it is less clear which is a more
 suitable tool for a specific task. In many cases, a combination of the two provides the optimal solution and 
-restricting yourself to one, while simplifying the programming model, can lead one two view all problems as a nail.
+restricting yourself to one, while simplifying the programming model, can lead one to view all problems as a nail.
 
 A more specific difference between the two is that `IObservable<'a>` subscribers have the basic type `'a -> unit` 
 and are therefore inherently synchronous and imperative. The observer can certainly make a blocking call, but this 
 can defeat the purpose of the observable sequence all together. Alternatively, the observer can spawn an operation, but
 this can break composition because one can no longer rely on the observer operation returning to determine that it has 
-completed. With the observable model however, we can model blocking operations through composition.
+completed. With the observable model however, we can model blocking operations through composition on sequences rather
+than observers.
 
 To illustrate, lets try to implement the above Tweet retrieval, filtering and storage workflow using observable sequences.
 Suppose we already have an observable sequence representing tweets `IObservable<Tweet>` and we simply wish 
 to filter it and store the resulting tweets. The function `Observable.filter` allows one to filter observable
-sequences based on a predicate, however in this case it doesn't quite cut it because the predicate is synchronous 
-`'a -> bool`:
+sequences based on a predicate, however in this case it doesn't quite cut it because the predicate passed to it must
+be synchronous `'a -> bool`:
 *)
 
 open System
@@ -174,17 +174,19 @@ let filteredTweetsObs =
   |> Observable.filter (filterTweet >> Async.RunSynchronously) // blocking IO-call!
 
 (**
-To remedy the blocking IO-call we can adapt the filtering function to the `IObservable<'a>` model. An `Async<'a>` 
-can be modeled as an `IObservable<'a>` with one element so suppose that we have `Tweet -> IObservable<bool>`. We can 
-then compose an observable that filters tweets using this function as follows:
+To remedy the blocking IO-call we can better adapt the filtering function to the `IObservable<'a>` model. A value
+of type `Async<'a>` can be modeled as an `IObservable<'a>` with one element. Suppose that we have 
+`Tweet -> IObservable<bool>`. We can define a few helper operators on observables to allow filtering using
+an asynchronous predicate as follows:
 *)
 
 module Observable =
   
+  /// a |> Async.StartAsTask |> (fun t -> t.ToObservable())
   let ofAsync (a:Async<'a>) : IObservable<'a> =
     failwith "TODO"
 
-  /// Observable.SelectMany in Rx
+  /// Observable.SelectMany
   let bind (f:'a -> IObservable<'b>) (o:IObservable<'a>) : IObservable<'b> =
     failwith "TODO"
 
@@ -208,7 +210,7 @@ let filteredTweetsObs' : IObservable<Tweet> =
 
 
 (**
-With little effort we were able to adapt `IObservable<'a>` to our needs. Next lets try implementing the storage of
+With a little effort, we were able to adapt `IObservable<'a>` to our needs. Next lets try implementing the storage of
 filtered tweets. Again, we can adapt the function `storeTweet` defined above to the observable model and bind the
 observable of filtered tweets to it:
 *)
@@ -228,13 +230,13 @@ let storedTeetsObs' : IObservable<unit> =
   |> Observable.mapAsync storeTweet
 
 (**
-Overall, both solutions are succinct and composable and can ultimately be a matter of preference. Some things to consider
-are the push vs. pull semantics. On the one hand, tweets are pushed based - the consumer has no control over their generation.
-On the other hand, the program at hand will process the tweets on its own terms regardless of how quickly they are being generated.
-Moreover, the underlying Twitter API will likely utilize a request-reply protocol to retrieve batches of tweets from persistent 
-storage. As such, the distinction between push vs. pull becomes less interesting. If the underlying source is truly push-based, then
-one can buffer its output and consume it using an asynchronous sequence. If the underlying source is pull-based, then one can turn
-it into an observable sequence by first pulling, then pushing. In a real-time reactive system, notifications must be pushed 
+Overall, both solutions are succinct and composable and deciding which one to use can ultimately be a matter of preference. 
+Some things to consider are the push vs. pull semantics. On the one hand, tweets are pushed based - the consumer has no control 
+over their generation. On the other hand, the program at hand will process the tweets on its own terms regardless of how quickly 
+they are being generated. Moreover, the underlying Twitter API will likely utilize a request-reply protocol to retrieve batches of 
+tweets from persistent storage. As such, the distinction between push vs. pull becomes less interesting. If the underlying source 
+is truly push-based, then one can buffer its output and consume it using an asynchronous sequence. If the underlying source is pull-based, 
+then one can turn it into an observable sequence by first pulling, then pushing. In a real-time reactive system, notifications must be pushed 
 immediately without delay. This point however is moot since neither `IObservable<'a>` nor `Async<'a>` are well suited for 
 real-time systems.
 *)
@@ -243,9 +245,11 @@ real-time systems.
 (**
 ### Performance Considerations
 
-While an async computation obviates the need to block an OS thread for the duration of an operation, it isn't always the case
+While an asynchronous computation obviates the need to block an OS thread for the duration of an operation, it isn't always the case
 that this will improve the overall performance of an application. Note however that an async computation does not **require** a
-non-blocking operation, it simply allows for it.
+non-blocking operation, it simply allows for it. Also of note is that unlike calling `IEnumerable.MoveNext()`, consuming
+and item from an asynchronous sequence requires several allocations. Usually this is greatly outweighed by the
+benefits, it can make a difference in some scenarios.
 
 *)
 
