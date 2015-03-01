@@ -19,7 +19,11 @@ Samples & documentation
 
 [API Reference](reference/index.html) contains automatically generated documentation for all types, modules and functions in the library. 
 This includes additional brief samples on using most of the functions.
+
+[Terminology](terminology.html) a reference for some of the terminology around F# async.
  
+[AsyncSeq](library/AsyncSeq.html) contains narrative and code samples explaining asynchronous sequences.
+
 Contributing and copyright
 --------------------------
 
