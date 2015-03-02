@@ -8,9 +8,9 @@ similar to `list<'a>` with the difference being that each head and tail node or 
 in `Async`. `AsyncSeq` also bears similarity to `IObservable<'a>` with the former being pull-based and the
 latter push-based. Analogs for most operations defined for `Seq`, `List` and `IObservable` are also defined for 
 `AsyncSeq`. The power of `AsyncSeq` lies in that many of these operations also have analogs based on `Async` 
-allowing one to compose complex asynchronous workflows.
+allowing composition of complex asynchronous workflows.
 
-The `AsyncSeq` type is located in the `FSharpx.Async.dll assembly which can be loaded in F# Interactive as follows:
+The `AsyncSeq` type is located in the `FSharpx.Async.dll` assembly which can be loaded in F# Interactive as follows:
 *)
 
 #r "../../../bin/FSharpx.Async.dll"
@@ -31,16 +31,16 @@ let asyncS = asyncSeq {
 
 (**
 Another way to generate an asynchronous sequence is using the `Async.unfoldAsync` function. This
-function takes another function which can generate individual elements based on a state and 
+function accepts as an argument a function which can generate individual elements based on a state and 
 signal completion of the sequence.
 
 For example, suppose that you're writing a program which consumes the Twitter API and stores tweets
-which satisfy some criteria into a database. There are several asynchronous request-reply operations at play - 
+which satisfy some criteria into a database. There are several asynchronous request-reply interactions at play - 
 one to retrieve a batch of tweets from the Twitter API, another to determine whether a tweet satisfies some
 criteria and finally an operation to write the desired tweet to a database. 
 
 Given the type `Tweet` to represent an individual tweet, the operation to retrieve a batch of tweets can 
-be modeled with a type `int -> Async<(Tweet[] * int) option>` where the incoming `int` represents the 
+be modeled with type `int -> Async<(Tweet[] * int) option>` where the incoming `int` represents the 
 offset into the tweet stream. The asynchronous result is an `Option` which when `None` indicates the
 end of the stream, and otherwise contains the batch of retrieved tweets as well as the next offset.
 
@@ -60,10 +60,10 @@ let tweetBatches : AsyncSeq<Tweet[]> =
   AsyncSeq.unfoldAsync getTweetBatch 0
 
 (**
-The asynchronous sequence `tweetBatches` will when iterated consume the entire tweet stream.
+The asynchronous sequence `tweetBatches` will when iterated, incrementally consume the entire tweet stream.
 
 Next, suppose that the tweet filtering function makes a call to a web service which determines
-whether a particular tweet should be stored in the database. This function can be modeled with
+whether a particular tweet is of interest and should be stored in the database. This function can be modeled with
 type `Tweet -> Async<bool>`. We can flatten the `tweetBatches` sequence and then filter it as follows:
 *)
 
@@ -92,7 +92,7 @@ let storeFilteredTweets : Async<unit> =
 
 (**
 Note that the value `storeFilteredTweets` is an asynchronous computation of type `Async<unit>`. At this point,
-it is a **representation** of the workflow which consists of reading batches of tweets, filtering them and storing them
+it is a *representation* of the workflow which consists of reading batches of tweets, filtering them and storing them
 in the database. When executed, the workflow will consume the entire tweet stream. The entire workflow can be
 succinctly declared and executed as follows:
 *)
@@ -113,9 +113,9 @@ composed using familiar operations on sequences. Furthermore, it will be execute
 
 The central difference between `seq<'a>` and `AsyncSeq<'a>` two can be illustrated by introducing the notion of time. 
 Suppose that generating subsequent elements of a sequence requires an IO-bound operation. Invoking long 
-running IO-bound operations from within a `seq<'a>` will **block** the thread which calls `MoveNext` on the 
-corresponding `IEnumerator`. An `AsyncSeq` can use facilities provided by the F# `Async` type to make more efficient 
-use of system resources.
+running IO-bound operations from within a `seq<'a>` will *block* the thread which calls `MoveNext` on the 
+corresponding `IEnumerator`. An `AsyncSeq` on the other hand can use facilities provided by the F# `Async` type to make 
+more efficient use of system resources.
 *)
 
 let withTime = seq {
@@ -134,8 +134,9 @@ let withTime' = asyncSeq {
 
 (**
 When the asynchronous sequence `withTime'` is iterated, the calls to `Async.Sleep` won't block threads. Instead,
-the **continuation** of the sequence will be scheduled by a `ThreadPool` thread, while the calling thread
-will be free to perform other work. Overall, a `seq<'a>` can be viewed as a special case of an `AsyncSeq<'a>`.
+the *continuation* of the sequence will be scheduled by `Async` while the calling thread will be free to perform other work. 
+Overall, a `seq<'a>` can be viewed as a special case of an `AsyncSeq<'a>` where subsequent elements are retrieved
+in a blocking manner.
 *)
 
 
@@ -144,8 +145,8 @@ will be free to perform other work. Overall, a `seq<'a>` can be viewed as a spec
 
 Both `IObservable<'a>` and `AsyncSeq<'a>` represent collections of items and both provide similar operations
 for transformation and composition. The central difference between the two is that the former is push-based 
-and the latter is pull-based. Consumers of an `IObservable<'a>` **subscribe** to receive notifications about
-new items or completion. By contrast, consumers of an `AsyncSeq<'a>` **retrieve** subsequent items on their own
+and the latter is pull-based. Consumers of an `IObservable<'a>` *subscribe* to receive notifications about
+new items or the end of the sequence. By contrast, consumers of an `AsyncSeq<'a>` *retrieve* subsequent items on their own
 terms. Some domains are more naturally modeled with one or the other, however it is less clear which is a more
 suitable tool for a specific task. In many cases, a combination of the two provides the optimal solution and 
 restricting yourself to one, while simplifying the programming model, can lead one to view all problems as a nail.
@@ -153,7 +154,7 @@ restricting yourself to one, while simplifying the programming model, can lead o
 A more specific difference between the two is that `IObservable<'a>` subscribers have the basic type `'a -> unit` 
 and are therefore inherently synchronous and imperative. The observer can certainly make a blocking call, but this 
 can defeat the purpose of the observable sequence all together. Alternatively, the observer can spawn an operation, but
-this can break composition because one can no longer rely on the observer operation returning to determine that it has 
+this can break composition because one can no longer rely on the observer returning to determine that it has 
 completed. With the observable model however, we can model blocking operations through composition on sequences rather
 than observers.
 
@@ -190,6 +191,8 @@ module Observable =
   let bind (f:'a -> IObservable<'b>) (o:IObservable<'a>) : IObservable<'b> =
     failwith "TODO"
 
+  /// Filter an observable sequence using a predicate producing a observable
+  /// which emits a single boolean value.
   let filterObs (f:'a -> IObservable<bool>) : IObservable<'a> -> IObservable<'a> =
     bind <| fun a -> 
       f a
@@ -198,9 +201,12 @@ module Observable =
         | false -> None
       )
   
+  /// Filter an observable sequence using a predicate which returns an async
+  /// computation producing a boolean value.
   let filterAsync (f:'a -> Async<bool>) : IObservable<'a> -> IObservable<'a> =
     filterObs (f >> ofAsync)
 
+  /// Maps over an observable sequence using an async-returning function.
   let mapAsync (f:'a -> Async<'b>) : IObservable<'a> -> IObservable<'b> =
     bind (f >> ofAsync)
 
@@ -236,9 +242,14 @@ over their generation. On the other hand, the program at hand will process the t
 they are being generated. Moreover, the underlying Twitter API will likely utilize a request-reply protocol to retrieve batches of 
 tweets from persistent storage. As such, the distinction between push vs. pull becomes less interesting. If the underlying source 
 is truly push-based, then one can buffer its output and consume it using an asynchronous sequence. If the underlying source is pull-based, 
-then one can turn it into an observable sequence by first pulling, then pushing. In a real-time reactive system, notifications must be pushed 
-immediately without delay. This point however is moot since neither `IObservable<'a>` nor `Async<'a>` are well suited for 
-real-time systems.
+then one can turn it into an observable sequence by first pulling, then pushing. Note however that in a true real-time reactive system, 
+notifications must be pushed immediately without delay.
+
+Upon closer inspection, the consumption approaches between the two models aren't all too different. While `AsyncSeq` is pull based,
+it is usually consumed using an operator such as `AsyncSeq.iterAsync` as shown above. This is a function of type 
+`('a -> Async<unit>) -> AsyncSeq<'a> -> Async<unit>` where the first argument is a function `'a -> Async<unit>` which performs 
+some work on an item of the sequence and is applied repeatedly to subsequent items. In a sense, `iterAsync` *pushes* values to this 
+function. The primary difference from observers of observable sequences is the return type `Async<unit>` rather than simply `unit`.
 *)
 
 
@@ -246,7 +257,7 @@ real-time systems.
 ### Performance Considerations
 
 While an asynchronous computation obviates the need to block an OS thread for the duration of an operation, it isn't always the case
-that this will improve the overall performance of an application. Note however that an async computation does not **require** a
+that this will improve the overall performance of an application. Note however that an async computation does not *require* a
 non-blocking operation, it simply allows for it. Also of note is that unlike calling `IEnumerable.MoveNext()`, consuming
 and item from an asynchronous sequence requires several allocations. Usually this is greatly outweighed by the
 benefits, it can make a difference in some scenarios.
