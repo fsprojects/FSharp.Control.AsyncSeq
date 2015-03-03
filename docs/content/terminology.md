@@ -10,7 +10,7 @@ concepts and hopefully alleviate some confusion.
 ## Thread
 
 A thread in this scope refers to a [managed thread](https://msdn.microsoft.com/en-us/library/6kac2kdh(v=vs.110).aspx). 
-A thread is a basic unit to which an OS allocates CPU resources. A **managed** thread usually maps directly to
+A thread is a basic unit to which an OS allocates CPU resources. A *managed* thread usually maps directly to
 an OS thread, however it is possible for a CLR host to override this behavior. A thread has a corresponding context 
 consisting of a pointer to the code being executed as well as stack and register state. 
 
@@ -21,26 +21,26 @@ information about ordering.
 
 ## Context Switch
 
-A context switch occurs when the OS scheduler decides to the thread to which it allocates CPU resources.
+A context switch occurs when the OS scheduler decides to change the thread to which it allocates CPU resources.
 In order to do this, it must save the context of the thread which is giving up use of the CPU and reconstitute
 the context of the thread which is next in line. Context switches occur for a number of reasons. 
-It occurs naturally as part of preemptive scheduling - threads run for a **time slice** or **quantum** until another
+It occurs naturally as part of preemptive scheduling - threads run for a *time slice* or *quantum* until another
 thread is given a chance to run. Another reason is when a thread explicitly yields its time slice, such as with a call to
 `Thread.Sleep`.
 
 ## Synchronous vs. Asynchronous
 
 An operation is synchronous if the caller must wait for it to complete before making progress. 
-More specifically, the calling **thread** may **block** until the synchronous operation is complete. 
+More specifically, the calling *thread* may *block* until the synchronous operation is complete. 
 Note that a CPU-bound task exhibits behavior similar to blocking.
 
 An operation is asynchronous if the request to begin the operation and the result of the operation can
 be delivered through different channels. This provides a convenient mechanism to encapsulate waiting. In other words, 
 an asynchronous operations decouples the means of sending the request from the means of receiving a response. 
 
-This decoupling allows one to in turn decouple the **logical** notion of an operation from the **physical**
+This decoupling allows one to in turn decouple the *logical* notion of an operation from the *physical*
 details of how it is executed. For example, an asynchronous operation to download a web page is a single 
-logical operation. Due to its asynchronous nature however, the underlying implementation can start the 
+*logical* operation. Due to its asynchronous nature however, the underlying implementation can start the 
 operation on one thread and then deliver the completion notification through a different thread
 (such as an IO completion thread managed by the ThreadPool). In the meantime, the calling thread is free
 to perform other work. In fact, the completion notification can even be handled by the same thread
