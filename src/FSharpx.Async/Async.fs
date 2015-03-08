@@ -71,3 +71,25 @@ module AsyncExtensions =
       /// async computation to the specified function. The computation produced 
       /// by the specified function is returned.
       static member inline bind f a = async.Bind(a, f)
+
+      /// Maps over an async computation which produces a choice value
+      /// using a function which maps over Choice1Of2 and itself returns a choice. 
+      /// A value of Choice2Of2 is treated like an error and passed through.
+      static member mapChoice (f:'a -> Choice<'b, 'e>) (a:Async<Choice<'a, 'e>>) : Async<Choice<'b, 'e>> = 
+        a |> Async.map (function 
+          | Choice1Of2 a' -> f a'
+          | Choice2Of2 e -> Choice2Of2 e)
+
+      /// Binds an async computation producing a choice value to another async
+      /// computation producing a choice such that a Choice2Of2 value is passed through.
+      static member bindChoice (f:'a -> Async<Choice<'b, 'e>>) (a:Async<Choice<'a, 'e>>) : Async<Choice<'b, 'e>> = 
+        a |> Async.bind (function
+          | Choice1Of2 a' -> f a'
+          | Choice2Of2 e ->  Choice2Of2 e |> async.Return)
+
+      /// Binds an async computation producing a choice value to another async
+      /// computation producing a choice such that a Choice2Of2 value is passed through.
+      static member bindChoices (f:'a -> Async<Choice<'b, 'e2>>) (a:Async<Choice<'a, 'e1>>) : Async<Choice<'b, Choice<'e1, 'e2>>> = 
+        a |> Async.bind (function
+          | Choice1Of2 a' -> f a' |> Async.map (function Choice1Of2 b -> Choice1Of2 b | Choice2Of2 e2 -> Choice2Of2 (Choice2Of2 e2))
+          | Choice2Of2 e1 -> Choice2Of2 (Choice1Of2 e1) |> async.Return)
