@@ -61,6 +61,50 @@ module AsyncExtensions =
         let! c = c
         return a,b,c }
 
+      /// Creates an async computation which runs the provided sequence of computations and completes
+      /// when all computations in the sequence complete. Up to parallelism computations will
+      /// be in-flight at any given point in time. Error or cancellation of any computation in
+      /// the sequence causes the resulting computation to error or cancel, respectively.
+      static member ParallelIgnore (parallelism:int) (xs:seq<Async<_>>) = async {
+                
+        let sm = new SemaphoreSlim(parallelism)
+        let cde = new CountdownEvent(1)
+        let tcs = new TaskCompletionSource<unit>()
+    
+        let inline ok _ =
+          sm.Release() |> ignore
+          if (cde.Signal()) then
+            tcs.SetResult(())
+                
+        let inline err (ex:exn) =
+          tcs.SetException ex
+          sm.Release() |> ignore
+                
+        let inline cnc (ex:OperationCanceledException) =      
+          tcs.SetCanceled()
+          sm.Release() |> ignore
+
+        try
+
+          for computation in xs do
+            sm.Wait()
+            cde.AddCount(1)            
+            // the following decreases throughput 3x but avoids blocking
+            // do! sm.WaitAsync() |> Async.AwaitTask
+            Async.StartWithContinuations(computation, ok, err, cnc)                    
+      
+          if (cde.Signal()) then
+            tcs.SetResult(())
+
+          do! tcs.Task |> Async.AwaitTask
+
+        finally
+      
+          cde.Dispose()    
+          sm.Dispose()
+                          
+        }
+
       /// An async computation which does nothing.
       static member inline unit = AsyncOps.unit
 
