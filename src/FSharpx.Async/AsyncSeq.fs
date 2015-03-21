@@ -34,7 +34,7 @@ module AsyncSeq =
   /// Creates an asynchronous sequence that generates a single element and then ends
   let singleton (v:'T) : AsyncSeq<'T> = 
     async { return Cons(v, empty) }
-
+    
   /// Yields all elements of the first asynchronous sequence and then 
   /// all elements of the second asynchronous sequence.
   let rec append (seq1: AsyncSeq<'T>) (seq2: AsyncSeq<'T>) : AsyncSeq<'T> = 
@@ -280,6 +280,15 @@ module AsyncSeq =
   let filter f (input : AsyncSeq<'T>) =
     filterAsync (f >> async.Return) input
     
+  /// Generates an async sequence using the specified generator function.
+  let rec unfoldAsync (f:'State -> Async<('T * 'State) option>) (s:'State) : AsyncSeq<'T> = asyncSeq {        
+    let! r = f s
+    match r with
+    | Some (a,s) -> 
+      yield a
+      yield! unfoldAsync f s
+    | None -> () }
+
   // --------------------------------------------------------------------------
   // Converting from/to synchronous sequences or IObservables
 
@@ -410,8 +419,19 @@ module AsyncSeq =
 
   // --------------------------------------------------------------------------
 
+  /// Threads a state through the mapping over an async sequence using an async function.
+  let rec threadStateAsync (f:'s -> 'a -> Async<'b * 's>) (st:'s) (s:AsyncSeq<'a>) : AsyncSeq<'b> = asyncSeq {
+    let! s = s
+    match s with
+    | Nil -> ()
+    | Cons(a,tl) ->       
+      let! b,st' = f st a
+      yield b
+      yield! threadStateAsync f st' tl }
+
   /// Combines two asynchronous sequences into a sequence of pairs. 
   /// The values from sequences are retrieved in parallel. 
+  /// The resulting sequence stops when either of the argument sequences stop.
   let rec zip (input1 : AsyncSeq<'T1>) (input2 : AsyncSeq<'T2>) : AsyncSeq<_> = async {
     let! ft = input1 |> Async.StartChild
     let! s = input2
@@ -420,6 +440,52 @@ module AsyncSeq =
     | Cons(hf, tf), Cons(hs, ts) ->
         return Cons( (hf, hs), zip tf ts)
     | _ -> return Nil }
+
+  /// Combines two asynchronous sequences using the specified function.
+  /// The values from sequences are retrieved in parallel.
+  /// The resulting sequence stops when either of the argument sequences stop.
+  let rec zipWithAsync (z:'a -> 'b -> Async<'c>) (a:AsyncSeq<'a>) (b:AsyncSeq<'b>) : AsyncSeq<'c> = async {
+    let! a,b = Async.Parallel(a, b)    
+    match a,b with 
+    | Cons(a, atl), Cons(b, btl) ->
+      let! c = z a b
+      return Cons(c, zipWithAsync z atl btl)
+    | _ -> return Nil }
+
+  /// Combines two asynchronous sequences using the specified function.
+  /// The values from sequences are retrieved in parallel.
+  /// The resulting sequence stops when either of the argument sequences stop.
+  let inline zipWith (z:'a -> 'b -> 'c) (a:AsyncSeq<'a>) (b:AsyncSeq<'b>) : AsyncSeq<'c> =
+    zipWithAsync (fun a b -> z a b |> async.Return) a b
+
+  /// Combines two asynchronous sequences using the specified function to which it also passes the index.
+  /// The values from sequences are retrieved in parallel.
+  /// The resulting sequence stops when either of the argument sequences stop.
+  let inline zipWithIndexAsync (f:int -> 'a -> Async<'b>) (s:AsyncSeq<'a>) : AsyncSeq<'b> =
+    threadStateAsync (fun i a -> f i a |> Async.map (fun b -> b,i + 1)) 0 s        
+
+  /// Feeds an async sequence of values into an async sequence of async functions.
+  let inline applyAsync (fs:AsyncSeq<'a -> Async<'b>>) (s:AsyncSeq<'a>) : AsyncSeq<'b> =
+    zipWithAsync ((|>)) s fs
+
+  /// Feeds an async sequence of values into an async sequence of functions.
+  let inline apply (fs:AsyncSeq<'a -> 'b>) (s:AsyncSeq<'a>) : AsyncSeq<'b> =
+    zipWith ((|>)) s fs
+
+  /// Returns an async computation which iterates the async sequence for
+  /// its side-effects.
+  let inline runAsync (s:AsyncSeq<unit>) : Async<unit> =
+    s |> iter id
+
+  /// Iterates an async sequence using the specified function until it returns false.
+  let inline iterWhileAsync (f:'a -> Async<bool>) (s:AsyncSeq<'a>) : Async<unit> =    
+    let rec sink() = asyncSeq {
+      let c = new AsyncResultCell<_>()
+      yield (fun a -> f a |> Async.map (fun f -> c.RegisterResult(AsyncOk f, true)))
+      let! flag = c.AsyncResult
+      if flag then yield! sink()
+      else () }
+    applyAsync (sink()) s |> runAsync
 
   /// Returns elements from an asynchronous sequence while the specified 
   /// predicate holds. The predicate is evaluated asynchronously.
@@ -489,15 +555,6 @@ module AsyncSeq =
     |> fold (fun arr a -> a::arr) []
     |> Async.map List.rev
 
-  /// Generates an async sequence using the specified generator function.
-  let rec unfoldAsync (f:'State -> Async<('T * 'State) option>) (s:'State) : AsyncSeq<'T> = asyncSeq {        
-    let! r = f s
-    match r with
-    | Some (a,s) -> 
-      yield a
-      yield! unfoldAsync f s
-    | None -> () }
-
   /// Flattens an AsyncSeq of sequences.
   let rec concatSeq (input:AsyncSeq<#seq<'T>>) : AsyncSeq<'T> = asyncSeq {
     let! v = input
@@ -526,7 +583,6 @@ module AsyncSeq =
 
     left
 
-
   /// Buffer items from the async sequence into buffers of a specified size.
   /// The last buffer returned may be less than the specified buffer size.
   let rec bufferByCount (bufferSize:int) (s:AsyncSeq<'T>) : AsyncSeq<'T[]> = 
@@ -549,7 +605,8 @@ module AsyncSeq =
             return! loop tl            
       }
       return! loop s
-    }    
+    }          
+    
 
 
 [<AutoOpen>]
