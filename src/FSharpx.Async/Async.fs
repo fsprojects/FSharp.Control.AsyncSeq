@@ -5,6 +5,7 @@
 namespace FSharpx.Control
 open System
 open System.Threading
+open System.Threading.Tasks
 
 // ----------------------------------------------------------------------------
 
@@ -93,3 +94,24 @@ module AsyncExtensions =
         a |> Async.bind (function
           | Choice1Of2 a' -> f a' |> Async.map (function Choice1Of2 b -> Choice1Of2 b | Choice2Of2 e2 -> Choice2Of2 (Choice2Of2 e2))
           | Choice2Of2 e1 -> Choice2Of2 (Choice1Of2 e1) |> async.Return)
+
+      /// Creates a computation which produces a tuple consiting of the value produces by the first
+      /// argument computation to complete and a handle to the other computation. The second computation
+      /// to complete is memoized.
+      static member internal chooseBoth (a:Async<'a>) (b:Async<'a>) : Async<'a * Async<'a>> =
+        Async.FromContinuations <| fun (ok,err,cnc) ->
+          let state = ref 0            
+          let tcs = TaskCompletionSource<'a>()            
+          let inline ok a =
+            if (Interlocked.CompareExchange(state, 1, 0) = 0) then
+              ok (a, tcs.Task |> Async.AwaitTask)
+            else
+              tcs.SetResult a
+          let inline err (ex:exn) =
+            if (Interlocked.CompareExchange(state, 1, 0) = 0) then err ex
+            else tcs.SetException ex
+          let inline cnc ex =
+            if (Interlocked.CompareExchange(state, 1, 0) = 0) then cnc ex
+            else tcs.SetCanceled()
+          Async.StartWithContinuations(a, ok, err, cnc)
+          Async.StartWithContinuations(b, ok, err, cnc)

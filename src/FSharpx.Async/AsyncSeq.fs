@@ -605,7 +605,23 @@ module AsyncSeq =
             return! loop tl            
       }
       return! loop s
-    }          
+    }
+
+  /// Merges two async sequences into an async sequence non-deterministically.
+  let rec merge (a:AsyncSeq<'a>) (b:AsyncSeq<'a>) : AsyncSeq<'a> = async {
+    let! one,other = Async.chooseBoth a b
+    match one with
+    | Nil -> return! other
+    | Cons(hd,tl) ->
+      return Cons(hd, merge tl other) }
+
+  /// Merges all specified async sequences into an async sequence non-deterministically.
+  let rec mergeAll (ss:AsyncSeq<'a> list) : AsyncSeq<'a> =
+    match ss with
+    | [] -> empty
+    | [s] -> s
+    | [a;b] -> merge a b
+    | hd::tl -> merge hd (mergeAll tl)
     
 
 

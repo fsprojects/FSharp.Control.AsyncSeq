@@ -60,7 +60,6 @@ let ``AsyncSeq.interleave``() =
   let s1 = AsyncSeq.ofSeq ["a";"b";"c"]
   let s2 = AsyncSeq.ofSeq [1;2;3]
   let merged = AsyncSeq.interleave s1 s2 |> AsyncSeq.toList |> Async.RunSynchronously
-  printfn "%A" merged
   Assert.True([Choice1Of2 "a" ; Choice2Of2 1 ; Choice1Of2 "b" ; Choice2Of2 2 ; Choice1Of2 "c" ; Choice2Of2 3] = merged)
 
 
@@ -180,6 +179,27 @@ let ``AsyncSeq.filterAsync``() =
   Assert.True(EQ expected actual)
 
 
+[<Test>]
+let ``AsyncSeq.merge``() =
+  let ls1 = [1;2;3;4;5]
+  let ls2 = [6;7;8;9;10]
+  let actual = AsyncSeq.merge (AsyncSeq.ofSeq ls1) (AsyncSeq.ofSeq ls2) |> AsyncSeq.toList |> Async.RunSynchronously |> Set.ofList
+  let expected = ls1 @ ls2 |> Set.ofList
+  Assert.True((expected = actual))
+
+
+[<Test>]
+let ``AsyncSeq.merge should be fair``() =  
+  let s1 = asyncSeq {
+    do! Async.Sleep 10
+    yield 1
+  }
+  let s2 = asyncSeq {
+    yield 2
+  }
+  let actual = AsyncSeq.merge s1 s2
+  let expected = [2;1] |> AsyncSeq.ofSeq
+  Assert.True(EQ expected actual)
 
 
 
