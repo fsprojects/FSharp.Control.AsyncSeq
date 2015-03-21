@@ -1,8 +1,8 @@
-﻿module FSharpx.Control.Utils
+﻿module internal FSharpx.Control.Utils
 
 let inline konst a _ = a
 
-module internal Choice =
+module Choice =
   
   /// Maps over the left result type.
   let mapl (f:'a -> 'b) = function
