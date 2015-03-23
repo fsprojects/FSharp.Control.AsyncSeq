@@ -465,11 +465,11 @@ module AsyncSeq =
     threadStateAsync (fun i a -> f i a |> Async.map (fun b -> b,i + 1)) 0 s        
 
   /// Feeds an async sequence of values into an async sequence of async functions.
-  let inline applyAsync (fs:AsyncSeq<'a -> Async<'b>>) (s:AsyncSeq<'a>) : AsyncSeq<'b> =
+  let inline zappAsync (fs:AsyncSeq<'a -> Async<'b>>) (s:AsyncSeq<'a>) : AsyncSeq<'b> =
     zipWithAsync ((|>)) s fs
 
   /// Feeds an async sequence of values into an async sequence of functions.
-  let inline apply (fs:AsyncSeq<'a -> 'b>) (s:AsyncSeq<'a>) : AsyncSeq<'b> =
+  let inline zapp (fs:AsyncSeq<'a -> 'b>) (s:AsyncSeq<'a>) : AsyncSeq<'b> =
     zipWith ((|>)) s fs
 
   /// Returns an async computation which iterates the async sequence for
@@ -485,7 +485,7 @@ module AsyncSeq =
       let! flag = c.AsyncResult
       if flag then yield! sink()
       else () }
-    applyAsync (sink()) s |> runAsync
+    zappAsync (sink()) s |> runAsync
 
   /// Returns elements from an asynchronous sequence while the specified 
   /// predicate holds. The predicate is evaluated asynchronously.
