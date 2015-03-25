@@ -35,6 +35,10 @@ module AsyncSeq =
   let singleton (v:'T) : AsyncSeq<'T> = 
     async { return Cons(v, empty) }
     
+  /// Creates an async sequence which repeats the specified value indefinitely.
+  let rec replicate (v:'T) : AsyncSeq<'T> =
+    Cons(v, async.Delay <| fun() -> replicate v) |> async.Return    
+
   /// Yields all elements of the first asynchronous sequence and then 
   /// all elements of the second asynchronous sequence.
   let rec append (seq1: AsyncSeq<'T>) (seq2: AsyncSeq<'T>) : AsyncSeq<'T> = 

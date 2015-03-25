@@ -201,6 +201,11 @@ let ``AsyncSeq.merge should be fair``() =
   let expected = [2;1] |> AsyncSeq.ofSeq
   Assert.True(EQ expected actual)
 
-
-
+[<Test>]
+let ``AsyncSeq.replicate``() =
+  let c = 10
+  let x = "hello"
+  let actual = AsyncSeq.replicate x |> AsyncSeq.take c
+  let expected = List.replicate c x |> AsyncSeq.ofSeq
+  Assert.True(EQ expected actual)
 
