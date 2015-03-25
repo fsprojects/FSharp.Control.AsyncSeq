@@ -209,3 +209,31 @@ let ``AsyncSeq.replicate``() =
   let expected = List.replicate c x |> AsyncSeq.ofSeq
   Assert.True(EQ expected actual)
 
+[<Test>]
+let ``AsyncSeq.traverseOptionAsync``() =
+  let seen = ResizeArray<_>()
+  let s = [1;2;3;4;5] |> AsyncSeq.ofSeq
+  let f i =
+    seen.Add i
+    if i < 2 then Some i |> async.Return
+    else None |> async.Return
+  let r = AsyncSeq.traverseOptionAsync f s |> Async.RunSynchronously
+  match r with
+  | Some _ -> Assert.Fail()
+  | None -> Assert.True(([1;2] = (seen |> List.ofSeq)))
+
+[<Test>]
+let ``AsyncSeq.traverseChoiceAsync``() =
+  let seen = ResizeArray<_>()
+  let s = [1;2;3;4;5] |> AsyncSeq.ofSeq
+  let f i =
+    seen.Add i
+    if i < 2 then Choice1Of2 i |> async.Return
+    else Choice2Of2 "oh no" |> async.Return
+  let r = AsyncSeq.traverseChoiceAsync f s |> Async.RunSynchronously
+  match r with
+  | Choice1Of2 _ -> Assert.Fail()
+  | Choice2Of2 e -> 
+    Assert.AreEqual("oh no", e)
+    Assert.True(([1;2] = (seen |> List.ofSeq)))
+  

@@ -7,6 +7,7 @@ namespace FSharpx.Control
 open System
 open System.Threading
 open System.IO
+open FSharpx.Control.Utils
 
 // ----------------------------------------------------------------------------
 
@@ -473,6 +474,34 @@ module AsyncSeq =
   /// Feeds an async sequence of values into an async sequence of functions.
   let inline zapp (fs:AsyncSeq<'a -> 'b>) (s:AsyncSeq<'a>) : AsyncSeq<'b> =
     zipWith ((|>)) s fs
+
+  /// Traverses an async sequence an applies to specified function such that if None is returned the traversal short-circuits
+  /// and None is returned as the result. Otherwise, the entire sequence is traversed and the result returned as Some.
+  let rec traverseOptionAsync (f:'a -> Async<'b option>) (s:AsyncSeq<'a>) : Async<AsyncSeq<'b> option> = async {
+    let! s = s
+    match s with
+    | Nil -> return Some (Nil |> async.Return)
+    | Cons(a,tl) ->
+      let! b = f a
+      match b with
+      | Some b -> 
+        return! traverseOptionAsync f tl |> Async.map (Option.map (fun tl -> Cons(b, tl) |> async.Return))
+      | None -> 
+        return None }
+
+  /// Traverses an async sequence an applies to specified function such that if Choice2Of2 is returned the traversal short-circuits
+  /// and Choice2Of2 is returned as the result. Otherwise, the entire sequence is traversed and the result returned as Choice1Of2.
+  let rec traverseChoiceAsync (f:'a -> Async<Choice<'b, 'e>>) (s:AsyncSeq<'a>) : Async<Choice<AsyncSeq<'b>, 'e>> = async {
+    let! s = s
+    match s with
+    | Nil -> return Choice1Of2 (Nil |> async.Return)
+    | Cons(a,tl) ->
+      let! b = f a
+      match b with
+      | Choice1Of2 b -> 
+        return! traverseChoiceAsync f tl |> Async.map (Choice.mapl (fun tl -> Cons(b, tl) |> async.Return))
+      | Choice2Of2 e -> 
+        return Choice2Of2 e }
 
   /// Returns an async computation which iterates the async sequence for
   /// its side-effects.
