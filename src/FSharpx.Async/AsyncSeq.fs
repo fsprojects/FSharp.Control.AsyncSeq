@@ -35,8 +35,15 @@ module AsyncSeq =
   let singleton (v:'T) : AsyncSeq<'T> = 
     async { return Cons(v, empty) }
     
+  /// Generates an async sequence using the specified generator function.
+  let rec unfoldAsync (f:'State -> Async<('T * 'State) option>) (s:'State) : AsyncSeq<'T> = 
+    f s
+    |> Async.map (function
+      | Some (a,s) -> Cons(a, unfoldAsync f s)
+      | None -> Nil)
+
   /// Creates an async sequence which repeats the specified value indefinitely.
-  let rec replicate (v:'T) : AsyncSeq<'T> =
+  let rec replicate (v:'T) : AsyncSeq<'T> =    
     Cons(v, async.Delay <| fun() -> replicate v) |> async.Return    
 
   /// Yields all elements of the first asynchronous sequence and then 
@@ -284,15 +291,6 @@ module AsyncSeq =
   let filter f (input : AsyncSeq<'T>) =
     filterAsync (f >> async.Return) input
     
-  /// Generates an async sequence using the specified generator function.
-  let rec unfoldAsync (f:'State -> Async<('T * 'State) option>) (s:'State) : AsyncSeq<'T> = asyncSeq {        
-    let! r = f s
-    match r with
-    | Some (a,s) -> 
-      yield a
-      yield! unfoldAsync f s
-    | None -> () }
-
   // --------------------------------------------------------------------------
   // Converting from/to synchronous sequences or IObservables
 
