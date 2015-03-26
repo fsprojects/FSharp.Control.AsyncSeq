@@ -7,6 +7,7 @@ namespace FSharpx.Control
 open System
 open System.Threading
 open System.IO
+open FSharpx.Control.Utils
 
 // ----------------------------------------------------------------------------
 
@@ -34,6 +35,17 @@ module AsyncSeq =
   /// Creates an asynchronous sequence that generates a single element and then ends
   let singleton (v:'T) : AsyncSeq<'T> = 
     async { return Cons(v, empty) }
+    
+  /// Generates an async sequence using the specified generator function.
+  let rec unfoldAsync (f:'State -> Async<('T * 'State) option>) (s:'State) : AsyncSeq<'T> = 
+    f s
+    |> Async.map (function
+      | Some (a,s) -> Cons(a, unfoldAsync f s)
+      | None -> Nil)
+
+  /// Creates an async sequence which repeats the specified value indefinitely.
+  let rec replicate (v:'T) : AsyncSeq<'T> =    
+    Cons(v, async.Delay <| fun() -> replicate v) |> async.Return    
 
   /// Yields all elements of the first asynchronous sequence and then 
   /// all elements of the second asynchronous sequence.
@@ -413,8 +425,19 @@ module AsyncSeq =
 
   // --------------------------------------------------------------------------
 
+  /// Threads a state through the mapping over an async sequence using an async function.
+  let rec threadStateAsync (f:'s -> 'a -> Async<'b * 's>) (st:'s) (s:AsyncSeq<'a>) : AsyncSeq<'b> = asyncSeq {
+    let! s = s
+    match s with
+    | Nil -> ()
+    | Cons(a,tl) ->       
+      let! b,st' = f st a
+      yield b
+      yield! threadStateAsync f st' tl }
+
   /// Combines two asynchronous sequences into a sequence of pairs. 
   /// The values from sequences are retrieved in parallel. 
+  /// The resulting sequence stops when either of the argument sequences stop.
   let rec zip (input1 : AsyncSeq<'T1>) (input2 : AsyncSeq<'T2>) : AsyncSeq<_> = async {
     let! ft = input1 |> Async.StartChild
     let! s = input2
@@ -423,6 +446,65 @@ module AsyncSeq =
     | Cons(hf, tf), Cons(hs, ts) ->
         return Cons( (hf, hs), zip tf ts)
     | _ -> return Nil }
+
+  /// Combines two asynchronous sequences using the specified function.
+  /// The values from sequences are retrieved in parallel.
+  /// The resulting sequence stops when either of the argument sequences stop.
+  let rec zipWithAsync (z:'a -> 'b -> Async<'c>) (a:AsyncSeq<'a>) (b:AsyncSeq<'b>) : AsyncSeq<'c> = async {
+    let! a,b = Async.Parallel(a, b)    
+    match a,b with 
+    | Cons(a, atl), Cons(b, btl) ->
+      let! c = z a b
+      return Cons(c, zipWithAsync z atl btl)
+    | _ -> return Nil }
+
+  /// Combines two asynchronous sequences using the specified function.
+  /// The values from sequences are retrieved in parallel.
+  /// The resulting sequence stops when either of the argument sequences stop.
+  let inline zipWith (z:'a -> 'b -> 'c) (a:AsyncSeq<'a>) (b:AsyncSeq<'b>) : AsyncSeq<'c> =
+    zipWithAsync (fun a b -> z a b |> async.Return) a b
+
+  /// Combines two asynchronous sequences using the specified function to which it also passes the index.
+  /// The values from sequences are retrieved in parallel.
+  /// The resulting sequence stops when either of the argument sequences stop.
+  let inline zipWithIndexAsync (f:int -> 'a -> Async<'b>) (s:AsyncSeq<'a>) : AsyncSeq<'b> =
+    threadStateAsync (fun i a -> f i a |> Async.map (fun b -> b,i + 1)) 0 s        
+
+  /// Feeds an async sequence of values into an async sequence of async functions.
+  let inline zappAsync (fs:AsyncSeq<'a -> Async<'b>>) (s:AsyncSeq<'a>) : AsyncSeq<'b> =
+    zipWithAsync ((|>)) s fs
+
+  /// Feeds an async sequence of values into an async sequence of functions.
+  let inline zapp (fs:AsyncSeq<'a -> 'b>) (s:AsyncSeq<'a>) : AsyncSeq<'b> =
+    zipWith ((|>)) s fs
+
+  /// Traverses an async sequence an applies to specified function such that if None is returned the traversal short-circuits
+  /// and None is returned as the result. Otherwise, the entire sequence is traversed and the result returned as Some.
+  let rec traverseOptionAsync (f:'a -> Async<'b option>) (s:AsyncSeq<'a>) : Async<AsyncSeq<'b> option> = async {
+    let! s = s
+    match s with
+    | Nil -> return Some (Nil |> async.Return)
+    | Cons(a,tl) ->
+      let! b = f a
+      match b with
+      | Some b -> 
+        return! traverseOptionAsync f tl |> Async.map (Option.map (fun tl -> Cons(b, tl) |> async.Return))
+      | None -> 
+        return None }
+
+  /// Traverses an async sequence an applies to specified function such that if Choice2Of2 is returned the traversal short-circuits
+  /// and Choice2Of2 is returned as the result. Otherwise, the entire sequence is traversed and the result returned as Choice1Of2.
+  let rec traverseChoiceAsync (f:'a -> Async<Choice<'b, 'e>>) (s:AsyncSeq<'a>) : Async<Choice<AsyncSeq<'b>, 'e>> = async {
+    let! s = s
+    match s with
+    | Nil -> return Choice1Of2 (Nil |> async.Return)
+    | Cons(a,tl) ->
+      let! b = f a
+      match b with
+      | Choice1Of2 b -> 
+        return! traverseChoiceAsync f tl |> Async.map (Choice.mapl (fun tl -> Cons(b, tl) |> async.Return))
+      | Choice2Of2 e -> 
+        return Choice2Of2 e }
 
   /// Returns elements from an asynchronous sequence while the specified 
   /// predicate holds. The predicate is evaluated asynchronously.
@@ -492,15 +574,6 @@ module AsyncSeq =
     |> fold (fun arr a -> a::arr) []
     |> Async.map List.rev
 
-  /// Generates an async sequence using the specified generator function.
-  let rec unfoldAsync (f:'State -> Async<('T * 'State) option>) (s:'State) : AsyncSeq<'T> = asyncSeq {        
-    let! r = f s
-    match r with
-    | Some (a,s) -> 
-      yield a
-      yield! unfoldAsync f s
-    | None -> () }
-
   /// Flattens an AsyncSeq of sequences.
   let rec concatSeq (input:AsyncSeq<#seq<'T>>) : AsyncSeq<'T> = asyncSeq {
     let! v = input
@@ -529,7 +602,6 @@ module AsyncSeq =
 
     left
 
-
   /// Buffer items from the async sequence into buffers of a specified size.
   /// The last buffer returned may be less than the specified buffer size.
   let rec bufferByCount (bufferSize:int) (s:AsyncSeq<'T>) : AsyncSeq<'T[]> = 
@@ -552,7 +624,24 @@ module AsyncSeq =
             return! loop tl            
       }
       return! loop s
-    }    
+    }
+
+  /// Merges two async sequences into an async sequence non-deterministically.
+  let rec merge (a:AsyncSeq<'a>) (b:AsyncSeq<'a>) : AsyncSeq<'a> = async {
+    let! one,other = Async.chooseBoth a b
+    match one with
+    | Nil -> return! other
+    | Cons(hd,tl) ->
+      return Cons(hd, merge tl other) }
+
+  /// Merges all specified async sequences into an async sequence non-deterministically.
+  let rec mergeAll (ss:AsyncSeq<'a> list) : AsyncSeq<'a> =
+    match ss with
+    | [] -> empty
+    | [s] -> s
+    | [a;b] -> merge a b
+    | hd::tl -> merge hd (mergeAll tl)
+    
 
 
 [<AutoOpen>]
