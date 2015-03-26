@@ -238,3 +238,15 @@ let ``AsyncSeq.toBlockingSeq does not hung forever and rethrows exception``() =
       failwith "error"
   }
   Assert.Throws<AggregateException>(fun _ -> s |> AsyncSeq.toBlockingSeq |> Seq.toList |> ignore) |> ignore
+
+
+[<Test>]
+let ``AsyncSeq.distinctUntilChangedWithAsync``() =  
+  let ls = [1;1;2;2;3;4;5;1]
+  let s = ls |> AsyncSeq.ofSeq
+  let c a b =
+    if a = b then true |> async.Return
+    else false |> async.Return
+  let actual = s |> AsyncSeq.distinctUntilChangedWithAsync c
+  let expected = [1;2;3;4;5;1] |> AsyncSeq.ofSeq
+  Assert.True(EQ expected actual)

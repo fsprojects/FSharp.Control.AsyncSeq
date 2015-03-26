@@ -641,6 +641,36 @@ module AsyncSeq =
     | [s] -> s
     | [a;b] -> merge a b
     | hd::tl -> merge hd (mergeAll tl)
+      
+  /// Returns an async sequence which contains no contiguous duplicate elements based on the specified comparison function.
+  let distinctUntilChangedWithAsync (f:'a -> 'a -> Async<bool>) (s:AsyncSeq<'a>) : AsyncSeq<'a> =     
+    
+    // return the head, if any, then the tail passing the previous element
+    let rec head s =
+      s |> Async.map (function
+        | Nil -> Nil
+        | Cons(a,tl) -> Cons(a, tail a tl))
+    
+    // returns the tail comparing with the previous element
+    and tail prev s =
+      s |> Async.bind (function
+        | Nil -> Nil |> async.Return
+        | Cons(a,tl) ->
+          f a prev 
+            |> Async.bind (function
+            | true -> tail a tl
+            | false -> Cons(a, tail a tl) |> async.Return))
+
+    head s
+
+  /// Returns an async sequence which contains no contiguous duplicate elements based on the specified comparison function.
+  let distinctUntilChangedWith (f:'a -> 'a -> bool) (s:AsyncSeq<'a>) : AsyncSeq<'a> =
+    distinctUntilChangedWithAsync (fun a b -> f a b |> async.Return) s
+
+  /// Returns an async sequence which contains no contiguous duplicate elements.
+  let distinctUntilChanged (s:AsyncSeq<'a>) : AsyncSeq<'a> =
+    distinctUntilChangedWith ((=)) s
+        
     
 
 
