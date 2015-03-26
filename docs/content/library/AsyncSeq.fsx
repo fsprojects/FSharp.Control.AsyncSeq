@@ -10,10 +10,10 @@ latter push-based. Analogs for most operations defined for `Seq`, `List` and `IO
 `AsyncSeq`. The power of `AsyncSeq` lies in that many of these operations also have analogs based on `Async` 
 allowing composition of complex asynchronous workflows.
 
-The `AsyncSeq` type is located in the `FSharpx.Async.dll` assembly which can be loaded in F# Interactive as follows:
+The `AsyncSeq` type is located in the `AsyncSeq.dll` assembly which can be loaded in F# Interactive as follows:
 *)
 
-#r "../../../bin/FSharpx.Async.dll"
+#r "../../../bin/AsyncSeq.dll"
 open FSharpx.Control
 
 

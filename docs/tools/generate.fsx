@@ -4,19 +4,19 @@
 // --------------------------------------------------------------------------------------
 
 // Binaries that have XML documentation (in a corresponding generated XML file)
-let referenceBinaries = [ "FSharpx.Async.dll" ]
+let referenceBinaries = [ "AsyncSeq.dll" ]
 // Web site location for the generated documentation
-let website = "/FSharpx.Async"
+let website = "/AsyncSeq"
 
-let githubLink = "http://github.com/fsprojects/FSharpx.Async"
+let githubLink = "http://github.com/fsprojects/AsyncSeq"
 
 // Specify more information about your project
 let info =
-  [ "project-name", "FSharpx.Async"
+  [ "project-name", "AsyncSeq"
     "project-author", "Thomas Petricek, David Thomas, Steffen Forkmann"
     "project-summary", "Async extensions for F#"
     "project-github", githubLink
-    "project-nuget", "http://nuget.org/packages/FSharpx.Async" ]
+    "project-nuget", "http://nuget.org/packages/AsyncSeq" ]
 
 // --------------------------------------------------------------------------------------
 // For typical project, no changes are needed below

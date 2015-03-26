@@ -1,14 +1,14 @@
-FSharpx.Async
+AsyncSeq
 =============
 
-FSharpx.Async is a collection of asynchronous programming utilities for F#.
+AsyncSeq is a collection of asynchronous programming utilities for F#.
 
 <div class="row">
   <div class="span1"></div>
   <div class="span6">
     <div class="well well-small" id="nuget">
-      The FSharpx.Async library can be <a href="https://nuget.org/packages/FSharpx.Async">installed from NuGet</a>:
-      <pre>PM> Install-Package FSharpx.Async</pre>
+      The AsyncSeq library can be <a href="https://nuget.org/packages/AsyncSeq">installed from NuGet</a>:
+      <pre>PM> Install-Package AsyncSeq</pre>
     </div>
   </div>
   <div class="span1"></div>
@@ -36,8 +36,8 @@ The library is available under Apache 2.0 license, which allows modification and
 redistribution for both commercial and non-commercial purposes. For more information see the 
 [License file][license] in the GitHub repository. 
 
-  [content]: https://github.com/fsprojects/FSharpx.Async/tree/master/docs/content
-  [gh]: https://github.com/fsprojects/FSharpx.Async
-  [issues]: https://github.com/fsprojects/FSharpx.Async/issues
-  [readme]: https://github.com/fsprojects/FSharpx.Async/blob/master/README.md
-  [license]: https://github.com/fsprojects/FSharpx.Async/blob/master/LICENSE.txt
+  [content]: https://github.com/fsprojects/AsyncSeq/tree/master/docs/content
+  [gh]: https://github.com/fsprojects/AsyncSeq
+  [issues]: https://github.com/fsprojects/AsyncSeq/issues
+  [readme]: https://github.com/fsprojects/AsyncSeq/blob/master/README.md
+  [license]: https://github.com/fsprojects/AsyncSeq/blob/master/LICENSE.txt

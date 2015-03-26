@@ -1,4 +1,4 @@
-module FSharpx.Async.Tests.AsyncTest
+module AsyncSeq.Tests.AsyncTest
 
 open System
 open System.Threading

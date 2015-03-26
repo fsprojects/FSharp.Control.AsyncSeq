@@ -1,14 +1,14 @@
-﻿type project
+type project
 owners
     Thomas Petricek, David Thomas, Ryan Riley, Steffen Forkmann
 authors
     Thomas Petricek, David Thomas, Ryan Riley, Steffen Forkmann
 projectUrl
-    http://fsprojects.github.io/FSharpx.Async/
+    http://fsprojects.github.io/AsyncSeq/
 iconUrl
-    http://fsprojects.github.io/FSharpx.Async/img/logo.png
+    http://fsprojects.github.io/AsyncSeq/img/logo.png
 licenseUrl
-    http://fsprojects.github.io/FSharpx.Async/license.html
+    http://fsprojects.github.io/AsyncSeq/license.html
 requireLicenseAcceptance
     false
 copyright
