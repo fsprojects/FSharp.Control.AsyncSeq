@@ -1,5 +1,5 @@
 Terminology
-====
+===========
 
 Terminology is frequently a source of confusion. Often times, terms have different 
 meanings depending on the context, different terms are used to refer to the same 

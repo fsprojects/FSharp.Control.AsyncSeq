@@ -1,4 +1,4 @@
-namespace System
+﻿namespace System
 open System.Reflection
 
 [<assembly: AssemblyTitleAttribute("AsyncSeq")>]

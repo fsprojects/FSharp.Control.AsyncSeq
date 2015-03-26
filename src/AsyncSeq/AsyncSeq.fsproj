@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
@@ -79,8 +79,6 @@
     <Compile Include="AsyncStreamReader.fsi" />
     <Compile Include="AsyncStreamReader.fs" />
     <Compile Include="AsyncSeq.fs" />
-    <Compile Include="AsyncStream.fs" />
-    <Compile Include="Async.IO.fs" />
     <None Include="paket.references" />
     <None Include="paket.template" />
   </ItemGroup>

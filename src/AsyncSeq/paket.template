@@ -1,8 +1,8 @@
 type project
 owners
-    Thomas Petricek, David Thomas, Ryan Riley, Steffen Forkmann
+    Tomasz Petricek, David Thomas, Ryan Riley, Steffen Forkmann
 authors
-    Thomas Petricek, David Thomas, Ryan Riley, Steffen Forkmann
+    Tomasz Petricek, David Thomas, Ryan Riley, Steffen Forkmann
 projectUrl
     http://fsprojects.github.io/AsyncSeq/
 iconUrl
