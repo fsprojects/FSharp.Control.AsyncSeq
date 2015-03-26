@@ -100,14 +100,6 @@ let ``AsyncSeq.zipWithAsync``() =
 
 
 [<Test>]
-let ``AsyncSeq.iterWhileAsync``() =  
-  let s = [1;2;3;4;5] |> AsyncSeq.ofSeq
-  let seen = ResizeArray<_>()
-  s |> AsyncSeq.iterWhileAsync (fun x -> seen.Add(x) ; (x < 3) |> async.Return) |> Async.RunSynchronously
-  Assert.True((seen |> List.ofSeq = [1;2;3]))
-
-
-[<Test>]
 let ``AsyncSeq.skipWhileAsync``() =  
   let ls = [1;2;3;4;5]
   let p i = i <= 2

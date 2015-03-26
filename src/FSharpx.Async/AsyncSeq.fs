@@ -506,21 +506,6 @@ module AsyncSeq =
       | Choice2Of2 e -> 
         return Choice2Of2 e }
 
-  /// Returns an async computation which iterates the async sequence for
-  /// its side-effects.
-  let inline runAsync (s:AsyncSeq<unit>) : Async<unit> =
-    s |> iter id
-
-  /// Iterates an async sequence using the specified function until it returns false.
-  let inline iterWhileAsync (f:'a -> Async<bool>) (s:AsyncSeq<'a>) : Async<unit> =    
-    let rec sink() = asyncSeq {
-      let c = new AsyncResultCell<_>()
-      yield (fun a -> f a |> Async.map (fun f -> c.RegisterResult(AsyncOk f, true)))
-      let! flag = c.AsyncResult
-      if flag then yield! sink()
-      else () }
-    zappAsync (sink()) s |> runAsync
-
   /// Returns elements from an asynchronous sequence while the specified 
   /// predicate holds. The predicate is evaluated asynchronously.
   let rec takeWhileAsync p (input : AsyncSeq<'T>) : AsyncSeq<_> = async {
