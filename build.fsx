@@ -32,11 +32,11 @@ let project = "AsyncSeq"
 
 // Short summary of the project
 // (used as description in AssemblyInfo and as a short summary for NuGet package)
-let summary = "Async extensions for F#"
+let summary = "Asynchronous sequences for F#"
 
 // Longer description of the project
 // (used as a description for NuGet package; line breaks are automatically cleaned up)
-let description = "Async extensions for F#"
+let description = "Asynchronous sequences for F#"
 
 // List of author names (for NuGet package)
 let authors = [ "Tomasz Petricek"; "David Thomas"; "Ryan Riley"; "Steffen Forkmann" ]

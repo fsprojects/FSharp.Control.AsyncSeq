@@ -16,6 +16,6 @@ copyright
 tags
     F#, async, fsharpx
 summary
-    Async extensions for F#
+    Asynchronous sequences for F#
 description
-    Async extensions for F#
+    Asynchronous sequences for F#
