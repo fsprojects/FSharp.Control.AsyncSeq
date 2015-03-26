@@ -518,6 +518,18 @@ module AsyncSeq =
         else return Nil
     | Nil -> return Nil }
 
+  /// Returns elements from the argument async sequence until the specified signal completes or
+  /// the sequences completes.
+  let rec takeUntil (signal:Async<unit>) (s:AsyncSeq<'a>) : AsyncSeq<'a> =
+    Async.chooseBoth (signal |> Async.map Choice1Of2) (s |> Async.map Choice2Of2)
+    |> Async.map (fun (first,second) ->
+      match first with
+      | Choice1Of2 _ -> Nil
+      | Choice2Of2 Nil -> Nil
+      | Choice2Of2 (Cons(a,tl)) ->        
+        let signal = second |> Async.map (function Choice1Of2 x -> x | _ -> failwith "unexpected state")
+        Cons(a, takeUntil signal tl))
+
   /// Skips elements from an asynchronous sequence while the specified 
   /// predicate holds and then returns the rest of the sequence. The 
   /// predicate is evaluated asynchronously.
@@ -530,10 +542,21 @@ module AsyncSeq =
         else return v
     | Nil -> return Nil }
 
+  /// Skips elements from an async sequence until the specified signal completes.
+  let rec skipUntil (signal:Async<unit>) (s:AsyncSeq<'a>) : AsyncSeq<'a> =
+    Async.chooseBoth (signal |> Async.map Choice1Of2) (s |> Async.map Choice2Of2)
+    |> Async.bind (fun (first,second) ->
+      match first with
+      | Choice1Of2 _ -> second |> Async.map (function Choice2Of2 tl -> tl | _ -> failwith "unexpected state")
+      | Choice2Of2 Nil -> Nil |> async.Return
+      | Choice2Of2 (Cons(_,tl)) -> 
+        let signal = second |> Async.map (function Choice1Of2 x -> x | _ -> failwith "unexpected state")
+        skipUntil signal tl)
+
   /// Returns elements from an asynchronous sequence while the specified 
   /// predicate holds. The predicate is evaluated synchronously.
   let rec takeWhile p (input : AsyncSeq<'T>) = 
-    takeWhileAsync (p >> async.Return) input
+    takeWhileAsync (p >> async.Return) input  
 
   /// Skips elements from an asynchronous sequence while the specified 
   /// predicate holds and then returns the rest of the sequence. The 

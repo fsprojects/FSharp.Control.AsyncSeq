@@ -250,3 +250,34 @@ let ``AsyncSeq.distinctUntilChangedWithAsync``() =
   let actual = s |> AsyncSeq.distinctUntilChangedWithAsync c
   let expected = [1;2;3;4;5;1] |> AsyncSeq.ofSeq
   Assert.True(EQ expected actual)
+
+
+[<Test>]
+let ``AsyncSeq.takeUntil should complete immediately with completed signal``() =  
+  let s = asyncSeq {
+    do! Async.Sleep 10
+    yield 1
+    yield 2
+  }
+  let actual = AsyncSeq.takeUntil Async.unit s
+  Assert.True(EQ AsyncSeq.empty actual)
+
+
+[<Test>]
+let ``AsyncSeq.takeUntil should take entire sequence with never signal``() =
+  let expected = [1;2;3;4] |> AsyncSeq.ofSeq
+  let actual = expected |> AsyncSeq.takeUntil Async.never
+  Assert.True(EQ expected actual)
+
+
+[<Test>]
+let ``AsyncSeq.skipUntil should not skip with completed signal``() =
+  let expected = [1;2;3;4] |> AsyncSeq.ofSeq
+  let actual = expected |> AsyncSeq.skipUntil Async.unit
+  Assert.True(EQ expected actual)
+
+
+[<Test>]
+let ``AsyncSeq.skipUntil should skip everything with never signal``() =
+  let actual = [1;2;3;4] |> AsyncSeq.ofSeq |> AsyncSeq.skipUntil Async.never
+  Assert.True(EQ AsyncSeq.empty actual)

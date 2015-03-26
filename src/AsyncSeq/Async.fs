@@ -12,6 +12,8 @@ open System.Threading.Tasks
 module AsyncOps =
       
   let unit : Async<unit> = async.Return()
+
+  let never : Async<unit> = Async.Sleep -1
  
 
 [<AutoOpen>]
@@ -105,8 +107,11 @@ module AsyncExtensions =
                           
         }
 
-      /// An async computation which does nothing.
+      /// An async computation which does nothing and completes immediatly.
       static member inline unit = AsyncOps.unit
+
+      /// An async computation which does nothing and never completes.
+      static member inline never = AsyncOps.never
 
       /// Creates an async computation which maps a function f over the 
       /// value produced by the specified asynchronous computation.
