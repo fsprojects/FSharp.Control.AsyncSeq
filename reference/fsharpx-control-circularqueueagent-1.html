@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8"/>
-    <title>CircularQueueAgent<'T> - FSharpx.Async</title>
+    <title>CircularQueueAgent<'T> - AsyncSeq</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <meta name="description" content=""/>
     <meta name="author" content="Thomas Petricek, David Thomas, Steffen Forkmann"/>
@@ -12,8 +12,8 @@
     <script src="https://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.1/js/bootstrap.min.js"></script>
     <link href="https://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.1/css/bootstrap-combined.min.css" rel="stylesheet"/>
 
-    <link type="text/css" rel="stylesheet" href="/FSharpx.Async/content/style.css" />
-    <script type="text/javascript" src="/FSharpx.Async/content/tips.js"></script>
+    <link type="text/css" rel="stylesheet" href="/AsyncSeq/content/style.css" />
+    <script type="text/javascript" src="/AsyncSeq/content/tips.js"></script>
     <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
     <!--[if lt IE 9]>
       <script src="https://html5shim.googlecode.com/svn/trunk/html5.js"></script>
@@ -24,9 +24,9 @@
       <div class="masthead">
         <ul class="nav nav-pills pull-right">
           <li><a href="http://fsharp.org">fsharp.org</a></li>
-          <li><a href="http://github.com/fsprojects/FSharpx.Async">github page</a></li>
+          <li><a href="http://github.com/fsprojects/AsyncSeq">github page</a></li>
         </ul>
-        <h3 class="muted"><a href="/FSharpx.Async/index.html">FSharpx.Async</a></h3>
+        <h3 class="muted"><a href="/AsyncSeq/index.html">AsyncSeq</a></h3>
       </div>
       <hr />
       <div class="row">
@@ -51,15 +51,15 @@ size of the buffer.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '179', 179)" onmouseover="showTip(event, '179', 179)">
+          <code onmouseout="hideTip(event, '204', 204)" onmouseover="showTip(event, '204', 204)">
             new(maxLength)
           </code>
-          <div class="tip" id="179">
+          <div class="tip" id="204">
             <strong>Signature:</strong> maxLength:int -&gt; CircularQueueAgent&lt;&#39;T&gt;<br />
                       </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharpx.Async/tree/master/src/FSharpx.Async/CircularQueueAgent.fs#L22-22" class="github-link">
+            <a href="http://github.com/fsprojects/AsyncSeq/tree/master/src/AsyncSeq/CircularQueueAgent.fs#L22-22" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -77,15 +77,15 @@ size of the buffer.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '180', 180)" onmouseover="showTip(event, '180', 180)">
+          <code onmouseout="hideTip(event, '205', 205)" onmouseover="showTip(event, '205', 205)">
             AsyncDequeue(count, timeout)
           </code>
-          <div class="tip" id="180">
+          <div class="tip" id="205">
             <strong>Signature:</strong> (count:int * timeout:int option) -&gt; Async&lt;&#39;T []&gt;<br />
                       </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharpx.Async/tree/master/src/FSharpx.Async/CircularQueueAgent.fs#L114-114" class="github-link">
+            <a href="http://github.com/fsprojects/AsyncSeq/tree/master/src/AsyncSeq/CircularQueueAgent.fs#L114-114" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -97,15 +97,15 @@ in the queue, the operation will block until items are added.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '181', 181)" onmouseover="showTip(event, '181', 181)">
+          <code onmouseout="hideTip(event, '206', 206)" onmouseover="showTip(event, '206', 206)">
             AsyncEnqueue(value, timeout)
           </code>
-          <div class="tip" id="181">
+          <div class="tip" id="206">
             <strong>Signature:</strong> (value:&#39;T [] * timeout:int option) -&gt; Async&lt;unit&gt;<br />
                       </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharpx.Async/tree/master/src/FSharpx.Async/CircularQueueAgent.fs#L91-91" class="github-link">
+            <a href="http://github.com/fsprojects/AsyncSeq/tree/master/src/AsyncSeq/CircularQueueAgent.fs#L91-91" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -118,15 +118,15 @@ will block until some items are removed.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '182', 182)" onmouseover="showTip(event, '182', 182)">
+          <code onmouseout="hideTip(event, '207', 207)" onmouseover="showTip(event, '207', 207)">
             AsyncEnqueue(segment, timeout)
           </code>
-          <div class="tip" id="182">
+          <div class="tip" id="207">
             <strong>Signature:</strong> (segment:ArraySegment&lt;&#39;T&gt; * timeout:int option) -&gt; Async&lt;unit&gt;<br />
                       </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharpx.Async/tree/master/src/FSharpx.Async/CircularQueueAgent.fs#L85-85" class="github-link">
+            <a href="http://github.com/fsprojects/AsyncSeq/tree/master/src/AsyncSeq/CircularQueueAgent.fs#L85-85" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -139,15 +139,15 @@ will block until some items are removed.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '183', 183)" onmouseover="showTip(event, '183', 183)">
+          <code onmouseout="hideTip(event, '208', 208)" onmouseover="showTip(event, '208', 208)">
             AsyncEnqueue(...)
           </code>
-          <div class="tip" id="183">
+          <div class="tip" id="208">
             <strong>Signature:</strong> (value:&#39;T [] * offset:int * count:int * timeout:int option) -&gt; Async&lt;unit&gt;<br />
                       </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharpx.Async/tree/master/src/FSharpx.Async/CircularQueueAgent.fs#L79-79" class="github-link">
+            <a href="http://github.com/fsprojects/AsyncSeq/tree/master/src/AsyncSeq/CircularQueueAgent.fs#L79-79" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -160,15 +160,15 @@ will block until some items are removed.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '184', 184)" onmouseover="showTip(event, '184', 184)">
+          <code onmouseout="hideTip(event, '209', 209)" onmouseover="showTip(event, '209', 209)">
             Count
           </code>
-          <div class="tip" id="184">
+          <div class="tip" id="209">
             <strong>Signature:</strong> int<br />
                       </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharpx.Async/tree/master/src/FSharpx.Async/CircularQueueAgent.fs#L124-124" class="github-link">
+            <a href="http://github.com/fsprojects/AsyncSeq/tree/master/src/AsyncSeq/CircularQueueAgent.fs#L124-124" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -179,15 +179,15 @@ will block until some items are removed.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '185', 185)" onmouseover="showTip(event, '185', 185)">
+          <code onmouseout="hideTip(event, '210', 210)" onmouseover="showTip(event, '210', 210)">
             Dequeue(count, timeout)
           </code>
-          <div class="tip" id="185">
+          <div class="tip" id="210">
             <strong>Signature:</strong> (count:int * timeout:int option) -&gt; &#39;T []<br />
                       </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharpx.Async/tree/master/src/FSharpx.Async/CircularQueueAgent.fs#L120-120" class="github-link">
+            <a href="http://github.com/fsprojects/AsyncSeq/tree/master/src/AsyncSeq/CircularQueueAgent.fs#L120-120" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -200,15 +200,15 @@ This method blocks until value is available!</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '186', 186)" onmouseover="showTip(event, '186', 186)">
+          <code onmouseout="hideTip(event, '211', 211)" onmouseover="showTip(event, '211', 211)">
             Enqueue(value)
           </code>
-          <div class="tip" id="186">
+          <div class="tip" id="211">
             <strong>Signature:</strong> (value:&#39;T []) -&gt; unit<br />
                       </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharpx.Async/tree/master/src/FSharpx.Async/CircularQueueAgent.fs#L109-109" class="github-link">
+            <a href="http://github.com/fsprojects/AsyncSeq/tree/master/src/AsyncSeq/CircularQueueAgent.fs#L109-109" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -221,15 +221,15 @@ will block until some items are removed.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '187', 187)" onmouseover="showTip(event, '187', 187)">
+          <code onmouseout="hideTip(event, '212', 212)" onmouseover="showTip(event, '212', 212)">
             Enqueue(segment)
           </code>
-          <div class="tip" id="187">
+          <div class="tip" id="212">
             <strong>Signature:</strong> segment:ArraySegment&lt;&#39;T&gt; -&gt; unit<br />
                       </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharpx.Async/tree/master/src/FSharpx.Async/CircularQueueAgent.fs#L103-103" class="github-link">
+            <a href="http://github.com/fsprojects/AsyncSeq/tree/master/src/AsyncSeq/CircularQueueAgent.fs#L103-103" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -242,15 +242,15 @@ will block until some items are removed.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '188', 188)" onmouseover="showTip(event, '188', 188)">
+          <code onmouseout="hideTip(event, '213', 213)" onmouseover="showTip(event, '213', 213)">
             Enqueue(value, offset, count)
           </code>
-          <div class="tip" id="188">
+          <div class="tip" id="213">
             <strong>Signature:</strong> (value:&#39;T [] * offset:int * count:int) -&gt; unit<br />
                       </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharpx.Async/tree/master/src/FSharpx.Async/CircularQueueAgent.fs#L97-97" class="github-link">
+            <a href="http://github.com/fsprojects/AsyncSeq/tree/master/src/AsyncSeq/CircularQueueAgent.fs#L97-97" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -265,22 +265,24 @@ will block until some items are removed.</p>
 
         </div>
         <div class="span3">
-          <img src="/FSharpx.Async/img/logo.png" alt="F# Project" style="width:150px;margin:10px" />  
+          <img src="/AsyncSeq/img/logo.png" alt="F# Project" style="width:150px;margin:10px" />  
           <ul class="nav nav-list" id="menu" style="margin-top: 20px;">
-            <li class="nav-header">FSharpx.Async</li>
-            <li><a href="/FSharpx.Async/index.html">Home page</a></li>
+            <li class="nav-header">AsyncSeq</li>
+            <li><a href="/AsyncSeq/index.html">Home page</a></li>
             <li class="divider"></li>
-            <li><a href="http://nuget.org/packages/FSharpx.Async">Get Library via NuGet</a></li>
-            <li><a href="http://github.com/fsprojects/FSharpx.Async">Source Code on GitHub</a></li>
-            <li><a href="/FSharpx.Async/license.html">License</a></li>
-            <li><a href="/FSharpx.Async/release-notes.html">Release Notes</a></li>
-
+            <li><a href="http://nuget.org/packages/AsyncSeq">Get Library via NuGet</a></li>
+            <li><a href="http://github.com/fsprojects/AsyncSeq">Source Code on GitHub</a></li>
+            <li><a href="/AsyncSeq/license.html">License</a></li>
+            <li><a href="/AsyncSeq/release-notes.html">Release Notes</a></li>
+            <li class="divider"></li>
             <li class="nav-header">Documentation</li>
-            <li><a href="/FSharpx.Async/reference/index.html">API Reference</a></li>
+            <li><a href="/AsyncSeq/terminology.html">Terminology</a></li>
+            <li><a href="/AsyncSeq/library/AsyncSeq.html">AsyncSeq</a></li>           
+            <li><a href="/AsyncSeq/reference/index.html">API Reference</a></li>
           </ul>
         </div>
       </div>
     </div>
-    <a href="http://github.com/fsprojects/FSharpx.Async"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_gray_6d6d6d.png" alt="Fork me on GitHub"/></a>
+    <a href="http://github.com/fsprojects/AsyncSeq"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_gray_6d6d6d.png" alt="Fork me on GitHub"/></a>
   </body>
   </html>

@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <title>Terminology
+</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta name="description" content="Async extensions for F#"/>
+    <meta name="author" content="Thomas Petricek, David Thomas, Steffen Forkmann"/>
+
+    <script src="https://code.jquery.com/jquery-1.8.0.js"></script>
+    <script src="https://code.jquery.com/ui/1.8.23/jquery-ui.js"></script>
+    <script src="https://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.1/js/bootstrap.min.js"></script>
+    <link href="https://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.1/css/bootstrap-combined.min.css" rel="stylesheet"/>
+
+    <link type="text/css" rel="stylesheet" href="/AsyncSeq/content/style.css" />
+    <script type="text/javascript" src="/AsyncSeq/content/tips.js"></script>
+    <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="https://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="container">
+      <div class="masthead">
+        <ul class="nav nav-pills pull-right">
+          <li><a href="http://fsharp.org">fsharp.org</a></li>
+          <li><a href="http://github.com/fsprojects/AsyncSeq">github page</a></li>
+        </ul>
+        <h3 class="muted"><a href="/AsyncSeq/index.html">AsyncSeq</a></h3>
+      </div>
+      <hr />
+      <div class="row">
+        <div class="span9" id="main">
+          
+<h1><a name="Terminology" class="anchor" href="#Terminology">Terminology</a></h1>
+
+<p>Terminology is frequently a source of confusion. Often times, terms have different 
+meanings depending on the context, different terms are used to refer to the same 
+concept, and finally not everyone agrees on any of this. The terminology described here 
+is scoped to F# and the .NET Framework. The goal is to briefly introduce high level
+concepts and hopefully alleviate some confusion.</p>
+
+<h2><a name="Thread" class="anchor" href="#Thread">Thread</a></h2>
+
+<p>A thread in this scope refers to a <a href="https://msdn.microsoft.com/en-us/library/6kac2kdh(v=vs.110).aspx">managed thread</a>. 
+A thread is a basic unit to which an OS allocates CPU resources. A <em>managed</em> thread usually maps directly to
+an OS thread, however it is possible for a CLR host to override this behavior. A thread has a corresponding context 
+consisting of a pointer to the code being executed as well as stack and register state.</p>
+
+<p>A thread can be viewed as a total ordering of instructions. Instructions executed by different threads
+are partially ordered by causality relationships - in some cases its impossible to tell which ran
+before the other. Much of the difficulty in multi-threaded code can be attributed to this lack of 
+information about ordering.</p>
+
+<h2><a name="Context-Switch" class="anchor" href="#Context-Switch">Context Switch</a></h2>
+
+<p>A context switch occurs when the OS scheduler decides to change the thread to which it allocates CPU resources.
+In order to do this, it must save the context of the thread which is giving up use of the CPU and reconstitute
+the context of the thread which is next in line. Context switches occur for a number of reasons. 
+It occurs naturally as part of preemptive scheduling - threads run for a <em>time slice</em> or <em>quantum</em> until another
+thread is given a chance to run. Another reason is when a thread explicitly yields its time slice, such as with a call to
+<code>Thread.Sleep</code>.</p>
+
+<h2><a name="Synchronous-vs-Asynchronous" class="anchor" href="#Synchronous-vs-Asynchronous">Synchronous vs. Asynchronous</a></h2>
+
+<p>An operation is synchronous if the caller must wait for it to complete before making progress. 
+More specifically, the calling <em>thread</em> may <em>block</em> until the synchronous operation is complete. 
+Note that a CPU-bound task exhibits behavior similar to blocking.</p>
+
+<p>An operation is asynchronous if the request to begin the operation and the result of the operation can
+be delivered through different channels. This provides a convenient mechanism to encapsulate waiting. In other words, 
+an asynchronous operations decouples the means of sending the request from the means of receiving a response.</p>
+
+<p>This decoupling allows one to in turn decouple the <em>logical</em> notion of an operation from the <em>physical</em>
+details of how it is executed. For example, an asynchronous operation to download a web page is a single 
+<em>logical</em> operation. Due to its asynchronous nature however, the underlying implementation can start the 
+operation on one thread and then deliver the completion notification through a different thread
+(such as an IO completion thread managed by the ThreadPool). In the meantime, the calling thread is free
+to perform other work. In fact, the completion notification can even be handled by the same thread
+as the calling thread.</p>
+
+<p>By contrast, a synchronous operation will use the calling thread's context to deliver the completion
+notification. If the work to be performed is small enough, this can be very efficient. If however the 
+operation is long running, the OS will perform a context switch to allow other threads to proceed, and 
+then another context switch to resume the calling thread. Note that synchrony can be viewed as a special
+form of asynchrony.</p>
+
+<p>In F# asynchrony is represented by the <code>Async</code> type.</p>
+
+<h2><a name="Blocking-vs-Non-blocking" class="anchor" href="#Blocking-vs-Non-blocking">Blocking vs. Non-blocking</a></h2>
+
+<p>A thread is <a href="http://www.albahari.com/threading/part2.aspx#_Blocking">blocked</a> when its execution
+is paused as it waits for some operation to complete (receiving IO, a lock being released, etc). Once the operation completes, 
+the OS will schedule the thread to resume and continue where it left off.</p>
+
+<p>A non-blocking operation is one that does not prevent the calling thread from making progress. In other words,
+once an non-blocking operation is started, the calling thread is free to perform other work, such as starting
+yet another operation.</p>
+
+<p>It is important to remember that when a thread is blocked, the CPU and the system as a whole can still do other work. 
+The issue with blocking is that the specific thread which is blocked can't do other work and the OS must 
+use resources for thread's context so that it can context switch continue where it left off once the operating being waited on is complete. 
+Since managed threads have a relatively high cost (by default, a .NET thread is allocated 1mb of stack space), this can 
+lead to inefficiencies. Non-blocking operations allow one to make more efficient use of system resources.</p>
+
+<h2><a name="Further-Reading" class="anchor" href="#Further-Reading">Further Reading</a></h2>
+
+<ul>
+<li><a href="https://msdn.microsoft.com/en-us/library/3e8s7xdd%28v=vs.110%29.aspx">Managed Threading</a></li>
+<li><a href="http://www.albahari.com/threading/">Threading in C#</a></li>
+<li><a href="http://www.amazon.com/Art-Multiprocessor-Programming-Revised-Reprint/dp/0123973376/">The Art of Multiprocessor Programming</a></li>
+</ul>
+
+
+        </div>
+        <div class="span3">
+          <img src="/AsyncSeq/img/logo.png" alt="F# Project" style="width:150px;margin:10px" />  
+          <ul class="nav nav-list" id="menu" style="margin-top: 20px;">
+            <li class="nav-header">AsyncSeq</li>
+            <li><a href="/AsyncSeq/index.html">Home page</a></li>
+            <li class="divider"></li>
+            <li><a href="http://nuget.org/packages/AsyncSeq">Get Library via NuGet</a></li>
+            <li><a href="http://github.com/fsprojects/AsyncSeq">Source Code on GitHub</a></li>
+            <li><a href="/AsyncSeq/license.html">License</a></li>
+            <li><a href="/AsyncSeq/release-notes.html">Release Notes</a></li>
+            <li class="divider"></li>
+            <li class="nav-header">Documentation</li>
+            <li><a href="/AsyncSeq/terminology.html">Terminology</a></li>
+            <li><a href="/AsyncSeq/library/AsyncSeq.html">AsyncSeq</a></li>           
+            <li><a href="/AsyncSeq/reference/index.html">API Reference</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <a href="http://github.com/fsprojects/AsyncSeq"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_gray_6d6d6d.png" alt="Fork me on GitHub"/></a>
+  </body>
+  </html>

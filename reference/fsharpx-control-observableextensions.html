@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8"/>
-    <title>ObservableExtensions - FSharpx.Async</title>
+    <title>ObservableExtensions - AsyncSeq</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <meta name="description" content=""/>
     <meta name="author" content="Thomas Petricek, David Thomas, Steffen Forkmann"/>
@@ -12,8 +12,8 @@
     <script src="https://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.1/js/bootstrap.min.js"></script>
     <link href="https://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.1/css/bootstrap-combined.min.css" rel="stylesheet"/>
 
-    <link type="text/css" rel="stylesheet" href="/FSharpx.Async/content/style.css" />
-    <script type="text/javascript" src="/FSharpx.Async/content/tips.js"></script>
+    <link type="text/css" rel="stylesheet" href="/AsyncSeq/content/style.css" />
+    <script type="text/javascript" src="/AsyncSeq/content/tips.js"></script>
     <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
     <!--[if lt IE 9]>
       <script src="https://html5shim.googlecode.com/svn/trunk/html5.js"></script>
@@ -24,9 +24,9 @@
       <div class="masthead">
         <ul class="nav nav-pills pull-right">
           <li><a href="http://fsharp.org">fsharp.org</a></li>
-          <li><a href="http://github.com/fsprojects/FSharpx.Async">github page</a></li>
+          <li><a href="http://github.com/fsprojects/AsyncSeq">github page</a></li>
         </ul>
-        <h3 class="muted"><a href="/FSharpx.Async/index.html">FSharpx.Async</a></h3>
+        <h3 class="muted"><a href="/AsyncSeq/index.html">AsyncSeq</a></h3>
       </div>
       <hr />
       <div class="row">
@@ -47,15 +47,15 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '191', 191)" onmouseover="showTip(event, '191', 191)">
+          <code onmouseout="hideTip(event, '216', 216)" onmouseover="showTip(event, '216', 216)">
             BufferWithTimeOrCount(...)
           </code>
-          <div class="tip" id="191">
+          <div class="tip" id="216">
             <strong>Signature:</strong> (source:IObservable&lt;&#39;TSource&gt; * timeSpan:TimeSpan * count:int) -&gt; IObservable&lt;seq&lt;&#39;TSource&gt;&gt;<br />
                           <strong>Type parameters:</strong> 'TSource          </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharpx.Async/tree/master/src/FSharpx.Async/Observable.fs#L456-456" class="github-link">
+            <a href="http://github.com/fsprojects/AsyncSeq/tree/master/src/AsyncSeq/Observable.fs#L456-456" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -65,15 +65,15 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '192', 192)" onmouseover="showTip(event, '192', 192)">
+          <code onmouseout="hideTip(event, '217', 217)" onmouseover="showTip(event, '217', 217)">
             CombineLatest(left, right, selector)
           </code>
-          <div class="tip" id="192">
+          <div class="tip" id="217">
             <strong>Signature:</strong> (left:IObservable&lt;&#39;TLeft&gt; * right:IObservable&lt;&#39;TRight&gt; * selector:Func&lt;&#39;TLeft,&#39;TRight,&#39;TResult&gt;) -&gt; IObservable&lt;&#39;TResult&gt;<br />
                           <strong>Type parameters:</strong> 'TLeft, 'TRight, 'TResult          </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharpx.Async/tree/master/src/FSharpx.Async/Observable.fs#L442-442" class="github-link">
+            <a href="http://github.com/fsprojects/AsyncSeq/tree/master/src/AsyncSeq/Observable.fs#L442-442" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -83,15 +83,15 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '193', 193)" onmouseover="showTip(event, '193', 193)">
+          <code onmouseout="hideTip(event, '218', 218)" onmouseover="showTip(event, '218', 218)">
             Delay(source, milliseconds)
           </code>
-          <div class="tip" id="193">
+          <div class="tip" id="218">
             <strong>Signature:</strong> (source:IObservable&lt;&#39;TSource&gt; * milliseconds:int) -&gt; IObservable&lt;&#39;TSource&gt;<br />
                           <strong>Type parameters:</strong> 'TSource          </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharpx.Async/tree/master/src/FSharpx.Async/Observable.fs#L452-452" class="github-link">
+            <a href="http://github.com/fsprojects/AsyncSeq/tree/master/src/AsyncSeq/Observable.fs#L452-452" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -101,15 +101,15 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '194', 194)" onmouseover="showTip(event, '194', 194)">
+          <code onmouseout="hideTip(event, '219', 219)" onmouseover="showTip(event, '219', 219)">
             Merge(source, sources)
           </code>
-          <div class="tip" id="194">
+          <div class="tip" id="219">
             <strong>Signature:</strong> (source:IObservable&lt;&#39;TSource&gt; * sources:IObservable&lt;&#39;TSource&gt; []) -&gt; IObservable&lt;&#39;TSource&gt;<br />
                           <strong>Type parameters:</strong> 'TSource          </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharpx.Async/tree/master/src/FSharpx.Async/Observable.fs#L434-434" class="github-link">
+            <a href="http://github.com/fsprojects/AsyncSeq/tree/master/src/AsyncSeq/Observable.fs#L434-434" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -119,15 +119,15 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '195', 195)" onmouseover="showTip(event, '195', 195)">
+          <code onmouseout="hideTip(event, '220', 220)" onmouseover="showTip(event, '220', 220)">
             Merge(source, sources)
           </code>
-          <div class="tip" id="195">
+          <div class="tip" id="220">
             <strong>Signature:</strong> (source:IObservable&lt;&#39;TSource&gt; * sources:IEnumerable&lt;IObservable&lt;&#39;TSource&gt;&gt;) -&gt; IObservable&lt;&#39;TSource&gt;<br />
                           <strong>Type parameters:</strong> 'TSource          </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharpx.Async/tree/master/src/FSharpx.Async/Observable.fs#L424-424" class="github-link">
+            <a href="http://github.com/fsprojects/AsyncSeq/tree/master/src/AsyncSeq/Observable.fs#L424-424" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -137,15 +137,15 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '196', 196)" onmouseover="showTip(event, '196', 196)">
+          <code onmouseout="hideTip(event, '221', 221)" onmouseover="showTip(event, '221', 221)">
             Scan(source, seed, f)
           </code>
-          <div class="tip" id="196">
+          <div class="tip" id="221">
             <strong>Signature:</strong> (source:IObservable&lt;&#39;TSource&gt; * seed:&#39;TAccumulate * f:Func&lt;&#39;TAccumulate,&#39;TSource,&#39;TAccumulate&gt;) -&gt; IObservable&lt;&#39;TAccumulate&gt;<br />
                           <strong>Type parameters:</strong> 'TSource, 'TAccumulate          </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharpx.Async/tree/master/src/FSharpx.Async/Observable.fs#L438-438" class="github-link">
+            <a href="http://github.com/fsprojects/AsyncSeq/tree/master/src/AsyncSeq/Observable.fs#L438-438" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -155,15 +155,15 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '197', 197)" onmouseover="showTip(event, '197', 197)">
+          <code onmouseout="hideTip(event, '222', 222)" onmouseover="showTip(event, '222', 222)">
             Select(source, selector)
           </code>
-          <div class="tip" id="197">
+          <div class="tip" id="222">
             <strong>Signature:</strong> (source:IObservable&lt;&#39;TSource&gt; * selector:Func&lt;&#39;TSource,int,&#39;TResult&gt;) -&gt; IObservable&lt;&#39;TResult&gt;<br />
                           <strong>Type parameters:</strong> 'TSource, 'TResult          </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharpx.Async/tree/master/src/FSharpx.Async/Observable.fs#L399-399" class="github-link">
+            <a href="http://github.com/fsprojects/AsyncSeq/tree/master/src/AsyncSeq/Observable.fs#L399-399" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -173,15 +173,15 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '198', 198)" onmouseover="showTip(event, '198', 198)">
+          <code onmouseout="hideTip(event, '223', 223)" onmouseover="showTip(event, '223', 223)">
             Select(source, selector)
           </code>
-          <div class="tip" id="198">
+          <div class="tip" id="223">
             <strong>Signature:</strong> (source:IObservable&lt;&#39;TSource&gt; * selector:Func&lt;&#39;TSource,&#39;TResult&gt;) -&gt; IObservable&lt;&#39;TResult&gt;<br />
                           <strong>Type parameters:</strong> 'TSource, 'TResult          </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharpx.Async/tree/master/src/FSharpx.Async/Observable.fs#L395-395" class="github-link">
+            <a href="http://github.com/fsprojects/AsyncSeq/tree/master/src/AsyncSeq/Observable.fs#L395-395" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -191,15 +191,15 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '199', 199)" onmouseover="showTip(event, '199', 199)">
+          <code onmouseout="hideTip(event, '224', 224)" onmouseover="showTip(event, '224', 224)">
             SelectMany(...)
           </code>
-          <div class="tip" id="199">
+          <div class="tip" id="224">
             <strong>Signature:</strong> (source:IObservable&lt;&#39;TSource&gt; * collectionSelector:Func&lt;&#39;TSource,IEnumerable&lt;&#39;TCollection&gt;&gt; * resultSelector:Func&lt;&#39;TSource,&#39;TCollection,&#39;TResult&gt;) -&gt; IObservable&lt;&#39;TResult&gt;<br />
                           <strong>Type parameters:</strong> 'TSource, 'TCollection, 'TResult          </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharpx.Async/tree/master/src/FSharpx.Async/Observable.fs#L403-403" class="github-link">
+            <a href="http://github.com/fsprojects/AsyncSeq/tree/master/src/AsyncSeq/Observable.fs#L403-403" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -209,15 +209,15 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '200', 200)" onmouseover="showTip(event, '200', 200)">
+          <code onmouseout="hideTip(event, '225', 225)" onmouseover="showTip(event, '225', 225)">
             Subscribe(source, action)
           </code>
-          <div class="tip" id="200">
+          <div class="tip" id="225">
             <strong>Signature:</strong> (source:IObservable&lt;&#39;TSource&gt; * action:Action&lt;&#39;TSource&gt;) -&gt; IDisposable<br />
                           <strong>Type parameters:</strong> 'TSource          </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharpx.Async/tree/master/src/FSharpx.Async/Observable.fs#L387-387" class="github-link">
+            <a href="http://github.com/fsprojects/AsyncSeq/tree/master/src/AsyncSeq/Observable.fs#L387-387" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -227,15 +227,15 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '201', 201)" onmouseover="showTip(event, '201', 201)">
+          <code onmouseout="hideTip(event, '226', 226)" onmouseover="showTip(event, '226', 226)">
             TakeWhile(source, f)
           </code>
-          <div class="tip" id="201">
+          <div class="tip" id="226">
             <strong>Signature:</strong> (source:IObservable&lt;&#39;TSource&gt; * f:Func&lt;&#39;TSource,bool&gt;) -&gt; IObservable&lt;&#39;TSource&gt;<br />
                           <strong>Type parameters:</strong> 'TSource          </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharpx.Async/tree/master/src/FSharpx.Async/Observable.fs#L420-420" class="github-link">
+            <a href="http://github.com/fsprojects/AsyncSeq/tree/master/src/AsyncSeq/Observable.fs#L420-420" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -245,15 +245,15 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '202', 202)" onmouseover="showTip(event, '202', 202)">
+          <code onmouseout="hideTip(event, '227', 227)" onmouseover="showTip(event, '227', 227)">
             Throttle(source, dueTime)
           </code>
-          <div class="tip" id="202">
+          <div class="tip" id="227">
             <strong>Signature:</strong> (source:IObservable&lt;&#39;TSource&gt; * dueTime:TimeSpan) -&gt; IObservable&lt;&#39;TSource&gt;<br />
                           <strong>Type parameters:</strong> 'TSource          </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharpx.Async/tree/master/src/FSharpx.Async/Observable.fs#L460-460" class="github-link">
+            <a href="http://github.com/fsprojects/AsyncSeq/tree/master/src/AsyncSeq/Observable.fs#L460-460" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -263,15 +263,15 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '203', 203)" onmouseover="showTip(event, '203', 203)">
+          <code onmouseout="hideTip(event, '228', 228)" onmouseover="showTip(event, '228', 228)">
             ToObservable(source)
           </code>
-          <div class="tip" id="203">
+          <div class="tip" id="228">
             <strong>Signature:</strong> source:IEnumerable&lt;&#39;TItem&gt; -&gt; IObservable&lt;&#39;TItem&gt;<br />
                           <strong>Type parameters:</strong> 'TItem          </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharpx.Async/tree/master/src/FSharpx.Async/Observable.fs#L383-383" class="github-link">
+            <a href="http://github.com/fsprojects/AsyncSeq/tree/master/src/AsyncSeq/Observable.fs#L383-383" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -281,15 +281,15 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '204', 204)" onmouseover="showTip(event, '204', 204)">
+          <code onmouseout="hideTip(event, '229', 229)" onmouseover="showTip(event, '229', 229)">
             Where(source, predicate)
           </code>
-          <div class="tip" id="204">
+          <div class="tip" id="229">
             <strong>Signature:</strong> (source:IObservable&lt;&#39;TSource&gt; * predicate:Func&lt;&#39;TSource,bool&gt;) -&gt; IObservable&lt;&#39;TSource&gt;<br />
                           <strong>Type parameters:</strong> 'TSource          </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharpx.Async/tree/master/src/FSharpx.Async/Observable.fs#L391-391" class="github-link">
+            <a href="http://github.com/fsprojects/AsyncSeq/tree/master/src/AsyncSeq/Observable.fs#L391-391" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -299,15 +299,15 @@
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '205', 205)" onmouseover="showTip(event, '205', 205)">
+          <code onmouseout="hideTip(event, '230', 230)" onmouseover="showTip(event, '230', 230)">
             Zip(left, right, selector)
           </code>
-          <div class="tip" id="205">
+          <div class="tip" id="230">
             <strong>Signature:</strong> (left:IObservable&lt;&#39;TLeft&gt; * right:IObservable&lt;&#39;TRight&gt; * selector:Func&lt;&#39;TLeft,&#39;TRight,&#39;TResult&gt;) -&gt; IObservable&lt;&#39;TResult&gt;<br />
                           <strong>Type parameters:</strong> 'TLeft, 'TRight, 'TResult          </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharpx.Async/tree/master/src/FSharpx.Async/Observable.fs#L447-447" class="github-link">
+            <a href="http://github.com/fsprojects/AsyncSeq/tree/master/src/AsyncSeq/Observable.fs#L447-447" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -319,22 +319,24 @@
 
         </div>
         <div class="span3">
-          <img src="/FSharpx.Async/img/logo.png" alt="F# Project" style="width:150px;margin:10px" />  
+          <img src="/AsyncSeq/img/logo.png" alt="F# Project" style="width:150px;margin:10px" />  
           <ul class="nav nav-list" id="menu" style="margin-top: 20px;">
-            <li class="nav-header">FSharpx.Async</li>
-            <li><a href="/FSharpx.Async/index.html">Home page</a></li>
+            <li class="nav-header">AsyncSeq</li>
+            <li><a href="/AsyncSeq/index.html">Home page</a></li>
             <li class="divider"></li>
-            <li><a href="http://nuget.org/packages/FSharpx.Async">Get Library via NuGet</a></li>
-            <li><a href="http://github.com/fsprojects/FSharpx.Async">Source Code on GitHub</a></li>
-            <li><a href="/FSharpx.Async/license.html">License</a></li>
-            <li><a href="/FSharpx.Async/release-notes.html">Release Notes</a></li>
-
+            <li><a href="http://nuget.org/packages/AsyncSeq">Get Library via NuGet</a></li>
+            <li><a href="http://github.com/fsprojects/AsyncSeq">Source Code on GitHub</a></li>
+            <li><a href="/AsyncSeq/license.html">License</a></li>
+            <li><a href="/AsyncSeq/release-notes.html">Release Notes</a></li>
+            <li class="divider"></li>
             <li class="nav-header">Documentation</li>
-            <li><a href="/FSharpx.Async/reference/index.html">API Reference</a></li>
+            <li><a href="/AsyncSeq/terminology.html">Terminology</a></li>
+            <li><a href="/AsyncSeq/library/AsyncSeq.html">AsyncSeq</a></li>           
+            <li><a href="/AsyncSeq/reference/index.html">API Reference</a></li>
           </ul>
         </div>
       </div>
     </div>
-    <a href="http://github.com/fsprojects/FSharpx.Async"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_gray_6d6d6d.png" alt="Fork me on GitHub"/></a>
+    <a href="http://github.com/fsprojects/AsyncSeq"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_gray_6d6d6d.png" alt="Fork me on GitHub"/></a>
   </body>
   </html>

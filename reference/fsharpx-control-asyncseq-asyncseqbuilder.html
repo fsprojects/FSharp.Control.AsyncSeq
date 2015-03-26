@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8"/>
-    <title>AsyncSeqBuilder - FSharpx.Async</title>
+    <title>AsyncSeqBuilder - AsyncSeq</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <meta name="description" content=""/>
     <meta name="author" content="Thomas Petricek, David Thomas, Steffen Forkmann"/>
@@ -12,8 +12,8 @@
     <script src="https://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.1/js/bootstrap.min.js"></script>
     <link href="https://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.1/css/bootstrap-combined.min.css" rel="stylesheet"/>
 
-    <link type="text/css" rel="stylesheet" href="/FSharpx.Async/content/style.css" />
-    <script type="text/javascript" src="/FSharpx.Async/content/tips.js"></script>
+    <link type="text/css" rel="stylesheet" href="/AsyncSeq/content/style.css" />
+    <script type="text/javascript" src="/AsyncSeq/content/tips.js"></script>
     <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
     <!--[if lt IE 9]>
       <script src="https://html5shim.googlecode.com/svn/trunk/html5.js"></script>
@@ -24,9 +24,9 @@
       <div class="masthead">
         <ul class="nav nav-pills pull-right">
           <li><a href="http://fsharp.org">fsharp.org</a></li>
-          <li><a href="http://github.com/fsprojects/FSharpx.Async">github page</a></li>
+          <li><a href="http://github.com/fsprojects/AsyncSeq">github page</a></li>
         </ul>
-        <h3 class="muted"><a href="/FSharpx.Async/index.html">FSharpx.Async</a></h3>
+        <h3 class="muted"><a href="/AsyncSeq/index.html">AsyncSeq</a></h3>
       </div>
       <hr />
       <div class="row">
@@ -49,15 +49,15 @@ sequences using the 'asyncSeq { ... }' syntax</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '104', 104)" onmouseover="showTip(event, '104', 104)">
+          <code onmouseout="hideTip(event, '129', 129)" onmouseover="showTip(event, '129', 129)">
             new()
           </code>
-          <div class="tip" id="104">
+          <div class="tip" id="129">
             <strong>Signature:</strong> unit -&gt; AsyncSeqBuilder<br />
                       </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharpx.Async/tree/master/src/FSharpx.Async/AsyncSeq.fs#L49-49" class="github-link">
+            <a href="http://github.com/fsprojects/AsyncSeq/tree/master/src/AsyncSeq/AsyncSeq.fs#L61-61" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -75,15 +75,15 @@ sequences using the 'asyncSeq { ... }' syntax</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '105', 105)" onmouseover="showTip(event, '105', 105)">
+          <code onmouseout="hideTip(event, '130', 130)" onmouseover="showTip(event, '130', 130)">
             Bind(inp, body)
           </code>
-          <div class="tip" id="105">
+          <div class="tip" id="130">
             <strong>Signature:</strong> (inp:Async&lt;&#39;T&gt; * body:(&#39;T -&gt; AsyncSeq&lt;&#39;U&gt;)) -&gt; AsyncSeq&lt;&#39;U&gt;<br />
                           <strong>Type parameters:</strong> 'T, 'U          </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharpx.Async/tree/master/src/FSharpx.Async/AsyncSeq.fs#L60-60" class="github-link">
+            <a href="http://github.com/fsprojects/AsyncSeq/tree/master/src/AsyncSeq/AsyncSeq.fs#L72-72" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -93,15 +93,15 @@ sequences using the 'asyncSeq { ... }' syntax</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '106', 106)" onmouseover="showTip(event, '106', 106)">
+          <code onmouseout="hideTip(event, '131', 131)" onmouseover="showTip(event, '131', 131)">
             Combine(seq1, seq2)
           </code>
-          <div class="tip" id="106">
+          <div class="tip" id="131">
             <strong>Signature:</strong> (seq1:AsyncSeq&lt;&#39;T&gt; * seq2:AsyncSeq&lt;&#39;T&gt;) -&gt; AsyncSeq&lt;&#39;T&gt;<br />
                           <strong>Type parameters:</strong> 'T          </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharpx.Async/tree/master/src/FSharpx.Async/AsyncSeq.fs#L62-62" class="github-link">
+            <a href="http://github.com/fsprojects/AsyncSeq/tree/master/src/AsyncSeq/AsyncSeq.fs#L74-74" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -111,15 +111,15 @@ sequences using the 'asyncSeq { ... }' syntax</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '107', 107)" onmouseover="showTip(event, '107', 107)">
+          <code onmouseout="hideTip(event, '132', 132)" onmouseover="showTip(event, '132', 132)">
             Delay(f)
           </code>
-          <div class="tip" id="107">
+          <div class="tip" id="132">
             <strong>Signature:</strong> (f:(unit -&gt; AsyncSeq&lt;&#39;T&gt;)) -&gt; AsyncSeq&lt;&#39;T&gt;<br />
                           <strong>Type parameters:</strong> 'T          </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharpx.Async/tree/master/src/FSharpx.Async/AsyncSeq.fs#L66-66" class="github-link">
+            <a href="http://github.com/fsprojects/AsyncSeq/tree/master/src/AsyncSeq/AsyncSeq.fs#L78-78" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -129,15 +129,15 @@ sequences using the 'asyncSeq { ... }' syntax</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '108', 108)" onmouseover="showTip(event, '108', 108)">
+          <code onmouseout="hideTip(event, '133', 133)" onmouseover="showTip(event, '133', 133)">
             For(seq, action)
           </code>
-          <div class="tip" id="108">
+          <div class="tip" id="133">
             <strong>Signature:</strong> (seq:AsyncSeq&lt;&#39;T&gt; * action:(&#39;T -&gt; AsyncSeq&lt;&#39;TResult&gt;)) -&gt; AsyncSeq&lt;&#39;TResult&gt;<br />
                           <strong>Type parameters:</strong> 'T, 'TResult          </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharpx.Async/tree/master/src/FSharpx.Async/AsyncSeq.fs#L144-144" class="github-link">
+            <a href="http://github.com/fsprojects/AsyncSeq/tree/master/src/AsyncSeq/AsyncSeq.fs#L156-156" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -150,15 +150,15 @@ also the AsyncSeq.collect function.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '109', 109)" onmouseover="showTip(event, '109', 109)">
+          <code onmouseout="hideTip(event, '134', 134)" onmouseover="showTip(event, '134', 134)">
             For(seq, action)
           </code>
-          <div class="tip" id="109">
+          <div class="tip" id="134">
             <strong>Signature:</strong> (seq:seq&lt;&#39;T&gt; * action:(&#39;T -&gt; AsyncSeq&lt;&#39;TResult&gt;)) -&gt; AsyncSeq&lt;&#39;TResult&gt;<br />
                           <strong>Type parameters:</strong> 'T, 'TResult          </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharpx.Async/tree/master/src/FSharpx.Async/AsyncSeq.fs#L135-135" class="github-link">
+            <a href="http://github.com/fsprojects/AsyncSeq/tree/master/src/AsyncSeq/AsyncSeq.fs#L147-147" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -170,15 +170,15 @@ all elements generated by the asynchronous body)</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '110', 110)" onmouseover="showTip(event, '110', 110)">
+          <code onmouseout="hideTip(event, '135', 135)" onmouseover="showTip(event, '135', 135)">
             Return()
           </code>
-          <div class="tip" id="110">
-            <strong>Signature:</strong> unit -&gt; AsyncSeq&lt;&#39;?6657&gt;<br />
-                          <strong>Type parameters:</strong> '?6657          </div>
+          <div class="tip" id="135">
+            <strong>Signature:</strong> unit -&gt; AsyncSeq&lt;&#39;?6651&gt;<br />
+                          <strong>Type parameters:</strong> '?6651          </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharpx.Async/tree/master/src/FSharpx.Async/AsyncSeq.fs#L57-57" class="github-link">
+            <a href="http://github.com/fsprojects/AsyncSeq/tree/master/src/AsyncSeq/AsyncSeq.fs#L69-69" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -188,15 +188,15 @@ all elements generated by the asynchronous body)</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '111', 111)" onmouseover="showTip(event, '111', 111)">
+          <code onmouseout="hideTip(event, '136', 136)" onmouseover="showTip(event, '136', 136)">
             TryFinally(body, compensation)
           </code>
-          <div class="tip" id="111">
+          <div class="tip" id="136">
             <strong>Signature:</strong> (body:AsyncSeq&lt;&#39;T&gt; * compensation:(unit -&gt; unit)) -&gt; AsyncSeq&lt;&#39;T&gt;<br />
                           <strong>Type parameters:</strong> 'T          </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharpx.Async/tree/master/src/FSharpx.Async/AsyncSeq.fs#L123-123" class="github-link">
+            <a href="http://github.com/fsprojects/AsyncSeq/tree/master/src/AsyncSeq/AsyncSeq.fs#L135-135" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -206,15 +206,15 @@ all elements generated by the asynchronous body)</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '112', 112)" onmouseover="showTip(event, '112', 112)">
+          <code onmouseout="hideTip(event, '137', 137)" onmouseover="showTip(event, '137', 137)">
             TryWith(body, handler)
           </code>
-          <div class="tip" id="112">
-            <strong>Signature:</strong> (body:AsyncSeq&lt;&#39;?6684&gt; * handler:(exn -&gt; AsyncSeq&lt;&#39;?6684&gt;)) -&gt; AsyncSeq&lt;&#39;?6684&gt;<br />
-                          <strong>Type parameters:</strong> '?6684          </div>
+          <div class="tip" id="137">
+            <strong>Signature:</strong> (body:AsyncSeq&lt;&#39;?6678&gt; * handler:(exn -&gt; AsyncSeq&lt;&#39;?6678&gt;)) -&gt; AsyncSeq&lt;&#39;?6678&gt;<br />
+                          <strong>Type parameters:</strong> '?6678          </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharpx.Async/tree/master/src/FSharpx.Async/AsyncSeq.fs#L126-126" class="github-link">
+            <a href="http://github.com/fsprojects/AsyncSeq/tree/master/src/AsyncSeq/AsyncSeq.fs#L138-138" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -224,15 +224,15 @@ all elements generated by the asynchronous body)</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '113', 113)" onmouseover="showTip(event, '113', 113)">
+          <code onmouseout="hideTip(event, '138', 138)" onmouseover="showTip(event, '138', 138)">
             Using(resource, binder)
           </code>
-          <div class="tip" id="113">
-            <strong>Signature:</strong> (resource:&#39;?6686 * binder:(&#39;?6686 -&gt; AsyncSeq&lt;&#39;?6687&gt;)) -&gt; AsyncSeq&lt;&#39;?6687&gt;<br />
-                          <strong>Type parameters:</strong> '?6686, '?6687          </div>
+          <div class="tip" id="138">
+            <strong>Signature:</strong> (resource:&#39;?6680 * binder:(&#39;?6680 -&gt; AsyncSeq&lt;&#39;?6681&gt;)) -&gt; AsyncSeq&lt;&#39;?6681&gt;<br />
+                          <strong>Type parameters:</strong> '?6680, '?6681          </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharpx.Async/tree/master/src/FSharpx.Async/AsyncSeq.fs#L129-129" class="github-link">
+            <a href="http://github.com/fsprojects/AsyncSeq/tree/master/src/AsyncSeq/AsyncSeq.fs#L141-141" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -242,15 +242,15 @@ all elements generated by the asynchronous body)</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '114', 114)" onmouseover="showTip(event, '114', 114)">
+          <code onmouseout="hideTip(event, '139', 139)" onmouseover="showTip(event, '139', 139)">
             While(gd, seq)
           </code>
-          <div class="tip" id="114">
+          <div class="tip" id="139">
             <strong>Signature:</strong> (gd:(unit -&gt; bool) * seq:AsyncSeq&lt;&#39;T&gt;) -&gt; AsyncSeq&lt;&#39;T&gt;<br />
                           <strong>Type parameters:</strong> 'T          </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharpx.Async/tree/master/src/FSharpx.Async/AsyncSeq.fs#L64-64" class="github-link">
+            <a href="http://github.com/fsprojects/AsyncSeq/tree/master/src/AsyncSeq/AsyncSeq.fs#L76-76" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -260,51 +260,51 @@ all elements generated by the asynchronous body)</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '115', 115)" onmouseover="showTip(event, '115', 115)">
+          <code onmouseout="hideTip(event, '140', 140)" onmouseover="showTip(event, '140', 140)">
             Yield(v)
           </code>
-          <div class="tip" id="115">
-            <strong>Signature:</strong> v:&#39;?6655 -&gt; AsyncSeq&lt;&#39;?6655&gt;<br />
+          <div class="tip" id="140">
+            <strong>Signature:</strong> v:&#39;?6649 -&gt; AsyncSeq&lt;&#39;?6649&gt;<br />
+                          <strong>Type parameters:</strong> '?6649          </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/fsprojects/AsyncSeq/tree/master/src/AsyncSeq/AsyncSeq.fs#L62-62" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '141', 141)" onmouseover="showTip(event, '141', 141)">
+            YieldFrom(s)
+          </code>
+          <div class="tip" id="141">
+            <strong>Signature:</strong> s:&#39;?6653 -&gt; &#39;?6653<br />
+                          <strong>Type parameters:</strong> '?6653          </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/fsprojects/AsyncSeq/tree/master/src/AsyncSeq/AsyncSeq.fs#L70-70" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '142', 142)" onmouseover="showTip(event, '142', 142)">
+            Zero()
+          </code>
+          <div class="tip" id="142">
+            <strong>Signature:</strong> unit -&gt; AsyncSeq&lt;&#39;?6655&gt;<br />
                           <strong>Type parameters:</strong> '?6655          </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharpx.Async/tree/master/src/FSharpx.Async/AsyncSeq.fs#L50-50" class="github-link">
-              <img src="../content/img/github.png" class="normal" />
-              <img src="../content/img/github-blue.png" class="hover" />
-            </a>
-          
-        </td>
-      </tr>
-      <tr>
-        <td class="member-name">
-
-          <code onmouseout="hideTip(event, '116', 116)" onmouseover="showTip(event, '116', 116)">
-            YieldFrom(s)
-          </code>
-          <div class="tip" id="116">
-            <strong>Signature:</strong> s:&#39;?6659 -&gt; &#39;?6659<br />
-                          <strong>Type parameters:</strong> '?6659          </div>
-        </td>
-        <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharpx.Async/tree/master/src/FSharpx.Async/AsyncSeq.fs#L58-58" class="github-link">
-              <img src="../content/img/github.png" class="normal" />
-              <img src="../content/img/github-blue.png" class="hover" />
-            </a>
-          
-        </td>
-      </tr>
-      <tr>
-        <td class="member-name">
-
-          <code onmouseout="hideTip(event, '117', 117)" onmouseover="showTip(event, '117', 117)">
-            Zero()
-          </code>
-          <div class="tip" id="117">
-            <strong>Signature:</strong> unit -&gt; AsyncSeq&lt;&#39;?6661&gt;<br />
-                          <strong>Type parameters:</strong> '?6661          </div>
-        </td>
-        <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharpx.Async/tree/master/src/FSharpx.Async/AsyncSeq.fs#L59-59" class="github-link">
+            <a href="http://github.com/fsprojects/AsyncSeq/tree/master/src/AsyncSeq/AsyncSeq.fs#L71-71" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -316,22 +316,24 @@ all elements generated by the asynchronous body)</p>
 
         </div>
         <div class="span3">
-          <img src="/FSharpx.Async/img/logo.png" alt="F# Project" style="width:150px;margin:10px" />  
+          <img src="/AsyncSeq/img/logo.png" alt="F# Project" style="width:150px;margin:10px" />  
           <ul class="nav nav-list" id="menu" style="margin-top: 20px;">
-            <li class="nav-header">FSharpx.Async</li>
-            <li><a href="/FSharpx.Async/index.html">Home page</a></li>
+            <li class="nav-header">AsyncSeq</li>
+            <li><a href="/AsyncSeq/index.html">Home page</a></li>
             <li class="divider"></li>
-            <li><a href="http://nuget.org/packages/FSharpx.Async">Get Library via NuGet</a></li>
-            <li><a href="http://github.com/fsprojects/FSharpx.Async">Source Code on GitHub</a></li>
-            <li><a href="/FSharpx.Async/license.html">License</a></li>
-            <li><a href="/FSharpx.Async/release-notes.html">Release Notes</a></li>
-
+            <li><a href="http://nuget.org/packages/AsyncSeq">Get Library via NuGet</a></li>
+            <li><a href="http://github.com/fsprojects/AsyncSeq">Source Code on GitHub</a></li>
+            <li><a href="/AsyncSeq/license.html">License</a></li>
+            <li><a href="/AsyncSeq/release-notes.html">Release Notes</a></li>
+            <li class="divider"></li>
             <li class="nav-header">Documentation</li>
-            <li><a href="/FSharpx.Async/reference/index.html">API Reference</a></li>
+            <li><a href="/AsyncSeq/terminology.html">Terminology</a></li>
+            <li><a href="/AsyncSeq/library/AsyncSeq.html">AsyncSeq</a></li>           
+            <li><a href="/AsyncSeq/reference/index.html">API Reference</a></li>
           </ul>
         </div>
       </div>
     </div>
-    <a href="http://github.com/fsprojects/FSharpx.Async"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_gray_6d6d6d.png" alt="Fork me on GitHub"/></a>
+    <a href="http://github.com/fsprojects/AsyncSeq"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_gray_6d6d6d.png" alt="Fork me on GitHub"/></a>
   </body>
   </html>
