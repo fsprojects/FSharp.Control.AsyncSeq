@@ -2,6 +2,7 @@
 
 open NUnit.Framework
 open FSharpx.Control
+open System
 
 /// Determines equality of two async sequences by convering them to lists, ignoring side-effects.
 let EQ (a:AsyncSeq<'a>) (b:AsyncSeq<'a>) = 
@@ -237,3 +238,11 @@ let ``AsyncSeq.traverseChoiceAsync``() =
     Assert.AreEqual("oh no", e)
     Assert.True(([1;2] = (seen |> List.ofSeq)))
   
+
+[<Test>]
+let ``AsyncSeq.toBlockingSeq does not hung forever and rethrows exception``() =
+  let s = asyncSeq {
+      yield 1
+      failwith "error"
+  }
+  Assert.Throws<AggregateException>(fun _ -> s |> AsyncSeq.toBlockingSeq |> Seq.toList |> ignore) |> ignore
