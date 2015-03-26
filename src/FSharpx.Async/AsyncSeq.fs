@@ -378,14 +378,17 @@ module AsyncSeq =
   let toBlockingSeq (input : AsyncSeq<'T>) = 
     // Write all elements to a blocking buffer and then add None to denote end
     let buf = new BlockingQueueAgent<_>(1)
-    async {
-      do! iterAsync (Some >> buf.AsyncAdd) input
-      do! buf.AsyncAdd(None) } |> Async.Start
+    let iterator =
+        async {
+            let! res = iterAsync (Some >> buf.AsyncAdd) input |> Async.Catch
+            do! buf.AsyncAdd(None)
+            return match res with Choice2Of2 e -> raise e | _ -> () 
+        } |> Async.StartAsTask
 
     // Read elements from the blocking buffer & return a sequences
     let rec loop () = seq {
       match buf.Get() with
-      | None -> ()
+      | None -> iterator.Result
       | Some v -> 
           yield v
           yield! loop() }

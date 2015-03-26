@@ -2,6 +2,7 @@
 
 open NUnit.Framework
 open FSharpx.Control
+open System
 
 [<Test>]
 let ``skipping should return all elements after the first non-match``() =
@@ -99,3 +100,11 @@ let ``AsyncSeq.bufferByCount``() =
   let s' = s |> AsyncSeq.bufferByCount 2 |> AsyncSeq.toList |> Async.RunSynchronously
 
   Assert.True(([[|1;2|];[|3;4|]] = s'))
+
+[<Test>]
+let ``AsyncSeq.toBlockingSeq does not hung forever and rethrows exception``() =
+  let s = asyncSeq {
+      yield 1
+      failwith "error"
+  }
+  Assert.Throws<AggregateException>(fun _ -> s |> AsyncSeq.toBlockingSeq |> Seq.toList |> ignore) |> ignore
