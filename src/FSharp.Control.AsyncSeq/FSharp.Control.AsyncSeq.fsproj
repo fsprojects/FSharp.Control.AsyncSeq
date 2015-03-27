@@ -58,11 +58,8 @@
   -->
   <Import Project="..\..\.paket\paket.targets" />
   <ItemGroup>
-    <Compile Include="Utils.fs" />
     <Compile Include="AutoCancelAgent.fs" />
     <Compile Include="BlockingQueueAgent.fs" />
-    <Compile Include="Observable.fs" />
-    <Compile Include="Async.fs" />
     <Compile Include="AsyncSeq.fs" />
     <None Include="paket.references" />
     <None Include="paket.template" />

@@ -4,6 +4,10 @@ open NUnit.Framework
 open FSharp.Control
 open System
 
+module AsyncOps = 
+    let unit = async.Return()
+    let never = Async.Sleep(-1)
+
 /// Determines equality of two async sequences by convering them to lists, ignoring side-effects.
 let EQ (a:AsyncSeq<'a>) (b:AsyncSeq<'a>) = 
   let exp = a |> AsyncSeq.toList |> Async.RunSynchronously
