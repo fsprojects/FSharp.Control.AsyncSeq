@@ -306,7 +306,7 @@ module AsyncSeq =
   ///
   /// The aggregation function is asynchronous (and the input sequence will
   /// be asked for the next element after the processing of an element completes).
-  let rec scanAsync f (state:'TState) (input : AsyncSeq<'T>) = asyncSeq {
+  let rec scanAsync f (state:'State) (input : AsyncSeq<'T>) = asyncSeq {
     let! v = input
     match v with
     | Nil -> ()
@@ -343,17 +343,17 @@ module AsyncSeq =
   ///
   /// The aggregation function is asynchronous (and the input sequence will
   /// be asked for the next element after the processing of an element completes).
-  let rec foldAsync f (state:'TState) (input : AsyncSeq<'T>) = 
+  let rec foldAsync f (state:'State) (input : AsyncSeq<'T>) = 
     input |> scanAsync f state |> lastOrDefault state
 
   /// Same as AsyncSeq.foldAsync, but the specified function is synchronous
   /// and returns the result of aggregation immediately.
-  let rec fold f (state:'TState) (input : AsyncSeq<'T>) = 
+  let rec fold f (state:'State) (input : AsyncSeq<'T>) = 
     foldAsync (fun st v -> f st v |> async.Return) state input 
 
   /// Same as AsyncSeq.scanAsync, but the specified function is synchronous
   /// and returns the result of aggregation immediately.
-  let rec scan f (state:'TState) (input : AsyncSeq<'T>) = 
+  let rec scan f (state:'State) (input : AsyncSeq<'T>) = 
     scanAsync (fun st v -> f st v |> async.Return) state input 
 
   /// Same as AsyncSeq.mapAsync, but the specified function is synchronous
@@ -693,7 +693,7 @@ module AsyncSeq =
 
   /// Interleaves two async sequences into a resulting sequence. The provided
   /// sequences are consumed in lock-step.
-  let interleave = 
+  let interleave (firstSeq: AsyncSeq<'T1>) (secondSeq: AsyncSeq<'T1>) = 
 
     let rec left (a:AsyncSeq<'T>) (b:AsyncSeq<'U>) : AsyncSeq<Choice<_,_>> = async {
       let! a = a        
@@ -707,7 +707,7 @@ module AsyncSeq =
       | Cons (a2, t2) -> return Cons (Choice2Of2 a2, left a t2)
       | Nil -> return! a |> map Choice1Of2 }
 
-    left
+    left firstSeq secondSeq
 
   /// Buffer items from the async sequence into buffers of a specified size.
   /// The last buffer returned may be less than the specified buffer size.
