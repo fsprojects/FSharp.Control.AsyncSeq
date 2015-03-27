@@ -144,8 +144,9 @@ in a blocking manner.
 ### Comparison with IObservable<'a>
 
 Both `IObservable<'a>` and `AsyncSeq<'a>` represent collections of items and both provide similar operations
-for transformation and composition. The central difference between the two is that the former used a *synchronous push*
-and the latter uses an *asynchronous pull*. Consumers of an `IObservable<'a>` *subscribe* to receive notifications about
+for transformation and composition. The central difference between the two is that the former uses a *synchronous push*
+to a subscriber and the latter uses an *asynchronous pull* by a consumer. 
+Consumers of an `IObservable<'a>` *subscribe* to receive notifications about
 new items or the end of the sequence. By contrast, consumers of an `AsyncSeq<'a>` *asynchronously retrieve* subsequent items on their own
 terms. Some domains are more naturally modeled with one or the other, however it is less clear which is a more
 suitable tool for a specific task. In many cases, a combination of the two provides the optimal solution and 
