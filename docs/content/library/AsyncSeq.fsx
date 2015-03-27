@@ -3,10 +3,10 @@
 # F# Async: FSharp.Control.AsyncSeq
 
 An AsyncSeq is a sequence in which individual elements are retrieved using an `Async` computation.
-It is similar to `seq<'a>` in that subsequent elements are pulled lazily. Structurally it is
+It is similar to `seq<'a>` in that subsequent elements are pulled asynchronously. Structurally it is
 similar to `list<'a>` with the difference being that each head and tail node or empty node is wrapped
-in `Async`. `AsyncSeq` also bears similarity to `IObservable<'a>` with the former being pull-based and the
-latter push-based. Analogs for most operations defined for `Seq`, `List` and `IObservable` are also defined for 
+in `Async`. `AsyncSeq` also bears similarity to `IObservable<'a>` with the former being based on an "asynchronous pull" and the
+latter based on a "synchronous push". Analogs for most operations defined for `Seq`, `List` and `IObservable` are also defined for 
 `AsyncSeq`. The power of `AsyncSeq` lies in that many of these operations also have analogs based on `Async` 
 allowing composition of complex asynchronous workflows.
 
@@ -144,9 +144,9 @@ in a blocking manner.
 ### Comparison with IObservable<'a>
 
 Both `IObservable<'a>` and `AsyncSeq<'a>` represent collections of items and both provide similar operations
-for transformation and composition. The central difference between the two is that the former is push-based 
-and the latter is pull-based. Consumers of an `IObservable<'a>` *subscribe* to receive notifications about
-new items or the end of the sequence. By contrast, consumers of an `AsyncSeq<'a>` *retrieve* subsequent items on their own
+for transformation and composition. The central difference between the two is that the former used a *synchronous push*
+and the latter uses an *asynchronous pull*. Consumers of an `IObservable<'a>` *subscribe* to receive notifications about
+new items or the end of the sequence. By contrast, consumers of an `AsyncSeq<'a>` *asynchronously retrieve* subsequent items on their own
 terms. Some domains are more naturally modeled with one or the other, however it is less clear which is a more
 suitable tool for a specific task. In many cases, a combination of the two provides the optimal solution and 
 restricting yourself to one, while simplifying the programming model, can lead one to view all problems as a nail.
@@ -237,15 +237,15 @@ let storedTeetsObs' : IObservable<unit> =
 
 (**
 Overall, both solutions are succinct and composable and deciding which one to use can ultimately be a matter of preference. 
-Some things to consider are the push vs. pull semantics. On the one hand, tweets are pushed based - the consumer has no control 
+Some things to consider are the "synchronous push" vs. "asynchronous pull" semantics. On the one hand, tweets are pushed based - the consumer has no control 
 over their generation. On the other hand, the program at hand will process the tweets on its own terms regardless of how quickly 
 they are being generated. Moreover, the underlying Twitter API will likely utilize a request-reply protocol to retrieve batches of 
-tweets from persistent storage. As such, the distinction between push vs. pull becomes less interesting. If the underlying source 
+tweets from persistent storage. As such, the distinction between "synchronous push" vs. "asynchronous pull" becomes less interesting. If the underlying source 
 is truly push-based, then one can buffer its output and consume it using an asynchronous sequence. If the underlying source is pull-based, 
 then one can turn it into an observable sequence by first pulling, then pushing. Note however that in a true real-time reactive system, 
 notifications must be pushed immediately without delay.
 
-Upon closer inspection, the consumption approaches between the two models aren't all too different. While `AsyncSeq` is pull based,
+Upon closer inspection, the consumption approaches between the two models aren't all too different. While `AsyncSeq` is based on an asynchronous-pull operation,
 it is usually consumed using an operator such as `AsyncSeq.iterAsync` as shown above. This is a function of type 
 `('a -> Async<unit>) -> AsyncSeq<'a> -> Async<unit>` where the first argument is a function `'a -> Async<unit>` which performs 
 some work on an item of the sequence and is applied repeatedly to subsequent items. In a sense, `iterAsync` *pushes* values to this 
