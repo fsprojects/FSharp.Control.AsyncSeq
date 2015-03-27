@@ -23,7 +23,7 @@ type internal BlockingQueueAgent<'T>(maxLength) =
     [<VolatileField>]
     let mutable count = 0
 
-    let agent = Agent.Start(fun agent ->
+    let agent = MailboxProcessor.Start(fun agent ->
     
         let queue = new Queue<'T>()
 

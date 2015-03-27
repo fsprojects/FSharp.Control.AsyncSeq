@@ -411,7 +411,7 @@ module AsyncSeq =
   /// sequence specified as the input. When accessing the resulting sequence
   /// multiple times, the input will still be evaluated only once
   let rec cache (input : AsyncSeq<'T>) = 
-    let agent = Agent<AsyncReplyChannel<_>>.Start(fun agent -> async {
+    let agent = MailboxProcessor<AsyncReplyChannel<_>>.Start(fun agent -> async {
       let! (repl:AsyncReplyChannel<AsyncSeqInner<'T>>) = agent.Receive()
       let! next = input
       let res = 

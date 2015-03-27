@@ -59,7 +59,6 @@
   <Import Project="..\..\.paket\paket.targets" />
   <ItemGroup>
     <Compile Include="Utils.fs" />
-    <Compile Include="Agent.fs" />
     <Compile Include="AutoCancelAgent.fs" />
     <Compile Include="BlockingQueueAgent.fs" />
     <Compile Include="Observable.fs" />
