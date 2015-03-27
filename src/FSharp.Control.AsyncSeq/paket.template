@@ -4,11 +4,11 @@ owners
 authors
     Tomasz Petricek, David Thomas, Ryan Riley, Steffen Forkmann
 projectUrl
-    http://fsprojects.github.io/AsyncSeq/
+    http://fsprojects.github.io/FSharp.Control.AsyncSeq/
 iconUrl
-    http://fsprojects.github.io/AsyncSeq/img/logo.png
+    http://fsprojects.github.io/FSharp.Control.AsyncSeq/img/logo.png
 licenseUrl
-    http://fsprojects.github.io/AsyncSeq/license.html
+    http://fsprojects.github.io/FSharp.Control.AsyncSeq/license.html
 requireLicenseAcceptance
     false
 copyright

@@ -1,6 +1,4 @@
-﻿module internal FSharpx.Control.Utils
-
-let inline konst a _ = a
+﻿module internal FSharp.Control.Utils
 
 module Choice =
   

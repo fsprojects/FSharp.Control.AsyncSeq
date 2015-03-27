@@ -1,7 +1,7 @@
 ﻿module AsyncSeqTests
 
 open NUnit.Framework
-open FSharpx.Control
+open FSharp.Control
 open System
 
 /// Determines equality of two async sequences by convering them to lists, ignoring side-effects.
@@ -259,25 +259,25 @@ let ``AsyncSeq.takeUntil should complete immediately with completed signal``() =
     yield 1
     yield 2
   }
-  let actual = AsyncSeq.takeUntil Async.unit s
+  let actual = AsyncSeq.takeUntil AsyncOps.unit s
   Assert.True(EQ AsyncSeq.empty actual)
 
 
 [<Test>]
 let ``AsyncSeq.takeUntil should take entire sequence with never signal``() =
   let expected = [1;2;3;4] |> AsyncSeq.ofSeq
-  let actual = expected |> AsyncSeq.takeUntil Async.never
+  let actual = expected |> AsyncSeq.takeUntil AsyncOps.never
   Assert.True(EQ expected actual)
 
 
 [<Test>]
 let ``AsyncSeq.skipUntil should not skip with completed signal``() =
   let expected = [1;2;3;4] |> AsyncSeq.ofSeq
-  let actual = expected |> AsyncSeq.skipUntil Async.unit
+  let actual = expected |> AsyncSeq.skipUntil AsyncOps.unit
   Assert.True(EQ expected actual)
 
 
 [<Test>]
 let ``AsyncSeq.skipUntil should skip everything with never signal``() =
-  let actual = [1;2;3;4] |> AsyncSeq.ofSeq |> AsyncSeq.skipUntil Async.never
+  let actual = [1;2;3;4] |> AsyncSeq.ofSeq |> AsyncSeq.skipUntil AsyncOps.never
   Assert.True(EQ AsyncSeq.empty actual)

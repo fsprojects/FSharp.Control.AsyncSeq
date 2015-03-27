@@ -4,19 +4,19 @@
 // --------------------------------------------------------------------------------------
 
 // Binaries that have XML documentation (in a corresponding generated XML file)
-let referenceBinaries = [ "AsyncSeq.dll" ]
+let referenceBinaries = [ "FSharp.Control.AsyncSeq.dll" ]
 // Web site location for the generated documentation
-let website = "/AsyncSeq"
+let website = "/FSharp.Control.AsyncSeq"
 
-let githubLink = "http://github.com/fsprojects/AsyncSeq"
+let githubLink = "http://github.com/fsprojects/FSharp.Control.AsyncSeq"
 
 // Specify more information about your project
 let info =
-  [ "project-name", "AsyncSeq"
+  [ "project-name", "FSharp.Control.AsyncSeq"
     "project-author", "Thomas Petricek, David Thomas, Steffen Forkmann"
     "project-summary", "Async extensions for F#"
     "project-github", githubLink
-    "project-nuget", "http://nuget.org/packages/AsyncSeq" ]
+    "project-nuget", "http://nuget.org/packages/FSharp.Control.AsyncSeq" ]
 
 // --------------------------------------------------------------------------------------
 // For typical project, no changes are needed below

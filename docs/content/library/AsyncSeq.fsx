@@ -1,6 +1,6 @@
 (**
 
-# F# Async: AsyncSeq
+# F# Async: FSharp.Control.AsyncSeq
 
 An AsyncSeq is a sequence in which individual elements are retrieved using an `Async` computation.
 It is similar to `seq<'a>` in that subsequent elements are pulled lazily. Structurally it is
@@ -10,11 +10,11 @@ latter push-based. Analogs for most operations defined for `Seq`, `List` and `IO
 `AsyncSeq`. The power of `AsyncSeq` lies in that many of these operations also have analogs based on `Async` 
 allowing composition of complex asynchronous workflows.
 
-The `AsyncSeq` type is located in the `AsyncSeq.dll` assembly which can be loaded in F# Interactive as follows:
+The `AsyncSeq` type is located in the `FSharp.Control.AsyncSeq.dll` assembly which can be loaded in F# Interactive as follows:
 *)
 
-#r "../../../bin/AsyncSeq.dll"
-open FSharpx.Control
+#r "../../../bin/FSharp.Control.AsyncSeq.dll"
+open FSharp.Control
 
 
 
