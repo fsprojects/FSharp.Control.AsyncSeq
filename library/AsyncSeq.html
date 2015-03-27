@@ -36,10 +36,10 @@
 <h1><a name="F-Async-FSharp-Control-AsyncSeq" class="anchor" href="#F-Async-FSharp-Control-AsyncSeq">F# Async: FSharp.Control.AsyncSeq</a></h1>
 
 <p>An AsyncSeq is a sequence in which individual elements are retrieved using an <code>Async</code> computation.
-It is similar to <code>seq&lt;'a&gt;</code> in that subsequent elements are pulled lazily. Structurally it is
+It is similar to <code>seq&lt;'a&gt;</code> in that subsequent elements are pulled asynchronously. Structurally it is
 similar to <code>list&lt;'a&gt;</code> with the difference being that each head and tail node or empty node is wrapped
-in <code>Async</code>. <code>AsyncSeq</code> also bears similarity to <code>IObservable&lt;'a&gt;</code> with the former being pull-based and the
-latter push-based. Analogs for most operations defined for <code>Seq</code>, <code>List</code> and <code>IObservable</code> are also defined for 
+in <code>Async</code>. <code>AsyncSeq</code> also bears similarity to <code>IObservable&lt;'a&gt;</code> with the former being based on an "asynchronous pull" and the
+latter based on a "synchronous push". Analogs for most operations defined for <code>Seq</code>, <code>List</code> and <code>IObservable</code> are also defined for 
 <code>AsyncSeq</code>. The power of <code>AsyncSeq</code> lies in that many of these operations also have analogs based on <code>Async</code> 
 allowing composition of complex asynchronous workflows.</p>
 
@@ -259,9 +259,9 @@ in a blocking manner.</p>
 <h3><a name="Comparison-with-IObservable-a" class="anchor" href="#Comparison-with-IObservable-a">Comparison with IObservable<'a></a></h3>
 
 <p>Both <code>IObservable&lt;'a&gt;</code> and <code>AsyncSeq&lt;'a&gt;</code> represent collections of items and both provide similar operations
-for transformation and composition. The central difference between the two is that the former is push-based 
-and the latter is pull-based. Consumers of an <code>IObservable&lt;'a&gt;</code> <em>subscribe</em> to receive notifications about
-new items or the end of the sequence. By contrast, consumers of an <code>AsyncSeq&lt;'a&gt;</code> <em>retrieve</em> subsequent items on their own
+for transformation and composition. The central difference between the two is that the former used a <em>synchronous push</em>
+and the latter uses an <em>asynchronous pull</em>. Consumers of an <code>IObservable&lt;'a&gt;</code> <em>subscribe</em> to receive notifications about
+new items or the end of the sequence. By contrast, consumers of an <code>AsyncSeq&lt;'a&gt;</code> <em>asynchronously retrieve</em> subsequent items on their own
 terms. Some domains are more naturally modeled with one or the other, however it is less clear which is a more
 suitable tool for a specific task. In many cases, a combination of the two provides the optimal solution and 
 restricting yourself to one, while simplifying the programming model, can lead one to view all problems as a nail.</p>
@@ -422,15 +422,15 @@ workflow can be expressed as follows:</p>
 </table>
 
 <p>Overall, both solutions are succinct and composable and deciding which one to use can ultimately be a matter of preference. 
-Some things to consider are the push vs. pull semantics. On the one hand, tweets are pushed based - the consumer has no control 
+Some things to consider are the "synchronous push" vs. "asynchronous pull" semantics. On the one hand, tweets are pushed based - the consumer has no control 
 over their generation. On the other hand, the program at hand will process the tweets on its own terms regardless of how quickly 
 they are being generated. Moreover, the underlying Twitter API will likely utilize a request-reply protocol to retrieve batches of 
-tweets from persistent storage. As such, the distinction between push vs. pull becomes less interesting. If the underlying source 
+tweets from persistent storage. As such, the distinction between "synchronous push" vs. "asynchronous pull" becomes less interesting. If the underlying source 
 is truly push-based, then one can buffer its output and consume it using an asynchronous sequence. If the underlying source is pull-based, 
 then one can turn it into an observable sequence by first pulling, then pushing. Note however that in a true real-time reactive system, 
 notifications must be pushed immediately without delay.</p>
 
-<p>Upon closer inspection, the consumption approaches between the two models aren't all too different. While <code>AsyncSeq</code> is pull based,
+<p>Upon closer inspection, the consumption approaches between the two models aren't all too different. While <code>AsyncSeq</code> is based on an asynchronous-pull operation,
 it is usually consumed using an operator such as <code>AsyncSeq.iterAsync</code> as shown above. This is a function of type 
 <code>('a -&gt; Async&lt;unit&gt;) -&gt; AsyncSeq&lt;'a&gt; -&gt; Async&lt;unit&gt;</code> where the first argument is a function <code>'a -&gt; Async&lt;unit&gt;</code> which performs 
 some work on an item of the sequence and is applied repeatedly to subsequent items. In a sense, <code>iterAsync</code> <em>pushes</em> values to this 
