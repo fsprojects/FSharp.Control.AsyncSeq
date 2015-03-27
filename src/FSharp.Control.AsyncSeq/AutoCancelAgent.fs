@@ -13,13 +13,13 @@ open System.Threading
 /// Wrapper for the standard F# agent (MailboxProcessor) that
 /// supports stopping of the agent's body using the IDisposable 
 /// interface (the type automatically creates a cancellation token)
-type internal AutoCancelAgent<'T> private (mbox:Agent<'T>, cts:CancellationTokenSource) = 
+type internal AutoCancelAgent<'T> private (mbox:MailboxProcessor<'T>, cts:CancellationTokenSource) = 
 
   /// Start a new disposable agent using the specified body function
   /// (the method creates a new cancellation token for the agent)
   static member Start(f) = 
     let cts = new CancellationTokenSource()
-    new AutoCancelAgent<'T>(Agent<'T>.Start(f, cancellationToken = cts.Token), cts)
+    new AutoCancelAgent<'T>(MailboxProcessor<'T>.Start(f, cancellationToken = cts.Token), cts)
   
   /// Returns the number of unprocessed messages in the message queue of the agent.
   member x.CurrentQueueLength = mbox.CurrentQueueLength
