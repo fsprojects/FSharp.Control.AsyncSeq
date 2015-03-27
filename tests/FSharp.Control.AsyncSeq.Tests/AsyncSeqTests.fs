@@ -285,3 +285,14 @@ let ``AsyncSeq.skipUntil should not skip with completed signal``() =
 let ``AsyncSeq.skipUntil should skip everything with never signal``() =
   let actual = [1;2;3;4] |> AsyncSeq.ofSeq |> AsyncSeq.skipUntil AsyncOps.never
   Assert.True(EQ AsyncSeq.empty actual)
+
+
+  
+[<Test>]
+let ``asyncSeq.For should delay``() =
+  let (s:seq<int>) = 
+     { new System.Collections.Generic.IEnumerable<int> with 
+           member x.GetEnumerator() = failwith "fail" 
+       interface System.Collections.IEnumerable with 
+           member x.GetEnumerator() = failwith "fail"  }
+  Assert.DoesNotThrow(fun _ -> asyncSeq.For(s, (fun v -> AsyncSeq.empty)) |> ignore)
