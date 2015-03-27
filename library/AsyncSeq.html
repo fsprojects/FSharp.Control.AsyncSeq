@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8"/>
-    <title>F# Async: AsyncSeq
+    <title>F# Async: FSharp.Control.AsyncSeq
 </title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <meta name="description" content="Async extensions for F#"/>
@@ -13,8 +13,8 @@
     <script src="https://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.1/js/bootstrap.min.js"></script>
     <link href="https://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.1/css/bootstrap-combined.min.css" rel="stylesheet"/>
 
-    <link type="text/css" rel="stylesheet" href="/AsyncSeq/content/style.css" />
-    <script type="text/javascript" src="/AsyncSeq/content/tips.js"></script>
+    <link type="text/css" rel="stylesheet" href="/FSharp.Control.AsyncSeq/content/style.css" />
+    <script type="text/javascript" src="/FSharp.Control.AsyncSeq/content/tips.js"></script>
     <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
     <!--[if lt IE 9]>
       <script src="https://html5shim.googlecode.com/svn/trunk/html5.js"></script>
@@ -25,15 +25,15 @@
       <div class="masthead">
         <ul class="nav nav-pills pull-right">
           <li><a href="http://fsharp.org">fsharp.org</a></li>
-          <li><a href="http://github.com/fsprojects/AsyncSeq">github page</a></li>
+          <li><a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq">github page</a></li>
         </ul>
-        <h3 class="muted"><a href="/AsyncSeq/index.html">AsyncSeq</a></h3>
+        <h3 class="muted"><a href="/FSharp.Control.AsyncSeq/index.html">FSharp.Control.AsyncSeq</a></h3>
       </div>
       <hr />
       <div class="row">
         <div class="span9" id="main">
           
-<h1><a name="F-Async-AsyncSeq" class="anchor" href="#F-Async-AsyncSeq">F# Async: AsyncSeq</a></h1>
+<h1><a name="F-Async-FSharp-Control-AsyncSeq" class="anchor" href="#F-Async-FSharp-Control-AsyncSeq">F# Async: FSharp.Control.AsyncSeq</a></h1>
 
 <p>An AsyncSeq is a sequence in which individual elements are retrieved using an <code>Async</code> computation.
 It is similar to <code>seq&lt;'a&gt;</code> in that subsequent elements are pulled lazily. Structurally it is
@@ -43,7 +43,7 @@ latter push-based. Analogs for most operations defined for <code>Seq</code>, <co
 <code>AsyncSeq</code>. The power of <code>AsyncSeq</code> lies in that many of these operations also have analogs based on <code>Async</code> 
 allowing composition of complex asynchronous workflows.</p>
 
-<p>The <code>AsyncSeq</code> type is located in the <code>AsyncSeq.dll</code> assembly which can be loaded in F# Interactive as follows:</p>
+<p>The <code>AsyncSeq</code> type is located in the <code>FSharp.Control.AsyncSeq.dll</code> assembly which can be loaded in F# Interactive as follows:</p>
 
 <table class="pre"><tr><td class="lines"><pre class="fssnip">
 <span class="l">1: </span>
@@ -51,8 +51,8 @@ allowing composition of complex asynchronous workflows.</p>
 </pre>
 </td>
 <td class="snippet"><pre class="fssnip">
-<span class="prep">#r</span> <span class="s">&quot;../../../bin/AsyncSeq.dll&quot;</span>
-<span class="k">open</span> <span onmouseout="hideTip(event, 'fs1', 1)" onmouseover="showTip(event, 'fs1', 1)" class="i">FSharpx</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs2', 2)" onmouseover="showTip(event, 'fs2', 2)" class="i">Control</span>
+<span class="prep">#r</span> <span class="s">&quot;../../../bin/FSharp.Control.AsyncSeq.dll&quot;</span>
+<span class="k">open</span> <span onmouseout="hideTip(event, 'fs1', 1)" onmouseover="showTip(event, 'fs1', 1)" class="i">FSharp</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs2', 2)" onmouseover="showTip(event, 'fs2', 2)" class="i">Control</span>
 </pre>
 </td>
 </tr>
@@ -450,10 +450,10 @@ benefits, it can make a difference in some scenarios.</p>
 <li><a href="http://tomasp.net/blog/async-sequences.aspx/">Programming with F# asynchronous sequences</a></li>
 </ul>
 
-<div class="tip" id="fs1">namespace FSharpx</div>
-<div class="tip" id="fs2">namespace FSharpx.Control</div>
+<div class="tip" id="fs1">namespace FSharp</div>
+<div class="tip" id="fs2">namespace FSharp.Control</div>
 <div class="tip" id="fs3">val asyncS : AsyncSeq&lt;int&gt;<br /><br />Full name: AsyncSeq.asyncS</div>
-<div class="tip" id="fs4">val asyncSeq : AsyncSeq.AsyncSeqBuilder<br /><br />Full name: FSharpx.Control.AsyncSeqExtensions.asyncSeq</div>
+<div class="tip" id="fs4">val asyncSeq : AsyncSeq.AsyncSeqBuilder<br /><br />Full name: FSharp.Control.AsyncSeqExtensions.asyncSeq</div>
 <div class="tip" id="fs5">type Tweet =<br />&#160;&#160;{user: string;<br />&#160;&#160;&#160;message: string;}<br /><br />Full name: AsyncSeq.Tweet</div>
 <div class="tip" id="fs6">Tweet.user: string</div>
 <div class="tip" id="fs7">Multiple items<br />val string : value:&#39;T -&gt; string<br /><br />Full name: Microsoft.FSharp.Core.Operators.string<br /><br />--------------------<br />type string = System.String<br /><br />Full name: Microsoft.FSharp.Core.string</div>
@@ -465,18 +465,18 @@ benefits, it can make a difference in some scenarios.</p>
 <div class="tip" id="fs13">type &#39;T option = Option&lt;&#39;T&gt;<br /><br />Full name: Microsoft.FSharp.Core.option&lt;_&gt;</div>
 <div class="tip" id="fs14">val failwith : message:string -&gt; &#39;T<br /><br />Full name: Microsoft.FSharp.Core.Operators.failwith</div>
 <div class="tip" id="fs15">val tweetBatches : AsyncSeq&lt;Tweet []&gt;<br /><br />Full name: AsyncSeq.tweetBatches</div>
-<div class="tip" id="fs16">Multiple items<br />module AsyncSeq<br /><br />from FSharpx.Control<br /><br />--------------------<br />type AsyncSeq&lt;&#39;T&gt; = Async&lt;AsyncSeqInner&lt;&#39;T&gt;&gt;<br /><br />Full name: FSharpx.Control.AsyncSeq&lt;_&gt;</div>
-<div class="tip" id="fs17">val unfoldAsync : f:(&#39;State -&gt; Async&lt;(&#39;T * &#39;State) option&gt;) -&gt; s:&#39;State -&gt; AsyncSeq&lt;&#39;T&gt;<br /><br />Full name: FSharpx.Control.AsyncSeq.unfoldAsync</div>
+<div class="tip" id="fs16">Multiple items<br />module AsyncSeq<br /><br />from FSharp.Control<br /><br />--------------------<br />type AsyncSeq&lt;&#39;T&gt; = Async&lt;AsyncSeqInner&lt;&#39;T&gt;&gt;<br /><br />Full name: FSharp.Control.AsyncSeq&lt;_&gt;</div>
+<div class="tip" id="fs17">val unfoldAsync : f:(&#39;State -&gt; Async&lt;(&#39;T * &#39;State) option&gt;) -&gt; s:&#39;State -&gt; AsyncSeq&lt;&#39;T&gt;<br /><br />Full name: FSharp.Control.AsyncSeq.unfoldAsync</div>
 <div class="tip" id="fs18">val filterTweet : t:Tweet -&gt; Async&lt;bool&gt;<br /><br />Full name: AsyncSeq.filterTweet</div>
 <div class="tip" id="fs19">val t : Tweet</div>
 <div class="tip" id="fs20">type bool = System.Boolean<br /><br />Full name: Microsoft.FSharp.Core.bool</div>
 <div class="tip" id="fs21">val filteredTweets : AsyncSeq&lt;Tweet&gt;<br /><br />Full name: AsyncSeq.filteredTweets</div>
-<div class="tip" id="fs22">val concatSeq : input:AsyncSeq&lt;#seq&lt;&#39;T&gt;&gt; -&gt; AsyncSeq&lt;&#39;T&gt;<br /><br />Full name: FSharpx.Control.AsyncSeq.concatSeq</div>
-<div class="tip" id="fs23">val filterAsync : f:(&#39;T -&gt; Async&lt;bool&gt;) -&gt; input:AsyncSeq&lt;&#39;T&gt; -&gt; AsyncSeq&lt;&#39;T&gt;<br /><br />Full name: FSharpx.Control.AsyncSeq.filterAsync</div>
+<div class="tip" id="fs22">val concatSeq : input:AsyncSeq&lt;#seq&lt;&#39;T&gt;&gt; -&gt; AsyncSeq&lt;&#39;T&gt;<br /><br />Full name: FSharp.Control.AsyncSeq.concatSeq</div>
+<div class="tip" id="fs23">val filterAsync : f:(&#39;T -&gt; Async&lt;bool&gt;) -&gt; input:AsyncSeq&lt;&#39;T&gt; -&gt; AsyncSeq&lt;&#39;T&gt;<br /><br />Full name: FSharp.Control.AsyncSeq.filterAsync</div>
 <div class="tip" id="fs24">val storeTweet : t:Tweet -&gt; Async&lt;unit&gt;<br /><br />Full name: AsyncSeq.storeTweet</div>
 <div class="tip" id="fs25">type unit = Unit<br /><br />Full name: Microsoft.FSharp.Core.unit</div>
 <div class="tip" id="fs26">val storeFilteredTweets : Async&lt;unit&gt;<br /><br />Full name: AsyncSeq.storeFilteredTweets</div>
-<div class="tip" id="fs27">val iterAsync : f:(&#39;T -&gt; Async&lt;unit&gt;) -&gt; input:AsyncSeq&lt;&#39;T&gt; -&gt; Async&lt;unit&gt;<br /><br />Full name: FSharpx.Control.AsyncSeq.iterAsync</div>
+<div class="tip" id="fs27">val iterAsync : f:(&#39;T -&gt; Async&lt;unit&gt;) -&gt; input:AsyncSeq&lt;&#39;T&gt; -&gt; Async&lt;unit&gt;<br /><br />Full name: FSharp.Control.AsyncSeq.iterAsync</div>
 <div class="tip" id="fs28">static member Async.RunSynchronously : computation:Async&lt;&#39;T&gt; * ?timeout:int * ?cancellationToken:System.Threading.CancellationToken -&gt; &#39;T</div>
 <div class="tip" id="fs29">val withTime : seq&lt;int&gt;<br /><br />Full name: AsyncSeq.withTime</div>
 <div class="tip" id="fs30">Multiple items<br />val seq : sequence:seq&lt;&#39;T&gt; -&gt; seq&lt;&#39;T&gt;<br /><br />Full name: Microsoft.FSharp.Core.Operators.seq<br /><br />--------------------<br />type seq&lt;&#39;T&gt; = System.Collections.Generic.IEnumerable&lt;&#39;T&gt;<br /><br />Full name: Microsoft.FSharp.Collections.seq&lt;_&gt;</div>
@@ -489,7 +489,7 @@ benefits, it can make a difference in some scenarios.</p>
 <div class="tip" id="fs37">val tweetsObs : IObservable&lt;Tweet&gt;<br /><br />Full name: AsyncSeq.tweetsObs</div>
 <div class="tip" id="fs38">type IObservable&lt;&#39;T&gt; =<br />&#160;&#160;member Subscribe : observer:IObserver&lt;&#39;T&gt; -&gt; IDisposable<br /><br />Full name: System.IObservable&lt;_&gt;</div>
 <div class="tip" id="fs39">val filteredTweetsObs : IObservable&lt;Tweet&gt;<br /><br />Full name: AsyncSeq.filteredTweetsObs</div>
-<div class="tip" id="fs40">Multiple items<br />module Observable<br /><br />from FSharpx.Control<br /><br />--------------------<br />module Observable<br /><br />from Microsoft.FSharp.Control</div>
+<div class="tip" id="fs40">module Observable<br /><br />from Microsoft.FSharp.Control</div>
 <div class="tip" id="fs41">val filter : predicate:(&#39;T -&gt; bool) -&gt; source:IObservable&lt;&#39;T&gt; -&gt; IObservable&lt;&#39;T&gt;<br /><br />Full name: Microsoft.FSharp.Control.Observable.filter</div>
 <div class="tip" id="fs42">static member Async.RunSynchronously : computation:Async&lt;&#39;T&gt; * ?timeout:int * ?cancellationToken:Threading.CancellationToken -&gt; &#39;T</div>
 <div class="tip" id="fs43">val ofAsync : a:Async&lt;&#39;a&gt; -&gt; IObservable&lt;&#39;a&gt;<br /><br />Full name: AsyncSeq.Observable.ofAsync<br /><em><br /><br />&#160;a |&gt; Async.StartAsTask |&gt; (fun t -&gt; t.ToObservable())</em></div>
@@ -509,30 +509,30 @@ benefits, it can make a difference in some scenarios.</p>
 <div class="tip" id="fs57">val mapAsync : f:(&#39;a -&gt; Async&lt;&#39;b&gt;) -&gt; (IObservable&lt;&#39;a&gt; -&gt; IObservable&lt;&#39;b&gt;)<br /><br />Full name: AsyncSeq.Observable.mapAsync<br /><em><br /><br />&#160;Maps over an observable sequence using an async-returning function.</em></div>
 <div class="tip" id="fs58">val f : (&#39;a -&gt; Async&lt;&#39;b&gt;)</div>
 <div class="tip" id="fs59">val filteredTweetsObs&#39; : IObservable&lt;Tweet&gt;<br /><br />Full name: AsyncSeq.filteredTweetsObs&#39;</div>
-<div class="tip" id="fs60">Multiple items<br />module Observable<br /><br />from AsyncSeq<br /><br />--------------------<br />module Observable<br /><br />from FSharpx.Control<br /><br />--------------------<br />module Observable<br /><br />from Microsoft.FSharp.Control</div>
+<div class="tip" id="fs60">Multiple items<br />module Observable<br /><br />from AsyncSeq<br /><br />--------------------<br />module Observable<br /><br />from Microsoft.FSharp.Control</div>
 <div class="tip" id="fs61">val storedTweetsObs : IObservable&lt;unit&gt;<br /><br />Full name: AsyncSeq.storedTweetsObs</div>
 <div class="tip" id="fs62">val storedTeetsObs&#39; : IObservable&lt;unit&gt;<br /><br />Full name: AsyncSeq.storedTeetsObs&#39;</div>
 
         </div>
         <div class="span3">
-          <img src="/AsyncSeq/img/logo.png" alt="F# Project" style="width:150px;margin:10px" />  
+          <img src="/FSharp.Control.AsyncSeq/img/logo.png" alt="F# Project" style="width:150px;margin:10px" />  
           <ul class="nav nav-list" id="menu" style="margin-top: 20px;">
-            <li class="nav-header">AsyncSeq</li>
-            <li><a href="/AsyncSeq/index.html">Home page</a></li>
+            <li class="nav-header">FSharp.Control.AsyncSeq</li>
+            <li><a href="/FSharp.Control.AsyncSeq/index.html">Home page</a></li>
             <li class="divider"></li>
-            <li><a href="http://nuget.org/packages/AsyncSeq">Get Library via NuGet</a></li>
-            <li><a href="http://github.com/fsprojects/AsyncSeq">Source Code on GitHub</a></li>
-            <li><a href="/AsyncSeq/license.html">License</a></li>
-            <li><a href="/AsyncSeq/release-notes.html">Release Notes</a></li>
+            <li><a href="http://nuget.org/packages/FSharp.Control.AsyncSeq">Get Library via NuGet</a></li>
+            <li><a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq">Source Code on GitHub</a></li>
+            <li><a href="/FSharp.Control.AsyncSeq/license.html">License</a></li>
+            <li><a href="/FSharp.Control.AsyncSeq/release-notes.html">Release Notes</a></li>
             <li class="divider"></li>
             <li class="nav-header">Documentation</li>
-            <li><a href="/AsyncSeq/terminology.html">Terminology</a></li>
-            <li><a href="/AsyncSeq/library/AsyncSeq.html">AsyncSeq</a></li>           
-            <li><a href="/AsyncSeq/reference/index.html">API Reference</a></li>
+            <li><a href="/FSharp.Control.AsyncSeq/terminology.html">Terminology</a></li>
+            <li><a href="/FSharp.Control.AsyncSeq/library/fsharp-control-AsyncSeq.html">AsyncSeq</a></li>           
+            <li><a href="/FSharp.Control.AsyncSeq/reference/index.html">API Reference</a></li>
           </ul>
         </div>
       </div>
     </div>
-    <a href="http://github.com/fsprojects/AsyncSeq"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_gray_6d6d6d.png" alt="Fork me on GitHub"/></a>
+    <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_gray_6d6d6d.png" alt="Fork me on GitHub"/></a>
   </body>
   </html>

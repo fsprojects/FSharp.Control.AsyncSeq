@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8"/>
-    <title>Namespaces - FSharp.Control.AsyncSeq</title>
+    <title>AsyncSeqInner<'T> - FSharp.Control.AsyncSeq</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <meta name="description" content=""/>
     <meta name="author" content="Thomas Petricek, David Thomas, Steffen Forkmann"/>
@@ -33,64 +33,57 @@
         <div class="span9" id="main">
           
 
-<h1>FSharp.Control.AsyncSeq</h1>
 
 
-  <h2>FSharp.Control Namespace</h2>
-    <div>
-      <table class="table table-bordered type-list">
-    <thead>
-      <tr><td>Type</td><td>Description</td></tr>
-    </thead>
-    <tbody>
-        <tr>
-          <td class="type-name">
-            <a href="fsharp-control-asyncseq-1.html">AsyncSeq<'T></a>
-          </td>
-          <td class="xmldoc"><p>An asynchronous sequence represents a delayed computation that can be
-started to produce either Cons value consisting of the next element of the 
-sequence (head) together with the next asynchronous sequence (tail) or a 
-special value representing the end of the sequence (Nil)</p>
-</td>
-        </tr>
-        <tr>
-          <td class="type-name">
-            <a href="fsharp-control-asyncseqinner-1.html">AsyncSeqInner<'T></a>
-          </td>
-          <td class="xmldoc"><p>The interanl type that represents a value returned as a result of
+<h1>AsyncSeqInner<'T></h1>
+<div class="xmldoc">
+<p>The interanl type that represents a value returned as a result of
 evaluating a step of an asynchronous sequence</p>
-</td>
-        </tr>
-    </tbody>
-  </table>
-  <table class="table table-bordered module-list">
+</div>
+  <h3>Union Cases</h3>
+  <table class="table table-bordered member-list">
     <thead>
-      <tr><td>Module</td><td>Description</td></tr>
+      <tr><td>Union Case</td><td>Description</td></tr>
     </thead>
     <tbody>
-        <tr>
-          <td class="module-name">
-            <a href="fsharp-control-asyncseq.html">AsyncSeq</a>
-          </td>
-          <td class="xmldoc"><p>Module with helper functions for working with asynchronous sequences</p>
-</td>
-        </tr>
-        <tr>
-          <td class="module-name">
-            <a href="fsharp-control-asyncseqextensions.html">AsyncSeqExtensions</a>
-          </td>
-          <td class="xmldoc"></td>
-        </tr>
-        <tr>
-          <td class="module-name">
-            <a href="fsharp-control-seq.html">Seq</a>
-          </td>
-          <td class="xmldoc"></td>
-        </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '73', 73)" onmouseover="showTip(event, '73', 73)">
+            Cons(&#39;T,AsyncSeq&lt;&#39;T&gt;)
+          </code>
+          <div class="tip" id="73">
+            <strong>Signature:</strong> &#39;T * AsyncSeq&lt;&#39;T&gt;<br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L24-24" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '74', 74)" onmouseover="showTip(event, '74', 74)">
+            Nil
+          </code>
+          <div class="tip" id="74">
+            <strong>Signature:</strong> <br />
+                      </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L23-23" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
     </tbody>
   </table>
-
-    </div>
 
         </div>
         <div class="span3">
