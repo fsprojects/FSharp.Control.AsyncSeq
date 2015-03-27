@@ -412,6 +412,7 @@ module AsyncSeq =
           while not fin.Value do
               match buf.Get() with
               | None -> 
+                  fin := true
                   match iteratorTask.Result with
                   | Choice1Of2() -> ()
                   | Choice2Of2 exn -> raise exn

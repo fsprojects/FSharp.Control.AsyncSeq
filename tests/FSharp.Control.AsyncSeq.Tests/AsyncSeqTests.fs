@@ -289,6 +289,42 @@ let ``AsyncSeq.skipUntil should skip everything with never signal``() =
 
 
 [<Test>]
+let ``AsyncSeq.toBlockingSeq should work length 1``() =
+  let s = asyncSeq { yield 1 } |> AsyncSeq.toBlockingSeq  |> Seq.toList
+  Assert.True((s = [1]))
+
+[<Test>]
+let ``AsyncSeq.toBlockingSeq should work length 0``() =
+  let s = asyncSeq { () } |> AsyncSeq.toBlockingSeq  |> Seq.toList
+  Assert.True((s = []))
+
+[<Test>]
+let ``AsyncSeq.toBlockingSeq should work length 2 with sleep``() =
+  let s = asyncSeq { yield 1 
+                     do! Async.Sleep 10
+                     yield 2  } |> AsyncSeq.toBlockingSeq  |> Seq.toList
+  Assert.True((s = [1; 2]))
+
+[<Test>]
+let ``AsyncSeq.toBlockingSeq should work length 1 with fail``() =
+  let s = 
+      asyncSeq { yield 1 
+                 failwith "fail"  } 
+      |> AsyncSeq.toBlockingSeq  
+      |> Seq.truncate 1 
+      |> Seq.toList
+  Assert.True((s = [1]))
+
+[<Test>]
+let ``AsyncSeq.toBlockingSeq should work length 0 with fail``() =
+  let s = 
+      asyncSeq { failwith "fail"  } 
+      |> AsyncSeq.toBlockingSeq  
+      |> Seq.truncate 0 
+      |> Seq.toList
+  Assert.True((s = []))
+
+[<Test>]
 let ``AsyncSeq.toBlockingSeq should be cancellable``() =
   let cancelCount = ref 0 
   let aseq = 
