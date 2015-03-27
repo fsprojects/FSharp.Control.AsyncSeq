@@ -1,6 +1,6 @@
 [![Issue Stats](http://issuestats.com/github/fsprojects/AsyncSeq/badge/issue)](http://issuestats.com/github/fsprojects/AsyncSeq)
 [![Issue Stats](http://issuestats.com/github/fsprojects/AsyncSeq/badge/pr)](http://issuestats.com/github/fsprojects/AsyncSeq)
-[![Build status](https://ci.appveyor.com/api/projects/status/jv6nki3vm2s6bmj6?svg=true)](https://ci.appveyor.com/project/SteffenForkmann/fsharpx-async)
+[![Build status](https://ci.appveyor.com/api/projects/status/g2w1vk0s1lwa3xq8/branch/master?svg=true)](https://ci.appveyor.com/project/SteffenForkmann/async/branch/master)
 [![Build status](https://travis-ci.org/fsprojects/AsyncSeq.svg?branch=master)](https://travis-ci.org/fsprojects/AsyncSeq)
 
 # AsyncSeq [![NuGet Status](http://img.shields.io/nuget/v/AsyncSeq.svg?style=flat)](https://www.nuget.org/packages/AsyncSeq/)
