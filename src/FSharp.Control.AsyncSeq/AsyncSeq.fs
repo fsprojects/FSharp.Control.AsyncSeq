@@ -19,7 +19,8 @@ type AsyncSeq<'T> = Async<AsyncSeqInner<'T>>
 
 /// The interanl type that represents a value returned as a result of
 /// evaluating a step of an asynchronous sequence
-and AsyncSeqInner<'T> =
+and AsyncSeqInner<'T> = 
+    internal
     | Nil
     | Cons of 'T * AsyncSeq<'T>
 
