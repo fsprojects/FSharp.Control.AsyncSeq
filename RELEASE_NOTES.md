@@ -1,6 +1,7 @@
 ### 1.13 - 27.03.2015
 * Renamed to FSharp.Control.AsyncSeq
 * Remove surface area
+* Hide Nil/Cons from representation of AsyncSeq 
 
 ### 1.12.1 - 27.03.2015
 * Added Async.bindChoice, Async.ParallelIgnore, AsyncSeq.zipWithAsync, AsyncSeq.zappAsync, AsyncSeq.threadStateAsync, AsyncSeq.merge, AsyncSeq.traverseOptionAsync, AsyncSeq.traverseChoiceAsync
