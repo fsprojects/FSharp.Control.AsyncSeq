@@ -3,7 +3,7 @@
 # F# Async: FSharp.Control.AsyncSeq
 
 An AsyncSeq is a sequence in which individual elements are retrieved using an `Async` computation.
-It is similar to `seq<'a>` in that subsequent elements are pulled asynchronously. Structurally it is
+It is similar to `seq<'a>` in that subsequent elements are pulled on-demand. Structurally it is
 similar to `list<'a>` with the difference being that each head and tail node or empty node is wrapped
 in `Async`. `AsyncSeq` also bears similarity to `IObservable<'a>` with the former being based on an "asynchronous pull" and the
 latter based on a "synchronous push". Analogs for most operations defined for `Seq`, `List` and `IObservable` are also defined for 
