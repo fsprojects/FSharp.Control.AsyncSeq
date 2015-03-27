@@ -36,7 +36,7 @@
 <h1><a name="F-Async-FSharp-Control-AsyncSeq" class="anchor" href="#F-Async-FSharp-Control-AsyncSeq">F# Async: FSharp.Control.AsyncSeq</a></h1>
 
 <p>An AsyncSeq is a sequence in which individual elements are retrieved using an <code>Async</code> computation.
-It is similar to <code>seq&lt;'a&gt;</code> in that subsequent elements are pulled asynchronously. Structurally it is
+It is similar to <code>seq&lt;'a&gt;</code> in that subsequent elements are pulled on-demand. Structurally it is
 similar to <code>list&lt;'a&gt;</code> with the difference being that each head and tail node or empty node is wrapped
 in <code>Async</code>. <code>AsyncSeq</code> also bears similarity to <code>IObservable&lt;'a&gt;</code> with the former being based on an "asynchronous pull" and the
 latter based on a "synchronous push". Analogs for most operations defined for <code>Seq</code>, <code>List</code> and <code>IObservable</code> are also defined for 
@@ -259,8 +259,9 @@ in a blocking manner.</p>
 <h3><a name="Comparison-with-IObservable-a" class="anchor" href="#Comparison-with-IObservable-a">Comparison with IObservable<'a></a></h3>
 
 <p>Both <code>IObservable&lt;'a&gt;</code> and <code>AsyncSeq&lt;'a&gt;</code> represent collections of items and both provide similar operations
-for transformation and composition. The central difference between the two is that the former used a <em>synchronous push</em>
-and the latter uses an <em>asynchronous pull</em>. Consumers of an <code>IObservable&lt;'a&gt;</code> <em>subscribe</em> to receive notifications about
+for transformation and composition. The central difference between the two is that the former uses a <em>synchronous push</em>
+to a subscriber and the latter uses an <em>asynchronous pull</em> by a consumer. 
+Consumers of an <code>IObservable&lt;'a&gt;</code> <em>subscribe</em> to receive notifications about
 new items or the end of the sequence. By contrast, consumers of an <code>AsyncSeq&lt;'a&gt;</code> <em>asynchronously retrieve</em> subsequent items on their own
 terms. Some domains are more naturally modeled with one or the other, however it is less clear which is a more
 suitable tool for a specific task. In many cases, a combination of the two provides the optimal solution and 
