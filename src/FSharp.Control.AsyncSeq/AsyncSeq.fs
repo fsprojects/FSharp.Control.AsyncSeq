@@ -350,9 +350,9 @@ module AsyncSeq =
 
   /// Converts observable to an asynchronous sequence. Values that are produced
   /// by the observable while the asynchronous sequence is blocked are discarded
-  /// (this function doesn't guarantee that asynchronou ssequence will return 
+  /// (this function doesn't guarantee that the asynchronous sequence will return 
   /// all values produced by the observable)
-  let ofObservable (input : System.IObservable<_>) = 
+  let ofObservableDiscarding (input : System.IObservable<_>) = 
     ofObservableUsingAgent input (fun mbox -> async {
       while true do 
         // Allow timeout (when the observable ends, caller will
@@ -369,6 +369,10 @@ module AsyncSeq =
             match v with 
             | Put v -> repl.Reply(v)
             | _ -> failwith "Unexpected Get" })
+
+  [<System.Obsolete("Use AsyncSeq.ofObservableDiscarding. This function doesn't guarantee that the asynchronous sequence will return all values produced by the observable")>]
+  let ofObservable (input : System.IObservable<_>) = 
+      ofObservableDiscarding input 
 
   /// Converts asynchronous sequence to an IObservable<_>. When the client subscribes
   /// to the observable, a new copy of asynchronous sequence is started and is 
@@ -389,29 +393,36 @@ module AsyncSeq =
   /// Converts asynchronous sequence to a synchronous blocking sequence.
   /// The elements of the asynchronous sequence are consumed lazily.
   let toBlockingSeq (input : AsyncSeq<'T>) = 
-    // Write all elements to a blocking buffer and then add None to denote end
-    let buf = new BlockingQueueAgent<_>(1)
-    let iterator =
-        async {
-            let! res = iterAsync (Some >> buf.AsyncAdd) input |> Async.Catch
-            do! buf.AsyncAdd(None)
-            return match res with Choice2Of2 e -> raise e | _ -> () 
-        } |> Async.StartAsTask
-
-    // Read elements from the blocking buffer & return a sequences
-    let rec loop () = seq {
-      match buf.Get() with
-      | None -> iterator.Result
-      | Some v -> 
-          yield v
-          yield! loop() }
-    loop ()
+      seq { 
+          // Write all elements to a blocking buffer and then add None to denote end
+          let buf = new BlockingQueueAgent<_>(1)
+          
+          use cts = new System.Threading.CancellationTokenSource()
+          use _cancel = { new IDisposable with member __.Dispose() = cts.Cancel() }
+          let iteratorTask = 
+              async { 
+                  let! res = iterAsync (Some >> buf.AsyncAdd) input |> Async.Catch
+                  do! buf.AsyncAdd(None)
+                  return res
+              }
+              |> fun p -> Async.StartAsTask(p, cancellationToken = cts.Token)
+          
+          // Read elements from the blocking buffer & return a sequences
+          let fin = ref false
+          while not fin.Value do
+              match buf.Get() with
+              | None -> 
+                  match iteratorTask.Result with
+                  | Choice1Of2() -> ()
+                  | Choice2Of2 exn -> raise exn
+              | Some v -> yield v
+      }
 
   /// Create a new asynchronous sequence that caches all elements of the 
   /// sequence specified as the input. When accessing the resulting sequence
   /// multiple times, the input will still be evaluated only once
   let rec cache (input : AsyncSeq<'T>) = 
-    let agent = Agent<AsyncReplyChannel<_>>.Start(fun agent -> async {
+    let agent = MailboxProcessor<AsyncReplyChannel<_>>.Start(fun agent -> async {
       let! (repl:AsyncReplyChannel<AsyncSeqInner<'T>>) = agent.Receive()
       let! next = input
       let res = 

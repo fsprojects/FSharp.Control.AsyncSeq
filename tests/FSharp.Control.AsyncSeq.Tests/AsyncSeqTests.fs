@@ -237,7 +237,12 @@ let ``AsyncSeq.toBlockingSeq does not hung forever and rethrows exception``() =
       yield 1
       failwith "error"
   }
-  Assert.Throws<AggregateException>(fun _ -> s |> AsyncSeq.toBlockingSeq |> Seq.toList |> ignore) |> ignore
+  Assert.Throws<Exception>(fun _ -> s |> AsyncSeq.toBlockingSeq |> Seq.toList |> ignore) |> ignore
+  try 
+      let _ = s |> AsyncSeq.toBlockingSeq |> Seq.toList 
+      ()
+  with e -> 
+      Assert.AreEqual(e.Message, "error") 
 
 
 [<Test>]
@@ -281,3 +286,26 @@ let ``AsyncSeq.skipUntil should not skip with completed signal``() =
 let ``AsyncSeq.skipUntil should skip everything with never signal``() =
   let actual = [1;2;3;4] |> AsyncSeq.ofSeq |> AsyncSeq.skipUntil AsyncOps.never
   Assert.True(EQ AsyncSeq.empty actual)
+
+
+[<Test>]
+let ``AsyncSeq.toBlockingSeq should be cancellable``() =
+  let cancelCount = ref 0 
+  let aseq = 
+      asyncSeq { 
+          use! a = Async.OnCancel(fun x -> incr cancelCount)
+          while true do 
+              yield 1 
+              do! Async.Sleep 10
+    }
+    
+  let asSeq = aseq |> AsyncSeq.toBlockingSeq
+  let enum = asSeq.GetEnumerator()
+  Assert.AreEqual(cancelCount.Value, 0)
+  let canMoveNext = enum.MoveNext()
+  Assert.AreEqual(canMoveNext, true)
+  Assert.AreEqual(cancelCount.Value, 0)
+  enum.Dispose()
+  System.Threading.Thread.Sleep(1000) // wait for task cancellation to be effective
+  Assert.AreEqual(cancelCount.Value, 1)
+
