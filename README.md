@@ -1,13 +1,13 @@
-[![Issue Stats](http://issuestats.com/github/fsprojects/AsyncSeq/badge/issue)](http://issuestats.com/github/fsprojects/AsyncSeq)
-[![Issue Stats](http://issuestats.com/github/fsprojects/AsyncSeq/badge/pr)](http://issuestats.com/github/fsprojects/AsyncSeq)
+[![Issue Stats](http://issuestats.com/github/fsprojects/FSharp.Control.AsyncSeq/badge/issue)](http://issuestats.com/github/fsprojects/FSharp.Control.AsyncSeq)
+[![Issue Stats](http://issuestats.com/github/fsprojects/FSharp.Control.AsyncSeq/badge/pr)](http://issuestats.com/github/fsprojects/FSharp.Control.AsyncSeq)
 [![Build status](https://ci.appveyor.com/api/projects/status/k7lyn5rqeuqagyi2/branch/master?svg=true)](https://ci.appveyor.com/project/SteffenForkmann/asyncseq/branch/master)
-[![Build status](https://travis-ci.org/fsprojects/AsyncSeq.svg?branch=master)](https://travis-ci.org/fsprojects/AsyncSeq)
+[![Build status](https://travis-ci.org/fsprojects/FSharp.Control.AsyncSeq.svg?branch=master)](https://travis-ci.org/fsprojects/AsyncSeq)
 
-# AsyncSeq [![NuGet Status](http://img.shields.io/nuget/v/AsyncSeq.svg?style=flat)](https://www.nuget.org/packages/AsyncSeq/)
+# FSharp.Control.AsyncSeq [![NuGet Status](http://img.shields.io/nuget/v/FSharp.Control.AsyncSeq.svg?style=flat)](https://www.nuget.org/packages/FSharp.Control.AsyncSeq/)
 
-**AsyncSeq** is a collection of asynchronous programming utilities for F#. 
+**FSharp.Control.AsyncSeq** is a collection of asynchronous programming utilities for F#. 
 
-See [the home page](http://fsprojects.github.io/AsyncSeq/) for details. The home page can be [edited, forked or cloned](https://github.com/fsprojects/AsyncSeq/tree/gh-pages)
+See [the home page](http://fsprojects.github.io/FSharp.Control.AsyncSeq/) for details. The home page can be [edited, forked or cloned](https://github.com/fsprojects/AsyncSeq/tree/gh-pages)
 Please contribute to this project. Don't ask for permission, just fork the repository and send pull requests.
 
 Please also join the [F# Open Source Group](http://fsharp.github.com)

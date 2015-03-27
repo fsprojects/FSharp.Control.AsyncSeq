@@ -2,7 +2,7 @@
 // F# async extensions (AutoCancelAgent.fs)
 // (c) Tomas Petricek, 2011, Available under Apache 2.0 license.
 // ----------------------------------------------------------------------------
-namespace FSharpx.Control
+namespace FSharp.Control
 
 open System
 open System.Threading
@@ -13,7 +13,7 @@ open System.Threading
 /// Wrapper for the standard F# agent (MailboxProcessor) that
 /// supports stopping of the agent's body using the IDisposable 
 /// interface (the type automatically creates a cancellation token)
-type AutoCancelAgent<'T> private (mbox:Agent<'T>, cts:CancellationTokenSource) = 
+type internal AutoCancelAgent<'T> private (mbox:Agent<'T>, cts:CancellationTokenSource) = 
 
   /// Start a new disposable agent using the specified body function
   /// (the method creates a new cancellation token for the agent)

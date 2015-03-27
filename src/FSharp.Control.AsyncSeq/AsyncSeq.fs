@@ -2,12 +2,12 @@
 // F# async extensions (AsyncSeq.fs)
 // (c) Tomas Petricek, 2011, Available under Apache 2.0 license.
 // ----------------------------------------------------------------------------
-namespace FSharpx.Control
+namespace FSharp.Control
 
 open System
 open System.Threading
 open System.IO
-open FSharpx.Control.Utils
+open FSharp.Control.Utils
 
 // ----------------------------------------------------------------------------
 
@@ -159,7 +159,7 @@ module AsyncSeq =
 
   // Add asynchronous for loop to the 'async' computation builder
   type Microsoft.FSharp.Control.AsyncBuilder with
-    member x.For (seq:AsyncSeq<'T>, action:'T -> Async<unit>) = 
+    member internal x.For (seq:AsyncSeq<'T>, action:'T -> Async<unit>) = 
       async.Bind(seq, function
         | Nil -> async.Zero()
         | Cons(h, t) -> async.Combine(action h, x.For(t, action)))
@@ -467,16 +467,16 @@ module AsyncSeq =
   /// Combines two asynchronous sequences using the specified function to which it also passes the index.
   /// The values from sequences are retrieved in parallel.
   /// The resulting sequence stops when either of the argument sequences stop.
-  let inline zipWithIndexAsync (f:int -> 'a -> Async<'b>) (s:AsyncSeq<'a>) : AsyncSeq<'b> =
+  let zipWithIndexAsync (f:int -> 'a -> Async<'b>) (s:AsyncSeq<'a>) : AsyncSeq<'b> =
     threadStateAsync (fun i a -> f i a |> Async.map (fun b -> b,i + 1)) 0 s        
 
   /// Feeds an async sequence of values into an async sequence of async functions.
   let inline zappAsync (fs:AsyncSeq<'a -> Async<'b>>) (s:AsyncSeq<'a>) : AsyncSeq<'b> =
-    zipWithAsync ((|>)) s fs
+    zipWithAsync (|>) s fs
 
   /// Feeds an async sequence of values into an async sequence of functions.
   let inline zapp (fs:AsyncSeq<'a -> 'b>) (s:AsyncSeq<'a>) : AsyncSeq<'b> =
-    zipWith ((|>)) s fs
+    zipWith (|>) s fs
 
   /// Traverses an async sequence an applies to specified function such that if None is returned the traversal short-circuits
   /// and None is returned as the result. Otherwise, the entire sequence is traversed and the result returned as Some.
@@ -710,9 +710,14 @@ module AsyncSeqExtensions =
         | Cons(h, t) -> async.Combine(action h, x.For(t, action)))
 
 module Seq = 
-  open FSharpx.Control
+  open FSharp.Control
 
   /// Converts asynchronous sequence to a synchronous blocking sequence.
   /// The elements of the asynchronous sequence are consumed lazily.
   let ofAsyncSeq (input : AsyncSeq<'T>) =
     AsyncSeq.toBlockingSeq input
+
+namespace System
+
+[<assembly:System.Runtime.CompilerServices.InternalsVisibleTo("FSharp.Control.AsyncSeq.Tests")>]
+do ()

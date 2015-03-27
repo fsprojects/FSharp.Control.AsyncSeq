@@ -7,11 +7,11 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>2d4f3d0e-0e18-48d7-9c27-98864039393d</ProjectGuid>
     <OutputType>Library</OutputType>
-    <RootNamespace>AsyncSeq</RootNamespace>
-    <AssemblyName>AsyncSeq</AssemblyName>
+    <RootNamespace>FSharp.Control.AsyncSeq</RootNamespace>
+    <AssemblyName>FSharp.Control.AsyncSeq</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <TargetFSharpCoreVersion>4.3.0.0</TargetFSharpCoreVersion>
-    <Name>AsyncSeq</Name>
+    <Name>FSharp.Control.AsyncSeq</Name>
     <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -22,7 +22,7 @@
     <OutputPath>..\..\bin</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <WarningLevel>3</WarningLevel>
-    <DocumentationFile>..\..\bin\AsyncSeq.xml</DocumentationFile>
+    <DocumentationFile>..\..\bin\FSharp.Control.AsyncSeq.xml</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -31,7 +31,7 @@
     <OutputPath>..\..\bin</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <WarningLevel>3</WarningLevel>
-    <DocumentationFile>..\..\bin\AsyncSeq.xml</DocumentationFile>
+    <DocumentationFile>..\..\bin\FSharp.Control.AsyncSeq.xml</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup>
     <MinimumVisualStudioVersion Condition="'$(MinimumVisualStudioVersion)' == ''">11</MinimumVisualStudioVersion>

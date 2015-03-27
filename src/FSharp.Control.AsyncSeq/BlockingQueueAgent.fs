@@ -2,7 +2,7 @@
 // F# async extensions (BlockingQueueAgent.fs)
 // (c) Tomas Petricek, 2011, Available under Apache 2.0 license.
 // ----------------------------------------------------------------------------
-namespace FSharpx.Control
+namespace FSharp.Control
 
 open System
 open System.Collections.Generic
@@ -18,7 +18,7 @@ type internal BlockingAgentMessage<'T> =
 /// and blocking get operation (this implements the producer-consumer 
 /// concurrent programming pattern). The constructor takes the maximal
 /// size of the buffer.
-type BlockingQueueAgent<'T>(maxLength) =
+type internal BlockingQueueAgent<'T>(maxLength) =
 
     [<VolatileField>]
     let mutable count = 0

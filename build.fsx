@@ -28,7 +28,7 @@ open SourceLink
 
 // The name of the project
 // (used by attributes in AssemblyInfo, name of a NuGet package and directory in 'src')
-let project = "AsyncSeq"
+let project = "FSharp.Control.AsyncSeq"
 
 // Short summary of the project
 // (used as description in AssemblyInfo and as a short summary for NuGet package)
@@ -45,7 +45,7 @@ let authors = [ "Tomasz Petricek"; "David Thomas"; "Ryan Riley"; "Steffen Forkma
 let tags = "F#, async, fsharpx"
 
 // File system information 
-let solutionFile  = "AsyncSeq.sln"
+let solutionFile  = "FSharp.Control.AsyncSeq.sln"
 
 // Pattern specifying assemblies to be tested using NUnit
 let testAssemblies = "tests/**/bin/Release/*Tests*.dll"
@@ -56,7 +56,7 @@ let gitOwner = "fsprojects"
 let gitHome = "https://github.com/" + gitOwner
 
 // The name of the project on GitHub
-let gitName = "AsyncSeq"
+let gitName = "FSharp.Control.AsyncSeq"
 
 // The url for the raw files hosted
 let gitRaw = environVarOrDefault "gitRaw" "https://raw.github.com/fsprojects"
