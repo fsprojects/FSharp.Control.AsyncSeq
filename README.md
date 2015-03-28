@@ -7,7 +7,7 @@
 
 **FSharp.Control.AsyncSeq** is a collection of asynchronous programming utilities for F#. 
 
-See [the home page](http://fsprojects.github.io/FSharp.Control.AsyncSeq/) for details. The home page can be [edited, forked or cloned](https://github.com/fsprojects/AsyncSeq/tree/gh-pages)
+See [the home page](http://fsprojects.github.io/FSharp.Control.AsyncSeq/) for details. The home page can be [edited, forked or cloned](https://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/docs/content)
 Please contribute to this project. Don't ask for permission, just fork the repository and send pull requests.
 
 Please also join the [F# Open Source Group](http://fsharp.github.com)

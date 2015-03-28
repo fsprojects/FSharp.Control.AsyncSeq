@@ -39,7 +39,7 @@ let summary = "Asynchronous sequences for F#"
 let description = "Asynchronous sequences for F#"
 
 // List of author names (for NuGet package)
-let authors = [ "Tomasz Petricek"; "David Thomas"; "Ryan Riley"; "Steffen Forkmann" ]
+let authors = [ "Tomas Petricek"; "David Thomas"; "Ryan Riley"; "Steffen Forkmann" ]
 
 // Tags for your project (for NuGet package)
 let tags = "F#, async, fsharpx"
