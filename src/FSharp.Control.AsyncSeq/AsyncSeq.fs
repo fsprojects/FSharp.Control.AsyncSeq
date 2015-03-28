@@ -306,14 +306,17 @@ module AsyncSeq =
   ///
   /// The aggregation function is asynchronous (and the input sequence will
   /// be asked for the next element after the processing of an element completes).
-  let rec scanAsync f (state:'TState) (input : AsyncSeq<'T>) = asyncSeq {
-    let! v = input
-    match v with
-    | Nil -> ()
-    | Cons(h, t) ->
+  let scanAsync f (state:'TState) (input : AsyncSeq<'T>) =    
+    let rec go f state s = asyncSeq {
+      let! v = s
+      match v with
+      | Nil -> ()
+      | Cons(h, t) ->
         let! v = f state h
         yield v
-        yield! t |> scanAsync f v }
+        yield! t |> go f v }
+    Cons(state, go f state input) |> async.Return
+
 
   /// Iterates over the input sequence and calls the specified function for
   /// every value (to perform some side-effect asynchronously).

@@ -153,7 +153,16 @@ let ``AsyncSeq.scanAsync``() =
   let f i a = i + a
   let z = 0
   let actual = ls |> AsyncSeq.ofSeq |> AsyncSeq.scanAsync (fun i a -> f i a |> async.Return) z
-  let expected = ls |> Seq.scan f z |> Seq.skip 1 |> AsyncSeq.ofSeq
+  let expected = ls |> List.scan f z |> AsyncSeq.ofSeq
+  Assert.True(EQ expected actual)
+
+[<Test>]
+let ``AsyncSeq.scanAsync on empty should emit initial state``() =
+  let ls = List.empty
+  let f i a = i + a
+  let z = 0
+  let actual = ls |> AsyncSeq.ofSeq |> AsyncSeq.scanAsync (fun i a -> f i a |> async.Return) z
+  let expected = ls |> List.scan f z |> AsyncSeq.ofSeq
   Assert.True(EQ expected actual)
 
 
