@@ -23,6 +23,8 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <WarningLevel>3</WarningLevel>
     <DocumentationFile>..\..\bin\FSharp.Control.AsyncSeq.xml</DocumentationFile>
+    <OtherFlags>
+    </OtherFlags>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -60,6 +62,7 @@
   <ItemGroup>
     <Compile Include="AutoCancelAgent.fs" />
     <Compile Include="BlockingQueueAgent.fs" />
+    <Compile Include="AsyncSeq.fsi" />
     <Compile Include="AsyncSeq.fs" />
     <None Include="paket.references" />
     <None Include="paket.template" />
