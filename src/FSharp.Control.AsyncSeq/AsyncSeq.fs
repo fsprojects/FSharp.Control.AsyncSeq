@@ -255,14 +255,16 @@ module AsyncSeq =
     | Nil -> return def
     | Cons(h, _) -> return h }
 
-  let rec scanAsync f (state:'State) (input : AsyncSeq<'T>) = asyncSeq {
-    let! v = input
-    match v with
-    | Nil -> ()
-    | Cons(h, t) ->
+  let scanAsync f (state:'TState) (input : AsyncSeq<'T>) =    
+    let rec go f state s = asyncSeq {
+      let! v = s
+      match v with
+      | Nil -> ()
+      | Cons(h, t) ->
         let! v = f state h
         yield v
-        yield! t |> scanAsync f v }
+        yield! t |> go f v }
+    asyncSeq { yield state ; yield! go f state input }
 
   let iterAsync f (input : AsyncSeq<'T>) = async {
     for itm in input do 
