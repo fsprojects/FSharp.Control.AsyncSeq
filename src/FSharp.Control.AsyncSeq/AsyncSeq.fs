@@ -315,7 +315,7 @@ module AsyncSeq =
         let! v = f state h
         yield v
         yield! t |> go f v }
-    Cons(state, go f state input) |> async.Return
+    asyncSeq { yield state ; yield! go f state input }
 
 
   /// Iterates over the input sequence and calls the specified function for
