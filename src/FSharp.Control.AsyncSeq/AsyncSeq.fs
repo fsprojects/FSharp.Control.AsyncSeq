@@ -308,36 +308,15 @@ module AsyncSeq =
     for el in input do 
       yield el }
 
-  /// A helper type for implementation of buffering when converting 
-  /// observable to an asynchronous sequence
-  type internal BufferMessage<'T> = 
-    | Get of AsyncReplyChannel<'T>
-    | Put of 'T
-
-  /// Converts observable to an asynchronous sequence using an agent with
-  /// a body specified as the argument. The returnd async sequence repeatedly 
-  /// sends 'Get' message to the agent to get the next element. The observable
-  /// sends 'Put' message to the agent (as new inputs are generated).
-  let internal ofObservableUsingAgent (input : System.IObservable<_>) f = 
-    asyncSeq {  
-      use agent = AutoCancelAgent.Start(f)
-      use d = input |> Observable.asUpdates
-                    |> Observable.subscribe (Put >> agent.Post)
-      
-      let rec loop() = asyncSeq {
-        let! msg = agent.PostAndAsyncReply(Get)
-        match msg with
-        | Observable.Error e -> raise e
-        | Observable.Completed -> ()
-        | Observable.Next v ->
-            yield v
-            yield! loop() }
-      yield! loop() }
-
   let ofObservableBuffered (input : System.IObservable<_>) = 
     asyncSeq {  
       let cts = new CancellationTokenSource()
       try 
+        // The body of this agent returns immediately.  It turns out this is a valid use of an F# agent, and it
+        // leaves the agent available as a queue that supports an asynchronous receive.
+        //
+        // This makes the cancellation token is somewhat meaningless since the body has already returned.  However
+        // if we don't pass it in then the default cancellation token will be used, so we pass one in for completeness.
         use agent = MailboxProcessor<_>.Start((fun inbox -> async.Return() ), cancellationToken = cts.Token)
         use d = input |> Observable.asUpdates |> Observable.subscribe agent.Post
         let fin = ref false
@@ -351,28 +330,8 @@ module AsyncSeq =
          // Cancel on early exit 
          cts.Cancel() }
 
-
-  let ofObservableDiscarding (input : System.IObservable<_>) = 
-    ofObservableUsingAgent input (fun mbox -> async {
-      while true do 
-        // Allow timeout (when the observable ends, caller will
-        // cancel the agent, so we need timeout to allow cancellation)
-        let! msg = mbox.TryReceive(200)
-        match msg with 
-        | Some(Put _) | None -> 
-            () // Ignore put or no message 
-        | Some(Get repl) ->
-            // Reader is blocked, so next will be Put
-            // (caller will not stop the agent at this point,
-            // so timeout is not necessary)
-            let! v = mbox.Receive()
-            match v with 
-            | Put v -> repl.Reply(v)
-            | _ -> failwith "Unexpected Get" })
-
-  [<System.Obsolete("Use AsyncSeq.ofObservableDiscarding or AsyncSeq.ofObservableBuffered. This function doesn't guarantee that the asynchronous sequence will return all values produced by the observable")>]
-  let ofObservable (input : System.IObservable<_>) = 
-      ofObservableDiscarding input 
+  [<System.Obsolete("Please use AsyncSeq.ofObservableBuffered. The original AsyncSeq.ofObservable doesn't guarantee that the asynchronous sequence will return all values produced by the observable",true) >]
+  let ofObservable (input : System.IObservable<'T>) : AsyncSeq<'T> = failwith "no longer supported"
 
   let toObservable (aseq:AsyncSeq<_>) =
     let start (obs:IObserver<_>) =
@@ -665,7 +624,6 @@ module AsyncSeqExtensions =
         | Cons(h, t) -> async.Combine(action h, x.For(t, action)))
 
 module Seq = 
-  open FSharp.Control
 
   let ofAsyncSeq (input : AsyncSeq<'T>) =
     AsyncSeq.toBlockingSeq input
