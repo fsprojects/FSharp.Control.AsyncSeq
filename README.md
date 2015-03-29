@@ -1,6 +1,5 @@
 [![Issue Stats](http://issuestats.com/github/fsprojects/FSharp.Control.AsyncSeq/badge/issue)](http://issuestats.com/github/fsprojects/FSharp.Control.AsyncSeq)
 [![Issue Stats](http://issuestats.com/github/fsprojects/FSharp.Control.AsyncSeq/badge/pr)](http://issuestats.com/github/fsprojects/FSharp.Control.AsyncSeq)
-[![Build status](https://ci.appveyor.com/api/projects/status/k7lyn5rqeuqagyi2/branch/master?svg=true)](https://ci.appveyor.com/project/SteffenForkmann/asyncseq/branch/master)
 [![Build status](https://ci.appveyor.com/api/projects/status/22wknie0x5c2jfuo/branch/master?svg=true)](https://ci.appveyor.com/project/SteffenForkmann/fsharp-control-asyncseq/branch/master)
 
 # FSharp.Control.AsyncSeq [![NuGet Status](http://img.shields.io/nuget/v/FSharp.Control.AsyncSeq.svg?style=flat)](https://www.nuget.org/packages/FSharp.Control.AsyncSeq/)
