@@ -338,7 +338,7 @@ module AsyncSeq =
     asyncSeq {  
       let cts = new CancellationTokenSource()
       try 
-        let agent = MailboxProcessor<_>.Start((fun inbox -> async.Return() ), cancellationToken = cts.Token)
+        use agent = MailboxProcessor<_>.Start((fun inbox -> async.Return() ), cancellationToken = cts.Token)
         use d = input |> Observable.asUpdates |> Observable.subscribe agent.Post
         let fin = ref false
         while not fin.Value do 
@@ -388,29 +388,28 @@ module AsyncSeq =
 
   let toBlockingSeq (input : AsyncSeq<'T>) = 
       seq { 
-          // Write all elements to a blocking buffer and then add None to denote end
-          let buf = new BlockingQueueAgent<_>(1)
+          // Write all elements to a blocking buffer 
+          use buf = new System.Collections.Concurrent.BlockingCollection<_>()
           
           use cts = new System.Threading.CancellationTokenSource()
           use _cancel = { new IDisposable with member __.Dispose() = cts.Cancel() }
           let iteratorTask = 
               async { 
-                  let! res = iterAsync (Some >> buf.AsyncAdd) input |> Async.Catch
-                  do! buf.AsyncAdd(None)
-                  return res
+                  try 
+                     do! iter (Observable.Next >> buf.Add) input 
+                     buf.CompleteAdding()
+                  with err -> 
+                     buf.Add(Observable.Error err)
+                     buf.CompleteAdding()
               }
               |> fun p -> Async.StartAsTask(p, cancellationToken = cts.Token)
           
           // Read elements from the blocking buffer & return a sequences
-          let fin = ref false
-          while not fin.Value do
-              match buf.Get() with
-              | None -> 
-                  fin := true
-                  match iteratorTask.Result with
-                  | Choice1Of2() -> ()
-                  | Choice2Of2 exn -> raise exn
-              | Some v -> yield v
+          for x in buf.GetConsumingEnumerable() do 
+            match x with
+            | Observable.Next v -> yield v
+            | Observable.Error err -> raise err
+            | Observable.Completed -> failwith "unexpected"
       }
 
   let rec cache (input : AsyncSeq<'T>) = 

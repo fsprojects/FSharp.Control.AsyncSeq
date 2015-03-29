@@ -61,7 +61,6 @@
   <Import Project="..\..\.paket\paket.targets" />
   <ItemGroup>
     <Compile Include="AutoCancelAgent.fs" />
-    <Compile Include="BlockingQueueAgent.fs" />
     <Compile Include="AsyncSeq.fsi" />
     <Compile Include="AsyncSeq.fs" />
     <None Include="paket.references" />
