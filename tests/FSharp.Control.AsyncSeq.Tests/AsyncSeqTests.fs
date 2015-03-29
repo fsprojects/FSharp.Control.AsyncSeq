@@ -367,6 +367,7 @@ let ``AsyncSeq.while should allow do at end``() =
   Assert.True(true)
 
 let observe vs err = 
+    let discarded = ref false
     { new IObservable<'U> with 
             member x.Subscribe(observer) = 
                 for v in vs do 
@@ -374,28 +375,42 @@ let observe vs err =
                 if err then 
                    observer.OnError (Failure "fail")
                 observer.OnCompleted()
-                { new IDisposable with member __.Dispose() = () }  }
+                { new IDisposable with member __.Dispose() = discarded := true }  },
+    (fun _ -> discarded.Value)
     
 [<Test>]
-let ``AsyncSeq.ofObservable should work (empty)``() =  
-  Assert.True(observe [] false |> AsyncSeq.ofObservableBuffered |> AsyncSeq.toList |> Async.RunSynchronously = [])
+let ``AsyncSeq.ofObservableBuffered should work (empty)``() =  
+  let src, discarded = observe [] false
+  Assert.True(src |> AsyncSeq.ofObservableBuffered |> AsyncSeq.toList |> Async.RunSynchronously = [])
+  Assert.True(discarded())
 
 [<Test>]
-let ``AsyncSeq.ofObservable should work (sinngleton)``() =  
-  Assert.True(observe [1] false |> AsyncSeq.ofObservableBuffered |> AsyncSeq.toList |> Async.RunSynchronously = [1])
+let ``AsyncSeq.ofObservableBuffered should work (sinngleton)``() =  
+  let src, discarded = observe [1] false
+  Assert.True(src |> AsyncSeq.ofObservableBuffered |> AsyncSeq.toList |> Async.RunSynchronously = [1])
+  Assert.True(discarded())
 
 [<Test>]
-let ``AsyncSeq.ofObservable should work (ten)``() =  
-  Assert.True(observe [1..10] false |> AsyncSeq.ofObservableBuffered |> AsyncSeq.toList |> Async.RunSynchronously = [1..10])
+let ``AsyncSeq.ofObservableBuffered should work (ten)``() =  
+  let src, discarded = observe [1..10] false
+  Assert.True(src |> AsyncSeq.ofObservableBuffered |> AsyncSeq.toList |> Async.RunSynchronously = [1..10])
+  Assert.True(discarded())
 
 [<Test>]
-let ``AsyncSeq.ofObservable should work (empty, fail)``() =  
-  Assert.True(try (observe [] true |> AsyncSeq.ofObservableBuffered |> AsyncSeq.toList |> Async.RunSynchronously |> ignore); false with _ -> true)
+let ``AsyncSeq.ofObservableBuffered should work (empty, fail)``() =  
+  let src, discarded = observe [] true
+  Assert.True(try (src |> AsyncSeq.ofObservableBuffered |> AsyncSeq.toList |> Async.RunSynchronously |> ignore); false with _ -> true)
+  Assert.True(discarded())
 
 [<Test>]
-let ``AsyncSeq.ofObservable should work (one, fail)``() =  
-  Assert.True(try (observe [1] true |> AsyncSeq.ofObservableBuffered |> AsyncSeq.toList |> Async.RunSynchronously |> ignore); false with _ -> true)
+let ``AsyncSeq.ofObservableBuffered should work (one, fail)``() =  
+  let src, discarded = observe [1] true
+  Assert.True(try (src |> AsyncSeq.ofObservableBuffered |> AsyncSeq.toList |> Async.RunSynchronously |> ignore); false with _ -> true)
+  Assert.True(discarded())
 
 [<Test>]
-let ``AsyncSeq.ofObservable should work (one, take)``() =  
-  Assert.True(observe [1] false |> AsyncSeq.ofObservableBuffered |> AsyncSeq.take 1 |> AsyncSeq.toList |> Async.RunSynchronously = [1])
+let ``AsyncSeq.ofObservableBuffered should work (one, take)``() =  
+  let src, discarded = observe [1] true
+  Assert.True(src |> AsyncSeq.ofObservableBuffered |> AsyncSeq.take 1 |> AsyncSeq.toList |> Async.RunSynchronously = [1])
+  // Take doesn't correctly run finally clauses, see https://github.com/fsprojects/FSharp.Control.AsyncSeq/issues/15
+  //Assert.True(discarded())
