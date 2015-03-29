@@ -153,7 +153,16 @@ let ``AsyncSeq.scanAsync``() =
   let f i a = i + a
   let z = 0
   let actual = ls |> AsyncSeq.ofSeq |> AsyncSeq.scanAsync (fun i a -> f i a |> async.Return) z
-  let expected = ls |> Seq.scan f z |> Seq.skip 1 |> AsyncSeq.ofSeq
+  let expected = ls |> List.scan f z |> AsyncSeq.ofSeq
+  Assert.True(EQ expected actual)
+
+[<Test>]
+let ``AsyncSeq.scanAsync on empty should emit initial state``() =
+  let ls = List.empty
+  let f i a = i + a
+  let z = 0
+  let actual = ls |> AsyncSeq.ofSeq |> AsyncSeq.scanAsync (fun i a -> f i a |> async.Return) z
+  let expected = ls |> List.scan f z |> AsyncSeq.ofSeq
   Assert.True(EQ expected actual)
 
 
@@ -291,7 +300,6 @@ let ``AsyncSeq.skipUntil should skip everything with never signal``() =
   let actual = [1;2;3;4] |> AsyncSeq.ofSeq |> AsyncSeq.skipUntil AsyncOps.never
   Assert.True(EQ AsyncSeq.empty actual)
 
-
 [<Test>]
 let ``AsyncSeq.toBlockingSeq should work length 1``() =
   let s = asyncSeq { yield 1 } |> AsyncSeq.toBlockingSeq  |> Seq.toList
@@ -349,3 +357,11 @@ let ``AsyncSeq.toBlockingSeq should be cancellable``() =
   System.Threading.Thread.Sleep(1000) // wait for task cancellation to be effective
   Assert.AreEqual(cancelCount.Value, 1)
 
+[<Test>]
+let ``AsyncSeq.while should allow do at end``() =  
+  let s1 = asyncSeq {
+    while false do 
+        yield 1
+        do! Async.Sleep 10
+  }
+  Assert.True(true)
