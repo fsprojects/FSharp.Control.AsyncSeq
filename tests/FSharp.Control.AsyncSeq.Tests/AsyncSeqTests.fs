@@ -365,3 +365,37 @@ let ``AsyncSeq.while should allow do at end``() =
         do! Async.Sleep 10
   }
   Assert.True(true)
+
+let observe vs err = 
+    { new IObservable<'U> with 
+            member x.Subscribe(observer) = 
+                for v in vs do 
+                   observer.OnNext v
+                if err then 
+                   observer.OnError (Failure "fail")
+                observer.OnCompleted()
+                { new IDisposable with member __.Dispose() = () }  }
+    
+[<Test>]
+let ``AsyncSeq.ofObservable should work (empty)``() =  
+  Assert.True(observe [] false |> AsyncSeq.ofObservableBuffered |> AsyncSeq.toList |> Async.RunSynchronously = [])
+
+[<Test>]
+let ``AsyncSeq.ofObservable should work (sinngleton)``() =  
+  Assert.True(observe [1] false |> AsyncSeq.ofObservableBuffered |> AsyncSeq.toList |> Async.RunSynchronously = [1])
+
+[<Test>]
+let ``AsyncSeq.ofObservable should work (ten)``() =  
+  Assert.True(observe [1..10] false |> AsyncSeq.ofObservableBuffered |> AsyncSeq.toList |> Async.RunSynchronously = [1..10])
+
+[<Test>]
+let ``AsyncSeq.ofObservable should work (empty, fail)``() =  
+  Assert.True(try (observe [] true |> AsyncSeq.ofObservableBuffered |> AsyncSeq.toList |> Async.RunSynchronously |> ignore); false with _ -> true)
+
+[<Test>]
+let ``AsyncSeq.ofObservable should work (one, fail)``() =  
+  Assert.True(try (observe [1] true |> AsyncSeq.ofObservableBuffered |> AsyncSeq.toList |> Async.RunSynchronously |> ignore); false with _ -> true)
+
+[<Test>]
+let ``AsyncSeq.ofObservable should work (one, take)``() =  
+  Assert.True(observe [1] false |> AsyncSeq.ofObservableBuffered |> AsyncSeq.take 1 |> AsyncSeq.toList |> Async.RunSynchronously = [1])

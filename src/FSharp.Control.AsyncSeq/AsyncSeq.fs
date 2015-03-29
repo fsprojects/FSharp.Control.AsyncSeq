@@ -335,20 +335,21 @@ module AsyncSeq =
       yield! loop() }
 
   let ofObservableBuffered (input : System.IObservable<_>) = 
-    ofObservableUsingAgent input (fun mbox -> async {
-        let buffer = new System.Collections.Generic.Queue<_>()
-        let repls = new System.Collections.Generic.Queue<_>()
-        while true do
-          // Receive next message (when observable ends, caller will
-          // cancel the agent, so we need timeout to allow cancleation)
-          let! msg = mbox.TryReceive(200)
-          match msg with 
-          | Some(Put(v)) -> buffer.Enqueue(v)
-          | Some(Get(repl)) -> repls.Enqueue(repl)
-          | _ -> () 
-          // Process matching calls from buffers
-          while buffer.Count > 0 && repls.Count > 0 do
-            repls.Dequeue().Reply(buffer.Dequeue())  })
+    asyncSeq {  
+      let cts = new CancellationTokenSource()
+      try 
+        let agent = MailboxProcessor<_>.Start((fun inbox -> async.Return() ), cancellationToken = cts.Token)
+        use d = input |> Observable.asUpdates |> Observable.subscribe agent.Post
+        let fin = ref false
+        while not fin.Value do 
+          let! msg = agent.Receive()
+          match msg with
+          | Observable.ObservableUpdate.Error e -> raise e
+          | Observable.Completed -> fin := true
+          | Observable.Next v -> yield v 
+      finally 
+         // Cancel on early exit 
+         cts.Cancel() }
 
 
   let ofObservableDiscarding (input : System.IObservable<_>) = 
@@ -369,7 +370,7 @@ module AsyncSeq =
             | Put v -> repl.Reply(v)
             | _ -> failwith "Unexpected Get" })
 
-  [<System.Obsolete("Use AsyncSeq.ofObservableDiscarding. This function doesn't guarantee that the asynchronous sequence will return all values produced by the observable")>]
+  [<System.Obsolete("Use AsyncSeq.ofObservableDiscarding or AsyncSeq.ofObservableBuffered. This function doesn't guarantee that the asynchronous sequence will return all values produced by the observable")>]
   let ofObservable (input : System.IObservable<_>) = 
       ofObservableDiscarding input 
 

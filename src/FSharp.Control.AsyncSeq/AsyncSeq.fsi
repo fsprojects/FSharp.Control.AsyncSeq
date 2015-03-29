@@ -185,6 +185,9 @@ module AsyncSeq =
     /// by the observable while the asynchronous sequence is blocked are discarded
     /// (this function doesn't guarantee that asynchronou ssequence will return 
     /// all values produced by the observable)
+    val ofObservableDiscarding : input:System.IObservable<'T> -> AsyncSeq<'T>
+
+    [<System.Obsolete("Use AsyncSeq.ofObservableDiscarding or AsyncSeq.ofObservableBuffered. This function doesn't guarantee that the asynchronous sequence will return all values produced by the observable")>]
     val ofObservable : input:System.IObservable<'T> -> AsyncSeq<'T>
 
     /// Converts asynchronous sequence to an IObservable<_>. When the client subscribes
