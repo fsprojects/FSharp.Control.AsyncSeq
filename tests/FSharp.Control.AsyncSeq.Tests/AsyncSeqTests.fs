@@ -294,3 +294,12 @@ let ``AsyncSeq.skipUntil should not skip with completed signal``() =
 let ``AsyncSeq.skipUntil should skip everything with never signal``() =
   let actual = [1;2;3;4] |> AsyncSeq.ofSeq |> AsyncSeq.skipUntil AsyncOps.never
   Assert.True(EQ AsyncSeq.empty actual)
+
+[<Test>]
+let ``AsyncSeq.while should allow do at end``() =  
+  let s1 = asyncSeq {
+    while false do 
+        yield 1
+        do! Async.Sleep 10
+  }
+  Assert.True(true)

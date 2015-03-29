@@ -136,7 +136,7 @@ module AsyncSeq =
     //     do! something
     //
     // because F# translates body as Bind(something, fun () -> Return())
-    member x.Return() = empty
+    member x.Return _ = empty
     member x.YieldFrom(s) = s
     member x.Zero () = empty
     member x.Bind (inp:Async<'T>, body : 'T -> AsyncSeq<'U>) : AsyncSeq<'U> = 
