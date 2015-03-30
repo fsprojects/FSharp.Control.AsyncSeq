@@ -1,3 +1,11 @@
+### 1.15.0 - 30.03.2015
+* Add AsyncSeq.getIterator (unblocks use of AsyncSeq in FSharpx.Async)
+
+### 1.14 - 30.03.2015
+* Cancellable AsyncSeq.toBlockingSeq
+* Fix AsyncSeq.scanAsync to also return first state
+* Add a signature file
+
 ### 1.13 - 27.03.2015
 * Renamed to FSharp.Control.AsyncSeq
 * Remove surface area
