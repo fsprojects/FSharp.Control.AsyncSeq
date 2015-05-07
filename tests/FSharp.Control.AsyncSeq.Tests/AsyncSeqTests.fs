@@ -80,6 +80,18 @@ let ``AsyncSeq.bufferByCount``() =
   let s' = s |> AsyncSeq.bufferByCount 2 |> AsyncSeq.toList |> Async.RunSynchronously
   Assert.True(([[|1;2|];[|3;4|];[|5|]] = s'))
 
+[<Test>]
+let ``AsyncSeq.bufferByCountAndTime``() =      
+  let s = asyncSeq {
+    yield 1
+    yield 2
+    yield 3
+    do! Async.Sleep 500
+    yield 4
+    yield 5
+  }
+  let s' = AsyncSeq.bufferByCountAndTime 2 10 s |> AsyncSeq.toList |> Async.RunSynchronously
+  Assert.True(([ [|1;2|] ; [|3|] ; [|4;5|] ] = s'))
 
 [<Test>]
 let ``AsyncSeq.zip``() =  

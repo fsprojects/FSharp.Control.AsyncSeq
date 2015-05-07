@@ -610,6 +610,39 @@ module AsyncSeq =
       return! loop s
     }
 
+  let bufferByCountAndTime (bufferSize:int) (timeoutMs:int) (s:AsyncSeq<'T>) : AsyncSeq<'T []> =
+    if (bufferSize < 1) then invalidArg "bufferSize" "must be positive"
+    if (timeoutMs < 1) then invalidArg "timeoutMs" "must be positive"
+    async {                  
+      let buffer = ResizeArray<_>()
+      let rec loop s rt = async {
+        let t0 = DateTime.Now
+        let! first,second = Async.chooseBoth (s |> Async.map Choice1Of2) (Async.Sleep (max 0 rt) |> Async.map Choice2Of2)
+        let delta = int (DateTime.Now - t0).TotalMilliseconds
+        match first with
+        | Choice1Of2 Nil ->
+          if (buffer.Count > 0) then return Cons(buffer.ToArray(),async.Return Nil)
+          else return Nil
+        | Choice1Of2 (Cons(a,tl)) ->
+          buffer.Add(a)
+          if buffer.Count = bufferSize then 
+            let buf = buffer.ToArray()
+            buffer.Clear()
+            return Cons(buf, loop tl timeoutMs)
+          else 
+            return! loop tl (rt - delta)
+        | Choice2Of2 () ->
+          let tl = second |> Async.map (function Choice1Of2 tl -> tl | _ -> failwith "invalid state")
+          if buffer.Count > 0 then
+            let buf = buffer.ToArray()
+            buffer.Clear()              
+            return Cons(buf, loop tl timeoutMs)
+          else
+            return! loop tl timeoutMs
+      }
+      return! loop s timeoutMs
+    }
+
   let rec merge (a:AsyncSeq<'T>) (b:AsyncSeq<'T>) : AsyncSeq<'T> = async {
     let! one,other = Async.chooseBoth a b
     match one with

@@ -288,6 +288,10 @@ module AsyncSeq =
     /// The last buffer returned may be less than the specified buffer size.
     val bufferByCount : bufferSize:int -> s:AsyncSeq<'T> -> AsyncSeq<'T []>
 
+    /// Buffers an async sequence by waiting for a the buffer to reach a certain size or for a specific 
+    /// amount of time to pass.
+    val bufferByCountAndTime : bufferSize:int -> timeoutMs:int -> s:AsyncSeq<'T> -> AsyncSeq<'T []>
+
     /// Merges two async sequences into an async sequence non-deterministically.
     val merge : a:AsyncSeq<'T> -> b:AsyncSeq<'T> -> AsyncSeq<'T>
 
