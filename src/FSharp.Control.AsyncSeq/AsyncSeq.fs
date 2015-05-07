@@ -102,6 +102,17 @@ module internal Utils =
           Async.StartWithContinuations(a, ok, err, cnc)
           Async.StartWithContinuations(b, ok, err, cnc)
 
+      /// Creates a computation which produces a tuple consiting of the value produces by the first
+      /// argument computation to complete and a handle to the other computation. The second computation
+      /// to complete is memoized.
+      static member internal chooseBoths (a:Async<'T>) (b:Async<'U>) : Async<Choice<'T * Async<'U>, 'U * Async<'T>>> =
+        Async.chooseBoth (a |> Async.map Choice1Of2) (b |> Async.map Choice2Of2)
+        |> Async.map (fun (first,second) ->          
+          match first with
+          | Choice1Of2 a -> (a,(second |> Async.map (function Choice2Of2 b -> b | _ -> failwith "invalid state"))) |> Choice1Of2
+          | Choice2Of2 b -> (b,(second |> Async.map (function Choice1Of2 a -> a | _ -> failwith "invalid state"))) |> Choice2Of2
+        )
+
 /// Module with helper functions for working with asynchronous sequences
 module AsyncSeq = 
 
@@ -617,13 +628,13 @@ module AsyncSeq =
       let buffer = ResizeArray<_>()
       let rec loop s rt = async {
         let t0 = DateTime.Now
-        let! first,second = Async.chooseBoth (s |> Async.map Choice1Of2) (Async.Sleep (max 0 rt) |> Async.map Choice2Of2)
+        let! choice = Async.chooseBoths s (Async.Sleep (max 0 rt))
         let delta = int (DateTime.Now - t0).TotalMilliseconds
-        match first with
-        | Choice1Of2 Nil ->
+        match choice with
+        | Choice1Of2 (Nil,_) ->
           if (buffer.Count > 0) then return Cons(buffer.ToArray(),async.Return Nil)
           else return Nil
-        | Choice1Of2 (Cons(a,tl)) ->
+        | Choice1Of2 (Cons(a,tl),_) ->
           buffer.Add(a)
           if buffer.Count = bufferSize then 
             let buf = buffer.ToArray()
@@ -631,8 +642,7 @@ module AsyncSeq =
             return Cons(buf, loop tl timeoutMs)
           else 
             return! loop tl (rt - delta)
-        | Choice2Of2 () ->
-          let tl = second |> Async.map (function Choice1Of2 tl -> tl | _ -> failwith "invalid state")
+        | Choice2Of2 ((),tl) ->
           if buffer.Count > 0 then
             let buf = buffer.ToArray()
             buffer.Clear()              
