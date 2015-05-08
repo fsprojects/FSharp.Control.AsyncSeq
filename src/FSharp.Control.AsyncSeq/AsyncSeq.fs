@@ -653,6 +653,32 @@ module AsyncSeq =
       return! loop s timeoutMs
     }
 
+  let bufferBy (bound:Async<unit>) (s:AsyncSeq<'T>) : AsyncSeq<'T []> = async {
+      let buffer = ResizeArray<_>()
+      let rec loop s b = async {
+        let! choice = Async.chooseBoths s b
+        match choice with
+        | Choice1Of2 (Nil,_) ->
+          if (buffer.Count > 0) then 
+            return Cons(buffer.ToArray(),async.Return Nil)
+          else return Nil
+        | Choice1Of2 (Cons(a,tl),b) ->
+          buffer.Add(a)
+          return! loop tl b
+        | Choice2Of2 ((),tl) ->
+          if buffer.Count > 0 then
+            let buf = buffer.ToArray()
+            buffer.Clear()             
+            return Cons(buf, loop tl bound)
+          else
+            return! loop tl bound
+      }
+      return! loop s bound
+    }
+
+  let bufferByTime (timeoutMs:int) (s:AsyncSeq<'T>) : AsyncSeq<'T []> =
+    bufferBy (Async.Sleep timeoutMs) s
+
   let rec merge (a:AsyncSeq<'T>) (b:AsyncSeq<'T>) : AsyncSeq<'T> = async {
     let! one,other = Async.chooseBoth a b
     match one with
