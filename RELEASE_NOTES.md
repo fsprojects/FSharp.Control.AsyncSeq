@@ -1,3 +1,6 @@
+### 1.15
+* AsyncSeq marked with require qualified access
+
 ### 1.14 - 31.03.2015
 * AsyncSeq got extracted as separate project and is now a dependency - https://github.com/fsprojects/FSharpx.Async/pull/24 
 

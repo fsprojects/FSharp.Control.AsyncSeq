@@ -13,6 +13,7 @@ and AsyncSeqInner<'T> =
     internal | Nil
              | Cons of 'T * AsyncSeq<'T>
 
+[<RequireQualifiedAccess>]
 module AsyncSeq = 
     /// Creates an empty asynchronou sequence that immediately ends
     [<GeneralizableValueAttribute>]
