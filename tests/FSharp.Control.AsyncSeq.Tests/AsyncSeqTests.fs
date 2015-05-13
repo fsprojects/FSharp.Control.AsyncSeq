@@ -414,3 +414,21 @@ let ``AsyncSeq.ofObservableBuffered should work (one, take)``() =
   Assert.True(src |> AsyncSeq.ofObservableBuffered |> AsyncSeq.take 1 |> AsyncSeq.toList |> Async.RunSynchronously = [1])
   // Take doesn't correctly run finally clauses, see https://github.com/fsprojects/FSharp.Control.AsyncSeq/issues/15
   //Assert.True(discarded())
+
+[<Test>]
+let ``AsyncSeq.getIterator should work``() =  
+  let s1 = [1..2] |> AsyncSeq.ofSeq
+  let i = AsyncSeq.getIterator s1
+  match i() |> Async.RunSynchronously with 
+  | None -> Assert.Fail("expected Some")
+  | Some v -> 
+    Assert.AreEqual(v,1)
+    match i() |> Async.RunSynchronously with 
+    | None -> Assert.Fail("expected Some")
+    | Some v -> 
+        Assert.AreEqual(v,2)
+        match i() |> Async.RunSynchronously with 
+        | None -> ()
+        | Some _ -> Assert.Fail("expected None")
+
+

@@ -286,7 +286,7 @@ module AsyncSeq =
   let fold f (state:'State) (input : AsyncSeq<'T>) = 
     foldAsync (fun st v -> f st v |> async.Return) state input 
 
-  let rec scan f (state:'State) (input : AsyncSeq<'T>) = 
+  let scan f (state:'State) (input : AsyncSeq<'T>) = 
     scanAsync (fun st v -> f st v |> async.Return) state input 
 
   let map f (input : AsyncSeq<'T>) = 
@@ -608,7 +608,14 @@ module AsyncSeq =
 
   let distinctUntilChanged (s:AsyncSeq<'T>) : AsyncSeq<'T> =
     distinctUntilChangedWith ((=)) s
-        
+
+  let getIterator (s:AsyncSeq<'T>) = 
+      let curr = ref s
+      fun () -> 
+          async { let! v = curr.Value 
+                  match v with 
+                  | Nil -> return None
+                  | Cons (v,t) -> curr := t; return Some v } 
     
 
 

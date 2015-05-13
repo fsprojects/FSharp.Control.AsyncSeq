@@ -300,7 +300,8 @@ module AsyncSeq =
     /// Returns an async sequence which contains no contiguous duplicate elements.
     val distinctUntilChanged : s:AsyncSeq<'T> -> AsyncSeq<'T> when 'T : equality
 
-
+    /// Get a function that may be usesd as an async iterator for the sequence. This functionality may be replaced in later versions of this library.
+    val getIterator : s:AsyncSeq<'T> -> (unit -> Async<'T option>)
 
 /// An automatically-opened module tht contains the `asyncSeq` builder and an extension method 
 [<AutoOpen>]
