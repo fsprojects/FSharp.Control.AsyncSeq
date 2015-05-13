@@ -5,6 +5,7 @@
 * Cancellable AsyncSeq.toBlockingSeq
 * Fix AsyncSeq.scanAsync to also return first state
 * Add a signature file
+* AsyncSeq got extracted as separate project and is now a dependency - https://github.com/fsprojects/FSharpx.Async/pull/24 
 
 ### 1.13 - 27.03.2015
 * Renamed to FSharp.Control.AsyncSeq
