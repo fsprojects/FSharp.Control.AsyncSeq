@@ -122,21 +122,65 @@ let ``AsyncSeq.takeWhileAsync``() =
 
 
 [<Test>]
-let ``AsyncSeq.take``() =  
+let ``AsyncSeq.take 3 of 5``() =  
   let ls = [1;2;3;4;5]
   let c = 3
   let actual = ls |> AsyncSeq.ofSeq |> AsyncSeq.take c
   let expected = ls |> Seq.take c |> AsyncSeq.ofSeq
   Assert.True(EQ expected actual)
 
+[<Test>]
+let ``AsyncSeq.take 0 of 5``() =  
+  let ls = [1;2;3;4;5]
+  let c = 0
+  let actual = ls |> AsyncSeq.ofSeq |> AsyncSeq.take c
+  let expected = ls |> Seq.take c |> AsyncSeq.ofSeq
+  Assert.True(EQ expected actual)
+
 
 [<Test>]
-let ``AsyncSeq.skip``() =
+let ``AsyncSeq.take 5 of 5``() =  
+  let ls = [1;2;3;4;5]
+  let c = 5
+  let actual = ls |> AsyncSeq.ofSeq |> AsyncSeq.take c
+  let expected = ls |> Seq.take c |> AsyncSeq.ofSeq
+  Assert.True(EQ expected actual)
+
+
+[<Test>]
+let ``AsyncSeq.skip 3 of 5``() =
   let ls = [1;2;3;4;5]
   let c = 3
   let actual = ls |> AsyncSeq.ofSeq |> AsyncSeq.skip c
   let expected = ls |> Seq.skip c |> AsyncSeq.ofSeq
   Assert.True(EQ expected actual)
+
+
+[<Test>]
+let ``AsyncSeq.skip 0 of 5``() =
+  let ls = [1;2;3;4;5]
+  let c = 0
+  let actual = ls |> AsyncSeq.ofSeq |> AsyncSeq.skip c
+  let expected = ls |> Seq.skip c |> AsyncSeq.ofSeq
+  Assert.True(EQ expected actual)
+
+
+[<Test>]
+let ``AsyncSeq.skip 5 of 5``() =
+  let ls = [1;2;3;4;5]
+  let c = 5
+  let actual = ls |> AsyncSeq.ofSeq |> AsyncSeq.skip c
+  let expected = ls |> Seq.skip c |> AsyncSeq.ofSeq
+  Assert.True(EQ expected actual)
+
+[<Test>]
+let ``AsyncSeq.skip 1 of 5``() =
+  let ls = [1;2;3;4;5]
+  let c = 1
+  let actual = ls |> AsyncSeq.ofSeq |> AsyncSeq.skip c
+  let expected = ls |> Seq.skip c |> AsyncSeq.ofSeq
+  Assert.True(EQ expected actual)
+
 
 
 [<Test>]
@@ -412,8 +456,7 @@ let ``AsyncSeq.ofObservableBuffered should work (one, fail)``() =
 let ``AsyncSeq.ofObservableBuffered should work (one, take)``() =  
   let src, discarded = observe [1] true
   Assert.True(src |> AsyncSeq.ofObservableBuffered |> AsyncSeq.take 1 |> AsyncSeq.toList |> Async.RunSynchronously = [1])
-  // Take doesn't correctly run finally clauses, see https://github.com/fsprojects/FSharp.Control.AsyncSeq/issues/15
-  //Assert.True(discarded())
+  Assert.True(discarded())
 
 [<Test>]
 let ``AsyncSeq.getIterator should work``() =  
