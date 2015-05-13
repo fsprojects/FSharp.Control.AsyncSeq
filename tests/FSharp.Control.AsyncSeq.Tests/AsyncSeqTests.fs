@@ -383,3 +383,12 @@ let ``AsyncSeq.getIterator should work``() =
         | Some _ -> Assert.Fail("expected None")
 
 
+  
+[<Test>]
+let ``asyncSeq.For should delay``() =
+  let (s:seq<int>) = 
+     { new System.Collections.Generic.IEnumerable<int> with 
+           member x.GetEnumerator() = failwith "fail" 
+       interface System.Collections.IEnumerable with 
+           member x.GetEnumerator() = failwith "fail"  }
+  Assert.DoesNotThrow(fun _ -> asyncSeq.For(s, (fun v -> AsyncSeq.empty)) |> ignore)
