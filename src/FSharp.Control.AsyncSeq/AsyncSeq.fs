@@ -207,10 +207,11 @@ module AsyncSeq =
         if box resource <> null then resource.Dispose())
 
     member x.For(seq:seq<'T>, action:'T -> AsyncSeq<'TResult>) = 
-      let enum = seq.GetEnumerator()
-      x.TryFinally(x.While((fun () -> enum.MoveNext()), x.Delay(fun () -> 
-        action enum.Current)), (fun () -> 
-          if enum <> null then enum.Dispose() ))
+      x.Delay(fun () -> 
+          let enum = seq.GetEnumerator()
+          x.TryFinally(x.While((fun () -> enum.MoveNext()), x.Delay(fun () -> 
+            action enum.Current)), (fun () -> 
+              if enum <> null then enum.Dispose() )))
 
     member x.For (seq:AsyncSeq<'T>, action:'T -> AsyncSeq<'TResult>) = 
       collect action seq
