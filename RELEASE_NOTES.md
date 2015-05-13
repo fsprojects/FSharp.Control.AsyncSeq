@@ -1,3 +1,6 @@
+### 1.16.0 - 13.05.2015
+* Simplify ofObservableBuffered and toBlockingSeq
+
 ### 1.15.0 - 30.03.2015
 * Add AsyncSeq.getIterator (unblocks use of AsyncSeq in FSharpx.Async)
 
