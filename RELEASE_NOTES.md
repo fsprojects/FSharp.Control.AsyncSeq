@@ -1,4 +1,10 @@
-### 1.14 - 31.03.2015
+### 1.15.0 - 30.03.2015
+* Add AsyncSeq.getIterator (unblocks use of AsyncSeq in FSharpx.Async)
+
+### 1.14 - 30.03.2015
+* Cancellable AsyncSeq.toBlockingSeq
+* Fix AsyncSeq.scanAsync to also return first state
+* Add a signature file
 * AsyncSeq got extracted as separate project and is now a dependency - https://github.com/fsprojects/FSharpx.Async/pull/24 
 
 ### 1.13 - 27.03.2015

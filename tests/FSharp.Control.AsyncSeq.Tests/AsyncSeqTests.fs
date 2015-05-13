@@ -365,3 +365,21 @@ let ``AsyncSeq.while should allow do at end``() =
         do! Async.Sleep 10
   }
   Assert.True(true)
+
+[<Test>]
+let ``AsyncSeq.getIterator should work``() =  
+  let s1 = [1..2] |> AsyncSeq.ofSeq
+  let i = AsyncSeq.getIterator s1
+  match i() |> Async.RunSynchronously with 
+  | None -> Assert.Fail("expected Some")
+  | Some v -> 
+    Assert.AreEqual(v,1)
+    match i() |> Async.RunSynchronously with 
+    | None -> Assert.Fail("expected Some")
+    | Some v -> 
+        Assert.AreEqual(v,2)
+        match i() |> Async.RunSynchronously with 
+        | None -> ()
+        | Some _ -> Assert.Fail("expected None")
+
+
