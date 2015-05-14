@@ -235,14 +235,14 @@ module AsyncSeq =
     //
     // because F# translates body as Bind(something, fun () -> Return())
     member x.Return _ = empty
-    member x.YieldFrom(s) = s
+    member x.YieldFrom(s:AsyncSeq<'T>) = s
     member x.Zero () = empty
     member x.Bind (inp:Async<'T>, body : 'T -> AsyncSeq<'U>) : AsyncSeq<'U> = 
       bindAsync body inp
     member x.Combine (seq1:AsyncSeq<'T>,seq2:AsyncSeq<'T>) = 
       append seq1 seq2
-    member x.While (gd, seq:AsyncSeq<'T>) = 
-      if gd() then x.Combine(seq,x.Delay(fun () -> x.While (gd, seq))) else x.Zero()
+    member x.While (guard, body:AsyncSeq<'T>) = 
+      if guard() then x.Combine(body,x.Delay(fun () -> x.While (guard, body))) else x.Zero()
     member x.Delay (f:unit -> AsyncSeq<'T>) = 
       delay f
 
