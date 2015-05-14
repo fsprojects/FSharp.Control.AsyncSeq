@@ -119,6 +119,7 @@ module AsyncSeq =
 
   let private dispose (d:System.IDisposable) = match d with null -> () | _ -> d.Dispose()
 
+
   [<GeneralizableValue>]
   let empty<'T> : AsyncSeq<'T> = 
         { new IAsyncEnumerable<'T> with 
@@ -248,20 +249,14 @@ module AsyncSeq =
       
   let asyncSeq = new AsyncSeqBuilder()
 
-  let rec unfoldAsync (f:'State -> Async<('T * 'State) option>) (s:'State) : AsyncSeq<'T> = 
-    asyncSeq { 
-        let! v = f s 
-        match v with 
-        | None -> ()
-        | Some (v,s2) -> 
-            yield v
-            yield! unfoldAsync f s2 }
 
-  let rec replicate (v:'T) : AsyncSeq<'T> =    
-    asyncSeq { 
-        yield v
-        yield! replicate v }
-
+  let emitEnumerator (ie: IAsyncEnumerator<'T>) = asyncSeq {
+      let! moven = ie.MoveNext() 
+      let b = ref moven 
+      while b.Value.IsSome do
+          yield b.Value.Value 
+          let! moven = ie.MoveNext() 
+          b := moven }
 
   /// Implements the 'TryWith' functionality for computation builder
   // this pushes the handler through all the async computations
@@ -467,6 +462,24 @@ module AsyncSeq =
     member internal x.For (seq:AsyncSeq<'T>, action:'T -> Async<unit>) = 
       seq |> iterAsync action 
 
+  let rec unfoldAsync (f:'State -> Async<('T * 'State) option>) (s:'State) : AsyncSeq<'T> = 
+    asyncSeq { 
+        let! v = f s 
+        match v with 
+        | None -> ()
+        | Some (v,s2) -> 
+            yield v
+            yield! unfoldAsync f s2 }
+
+  let replicateInfinite (v:'T) : AsyncSeq<'T> =    
+    asyncSeq { 
+        while true do 
+            yield v }
+
+  let replicate (count:int) (v:'T) : AsyncSeq<'T> =    
+    asyncSeq { 
+        for i in 1 .. count do 
+           yield v }
   // --------------------------------------------------------------------------
   // Additional combinators (implemented as async/asyncSeq computations)
 
@@ -487,26 +500,38 @@ module AsyncSeq =
       let! b = f v
       if b then yield v }
 
-  let lastOrDefault def (source : AsyncSeq<'T>) = async { 
+  let tryLast (source : AsyncSeq<'T>) = async { 
       use ie = source.GetEnumerator() 
       let! v = ie.MoveNext()
       let b = ref v
-      let res = ref def
+      let res = ref None
       while b.Value.IsSome do
-          res := b.Value.Value
+          res := b.Value
           let! moven = ie.MoveNext()
           b := moven
       return res.Value }
 
-  let firstOrDefault def (source : AsyncSeq<'T>) = async {
+  let lastOrDefault def (source : AsyncSeq<'T>) = async { 
+      let! v = tryLast source
+      match v with
+      | None -> return def
+      | Some v -> return v }
+
+
+  let tryFirst (source : AsyncSeq<'T>) = async {
       use ie = source.GetEnumerator() 
       let! v = ie.MoveNext()
       let b = ref v
       if b.Value.IsSome then 
-          return b.Value.Value
+          return b.Value
       else 
-         return def }
+         return None }
 
+  let firstOrDefault def (source : AsyncSeq<'T>) = async {
+      let! v = tryFirst source
+      match v with
+      | None -> return def
+      | Some v -> return v }
 
   let scanAsync f (state:'TState) (source : AsyncSeq<'T>) = asyncSeq { 
         yield state 
@@ -544,6 +569,29 @@ module AsyncSeq =
 
   let scan f (state:'State) (source : AsyncSeq<'T>) = 
     scanAsync (fun st v -> f st v |> async.Return) state source 
+
+  let unfold f (state:'State) = 
+    unfoldAsync (f >> async.Return) state 
+
+  let initInfiniteAsync f = 
+    0L |> unfoldAsync (fun n -> 
+        async { let! x = f n 
+                return Some (x,n+1L) }) 
+
+  let initAsync (count:int64) f = 
+    0L |> unfoldAsync (fun n -> 
+        async { 
+            if n >= count then return None 
+            else 
+                let! x = f n 
+                return Some (x,n+1L) }) 
+
+
+  let init count f  = 
+    initAsync count (f >> async.Return) 
+
+  let initInfinite f  = 
+    initInfiniteAsync (f >> async.Return) 
 
   let map f (source : AsyncSeq<'T>) = 
     mapAsync (f >> async.Return) source
@@ -710,7 +758,7 @@ module AsyncSeq =
           else
               b := None }
 
-  let takeUntil (signal:Async<unit>) (source:AsyncSeq<'T>) : AsyncSeq<'T> = asyncSeq {
+  let takeUntilSignal (signal:Async<unit>) (source:AsyncSeq<'T>) : AsyncSeq<'T> = asyncSeq {
       use ie = source.GetEnumerator() 
       let! move = Async.chooseBoths signal (ie.MoveNext())
       let b = ref move
@@ -719,6 +767,8 @@ module AsyncSeq =
           yield v
           let! move = Async.chooseBoths sg (ie.MoveNext())
           b := move }
+
+  let takeUntil signal source = takeUntilSignal signal source
 
   let skipWhileAsync p (source : AsyncSeq<'T>) : AsyncSeq<_> = asyncSeq {
       use ie = source.GetEnumerator() 
@@ -737,7 +787,7 @@ module AsyncSeq =
           let! moven = ie.MoveNext()
           b := moven }
 
-  let skipUntil (signal:Async<unit>) (source:AsyncSeq<'T>) : AsyncSeq<'T> = asyncSeq {
+  let skipUntilSignal (signal:Async<unit>) (source:AsyncSeq<'T>) : AsyncSeq<'T> = asyncSeq {
       use ie = source.GetEnumerator() 
       let! move = Async.chooseBoths signal (ie.MoveNext())
       let b = ref move
@@ -758,6 +808,8 @@ module AsyncSeq =
               let! moven = ie.MoveNext()
               b2 := moven 
       | Choice2Of2 (Some _,_) -> failwith "unreachable" }
+
+  let skipUntil signal source = skipUntilSignal signal source
 
   let takeWhile p (source : AsyncSeq<'T>) = 
       takeWhileAsync (p >> async.Return) source  
@@ -794,7 +846,7 @@ module AsyncSeq =
           let! moven = ie.MoveNext()
           b := moven }
 
-  let toArray (source : AsyncSeq<'T>) : Async<'T[]> = async {
+  let toArrayAsync (source : AsyncSeq<'T>) : Async<'T[]> = async {
       let ra = (new ResizeArray<_>()) 
       use ie = source.GetEnumerator() 
       let! move = ie.MoveNext()
@@ -805,7 +857,9 @@ module AsyncSeq =
           b := moven
       return ra.ToArray() }
 
-  let toList (source:AsyncSeq<'T>) : Async<'T list> = toArray source |> Async.map Array.toList
+  let toListAsync (source:AsyncSeq<'T>) : Async<'T list> = toArrayAsync source |> Async.map Array.toList
+  let toList (source:AsyncSeq<'T>) = toListAsync source |> Async.RunSynchronously
+  let toArray (source:AsyncSeq<'T>) = toArrayAsync source |> Async.RunSynchronously
 
   let concatSeq (source:AsyncSeq<#seq<'T>>) : AsyncSeq<'T> = asyncSeq {
       use ie = source.GetEnumerator() 
@@ -827,7 +881,10 @@ module AsyncSeq =
           yield b.Value.Value 
           is1 := not is1.Value
           let! moven = (if is1.Value then ie1.MoveNext() else ie2.MoveNext())
-          b := moven }
+          b := moven 
+      // emit the rest
+      yield! emitEnumerator (if is1.Value then ie2 else ie1)
+      }
 
 
   let bufferByCount (bufferSize:int) (source:AsyncSeq<'T>) : AsyncSeq<'T[]> = 
