@@ -7,7 +7,7 @@ FSharp.Control.AsyncSeq is a collection of asynchronous programming utilities fo
   <div class="span1"></div>
   <div class="span6">
     <div class="well well-small" id="nuget">
-      The FSharp.Control.AsyncSeq library can be <a href="https://nuget.org/packages/AsyncSeq">installed from NuGet</a>:
+      The FSharp.Control.AsyncSeq library can be <a href="http://www.nuget.org/packages/FSharp.Control.AsyncSeq">installed from NuGet</a>:
       <pre>PM> Install-Package FSharp.Control.AsyncSeq</pre>
     </div>
   </div>

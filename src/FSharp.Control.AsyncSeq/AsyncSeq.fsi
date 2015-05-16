@@ -182,10 +182,7 @@ module AsyncSeq =
     /// an unbounded buffer and are returned as next elements of the async sequence.
     val ofObservableBuffered : input:System.IObservable<'T> -> AsyncSeq<'T>
 
-    /// Converts observable to an asynchronous sequence. Values that are produced
-    /// by the observable while the asynchronous sequence is blocked are discarded
-    /// (this function doesn't guarantee that asynchronou ssequence will return 
-    /// all values produced by the observable)
+    [<System.Obsolete("Please use AsyncSeq.ofObservableBuffered. The original AsyncSeq.ofObservable doesn't guarantee that the asynchronous sequence will return all values produced by the observable",true) >]
     val ofObservable : input:System.IObservable<'T> -> AsyncSeq<'T>
 
     /// Converts asynchronous sequence to an IObservable<_>. When the client subscribes
@@ -315,7 +312,8 @@ module AsyncSeq =
     /// Returns an async sequence which contains no contiguous duplicate elements.
     val distinctUntilChanged : s:AsyncSeq<'T> -> AsyncSeq<'T> when 'T : equality
 
-
+    /// Get a function that may be usesd as an async iterator for the sequence. This functionality may be replaced in later versions of this library.
+    val getIterator : s:AsyncSeq<'T> -> (unit -> Async<'T option>)
 
 /// An automatically-opened module tht contains the `asyncSeq` builder and an extension method 
 [<AutoOpen>]
