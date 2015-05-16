@@ -102,6 +102,17 @@ module internal Utils =
           Async.StartWithContinuations(a, ok, err, cnc)
           Async.StartWithContinuations(b, ok, err, cnc)
 
+      /// Creates a computation which produces a tuple consiting of the value produces by the first
+      /// argument computation to complete and a handle to the other computation. The second computation
+      /// to complete is memoized.
+      static member internal chooseBoths (a:Async<'T>) (b:Async<'U>) : Async<Choice<'T * Async<'U>, 'U * Async<'T>>> =
+        Async.chooseBoth (a |> Async.map Choice1Of2) (b |> Async.map Choice2Of2)
+        |> Async.map (fun (first,second) ->          
+          match first with
+          | Choice1Of2 a -> (a,(second |> Async.map (function Choice2Of2 b -> b | _ -> failwith "invalid state"))) |> Choice1Of2
+          | Choice2Of2 b -> (b,(second |> Async.map (function Choice1Of2 a -> a | _ -> failwith "invalid state"))) |> Choice2Of2
+        )
+
 /// Module with helper functions for working with asynchronous sequences
 module AsyncSeq = 
 
@@ -569,6 +580,64 @@ module AsyncSeq =
       }
       return! loop s
     }
+
+  let bufferByCountAndTime (bufferSize:int) (timeoutMs:int) (s:AsyncSeq<'T>) : AsyncSeq<'T []> =
+    if (bufferSize < 1) then invalidArg "bufferSize" "must be positive"
+    if (timeoutMs < 1) then invalidArg "timeoutMs" "must be positive"
+    async {                  
+      let buffer = ResizeArray<_>()
+      let rec loop s rt = async {
+        let t0 = DateTime.Now
+        let! choice = Async.chooseBoths s (Async.Sleep (max 0 rt))
+        let delta = int (DateTime.Now - t0).TotalMilliseconds
+        match choice with
+        | Choice1Of2 (Nil,_) ->
+          if (buffer.Count > 0) then return Cons(buffer.ToArray(),async.Return Nil)
+          else return Nil
+        | Choice1Of2 (Cons(a,tl),_) ->
+          buffer.Add(a)
+          if buffer.Count = bufferSize then 
+            let buf = buffer.ToArray()
+            buffer.Clear()
+            return Cons(buf, loop tl timeoutMs)
+          else 
+            return! loop tl (rt - delta)
+        | Choice2Of2 ((),tl) ->
+          if buffer.Count > 0 then
+            let buf = buffer.ToArray()
+            buffer.Clear()              
+            return Cons(buf, loop tl timeoutMs)
+          else
+            return! loop tl timeoutMs
+      }
+      return! loop s timeoutMs
+    }
+
+  let bufferBy (bound:Async<unit>) (s:AsyncSeq<'T>) : AsyncSeq<'T []> = async {
+      let buffer = ResizeArray<_>()
+      let rec loop s b = async {
+        let! choice = Async.chooseBoths s b
+        match choice with
+        | Choice1Of2 (Nil,_) ->
+          if (buffer.Count > 0) then 
+            return Cons(buffer.ToArray(),async.Return Nil)
+          else return Nil
+        | Choice1Of2 (Cons(a,tl),b) ->
+          buffer.Add(a)
+          return! loop tl b
+        | Choice2Of2 ((),tl) ->
+          if buffer.Count > 0 then
+            let buf = buffer.ToArray()
+            buffer.Clear()             
+            return Cons(buf, loop tl bound)
+          else
+            return! loop tl bound
+      }
+      return! loop s bound
+    }
+
+  let bufferByTime (timeoutMs:int) (s:AsyncSeq<'T>) : AsyncSeq<'T []> =
+    bufferBy (Async.Sleep timeoutMs) s
 
   let rec merge (a:AsyncSeq<'T>) (b:AsyncSeq<'T>) : AsyncSeq<'T> = async {
     let! one,other = Async.chooseBoth a b
