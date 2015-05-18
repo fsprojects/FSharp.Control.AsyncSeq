@@ -709,8 +709,8 @@ let ``asyncSeq.For should delay``() =
 
 
 let empty = async { return () }
-let perfTest1() = 
-    Seq.init 6000 id
+let perfTest1 n = 
+    Seq.init n id
     |> AsyncSeq.ofSeq
     |> AsyncSeq.iterAsync (fun _ -> empty )
     |> Async.RunSynchronously
@@ -720,24 +720,26 @@ let perfTest2 n =
     |> AsyncSeq.ofSeq
     |> AsyncSeq.toArray
 
-//perfTest2 1000
-//perfTest2 2000
-//perfTest2 3000
-//perfTest2 4000
-//perfTest2 1000000
+// n                OLD     NEW
+//perfTest2 1000    0.227   0.038
+//perfTest2 2000    0.905   0.001
+//perfTest2 3000    2.154   0.004
+//perfTest2 4000    3.757
+//perfTest2 5000    6.197
+//perfTest2 10000   38.197  0.007
+//perfTest2 100000          0.076
+//perfTest2 1000000         0.663
 
-// 1000 - 0.227  - 0.038
-// 1000 - 0.905
-// 3000 - 2.154
-// 4000 - 3.757
-// 5000 - 6.197
-
-//perfTest1()
-//1000 - 0.244
-//2000 - 0.922
-//3000 - 2.091
-//4000 - 3.811
-//5000 - 6.311
-//6000 - 10.071
+//perfTest1 n
+// n                OLD     NEW
+//perfTest1 1000 - 0.244       0.001
+//perfTest1 2000 - 0.922
+//perfTest1 3000 - 2.091
+//perfTest1 4000 - 3.811
+//perfTest1 5000 - 6.311
+//perfTest1 6000 - 10.071      0.006
+//perfTest1 10000 - 38..0      0.012
+//perfTest1 100000 -           0.129
+//perfTest1 1000000 -          0.708
 
 

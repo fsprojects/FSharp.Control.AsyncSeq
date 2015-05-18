@@ -484,7 +484,7 @@ module AsyncSeq =
       tryFinally (binder resource) (fun () -> 
         if box resource <> null then dispose resource)
 
-    member x.For(seq:seq<'T>, action:'T -> AsyncSeq<'TResult>) = 
+    member x.For (seq:seq<'T>, action:'T -> AsyncSeq<'TResult>) = 
       collect action (ofSeq seq) 
 
     member x.For (seq:AsyncSeq<'T>, action:'T -> AsyncSeq<'TResult>) = 
