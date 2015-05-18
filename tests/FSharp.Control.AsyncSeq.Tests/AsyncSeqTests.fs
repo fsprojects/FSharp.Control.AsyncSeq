@@ -742,6 +742,9 @@ let perfTest2 n =
 //perfTest2 1000000         0.663
 
 
+// This was the original ofSeq implementation.  It is now faster than before this perf testing
+// took place, but is still slower than the bespoke ofSeq implementation (which effectively "knows"
+// that a single yield happens for each iteration of the loop).
 let ofSeq2 (source : seq<'T>) = asyncSeq {  
     for el in source do   
       yield el }  
@@ -760,4 +763,4 @@ let perfTest3 n =
 //perfTest3 5000           0.009
 //perfTest3 10000           0.015
 //perfTest3 100000          0.155
-//perfTest3 1000000         1.645
+//perfTest3 1000000         1.500

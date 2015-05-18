@@ -579,7 +579,7 @@ module AsyncSeq =
         if box resource <> null then dispose resource)
 
     member x.For (seq:seq<'T>, action:'T -> AsyncSeq<'TResult>) = 
-      collect action (ofSeq seq) 
+      collectSeq action seq
 
     member x.For (seq:AsyncSeq<'T>, action:'T -> AsyncSeq<'TResult>) = 
       collect action seq
