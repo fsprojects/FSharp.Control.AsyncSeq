@@ -1,5 +1,9 @@
 ﻿#if INTERACTIVE
+#if COMPARE_TO_OLD
+#r @"../../packages/FSharp.Control.AsyncSeq/lib/net40/Fsharp.Control.AsyncSeq.dll"
+#else
 #r @"../../bin/FSharp.Control.AsyncSeq.dll"
+#endif
 #r @"../../packages/NUnit/lib/nunit.framework.dll"
 #time "on"
 #else
@@ -708,6 +712,7 @@ let ``asyncSeq.For should delay``() =
 
 
 
+
 let empty = async { return () }
 let perfTest1 n = 
     Seq.init n id
@@ -715,29 +720,30 @@ let perfTest1 n =
     |> AsyncSeq.iterAsync (fun _ -> empty )
     |> Async.RunSynchronously
 
-// n                OLD     NEW
-//perfTest1 1000 - 0.244       0.001
-//perfTest1 2000 - 0.922
-//perfTest1 3000 - 2.091
-//perfTest1 4000 - 3.811
-//perfTest1 5000 - 6.311
-//perfTest1 6000 - 10.071      0.006
-//perfTest1 10000 - 38..0      0.012
-//perfTest1 100000 -           0.129
-//perfTest1 1000000 -          0.708
+// n                            NEW        1.15.0
+//perfTest1 1000 -             0.001        0.004
+//perfTest1 2000 - 
+//perfTest1 3000 - 
+//perfTest1 4000 - 
+//perfTest1 5000 - 
+//perfTest1 6000 -             0.006        0.020
+//perfTest1 10000 -            0.012
+//perfTest1 100000 -           0.129        0.260
+//perfTest1 1000000 -          0.708        2.345
+
 
 let perfTest2 n = 
     Seq.init n id
     |> AsyncSeq.ofSeq
     |> AsyncSeq.toArray
 
-// n                OLD     NEW
-//perfTest2 1000    0.227   0.038
-//perfTest2 2000    0.905   0.001
-//perfTest2 3000    2.154   0.004
-//perfTest2 4000    3.757
-//perfTest2 5000    6.197
-//perfTest2 10000   38.197  0.007
+// n                        NEW
+//perfTest2 1000            0.038
+//perfTest2 2000            0.001
+//perfTest2 3000            0.004
+//perfTest2 4000         
+//perfTest2 5000         
+//perfTest2 10000           0.007
 //perfTest2 100000          0.076
 //perfTest2 1000000         0.663
 
@@ -755,7 +761,7 @@ let perfTest3 n =
     |> AsyncSeq.toArray
 
 
-// n                OLD     NEW
+// n                        NEW         1.15.0
 //perfTest3 1000            0.003
 //perfTest3 2000            
 //perfTest3 3000            
@@ -763,4 +769,21 @@ let perfTest3 n =
 //perfTest3 5000           0.009
 //perfTest3 10000           0.015
 //perfTest3 100000          0.155
-//perfTest3 1000000         1.500
+//perfTest3 1000000         1.500      3.480
+
+let perfTest4 n = 
+    Seq.init n id
+    |> AsyncSeq.ofSeq 
+    |> AsyncSeq.map id
+    |> AsyncSeq.filter (fun x -> x % 2 = 0)
+    |> AsyncSeq.toArray
+
+// n                        NEW         1.15.0
+//perfTest4 1000                 
+//perfTest4 2000            
+//perfTest4 3000            
+//perfTest4 4000         
+//perfTest4 5000          
+//perfTest4 10000         
+//perfTest4 100000          0.362       0.442
+//perfTest4 1000000         3.533       4.656

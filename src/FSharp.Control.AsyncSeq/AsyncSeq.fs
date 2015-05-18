@@ -230,10 +230,9 @@ module AsyncSeq =
                                     | BindState.HaveEnumerator ->   
                                         let! res = enum.Value.MoveNext() 
                                         return (match res with
-                                                | None -> 
-                                                    x.Dispose()
-                                                    None
-                                                | Some _ -> res)
+                                                | None -> x.Dispose()
+                                                | Some _ -> ()
+                                                res)
                                     | _ -> 
                                         return None }
                         member x.Dispose() = 
@@ -282,12 +281,10 @@ module AsyncSeq =
   type TryWithState =
      | NotStarted    = -1
      | HaveBodyEnumerator = 0
-     | Finished = 1
-     | PreHandler = 2
-     | HaveHandlerEnumerator = 3
+     | HaveHandlerEnumerator = 1
+     | Finished = 2
 
   /// Implements the 'TryWith' functionality for computation builder
-  // this pushes the handler through all the async computations
   let tryWith (inp: AsyncSeq<'T>) (handler : exn -> AsyncSeq<'T>) : AsyncSeq<'T> = 
         { new IAsyncEnumerable<'T> with 
               member x.GetEnumerator() = 
@@ -311,7 +308,6 @@ module AsyncSeq =
                                         | Choice2Of2 exn -> 
                                             return! 
                                                (x.Dispose()
-                                                state := TryWithState.PreHandler
                                                 enum := (handler exn).GetEnumerator()
                                                 state := TryWithState.HaveHandlerEnumerator
                                                 x.MoveNext())
@@ -324,15 +320,15 @@ module AsyncSeq =
                                         with exn -> 
                                             res := Choice2Of2 exn
                                         match res.Value with 
-                                        | Choice1Of2 (Some res) -> 
-                                            return (Some res)
-                                        | Choice1Of2 None -> 
-                                            x.Dispose()
-                                            return None
+                                        | Choice1Of2 res -> 
+                                            return 
+                                                (match res with 
+                                                 | None -> x.Dispose()
+                                                 | _ -> ()
+                                                 res)
                                         | Choice2Of2 exn -> 
                                             return! 
                                               (x.Dispose()
-                                               state := TryWithState.PreHandler
                                                enum := (handler exn).GetEnumerator()
                                                state := TryWithState.HaveHandlerEnumerator
                                                x.MoveNext())
