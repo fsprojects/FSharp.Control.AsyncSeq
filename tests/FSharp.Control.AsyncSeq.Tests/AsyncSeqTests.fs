@@ -1,4 +1,10 @@
-﻿module AsyncSeqTests
+﻿#if INTERACTIVE
+#r @"../../bin/FSharp.Control.AsyncSeq.dll"
+#r @"../../packages/NUnit/lib/nunit.framework.dll"
+#time "on"
+#else
+module AsyncSeqTests
+#endif
 
 open NUnit.Framework
 open FSharp.Control
@@ -699,3 +705,39 @@ let ``asyncSeq.For should delay``() =
        interface System.Collections.IEnumerable with 
            member x.GetEnumerator() = failwith "fail"  }
   Assert.DoesNotThrow(fun _ -> asyncSeq.For(s, (fun v -> AsyncSeq.empty)) |> ignore)
+
+
+
+let empty = async { return () }
+let perfTest1() = 
+    Seq.init 6000 id
+    |> AsyncSeq.ofSeq
+    |> AsyncSeq.iterAsync (fun _ -> empty )
+    |> Async.RunSynchronously
+
+let perfTest2 n = 
+    Seq.init n id
+    |> AsyncSeq.ofSeq
+    |> AsyncSeq.toArray
+
+//perfTest2 1000
+//perfTest2 2000
+//perfTest2 3000
+//perfTest2 4000
+//perfTest2 1000000
+
+// 1000 - 0.227  - 0.038
+// 1000 - 0.905
+// 3000 - 2.154
+// 4000 - 3.757
+// 5000 - 6.197
+
+//perfTest1()
+//1000 - 0.244
+//2000 - 0.922
+//3000 - 2.091
+//4000 - 3.811
+//5000 - 6.311
+//6000 - 10.071
+
+

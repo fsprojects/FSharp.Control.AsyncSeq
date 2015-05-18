@@ -9,6 +9,8 @@ open System.IO
 open System.Threading
 open System.Threading.Tasks
 
+#nowarn "40"
+
 // ----------------------------------------------------------------------------
 
 type IAsyncEnumerator<'T> =
@@ -185,16 +187,21 @@ module AsyncSeq =
                             | _ -> () } }
 
 
-  let make (f: unit -> Async<AsyncSeq<'T>>) : AsyncSeq<'T> = 
+  let delay (f: unit -> AsyncSeq<'T>) : AsyncSeq<'T> = 
         { new IAsyncEnumerable<'T> with 
+              member x.GetEnumerator() = f().GetEnumerator() }
+
+  let bindAsync (f: 'T -> AsyncSeq<'U>) (inp : Async<'T>) : AsyncSeq<'U> = 
+        { new IAsyncEnumerable<'U> with 
               member x.GetEnumerator() = 
                   let state = ref -1
-                  let enum = ref Unchecked.defaultof<IAsyncEnumerator<'T>>
-                  { new IAsyncEnumerator<'T> with 
+                  let enum = ref Unchecked.defaultof<IAsyncEnumerator<'U>>
+                  { new IAsyncEnumerator<'U> with 
                         member x.MoveNext() = 
                             async { match !state with 
                                     | -1 -> 
-                                        let! s = f()
+                                        let! v = inp 
+                                        let s = f v
                                         let e = s.GetEnumerator()
                                         enum := e
                                         state := 0
@@ -219,11 +226,6 @@ module AsyncSeq =
                                 dispose e 
                             | _ -> () } }
 
-  let delay (f: unit -> AsyncSeq<'T>) : AsyncSeq<'T> = 
-       make (fun () -> async { return f() })
-
-  let bindAsync (f: 'T -> AsyncSeq<'U>) (inp : Async<'T>) : AsyncSeq<'U> = 
-       make (fun () -> async { let! v = inp in return f v })
 
 
   type AsyncSeqBuilder() =
@@ -237,12 +239,11 @@ module AsyncSeq =
     member x.Return _ = empty
     member x.YieldFrom(s:AsyncSeq<'T>) = s
     member x.Zero () = empty
-    member x.Bind (inp:Async<'T>, body : 'T -> AsyncSeq<'U>) : AsyncSeq<'U> = 
-      bindAsync body inp
-    member x.Combine (seq1:AsyncSeq<'T>,seq2:AsyncSeq<'T>) = 
-      append seq1 seq2
+    member x.Bind (inp:Async<'T>, body : 'T -> AsyncSeq<'U>) : AsyncSeq<'U> = bindAsync body inp
+    member x.Combine (seq1:AsyncSeq<'T>,seq2:AsyncSeq<'T>) = append seq1 seq2
     member x.While (guard, body:AsyncSeq<'T>) = 
-      if guard() then x.Combine(body,x.Delay(fun () -> x.While (guard, body))) else x.Zero()
+      let rec fix = delay (fun () -> if guard() then append body fix else empty)
+      fix
     member x.Delay (f:unit -> AsyncSeq<'T>) = 
       delay f
 
@@ -417,16 +418,53 @@ module AsyncSeq =
                                 x.Dispose()
                             | _ -> () } }
 
-  let iteriAsync f (source: AsyncSeq<_>)  = async { 
-        use ie = source.GetEnumerator()
-        let count = ref 0 
-        let! move = ie.MoveNext()
-        let b = ref move
-        while b.Value.IsSome do
-          do! f !count b.Value.Value
-          incr count
-          let! moven = ie.MoveNext()
-          b := moven }
+  let ofSeq (inp: seq<'T>) : AsyncSeq<'T> = 
+        { new IAsyncEnumerable<'T> with 
+              member x.GetEnumerator() = 
+                  let state = ref -1
+                  let enum = ref Unchecked.defaultof<System.Collections.Generic.IEnumerator<'T>>
+                  { new IAsyncEnumerator<'T> with 
+                        member x.MoveNext() = 
+                            async { match !state with 
+                                    | -1 -> 
+                                        enum := inp.GetEnumerator()
+                                        state := 0
+                                        return! x.MoveNext()
+                                    | 0 ->   
+                                        let e1 = enum.Value
+                                        if e1.MoveNext()  then 
+                                            return Some enum.Value.Current
+                                        else 
+                                            enum := Unchecked.defaultof<_>
+                                            dispose e1
+                                            state := 1
+                                            return None
+                                    | 1 ->   
+                                        return None
+                                    | _ -> 
+                                        return! invalidOp "enumerator already finished" }
+                        member x.Dispose() = 
+                            match !state with 
+                            | 0 -> 
+                                let e = enum.Value
+                                state := 1
+                                enum := Unchecked.defaultof<_>
+                                dispose e 
+                            | _ -> () } }
+
+  let iteriAsync f (source : AsyncSeq<_>) = 
+      async { 
+          use ie = source.GetEnumerator()
+          let count = ref 0
+          let! move = ie.MoveNext()
+          let b = ref move
+          while b.Value.IsSome do
+              do! f !count b.Value.Value
+              let! moven = ie.MoveNext()
+              do incr count
+                 b := moven
+      }
+
   
   let iterAsync (f: 'T -> Async<unit>) (inp: AsyncSeq<'T>)  = iteriAsync (fun i x -> f x) inp
   
@@ -447,11 +485,7 @@ module AsyncSeq =
         if box resource <> null then dispose resource)
 
     member x.For(seq:seq<'T>, action:'T -> AsyncSeq<'TResult>) = 
-      x.Delay(fun () -> 
-          let enum = seq.GetEnumerator()
-          x.TryFinally(x.While((fun () -> enum.MoveNext()), x.Delay(fun () -> 
-            action enum.Current)), (fun () -> 
-              if enum <> null then enum.Dispose() )))
+      collect action (ofSeq seq) 
 
     member x.For (seq:AsyncSeq<'T>, action:'T -> AsyncSeq<'TResult>) = 
       collect action seq
@@ -608,9 +642,6 @@ module AsyncSeq =
   // --------------------------------------------------------------------------
   // Converting from/to synchronous sequences or IObservables
 
-  let ofSeq (source : seq<'T>) = asyncSeq {
-    for el in source do 
-      yield el }
 
   let ofObservableBuffered (source : System.IObservable<_>) = 
     asyncSeq {  
