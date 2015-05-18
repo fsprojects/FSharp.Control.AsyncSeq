@@ -715,6 +715,17 @@ let perfTest1 n =
     |> AsyncSeq.iterAsync (fun _ -> empty )
     |> Async.RunSynchronously
 
+// n                OLD     NEW
+//perfTest1 1000 - 0.244       0.001
+//perfTest1 2000 - 0.922
+//perfTest1 3000 - 2.091
+//perfTest1 4000 - 3.811
+//perfTest1 5000 - 6.311
+//perfTest1 6000 - 10.071      0.006
+//perfTest1 10000 - 38..0      0.012
+//perfTest1 100000 -           0.129
+//perfTest1 1000000 -          0.708
+
 let perfTest2 n = 
     Seq.init n id
     |> AsyncSeq.ofSeq
@@ -730,16 +741,23 @@ let perfTest2 n =
 //perfTest2 100000          0.076
 //perfTest2 1000000         0.663
 
-//perfTest1 n
+
+let ofSeq2 (source : seq<'T>) = asyncSeq {  
+    for el in source do   
+      yield el }  
+
+let perfTest3 n = 
+    Seq.init n id
+    |> ofSeq2
+    |> AsyncSeq.toArray
+
+
 // n                OLD     NEW
-//perfTest1 1000 - 0.244       0.001
-//perfTest1 2000 - 0.922
-//perfTest1 3000 - 2.091
-//perfTest1 4000 - 3.811
-//perfTest1 5000 - 6.311
-//perfTest1 6000 - 10.071      0.006
-//perfTest1 10000 - 38..0      0.012
-//perfTest1 100000 -           0.129
-//perfTest1 1000000 -          0.708
-
-
+//perfTest3 1000            0.003
+//perfTest3 2000            
+//perfTest3 3000            
+//perfTest3 4000         
+//perfTest3 5000           0.009
+//perfTest3 10000           0.015
+//perfTest3 100000          0.155
+//perfTest3 1000000         1.645

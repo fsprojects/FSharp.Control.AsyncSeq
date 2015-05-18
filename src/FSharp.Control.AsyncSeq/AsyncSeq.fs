@@ -140,48 +140,67 @@ module AsyncSeq =
                                                       return (if res then Some v else None) }
                         member x.Dispose() = () } }
     
+  type AppendState =
+     /// not started
+     | NotStarted1     = -1
+     /// have left enumerator
+     | HaveEnumerator1 = 0
+     /// finished left enumerator, not yet started right enumerator
+     | NotStarted2     = 1
+     /// have right enumerator
+     | HaveEnumerator2 = 2
+     /// finished
+     | Finished        = 3
+
   let append (inp1: AsyncSeq<'T>) (inp2: AsyncSeq<'T>) : AsyncSeq<'T> =
         { new IAsyncEnumerable<'T> with 
               member x.GetEnumerator() = 
-                  let state = ref -1
+                  let state = ref AppendState.NotStarted1
                   let enum = ref Unchecked.defaultof<IAsyncEnumerator<'T>>
                   { new IAsyncEnumerator<'T> with 
                         member x.MoveNext() = 
                             async { match !state with 
-                                    | -1 -> 
-                                        enum := inp1.GetEnumerator()
-                                        state := 0
-                                        return! x.MoveNext()
-                                    | 0 ->   
-                                        let! res = enum.Value.MoveNext() 
-                                        match res with 
-                                        | None -> 
-                                            x.Dispose()
-                                            state := 1
-                                            return! x.MoveNext()
-                                        | Some _ -> 
-                                            return res
-                                    | 1 -> 
-                                        enum := inp2.GetEnumerator()
-                                        state := 2
-                                        return! x.MoveNext()
-                                    | 2 ->   
+                                    | AppendState.NotStarted1 -> 
+                                        return! 
+                                         (enum := inp1.GetEnumerator()
+                                          state := AppendState.HaveEnumerator1
+                                          x.MoveNext())
+                                    | AppendState.HaveEnumerator1 ->   
                                         let e = enum.Value
                                         let! res = e.MoveNext() 
-                                        match res with
+                                        match res with 
                                         | None -> 
-                                            x.Dispose()
-                                            state := 3
-                                            return! x.MoveNext()
+                                            return! 
+                                              (state := AppendState.NotStarted2
+                                               enum := Unchecked.defaultof<_>
+                                               dispose e
+                                               x.MoveNext())
                                         | Some _ -> 
                                             return res
+                                    | AppendState.NotStarted2 -> 
+                                        return! 
+                                         (enum := inp2.GetEnumerator()
+                                          state := AppendState.HaveEnumerator2
+                                          x.MoveNext())
+                                    | AppendState.HaveEnumerator2 ->   
+                                        let e = enum.Value
+                                        let! res = e.MoveNext() 
+                                        return (match res with
+                                                | None -> 
+                                                    state := AppendState.Finished
+                                                    enum := Unchecked.defaultof<_>
+                                                    dispose e
+                                                    None
+                                                | Some _ -> 
+                                                    res)
                                     | _ -> 
                                         return None }
                         member x.Dispose() = 
                             match !state with 
-                            | 0 -> 
+                            | AppendState.HaveEnumerator1 
+                            | AppendState.HaveEnumerator2 -> 
                                 let e = enum.Value
-                                state := 3
+                                state := AppendState.Finished
                                 enum := Unchecked.defaultof<_>
                                 dispose e 
                             | _ -> () } }
@@ -195,26 +214,28 @@ module AsyncSeq =
         { new IAsyncEnumerable<'U> with 
               member x.GetEnumerator() = 
                   let state = ref -1
+                  // state -1 = not started
+                  // state 0 = have result enumerator
+                  // state 1 = finished
                   let enum = ref Unchecked.defaultof<IAsyncEnumerator<'U>>
                   { new IAsyncEnumerator<'U> with 
                         member x.MoveNext() = 
                             async { match !state with 
                                     | -1 -> 
                                         let! v = inp 
-                                        let s = f v
-                                        let e = s.GetEnumerator()
-                                        enum := e
-                                        state := 0
-                                        return! x.MoveNext()
+                                        return! 
+                                           (let s = f v
+                                            let e = s.GetEnumerator()
+                                            enum := e
+                                            state := 0
+                                            x.MoveNext())
                                     | 0 ->   
-                                        let e = enum.Value
-                                        let! res = e.MoveNext() 
-                                        match res with
-                                        | None -> 
-                                            x.Dispose()
-                                            return None
-                                        | Some v ->
-                                            return Some v
+                                        let! res = enum.Value.MoveNext() 
+                                        return (match res with
+                                                | None -> 
+                                                    x.Dispose()
+                                                    None
+                                                | Some _ -> res)
                                     | _ -> 
                                         return None }
                         member x.Dispose() = 
@@ -242,6 +263,7 @@ module AsyncSeq =
     member x.Bind (inp:Async<'T>, body : 'T -> AsyncSeq<'U>) : AsyncSeq<'U> = bindAsync body inp
     member x.Combine (seq1:AsyncSeq<'T>,seq2:AsyncSeq<'T>) = append seq1 seq2
     member x.While (guard, body:AsyncSeq<'T>) = 
+      // Use F#'s support for Landin's knot for a low-allocation fixed-point
       let rec fix = delay (fun () -> if guard() then append body fix else empty)
       fix
     member x.Delay (f:unit -> AsyncSeq<'T>) = 
@@ -267,10 +289,10 @@ module AsyncSeq =
                   let state = ref -1
                   let enum = ref Unchecked.defaultof<IAsyncEnumerator<'T>>
                   // state -1: not started
-                  // state 0: running
+                  // state 0: have body enumerator
                   // state 1: finished
-                  // state 2: exception happened, calling handler
-                  // state 3: running handler
+                  // state 2: exception happened, about to get handler enumerator
+                  // state 3: have handler enumerator
                   { new IAsyncEnumerator<'T> with 
                         member x.MoveNext() = 
                             async { match !state with 
@@ -282,15 +304,17 @@ module AsyncSeq =
                                             res := Choice2Of2 exn
                                         match res.Value with
                                         | Choice1Of2 r ->
-                                            enum := r
-                                            state := 0
-                                            return! x.MoveNext()
+                                            return! 
+                                              (enum := r
+                                               state := 0
+                                               x.MoveNext())
                                         | Choice2Of2 exn -> 
-                                            x.Dispose()
-                                            state := 2
-                                            enum := (handler exn).GetEnumerator()
-                                            state := 3
-                                            return! x.MoveNext()
+                                            return! 
+                                               (x.Dispose()
+                                                state := 2
+                                                enum := (handler exn).GetEnumerator()
+                                                state := 3
+                                                x.MoveNext())
                                     | 0 ->   
                                         let e = enum.Value
                                         let res = ref Unchecked.defaultof<_>
@@ -304,21 +328,19 @@ module AsyncSeq =
                                             return (Some res)
                                         | Choice1Of2 None -> 
                                             x.Dispose()
-                                            return! x.MoveNext()
+                                            return None
                                         | Choice2Of2 exn -> 
-                                            x.Dispose()
-                                            state := 2
-                                            enum := (handler exn).GetEnumerator()
-                                            state := 3
-                                            return! x.MoveNext()
+                                            return! 
+                                              (x.Dispose()
+                                               state := 2
+                                               enum := (handler exn).GetEnumerator()
+                                               state := 3
+                                               x.MoveNext())
                                     | 3 ->   
-                                        let e = enum.Value
-                                        let! res = e.MoveNext() 
-                                        match res with 
-                                        | Some _ -> return res
-                                        | None -> 
-                                            x.Dispose()
-                                            return! x.MoveNext()
+                                        let! res = enum.Value.MoveNext() 
+                                        return (match res with 
+                                                | Some _ -> res
+                                                | None -> x.Dispose(); None)
                                     | _ -> 
                                         return None }
                         member x.Dispose() = 
@@ -333,6 +355,11 @@ module AsyncSeq =
   // this pushes the handler through all the async computations
   let tryFinally (inp: AsyncSeq<'T>) (compensation : unit -> unit) : AsyncSeq<'T> = 
         { new IAsyncEnumerable<'T> with 
+                  // state -1: not started
+                  // state 0: have body enumerator
+                  // state 1: finished
+                  //
+                  // The (synchronous) compensation is run when the Dispose() is called
               member x.GetEnumerator() = 
                   let state = ref -1
                   let enum = ref Unchecked.defaultof<IAsyncEnumerator<'T>>
@@ -340,19 +367,18 @@ module AsyncSeq =
                         member x.MoveNext() = 
                             async { match !state with 
                                     | -1 -> 
-                                        let e = inp.GetEnumerator()
-                                        enum := e
-                                        state := 0
-                                        return! x.MoveNext()
+                                        return! 
+                                           (let e = inp.GetEnumerator()
+                                            enum := e
+                                            state := 0
+                                            x.MoveNext())
                                     | 0 ->   
-                                        let e = enum.Value
-                                        let! res = e.MoveNext() 
-                                        match res with 
-                                        | None -> 
-                                            x.Dispose()
-                                            return! x.MoveNext()
-                                        | Some _ -> 
-                                            return res
+                                        let! res = enum.Value.MoveNext() 
+                                        return 
+                                           (match res with 
+                                            | None -> x.Dispose()
+                                            | Some _ -> ()
+                                            res)
                                     | _ -> 
                                         return None }
                         member x.Dispose() = 
@@ -370,25 +396,31 @@ module AsyncSeq =
         { new IAsyncEnumerable<'U> with 
               member x.GetEnumerator() = 
                   let state = ref -1
+                  // state -1: not started
+                  // state 0: have input enumerator, do not yet have inner enumerator
+                  // state 1: have input enumerator and inner enumerator
+                  // state 2: finished input enumerator
+                  // state 3: finished 
                   let enum1 = ref Unchecked.defaultof<IAsyncEnumerator<'T>>
                   let enum2 = ref Unchecked.defaultof<IAsyncEnumerator<'U>>
                   { new IAsyncEnumerator<'U> with 
                         member x.MoveNext() = 
                             async { match !state with 
                                     | -1 -> 
-                                        enum1 := inp.GetEnumerator()
-                                        state := 0
-                                        return! x.MoveNext()
+                                        return! 
+                                           (enum1 := inp.GetEnumerator()
+                                            state := 0
+                                            x.MoveNext())
                                     | 0 ->   
-                                        let e1 = enum1.Value
-                                        let! res1 = e1.MoveNext() 
-                                        match res1 with
-                                        | Some v1 ->
-                                            enum2 := (f v1).GetEnumerator()
-                                            state := 1
-                                        | None -> 
-                                            state := 2
-                                        return! x.MoveNext()
+                                        let! res1 = enum1.Value.MoveNext() 
+                                        return! 
+                                           (match res1 with
+                                            | Some v1 ->
+                                                enum2 := (f v1).GetEnumerator()
+                                                state := 1
+                                            | None -> 
+                                                state := 2
+                                            x.MoveNext())
                                     | 1 ->   
                                         let e2 = enum2.Value
                                         let! res2 = e2.MoveNext() 
@@ -418,10 +450,72 @@ module AsyncSeq =
                                 x.Dispose()
                             | _ -> () } }
 
+  // Like collect, but the input is a sequence, where no bind is required on each step of the enumeration
+  let collectSeq (f: 'T -> AsyncSeq<'U>) (inp: seq<'T>) : AsyncSeq<'U> = 
+        { new IAsyncEnumerable<'U> with 
+              member x.GetEnumerator() = 
+                  let state = ref -1
+                  // state -1: not started
+                  // state 0: have input enumerator, do not yet have inner enumerator
+                  // state 1: have input enumerator and inner enumerator
+                  // state 2: finished input enumerator
+                  // state 3: finished 
+                  let enum1 = ref Unchecked.defaultof<System.Collections.Generic.IEnumerator<'T>>
+                  let enum2 = ref Unchecked.defaultof<IAsyncEnumerator<'U>>
+                  { new IAsyncEnumerator<'U> with 
+                        member x.MoveNext() = 
+                            async { match !state with 
+                                    | -1 -> 
+                                        return! 
+                                           (enum1 := inp.GetEnumerator()
+                                            state := 0
+                                            x.MoveNext())
+                                    | 0 ->   
+                                        return! 
+                                          (let e1 = enum1.Value
+                                           if e1.MoveNext()  then 
+                                               enum2 := (f e1.Current).GetEnumerator()
+                                               state := 1
+                                           else
+                                               state := 2
+                                           x.MoveNext())
+                                    | 1 ->   
+                                        let e2 = enum2.Value
+                                        let! res2 = e2.MoveNext() 
+                                        match res2 with 
+                                        | None ->
+                                            return! 
+                                              (enum2 := Unchecked.defaultof<_>
+                                               state := 0
+                                               dispose e2
+                                               x.MoveNext())
+                                        | Some _ -> 
+                                            return res2
+                                    | 2 -> 
+                                        return None
+                                    | _ -> 
+                                        return! invalidOp "enumerator already finished" }
+                        member x.Dispose() = 
+                            match !state with 
+                            | 0 -> 
+                                let e = enum1.Value
+                                state := 3
+                                enum1 := Unchecked.defaultof<_>
+                                dispose e 
+                            | 1 -> 
+                                let e2 = enum1.Value
+                                state := 0
+                                dispose e2
+                                x.Dispose()
+                            | _ -> () } }
+
   let ofSeq (inp: seq<'T>) : AsyncSeq<'T> = 
         { new IAsyncEnumerable<'T> with 
               member x.GetEnumerator() = 
                   let state = ref -1
+                  // state -1: not started
+                  // state 0: have input enumerator
+                  // state 1: finished 
                   let enum = ref Unchecked.defaultof<System.Collections.Generic.IEnumerator<'T>>
                   { new IAsyncEnumerator<'T> with 
                         member x.MoveNext() = 
@@ -442,7 +536,7 @@ module AsyncSeq =
                                     | 1 ->   
                                         return None
                                     | _ -> 
-                                        return! invalidOp "enumerator already finished" }
+                                        return! invalidOp "unreachable" }
                         member x.Dispose() = 
                             match !state with 
                             | 0 -> 
@@ -490,7 +584,7 @@ module AsyncSeq =
     member x.For (seq:AsyncSeq<'T>, action:'T -> AsyncSeq<'TResult>) = 
       collect action seq
 
-
+       
   // Add asynchronous for loop to the 'async' computation builder
   type Microsoft.FSharp.Control.AsyncBuilder with
     member internal x.For (seq:AsyncSeq<'T>, action:'T -> Async<unit>) = 
