@@ -1,4 +1,14 @@
-﻿module AsyncSeqTests
+﻿#if INTERACTIVE
+#if COMPARE_TO_OLD
+#r @"../../packages/FSharp.Control.AsyncSeq/lib/net40/Fsharp.Control.AsyncSeq.dll"
+#else
+#r @"../../bin/FSharp.Control.AsyncSeq.dll"
+#endif
+#r @"../../packages/NUnit/lib/nunit.framework.dll"
+#time "on"
+#else
+module AsyncSeqTests
+#endif
 
 open NUnit.Framework
 open FSharp.Control
@@ -10,8 +20,8 @@ module AsyncOps =
 
 /// Determines equality of two async sequences by convering them to lists, ignoring side-effects.
 let EQ (a:AsyncSeq<'a>) (b:AsyncSeq<'a>) = 
-  let exp = a |> AsyncSeq.toList |> Async.RunSynchronously
-  let act = b |> AsyncSeq.toList |> Async.RunSynchronously  
+  let exp = a |> AsyncSeq.toList 
+  let act = b |> AsyncSeq.toList 
   if (exp = act) then true
   else
     printfn "expected=%A" exp
@@ -27,7 +37,7 @@ let ``AsyncSeq.toArray``() =
     yield 2
     yield 3
   }
-  let a = s |> AsyncSeq.toArray |> Async.RunSynchronously |> Array.toList
+  let a = s |> AsyncSeq.toList 
   Assert.True(([1;2;3] = a))
 
 
@@ -38,7 +48,7 @@ let ``AsyncSeq.toList``() =
     yield 2
     yield 3
   }
-  let a = s |> AsyncSeq.toList |> Async.RunSynchronously
+  let a = s |> AsyncSeq.toList 
   Assert.True(([1;2;3] = a))
 
 
@@ -59,13 +69,60 @@ let ``AsyncSeq.unfoldAsync``() =
   let actual = AsyncSeq.unfoldAsync (gen >> async.Return) 0
   Assert.True(EQ expected actual)
 
+[<Test>]
+let ``AsyncSeq.unfold``() =  
+  let gen s =
+    if s < 3 then (s,s + 1) |> Some
+    else None
+  let expected = Seq.unfold gen 0 |> AsyncSeq.ofSeq
+  let actual = AsyncSeq.unfold gen 0
+  Assert.True(EQ expected actual)
+
 
 [<Test>]
 let ``AsyncSeq.interleave``() =  
   let s1 = AsyncSeq.ofSeq ["a";"b";"c"]
   let s2 = AsyncSeq.ofSeq [1;2;3]
-  let merged = AsyncSeq.interleave s1 s2 |> AsyncSeq.toList |> Async.RunSynchronously
+  let merged = AsyncSeq.interleave s1 s2 |> AsyncSeq.toList 
   Assert.True([Choice1Of2 "a" ; Choice2Of2 1 ; Choice1Of2 "b" ; Choice2Of2 2 ; Choice1Of2 "c" ; Choice2Of2 3] = merged)
+
+[<Test>]
+let ``AsyncSeq.interleave second smaller``() =  
+  let s1 = AsyncSeq.ofSeq ["a";"b";"c"]
+  let s2 = AsyncSeq.ofSeq [1]
+  let merged = AsyncSeq.interleave s1 s2 |> AsyncSeq.toList 
+  Assert.True([Choice1Of2 "a" ; Choice2Of2 1 ; Choice1Of2 "b" ; Choice1Of2 "c" ] = merged)
+
+[<Test>]
+let ``AsyncSeq.interleave second empty``() =  
+  let s1 = AsyncSeq.ofSeq ["a";"b";"c"]
+  let s2 = AsyncSeq.ofSeq []
+  let merged = AsyncSeq.interleave s1 s2 |> AsyncSeq.toList 
+  Assert.True([Choice1Of2 "a" ; Choice1Of2 "b" ; Choice1Of2 "c" ] = merged)
+
+[<Test>]
+let ``AsyncSeq.interleave both empty``() =  
+  let s1 = AsyncSeq.ofSeq<int> []
+  let s2 = AsyncSeq.ofSeq<int> []
+  let merged = AsyncSeq.interleave s1 s2 |> AsyncSeq.toList 
+  Assert.True([ ] = merged)
+
+[<Test>]
+let ``AsyncSeq.interleave first smaller``() =  
+  let s1 = AsyncSeq.ofSeq ["a"]
+  let s2 = AsyncSeq.ofSeq [1;2;3]
+  let merged = AsyncSeq.interleave s1 s2 |> AsyncSeq.toList 
+  Assert.True([Choice1Of2 "a" ; Choice2Of2 1 ; Choice2Of2 2 ; Choice2Of2 3] = merged)
+
+
+
+[<Test>]
+let ``AsyncSeq.interleave first empty``() =  
+  let s1 = AsyncSeq.ofSeq []
+  let s2 = AsyncSeq.ofSeq [1;2;3]
+  let merged = AsyncSeq.interleave s1 s2 |> AsyncSeq.toList 
+  Assert.True([Choice2Of2 1 ; Choice2Of2 2 ; Choice2Of2 3] = merged)
+
 
 
 [<Test>]
@@ -77,66 +134,196 @@ let ``AsyncSeq.bufferByCount``() =
     yield 4
     yield 5
   }
-  let s' = s |> AsyncSeq.bufferByCount 2 |> AsyncSeq.toList |> Async.RunSynchronously
+  let s' = s |> AsyncSeq.bufferByCount 2 |> AsyncSeq.toList 
   Assert.True(([[|1;2|];[|3;4|];[|5|]] = s'))
 
+[<Test>]
+let ``AsyncSeq.bufferByCount various sizes``() =
+  for sz in 0 .. 10 do
+      let s = asyncSeq {
+        for i in 1 .. sz do
+           yield i
+      }
+      let s' = s |> AsyncSeq.bufferByCount 1 |> AsyncSeq.toList 
+      Assert.True(([for i in 1 .. sz -> [|i|]] = s'))
+
+[<Test>]
+let ``AsyncSeq.bufferByCount empty``() =
+  let s = AsyncSeq.empty<int>
+  let s' = s |> AsyncSeq.bufferByCount 2 |> AsyncSeq.toList 
+  Assert.True(([] = s'))
+
+[<Test>]
+let ``try finally works no exception``() =
+  let x = ref 0
+  let s = asyncSeq {
+    try yield 1 
+    finally x := x.Value + 3
+  }
+  Assert.True(x.Value = 0)
+  let s1 = s |> AsyncSeq.toList 
+  Assert.True(x.Value = 3)
+  let s2 = s |> AsyncSeq.toList
+  Assert.True(x.Value = 6)
+
+[<Test>]
+let ``try finally works exception``() =
+  let x = ref 0
+  let s = asyncSeq {
+    try 
+      try yield 1
+          failwith "fffail"
+      finally x := x.Value + 1
+    finally x := x.Value + 2
+  }
+  Assert.True(x.Value = 0)
+  let s1 = try s |> AsyncSeq.toList with _ -> []
+  Assert.True((s1 = []))
+  Assert.True(x.Value = 3)
+  let s2 = try s |> AsyncSeq.toList with _ -> []
+  Assert.True((s2 = []))
+  Assert.True(x.Value = 6)
+
+[<Test>]
+let ``try with works exception``() =
+  let x = ref 0
+  let s = asyncSeq {
+    try failwith "ffail"
+    with e -> x := x.Value + 3
+  }
+  Assert.True(x.Value = 0)
+  let s1 = try s |> AsyncSeq.toList with _ -> []
+  Assert.True((s1 = []))
+  Assert.True(x.Value = 3)
+  let s2 = try s |> AsyncSeq.toList with _ -> []
+  Assert.True((s2 = []))
+  Assert.True(x.Value = 6)
+
+[<Test>]
+let ``try with works no exception``() =
+  let x = ref 0
+  let s = asyncSeq {
+    try yield 1
+    with e -> x := x.Value + 3
+  }
+  Assert.True(x.Value = 0)
+  let s1 = try s |> AsyncSeq.toList with _ -> []
+  Assert.True((s1 = [1]))
+  Assert.True(x.Value = 0)
+  let s2 = try s |> AsyncSeq.toList with _ -> []
+  Assert.True((s2 = [1]))
+  Assert.True(x.Value = 0)
 
 [<Test>]
 let ``AsyncSeq.zip``() =  
-  let la = [1;2;3;4;5]
-  let lb = [1;2;3;4;5]
-  let a = la |> AsyncSeq.ofSeq
-  let b = lb |> AsyncSeq.ofSeq
-  let actual = AsyncSeq.zip a b
-  let expected = List.zip la lb |> AsyncSeq.ofSeq
-  Assert.True(EQ expected actual)
+  for la in [ []; [1]; [1;2;3;4;5] ] do 
+     for lb in [ []; [1]; [1;2;3;4;5] ] do 
+          let a = la |> AsyncSeq.ofSeq
+          let b = lb |> AsyncSeq.ofSeq
+          let actual = AsyncSeq.zip a b
+          let expected = Seq.zip la lb |> AsyncSeq.ofSeq
+          Assert.True(EQ expected actual)
 
 
 [<Test>]
 let ``AsyncSeq.zipWithAsync``() =  
-  let la = [1;2;3;4;5]
-  let lb = [1;2;3;4;5]
-  let a = la |> AsyncSeq.ofSeq
-  let b = lb |> AsyncSeq.ofSeq
-  let actual = AsyncSeq.zipWithAsync (fun a b -> a + b |> async.Return) a b
-  let expected = List.zip la lb |> List.map ((<||) (+)) |> AsyncSeq.ofSeq
-  Assert.True(EQ expected actual)
+  for la in [ []; [1]; [1;2;3;4;5] ] do 
+     for lb in [ []; [1]; [1;2;3;4;5] ] do 
+          let a = la |> AsyncSeq.ofSeq
+          let b = lb |> AsyncSeq.ofSeq
+          let actual = AsyncSeq.zipWithAsync (fun a b -> a + b |> async.Return) a b
+          let expected = Seq.zip la lb |> Seq.map ((<||) (+)) |> AsyncSeq.ofSeq
+          Assert.True(EQ expected actual)
+
+[<Test>]
+let ``AsyncSeq.append works``() =  
+  for la in [ []; [1]; [1;2;3;4;5] ] do 
+     for lb in [ []; [1]; [1;2;3;4;5] ] do 
+          let a = la |> AsyncSeq.ofSeq
+          let b = lb |> AsyncSeq.ofSeq
+          let actual = AsyncSeq.append a b
+          let expected = List.append la lb |> AsyncSeq.ofSeq
+          Assert.True(EQ expected actual)
 
 
 [<Test>]
 let ``AsyncSeq.skipWhileAsync``() =  
-  let ls = [1;2;3;4;5]
-  let p i = i <= 2
-  let actual = ls |> AsyncSeq.ofSeq |> AsyncSeq.skipWhileAsync (p >> async.Return)
-  let expected = ls |> Seq.skipWhile p |> AsyncSeq.ofSeq
-  Assert.True(EQ expected actual)
+  for ls in [ []; [1]; [3]; [1;2;3;4;5] ] do 
+      let p i = i <= 2
+      let actual = ls |> AsyncSeq.ofSeq |> AsyncSeq.skipWhileAsync (p >> async.Return)
+      let expected = ls |> Seq.skipWhile p |> AsyncSeq.ofSeq
+      Assert.True(EQ expected actual)
 
 
 [<Test>]
 let ``AsyncSeq.takeWhileAsync``() =  
-  let ls = [1;2;3;4;5]
-  let p i = i < 4
-  let actual = ls |> AsyncSeq.ofSeq |> AsyncSeq.takeWhileAsync (p >> async.Return)
-  let expected = ls |> Seq.takeWhile p |> AsyncSeq.ofSeq
-  Assert.True(EQ expected actual)
+  for ls in [ []; [1]; [1;2;3;4;5] ] do 
+      let p i = i < 4
+      let actual = ls |> AsyncSeq.ofSeq |> AsyncSeq.takeWhileAsync (p >> async.Return)
+      let expected = ls |> Seq.takeWhile p |> AsyncSeq.ofSeq
+      Assert.True(EQ expected actual)
 
 
 [<Test>]
-let ``AsyncSeq.take``() =  
+let ``AsyncSeq.take 3 of 5``() =  
   let ls = [1;2;3;4;5]
   let c = 3
   let actual = ls |> AsyncSeq.ofSeq |> AsyncSeq.take c
   let expected = ls |> Seq.take c |> AsyncSeq.ofSeq
   Assert.True(EQ expected actual)
 
+[<Test>]
+let ``AsyncSeq.take 0 of 5``() =  
+  let ls = [1;2;3;4;5]
+  let c = 0
+  let actual = ls |> AsyncSeq.ofSeq |> AsyncSeq.take c
+  let expected = ls |> Seq.take c |> AsyncSeq.ofSeq
+  Assert.True(EQ expected actual)
+
 
 [<Test>]
-let ``AsyncSeq.skip``() =
+let ``AsyncSeq.take 5 of 5``() =  
+  let ls = [1;2;3;4;5]
+  let c = 5
+  let actual = ls |> AsyncSeq.ofSeq |> AsyncSeq.take c
+  let expected = ls |> Seq.take c |> AsyncSeq.ofSeq
+  Assert.True(EQ expected actual)
+
+
+[<Test>]
+let ``AsyncSeq.skip 3 of 5``() =
   let ls = [1;2;3;4;5]
   let c = 3
   let actual = ls |> AsyncSeq.ofSeq |> AsyncSeq.skip c
   let expected = ls |> Seq.skip c |> AsyncSeq.ofSeq
   Assert.True(EQ expected actual)
+
+
+[<Test>]
+let ``AsyncSeq.skip 0 of 5``() =
+  let ls = [1;2;3;4;5]
+  let c = 0
+  let actual = ls |> AsyncSeq.ofSeq |> AsyncSeq.skip c
+  let expected = ls |> Seq.skip c |> AsyncSeq.ofSeq
+  Assert.True(EQ expected actual)
+
+
+[<Test>]
+let ``AsyncSeq.skip 5 of 5``() =
+  let ls = [1;2;3;4;5]
+  let c = 5
+  let actual = ls |> AsyncSeq.ofSeq |> AsyncSeq.skip c
+  let expected = ls |> Seq.skip c |> AsyncSeq.ofSeq
+  Assert.True(EQ expected actual)
+
+[<Test>]
+let ``AsyncSeq.skip 1 of 5``() =
+  let ls = [1;2;3;4;5]
+  let c = 1
+  let actual = ls |> AsyncSeq.ofSeq |> AsyncSeq.skip c
+  let expected = ls |> Seq.skip c |> AsyncSeq.ofSeq
+  Assert.True(EQ expected actual)
+
 
 
 [<Test>]
@@ -149,48 +336,63 @@ let ``AsyncSeq.threadStateAsync``() =
 
 [<Test>]
 let ``AsyncSeq.scanAsync``() =
-  let ls = [1;2;3;4;5]
-  let f i a = i + a
-  let z = 0
-  let actual = ls |> AsyncSeq.ofSeq |> AsyncSeq.scanAsync (fun i a -> f i a |> async.Return) z
-  let expected = ls |> List.scan f z |> AsyncSeq.ofSeq
-  Assert.True(EQ expected actual)
+  for ls in [ []; [1]; [3]; [1;2;3;4;5] ] do 
+      let f i a = i + a
+      let z = 0
+      let actual = ls |> AsyncSeq.ofSeq |> AsyncSeq.scanAsync (fun i a -> f i a |> async.Return) z
+      let expected = ls |> List.scan f z |> AsyncSeq.ofSeq
+      Assert.True(EQ expected actual)
 
 [<Test>]
-let ``AsyncSeq.scanAsync on empty should emit initial state``() =
-  let ls = List.empty
-  let f i a = i + a
-  let z = 0
-  let actual = ls |> AsyncSeq.ofSeq |> AsyncSeq.scanAsync (fun i a -> f i a |> async.Return) z
-  let expected = ls |> List.scan f z |> AsyncSeq.ofSeq
-  Assert.True(EQ expected actual)
+let ``AsyncSeq.scan``() =
+  for ls in [ []; [1]; [3]; [1;2;3;4;5] ] do 
+      let f i a = i + a
+      let z = 0
+      let actual = ls |> AsyncSeq.ofSeq |> AsyncSeq.scan (fun i a -> f i a) z
+      let expected = ls |> List.scan f z |> AsyncSeq.ofSeq
+      Assert.True(EQ expected actual)
 
 
 [<Test>]
 let ``AsyncSeq.foldAsync``() =
-  let ls = [1;2;3;4;5]
-  let f i a = i + a
-  let z = 0
-  let actual = ls |> AsyncSeq.ofSeq |> AsyncSeq.foldAsync (fun i a -> f i a |> async.Return) z |> Async.RunSynchronously
-  let expected = ls |> Seq.fold f z
-  Assert.True((expected = actual))
+  for ls in [ []; [1]; [3]; [1;2;3;4;5] ] do 
+      let f i a = i + a
+      let z = 0
+      let actual = ls |> AsyncSeq.ofSeq |> AsyncSeq.foldAsync (fun i a -> f i a |> async.Return) z |> Async.RunSynchronously
+      let expected = ls |> Seq.fold f z
+      Assert.True((expected = actual))
 
 
 [<Test>]
 let ``AsyncSeq.filterAsync``() =
-  let ls = [1;2;3;4;5]
-  let p i = i > 3
-  let actual = ls |> AsyncSeq.ofSeq |> AsyncSeq.filterAsync (p >> async.Return)
-  let expected = ls |> Seq.filter p |> AsyncSeq.ofSeq
-  Assert.True(EQ expected actual)
+  for ls in [ []; [1]; [4]; [1;2;3;4;5] ] do 
+      let p i = i > 3
+      let actual = ls |> AsyncSeq.ofSeq |> AsyncSeq.filterAsync (p >> async.Return)
+      let expected = ls |> Seq.filter p |> AsyncSeq.ofSeq
+      Assert.True(EQ expected actual)
 
+[<Test>]
+let ``AsyncSeq.filter``() =
+  for ls in [ []; [1]; [4]; [1;2;3;4;5] ] do 
+      let p i = i > 3
+      let actual = ls |> AsyncSeq.ofSeq |> AsyncSeq.filter p
+      let expected = ls |> Seq.filter p |> AsyncSeq.ofSeq
+      Assert.True(EQ expected actual)
 
 [<Test>]
 let ``AsyncSeq.merge``() =
   let ls1 = [1;2;3;4;5]
   let ls2 = [6;7;8;9;10]
-  let actual = AsyncSeq.merge (AsyncSeq.ofSeq ls1) (AsyncSeq.ofSeq ls2) |> AsyncSeq.toList |> Async.RunSynchronously |> Set.ofList
+  let actual = AsyncSeq.merge (AsyncSeq.ofSeq ls1) (AsyncSeq.ofSeq ls2) |> AsyncSeq.toList |> Set.ofList
   let expected = ls1 @ ls2 |> Set.ofList
+  Assert.True((expected = actual))
+
+[<Test>]
+let ``AsyncSeq.mergeChoice``() =
+  let ls1 = [1;2;3;4;5]
+  let ls2 = [6.;7.;8.;9.;10.]
+  let actual = AsyncSeq.mergeChoice (AsyncSeq.ofSeq ls1) (AsyncSeq.ofSeq ls2) |> AsyncSeq.toList |> Set.ofList
+  let expected = (List.map Choice1Of2 ls1) @ (List.map Choice2Of2 ls2) |> Set.ofList
   Assert.True((expected = actual))
 
 
@@ -208,12 +410,73 @@ let ``AsyncSeq.merge should be fair``() =
   Assert.True(EQ expected actual)
 
 [<Test>]
+let ``AsyncSeq.merge should be fair 2``() =  
+  let s1 = asyncSeq {
+    yield 1
+  }
+  let s2 = asyncSeq {
+    do! Async.Sleep 10
+    yield 2
+  }
+  let actual = AsyncSeq.merge s1 s2
+  let expected = [1;2] |> AsyncSeq.ofSeq
+  Assert.True(EQ expected actual)
+
+[<Test>]
 let ``AsyncSeq.replicate``() =
   let c = 10
   let x = "hello"
-  let actual = AsyncSeq.replicate x |> AsyncSeq.take c
+  let actual = AsyncSeq.replicate 100 x |> AsyncSeq.take c
   let expected = List.replicate c x |> AsyncSeq.ofSeq
   Assert.True(EQ expected actual)
+
+[<Test>]
+let ``AsyncSeq.replicateInfinite``() =
+  let c = 10
+  let x = "hello"
+  let actual = AsyncSeq.replicateInfinite x |> AsyncSeq.take c
+  let expected = List.replicate c x |> AsyncSeq.ofSeq
+  Assert.True(EQ expected actual)
+
+[<Test>]
+let ``AsyncSeq.init``() =
+  for c in [0; 1; 100] do
+      let actual = AsyncSeq.init (int64 c) string 
+      let expected = List.init c string |> AsyncSeq.ofSeq
+      Assert.True(EQ expected actual)
+
+[<Test>]
+let ``AsyncSeq.initInfinite``() =
+  for c in [0; 1; 100] do
+      let actual = AsyncSeq.initInfinite string  |> AsyncSeq.take c
+      let expected = List.init c string |> AsyncSeq.ofSeq
+      Assert.True(EQ expected actual)
+
+[<Test>]
+let ``AsyncSeq.collect works``() =
+  for c in [0; 1; 10] do
+      let actual = AsyncSeq.collect (fun i -> AsyncSeq.ofSeq [ 0 .. i]) (AsyncSeq.ofSeq [ 0 .. c ])
+      let expected = [ for i in 0 .. c do yield! [ 0 .. i ] ] |> AsyncSeq.ofSeq
+      Assert.True(EQ expected actual)
+
+
+[<Test>]
+let ``AsyncSeq.initInfinite scales``() =
+    AsyncSeq.initInfinite string  |> AsyncSeq.take 1000 |> AsyncSeq.iter ignore |> Async.RunSynchronously
+
+[<Test>]
+let ``AsyncSeq.initAsync``() =
+  for c in [0; 1; 100] do
+      let actual = AsyncSeq.initAsync (int64 c) (string >> async.Return)
+      let expected = List.init c string |> AsyncSeq.ofSeq
+      Assert.True(EQ expected actual)
+
+[<Test>]
+let ``AsyncSeq.initInfiniteAsync``() =
+  for c in [0; 1; 100] do
+      let actual = AsyncSeq.initInfiniteAsync (string >> async.Return) |> AsyncSeq.take c
+      let expected = List.init c string |> AsyncSeq.ofSeq
+      Assert.True(EQ expected actual)
 
 [<Test>]
 let ``AsyncSeq.traverseOptionAsync``() =
@@ -277,27 +540,33 @@ let ``AsyncSeq.takeUntil should complete immediately with completed signal``() =
     yield 1
     yield 2
   }
-  let actual = AsyncSeq.takeUntil AsyncOps.unit s
+  let actual = AsyncSeq.takeUntilSignal AsyncOps.unit s
   Assert.True(EQ AsyncSeq.empty actual)
 
 
 [<Test>]
 let ``AsyncSeq.takeUntil should take entire sequence with never signal``() =
   let expected = [1;2;3;4] |> AsyncSeq.ofSeq
-  let actual = expected |> AsyncSeq.takeUntil AsyncOps.never
+  let actual = expected |> AsyncSeq.takeUntilSignal AsyncOps.never
+  Assert.True(EQ expected actual)
+
+[<Test>]
+let ``AsyncSeq.singleton works``() =
+  let expected = [1] |> AsyncSeq.ofSeq
+  let actual = AsyncSeq.singleton 1 
   Assert.True(EQ expected actual)
 
 
 [<Test>]
 let ``AsyncSeq.skipUntil should not skip with completed signal``() =
   let expected = [1;2;3;4] |> AsyncSeq.ofSeq
-  let actual = expected |> AsyncSeq.skipUntil AsyncOps.unit
+  let actual = expected |> AsyncSeq.skipUntilSignal AsyncOps.unit
   Assert.True(EQ expected actual)
 
 
 [<Test>]
 let ``AsyncSeq.skipUntil should skip everything with never signal``() =
-  let actual = [1;2;3;4] |> AsyncSeq.ofSeq |> AsyncSeq.skipUntil AsyncOps.never
+  let actual = [1;2;3;4] |> AsyncSeq.ofSeq |> AsyncSeq.skipUntilSignal AsyncOps.never
   Assert.True(EQ AsyncSeq.empty actual)
 
 [<Test>]
@@ -381,53 +650,52 @@ let observe vs err =
 [<Test>]
 let ``AsyncSeq.ofObservableBuffered should work (empty)``() =  
   let src, discarded = observe [] false
-  Assert.True(src |> AsyncSeq.ofObservableBuffered |> AsyncSeq.toList |> Async.RunSynchronously = [])
+  Assert.True(src |> AsyncSeq.ofObservableBuffered |> AsyncSeq.toList = [])
   Assert.True(discarded())
 
 [<Test>]
-let ``AsyncSeq.ofObservableBuffered should work (sinngleton)``() =  
+let ``AsyncSeq.ofObservableBuffered should work (singleton)``() =  
   let src, discarded = observe [1] false
-  Assert.True(src |> AsyncSeq.ofObservableBuffered |> AsyncSeq.toList |> Async.RunSynchronously = [1])
+  Assert.True(src |> AsyncSeq.ofObservableBuffered |> AsyncSeq.toList = [1])
   Assert.True(discarded())
 
 [<Test>]
 let ``AsyncSeq.ofObservableBuffered should work (ten)``() =  
   let src, discarded = observe [1..10] false
-  Assert.True(src |> AsyncSeq.ofObservableBuffered |> AsyncSeq.toList |> Async.RunSynchronously = [1..10])
+  Assert.True(src |> AsyncSeq.ofObservableBuffered |> AsyncSeq.toList = [1..10])
   Assert.True(discarded())
 
 [<Test>]
 let ``AsyncSeq.ofObservableBuffered should work (empty, fail)``() =  
   let src, discarded = observe [] true
-  Assert.True(try (src |> AsyncSeq.ofObservableBuffered |> AsyncSeq.toList |> Async.RunSynchronously |> ignore); false with _ -> true)
+  Assert.True(try (src |> AsyncSeq.ofObservableBuffered |> AsyncSeq.toList |> ignore); false with _ -> true)
   Assert.True(discarded())
 
 [<Test>]
 let ``AsyncSeq.ofObservableBuffered should work (one, fail)``() =  
   let src, discarded = observe [1] true
-  Assert.True(try (src |> AsyncSeq.ofObservableBuffered |> AsyncSeq.toList |> Async.RunSynchronously |> ignore); false with _ -> true)
+  Assert.True(try (src |> AsyncSeq.ofObservableBuffered |> AsyncSeq.toList |> ignore); false with _ -> true)
   Assert.True(discarded())
 
 [<Test>]
 let ``AsyncSeq.ofObservableBuffered should work (one, take)``() =  
   let src, discarded = observe [1] true
-  Assert.True(src |> AsyncSeq.ofObservableBuffered |> AsyncSeq.take 1 |> AsyncSeq.toList |> Async.RunSynchronously = [1])
-  // Take doesn't correctly run finally clauses, see https://github.com/fsprojects/FSharp.Control.AsyncSeq/issues/15
-  //Assert.True(discarded())
+  Assert.True(src |> AsyncSeq.ofObservableBuffered |> AsyncSeq.take 1 |> AsyncSeq.toList = [1])
+  Assert.True(discarded())
 
 [<Test>]
 let ``AsyncSeq.getIterator should work``() =  
   let s1 = [1..2] |> AsyncSeq.ofSeq
-  let i = AsyncSeq.getIterator s1
-  match i() |> Async.RunSynchronously with 
+  use i = s1.GetEnumerator()
+  match i.MoveNext() |> Async.RunSynchronously with 
   | None -> Assert.Fail("expected Some")
   | Some v -> 
     Assert.AreEqual(v,1)
-    match i() |> Async.RunSynchronously with 
+    match i.MoveNext() |> Async.RunSynchronously with 
     | None -> Assert.Fail("expected Some")
     | Some v -> 
         Assert.AreEqual(v,2)
-        match i() |> Async.RunSynchronously with 
+        match i.MoveNext() |> Async.RunSynchronously with 
         | None -> ()
         | Some _ -> Assert.Fail("expected None")
 
@@ -441,3 +709,81 @@ let ``asyncSeq.For should delay``() =
        interface System.Collections.IEnumerable with 
            member x.GetEnumerator() = failwith "fail"  }
   Assert.DoesNotThrow(fun _ -> asyncSeq.For(s, (fun v -> AsyncSeq.empty)) |> ignore)
+
+
+
+
+let empty = async { return () }
+let perfTest1 n = 
+    Seq.init n id
+    |> AsyncSeq.ofSeq
+    |> AsyncSeq.iterAsync (fun _ -> empty )
+    |> Async.RunSynchronously
+
+// n                            NEW        1.15.0
+//perfTest1 1000 -             0.001        0.004
+//perfTest1 2000 - 
+//perfTest1 3000 - 
+//perfTest1 4000 - 
+//perfTest1 5000 - 
+//perfTest1 6000 -             0.006        0.020
+//perfTest1 10000 -            0.012
+//perfTest1 100000 -           0.129        0.260
+//perfTest1 1000000 -          0.708        2.345
+
+
+let perfTest2 n = 
+    Seq.init n id
+    |> AsyncSeq.ofSeq
+    |> AsyncSeq.toArray
+
+// n                        NEW
+//perfTest2 1000            0.038
+//perfTest2 2000            0.001
+//perfTest2 3000            0.004
+//perfTest2 4000         
+//perfTest2 5000         
+//perfTest2 10000           0.007
+//perfTest2 100000          0.076
+//perfTest2 1000000         0.663
+
+
+// This was the original ofSeq implementation.  It is now faster than before this perf testing
+// took place, but is still slower than the bespoke ofSeq implementation (which effectively "knows"
+// that a single yield happens for each iteration of the loop).
+let ofSeq2 (source : seq<'T>) = asyncSeq {  
+    for el in source do   
+      yield el }  
+
+let perfTest3 n = 
+    Seq.init n id
+    |> ofSeq2
+    |> AsyncSeq.toArray
+
+
+// n                        NEW         1.15.0
+//perfTest3 1000            0.003
+//perfTest3 2000            
+//perfTest3 3000            
+//perfTest3 4000         
+//perfTest3 5000           0.009
+//perfTest3 10000           0.015
+//perfTest3 100000          0.155
+//perfTest3 1000000         1.500      3.480
+
+let perfTest4 n = 
+    Seq.init n id
+    |> AsyncSeq.ofSeq 
+    |> AsyncSeq.map id
+    |> AsyncSeq.filter (fun x -> x % 2 = 0)
+    |> AsyncSeq.toArray
+
+// n                        NEW         1.15.0
+//perfTest4 1000                 
+//perfTest4 2000            
+//perfTest4 3000            
+//perfTest4 4000         
+//perfTest4 5000          
+//perfTest4 10000         
+//perfTest4 100000          0.362       0.442
+//perfTest4 1000000         3.533       4.656
