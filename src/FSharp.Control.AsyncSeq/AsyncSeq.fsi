@@ -17,6 +17,7 @@ type IAsyncEnumerable<'T> =
 /// started to give an enumerator for pulling results asynchronously
 type AsyncSeq<'T> = IAsyncEnumerable<'T>
 
+[<RequireQualifiedAccess>]
 module AsyncSeq = 
     /// Creates an empty asynchronou sequence that immediately ends
     [<GeneralizableValueAttribute>]

@@ -11,6 +11,7 @@
 * Fix performance of mergeAll 
 * Add init, initInfinite
 * Add initAsync, initInfiniteAsync, replicateInfinite
+* Add RequireQualifiedAccess to AsyncSeq
 
 ### 1.15.0 - 30.03.2015
 * Add AsyncSeq.getIterator (unblocks use of AsyncSeq in FSharpx.Async)
