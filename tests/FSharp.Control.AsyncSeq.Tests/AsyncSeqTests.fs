@@ -53,11 +53,19 @@ let ``AsyncSeq.toList``() =
 
 
 [<Test>]
-let ``AsyncSeq.concatSeq``() =  
+let ``AsyncSeq.concatSeq works``() =  
   let ls = [ [1;2] ; [3;4] ]
   let actual = AsyncSeq.ofSeq ls |> AsyncSeq.concatSeq    
   let expected = ls |> List.concat |> AsyncSeq.ofSeq
   Assert.True(EQ expected actual)
+
+[<Test>]
+let ``AsyncSeq.cache works``() =  
+  for n in 0 .. 10 do 
+          let ls = [ for i in 1 .. n do for j in 1 .. i do yield i ]
+          let actual = ls |> AsyncSeq.ofSeq |> AsyncSeq.cache
+          let expected = ls |> AsyncSeq.ofSeq
+          Assert.True(EQ expected actual)
 
 
 [<Test>]
@@ -80,25 +88,70 @@ let ``AsyncSeq.unfold``() =
 
 
 [<Test>]
-let ``AsyncSeq.interleave``() =  
+let ``AsyncSeq.interleaveChoice``() =  
   let s1 = AsyncSeq.ofSeq ["a";"b";"c"]
   let s2 = AsyncSeq.ofSeq [1;2;3]
-  let merged = AsyncSeq.interleave s1 s2 |> AsyncSeq.toList 
+  let merged = AsyncSeq.interleaveChoice s1 s2 |> AsyncSeq.toList 
   Assert.True([Choice1Of2 "a" ; Choice2Of2 1 ; Choice1Of2 "b" ; Choice2Of2 2 ; Choice1Of2 "c" ; Choice2Of2 3] = merged)
+
+[<Test>]
+let ``AsyncSeq.interleaveChoice second smaller``() =  
+  let s1 = AsyncSeq.ofSeq ["a";"b";"c"]
+  let s2 = AsyncSeq.ofSeq [1]
+  let merged = AsyncSeq.interleaveChoice s1 s2 |> AsyncSeq.toList 
+  Assert.True([Choice1Of2 "a" ; Choice2Of2 1 ; Choice1Of2 "b" ; Choice1Of2 "c" ] = merged)
+
+[<Test>]
+let ``AsyncSeq.interleaveChoice second empty``() =  
+  let s1 = AsyncSeq.ofSeq ["a";"b";"c"]
+  let s2 = AsyncSeq.ofSeq []
+  let merged = AsyncSeq.interleaveChoice s1 s2 |> AsyncSeq.toList 
+  Assert.True([Choice1Of2 "a" ; Choice1Of2 "b" ; Choice1Of2 "c" ] = merged)
+
+[<Test>]
+let ``AsyncSeq.interleaveChoice both empty``() =  
+  let s1 = AsyncSeq.ofSeq<int> []
+  let s2 = AsyncSeq.ofSeq<int> []
+  let merged = AsyncSeq.interleaveChoice s1 s2 |> AsyncSeq.toList 
+  Assert.True([ ] = merged)
+
+[<Test>]
+let ``AsyncSeq.interleaveChoice first smaller``() =  
+  let s1 = AsyncSeq.ofSeq ["a"]
+  let s2 = AsyncSeq.ofSeq [1;2;3]
+  let merged = AsyncSeq.interleaveChoice s1 s2 |> AsyncSeq.toList 
+  Assert.True([Choice1Of2 "a" ; Choice2Of2 1 ; Choice2Of2 2 ; Choice2Of2 3] = merged)
+
+
+
+[<Test>]
+let ``AsyncSeq.interleaveChoice first empty``() =  
+  let s1 = AsyncSeq.ofSeq []
+  let s2 = AsyncSeq.ofSeq [1;2;3]
+  let merged = AsyncSeq.interleaveChoice s1 s2 |> AsyncSeq.toList 
+  Assert.True([Choice2Of2 1 ; Choice2Of2 2 ; Choice2Of2 3] = merged)
+
+
+[<Test>]
+let ``AsyncSeq.interleave``() =  
+  let s1 = AsyncSeq.ofSeq ["a";"b";"c"]
+  let s2 = AsyncSeq.ofSeq ["1";"2";"3"]
+  let merged = AsyncSeq.interleave s1 s2 |> AsyncSeq.toList 
+  Assert.True(["a" ; "1" ; "b" ; "2" ; "c" ; "3"] = merged)
 
 [<Test>]
 let ``AsyncSeq.interleave second smaller``() =  
   let s1 = AsyncSeq.ofSeq ["a";"b";"c"]
-  let s2 = AsyncSeq.ofSeq [1]
+  let s2 = AsyncSeq.ofSeq ["1"]
   let merged = AsyncSeq.interleave s1 s2 |> AsyncSeq.toList 
-  Assert.True([Choice1Of2 "a" ; Choice2Of2 1 ; Choice1Of2 "b" ; Choice1Of2 "c" ] = merged)
+  Assert.True(["a" ; "1" ; "b" ; "c" ] = merged)
 
 [<Test>]
 let ``AsyncSeq.interleave second empty``() =  
   let s1 = AsyncSeq.ofSeq ["a";"b";"c"]
   let s2 = AsyncSeq.ofSeq []
   let merged = AsyncSeq.interleave s1 s2 |> AsyncSeq.toList 
-  Assert.True([Choice1Of2 "a" ; Choice1Of2 "b" ; Choice1Of2 "c" ] = merged)
+  Assert.True(["a" ; "b" ; "c" ] = merged)
 
 [<Test>]
 let ``AsyncSeq.interleave both empty``() =  
@@ -110,9 +163,9 @@ let ``AsyncSeq.interleave both empty``() =
 [<Test>]
 let ``AsyncSeq.interleave first smaller``() =  
   let s1 = AsyncSeq.ofSeq ["a"]
-  let s2 = AsyncSeq.ofSeq [1;2;3]
+  let s2 = AsyncSeq.ofSeq ["1";"2";"3"]
   let merged = AsyncSeq.interleave s1 s2 |> AsyncSeq.toList 
-  Assert.True([Choice1Of2 "a" ; Choice2Of2 1 ; Choice2Of2 2 ; Choice2Of2 3] = merged)
+  Assert.True(["a" ; "1" ; "2" ; "3"] = merged)
 
 
 
@@ -121,8 +174,7 @@ let ``AsyncSeq.interleave first empty``() =
   let s1 = AsyncSeq.ofSeq []
   let s2 = AsyncSeq.ofSeq [1;2;3]
   let merged = AsyncSeq.interleave s1 s2 |> AsyncSeq.toList 
-  Assert.True([Choice2Of2 1 ; Choice2Of2 2 ; Choice2Of2 3] = merged)
-
+  Assert.True([1 ; 2 ; 3] = merged)
 
 
 [<Test>]
@@ -710,11 +762,99 @@ let ``asyncSeq.For should delay``() =
            member x.GetEnumerator() = failwith "fail"  }
   Assert.DoesNotThrow(fun _ -> asyncSeq.For(s, (fun v -> AsyncSeq.empty)) |> ignore)
 
+[<Test>]
+let ``Async.mergeAll should work``() =
+    for n in 0 .. 10 do 
+        let expected = 
+            [ for i in 1 .. n do
+                    for j in 0 .. i do
+                      yield i 
+                 ] 
+            |> List.sort
+        let actual = 
+            [ for i in 1 .. n -> 
+                asyncSeq { 
+                    for j in 0 .. i do 
+                      do! Async.Sleep 1; 
+                      yield i 
+                } ] 
+            |> AsyncSeq.mergeAll
+            |> AsyncSeq.toList
+            |> List.sort
+        Assert.True((actual = expected), sprintf "mergeAll test at n = %d" n)
+
+
+[<Test>]
+let ``Async.mergeAll should perform well``() =
+    let mergeTest n = 
+        [ for i in 1 .. n -> 
+            asyncSeq{ do! Async.Sleep 1000; 
+                      yield i } ] 
+        |> AsyncSeq.mergeAll
+        |> AsyncSeq.toList
+
+    Assert.DoesNotThrow(fun _ -> mergeTest 1000 |> ignore)
 
 
 
-let empty = async { return () }
+[<Test>]
+let ``AsyncSeq.mergeAll should fail with AggregateException if a task fails``() =
+    for n in 0 .. 10 do 
+      Assert.Throws<AggregateException>(fun _ -> 
+          [ for i in 0 .. n -> 
+                    asyncSeq { yield 1 
+                               if (i % 4) = 0 then 
+                                    failwith "fail"  
+                               yield 2 } ]
+          |> AsyncSeq.mergeAll
+          |> AsyncSeq.toList
+          |> ignore) |> ignore
+
+[<Test>]
+let ``AsyncSeq.merge should fail with AggregateException if a task fails``() =
+      for i in 0 .. 1 do 
+        Assert.Throws<AggregateException>(fun _ -> 
+          (asyncSeq { yield 1 
+                      if i % 2 = 0 then failwith "fail"  
+                      yield 2 }, 
+           asyncSeq { yield 1 
+                      if i % 2 = 1 then failwith "fail"  
+                      yield 2 })
+          ||> AsyncSeq.merge
+          |> AsyncSeq.toList
+          |> ignore) |> ignore
+
+
+[<Test>]
+let ``AsyncSeq.mergeChoice should fail with AggregateException if a task fails``() =
+      for i in 0 .. 1 do 
+        Assert.Throws<AggregateException>(fun _ -> 
+          (asyncSeq { yield 1 
+                      if i % 2 = 0 then failwith "fail"  
+                      yield 2 }, 
+           asyncSeq { yield 1 
+                      if i % 2 = 1 then failwith "fail"  
+                      yield 2 })
+          ||> AsyncSeq.mergeChoice
+          |> AsyncSeq.toList
+          |> ignore) |> ignore
+
+[<Test>]
+let ``AsyncSeq.interleave should fail with Exception if a task fails``() =
+      for i in 0 .. 1 do 
+        Assert.Throws<Exception>(fun _ -> 
+          (asyncSeq { yield 1 
+                      if i % 2 = 0 then failwith "fail"  
+                      yield 2 }, 
+           asyncSeq { yield 1 
+                      if i % 2 = 1 then failwith "fail"  
+                      yield 2 })
+          ||> AsyncSeq.interleave
+          |> AsyncSeq.toList
+          |> ignore) |> ignore
+
 let perfTest1 n = 
+    let empty = async { return () }
     Seq.init n id
     |> AsyncSeq.ofSeq
     |> AsyncSeq.iterAsync (fun _ -> empty )
@@ -751,11 +891,11 @@ let perfTest2 n =
 // This was the original ofSeq implementation.  It is now faster than before this perf testing
 // took place, but is still slower than the bespoke ofSeq implementation (which effectively "knows"
 // that a single yield happens for each iteration of the loop).
-let ofSeq2 (source : seq<'T>) = asyncSeq {  
-    for el in source do   
-      yield el }  
-
 let perfTest3 n = 
+    let ofSeq2 (source : seq<'T>) = asyncSeq {  
+        for el in source do   
+          yield el }  
+
     Seq.init n id
     |> ofSeq2
     |> AsyncSeq.toArray
@@ -787,3 +927,22 @@ let perfTest4 n =
 //perfTest4 10000         
 //perfTest4 100000          0.362       0.442
 //perfTest4 1000000         3.533       4.656
+
+(*
+let FindPackages(_,_,_,_) = [| "package" |]
+
+type Source = { IsNuget: bool; Url: string }
+let DefaultNugetSource = { IsNuget = true; Url = "http://nuget.org" }
+
+//-------------------------------
+
+let SearchPackagesByName(sources, search) = 
+    let sources = [ yield! sources; yield  DefaultNugetSource ]    
+    [ for source in sources ->
+        asyncSeq { if source.IsNuget then 
+                     for p in FindPackages(None, source.Url, search, 1000) do
+                        yield p } ]
+    |> AsyncSeq.mergeAll
+*)
+
+
