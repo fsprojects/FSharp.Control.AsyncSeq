@@ -564,6 +564,13 @@ module AsyncSeq =
       let! v = f itm
       yield v }
 
+  let mapiAsync f (source : AsyncSeq<'T>) : AsyncSeq<'TResult> = asyncSeq {
+    let i = ref 0L
+    for itm in source do 
+      let! v = f i.Value itm
+      i := i.Value + 1L
+      yield v }
+
   let chooseAsync f (source : AsyncSeq<'T>) : AsyncSeq<'R> = asyncSeq {
     for itm in source do
       let! v = f itm
@@ -636,12 +643,47 @@ module AsyncSeq =
           let! moven = ie.MoveNext()
           b := moven }
 
+  let tryPickAsync f (source : AsyncSeq<'T>) = async { 
+      use ie = source.GetEnumerator() 
+      let! v = ie.MoveNext()
+      let b = ref v
+      let res = ref None
+      while b.Value.IsSome && not res.Value.IsSome do
+          let! fv = f b.Value.Value
+          match fv with 
+          | None -> 
+              let! moven = ie.MoveNext()
+              b := moven
+          | Some _ as r -> 
+              res := r
+      return res.Value }
+
+  let tryPick f (source : AsyncSeq<'T>) = 
+    tryPickAsync (f >> async.Return) source 
+
+  let contains value (source : AsyncSeq<'T>) = 
+    source |> tryPick (fun v -> if v = value then Some () else None) |> Async.map Option.isSome
+
+  let tryFind f (source : AsyncSeq<'T>) = 
+    source |> tryPick (fun v -> if f v then Some v else None)
+
+  let exists f (source : AsyncSeq<'T>) = 
+    source |> tryFind f |> Async.map Option.isSome
+
+  let forall f (source : AsyncSeq<'T>) = 
+    source |> exists (f >> not) |> Async.map not
 
   let foldAsync f (state:'State) (source : AsyncSeq<'T>) = 
     source |> scanAsync f state |> lastOrDefault state
 
   let fold f (state:'State) (source : AsyncSeq<'T>) = 
     foldAsync (fun st v -> f st v |> async.Return) state source 
+
+  let length (source : AsyncSeq<'T>) = 
+    fold (fun st _ -> st + 1L) 0L source 
+
+  let inline sum (source : AsyncSeq<'T>) : Async<'T> = 
+    (LanguagePrimitives.GenericZero, source) ||> fold (+)
 
   let scan f (state:'State) (source : AsyncSeq<'T>) = 
     scanAsync (fun st v -> f st v |> async.Return) state source 
@@ -669,8 +711,14 @@ module AsyncSeq =
   let initInfinite f  = 
     initInfiniteAsync (f >> async.Return) 
 
+  let mapi f (source : AsyncSeq<'T>) = 
+    mapiAsync (fun i x -> f i x |> async.Return) source
+
   let map f (source : AsyncSeq<'T>) = 
     mapAsync (f >> async.Return) source
+
+  let indexed (source : AsyncSeq<'T>) = 
+    mapi (fun i x -> (i,x)) source 
 
   let iter f (source : AsyncSeq<'T>) = 
     iterAsync (f >> async.Return) source
@@ -806,10 +854,7 @@ module AsyncSeq =
   let zipWith (z:'T1 -> 'T2 -> 'U) (a:AsyncSeq<'T1>) (b:AsyncSeq<'T2>) : AsyncSeq<'U> =
       zipWithAsync (fun a b -> z a b |> async.Return) a b
 
-  let mapiAsync (f:int -> 'T -> Async<'U>) (source:AsyncSeq<'T>) : AsyncSeq<'U> =
-      threadStateAsync (fun i a -> f i a |> Async.map (fun b -> b,i + 1)) 0 source        
-
-  let zipWithIndexAsync (f:int -> 'T -> Async<'U>) (s:AsyncSeq<'T>) : AsyncSeq<'U> = mapiAsync f s 
+  let zipWithIndexAsync (f:int64 -> 'T -> Async<'U>) (s:AsyncSeq<'T>) : AsyncSeq<'U> = mapiAsync f s 
 
   let zappAsync (fs:AsyncSeq<'T -> Async<'U>>) (s:AsyncSeq<'T>) : AsyncSeq<'U> =
       zipWithAsync (|>) s fs
