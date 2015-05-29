@@ -1,11 +1,17 @@
-### 1.16.0 - 13.05.2015
+### 2.0.0 - 28.05.2015
 * Simplify ofObservableBuffered and toBlockingSeq
 * Move to IAsyncEnumerable model to support try/finally and try/with
 * Rename replicate to replicateInfinite
 * Rename toList to toListAsync
 * Rename toArray to toArrayAsync
 * Rename zipWithIndexAsync to mapiAsync
-* Add init, initInfinite, initAsync, initInfiniteAsync, replicateInfinite
+* Rename interleave to interleaveChoice
+* Add interleave 
+* Add mergeChoice 
+* Fix performance of mergeAll 
+* Add init, initInfinite
+* Add initAsync, initInfiniteAsync, replicateInfinite
+* Add RequireQualifiedAccess to AsyncSeq
 
 ### 1.15.0 - 30.03.2015
 * Add AsyncSeq.getIterator (unblocks use of AsyncSeq in FSharpx.Async)
