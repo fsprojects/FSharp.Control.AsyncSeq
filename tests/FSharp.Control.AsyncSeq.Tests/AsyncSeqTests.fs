@@ -220,6 +220,16 @@ let ``AsyncSeq.bufferByTimeAndCount``() =
   Assert.True((actual = [ [|1;2|] ; [|3|] ; [|4;5|] ]))
 
 [<Test>]
+let ``AsyncSeq.bufferByCountAndTime various sizes``() =
+  for sz in 0 .. 10 do
+      let s = asyncSeq {
+        for i in 1 .. sz do
+           yield i
+      }
+      let s' = s |> AsyncSeq.bufferByCountAndTime 1 1 |> AsyncSeq.toList 
+      Assert.True(([for i in 1 .. sz -> [|i|]] = s'))
+
+[<Test>]
 let ``AsyncSeq.bufferByTimeAndCount empty``() =      
   let s = AsyncSeq.empty<int>
   let actual = AsyncSeq.bufferByCountAndTime 2 10 s |> AsyncSeq.toList
