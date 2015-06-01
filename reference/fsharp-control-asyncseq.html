@@ -101,7 +101,7 @@ all elements of the second asynchronous sequence.</p>
                           <strong>Type parameters:</strong> 'T          </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L973-973" class="github-link">
+            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L1018-1018" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -123,7 +123,7 @@ The last buffer returned may be less than the specified buffer size.</p>
                           <strong>Type parameters:</strong> 'T          </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L990-990" class="github-link">
+            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L1035-1035" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -144,7 +144,7 @@ The last buffer returned may be less than the specified buffer size.</p>
                           <strong>Type parameters:</strong> 'T          </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L752-752" class="github-link">
+            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L800-800" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -167,12 +167,13 @@ multiple times, the input will still be evaluated only once</p>
                           <strong>Type parameters:</strong> 'T, 'U          </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L679-679" class="github-link">
+            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L727-727" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
-          <p>Same as AsyncSeq.chooseAsync, but the specified function is synchronous
-and processes the input element immediately.</p>
+          <p>Asynchronously iterates over the input sequence and generates 'x' for 
+every input element for which the specified function 
+returned 'Some(x)'</p>
 
 
 
@@ -189,7 +190,7 @@ and processes the input element immediately.</p>
                           <strong>Type parameters:</strong> 'T, 'R          </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L568-568" class="github-link">
+            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L575-575" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -236,11 +237,11 @@ the 'for' keyword in asyncSeq computation).</p>
             concatSeq(source)
           </code>
           <div class="tip" id="8">
-            <strong>Signature:</strong> source:AsyncSeq&lt;&#39;?7072&gt; -&gt; AsyncSeq&lt;&#39;T&gt;<br />
-                          <strong>Type parameters:</strong> '?7072, 'T          </div>
+            <strong>Signature:</strong> source:AsyncSeq&lt;&#39;?7089&gt; -&gt; AsyncSeq&lt;&#39;T&gt;<br />
+                          <strong>Type parameters:</strong> '?7089, 'T          </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L944-944" class="github-link">
+            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L989-989" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -254,14 +255,35 @@ the 'for' keyword in asyncSeq computation).</p>
         <td class="member-name">
 
           <code onmouseout="hideTip(event, '9', 9)" onmouseover="showTip(event, '9', 9)">
-            distinctUntilChanged(source)
+            contains(value source)
           </code>
           <div class="tip" id="9">
+            <strong>Signature:</strong> value:&#39;T -&gt; source:AsyncSeq&lt;&#39;T&gt; -&gt; Async&lt;bool&gt;<br />
+                          <strong>Type parameters:</strong> 'T          </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L665-665" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Asynchronously determine if the sequence contains the given value</p>
+
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '10', 10)" onmouseover="showTip(event, '10', 10)">
+            distinctUntilChanged(source)
+          </code>
+          <div class="tip" id="10">
             <strong>Signature:</strong> source:AsyncSeq&lt;&#39;T&gt; -&gt; AsyncSeq&lt;&#39;T&gt;<br />
                           <strong>Type parameters:</strong> 'T          </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L1128-1128" class="github-link">
+            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L1173-1173" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -274,36 +296,15 @@ the 'for' keyword in asyncSeq computation).</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '10', 10)" onmouseover="showTip(event, '10', 10)">
+          <code onmouseout="hideTip(event, '11', 11)" onmouseover="showTip(event, '11', 11)">
             distinctUntilChangedWith(mapping source)
           </code>
-          <div class="tip" id="10">
+          <div class="tip" id="11">
             <strong>Signature:</strong> mapping:(&#39;T -&gt; &#39;T -&gt; bool) -&gt; source:AsyncSeq&lt;&#39;T&gt; -&gt; AsyncSeq&lt;&#39;T&gt;<br />
                           <strong>Type parameters:</strong> 'T          </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L1125-1125" class="github-link">
-              <img src="../content/img/github.png" class="normal" />
-              <img src="../content/img/github-blue.png" class="hover" />
-            </a>
-          <p>Returns an async sequence which contains no contiguous duplicate elements based on the specified comparison function.</p>
-
-
-
-        </td>
-      </tr>
-      <tr>
-        <td class="member-name">
-
-          <code onmouseout="hideTip(event, '11', 11)" onmouseover="showTip(event, '11', 11)">
-            distinctUntilChangedWithAsync(...)
-          </code>
-          <div class="tip" id="11">
-            <strong>Signature:</strong> mapping:(&#39;T -&gt; &#39;T -&gt; Async&lt;bool&gt;) -&gt; source:AsyncSeq&lt;&#39;T&gt; -&gt; AsyncSeq&lt;&#39;T&gt;<br />
-                          <strong>Type parameters:</strong> 'T          </div>
-        </td>
-        <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L1108-1108" class="github-link">
+            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L1170-1170" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -317,9 +318,30 @@ the 'for' keyword in asyncSeq computation).</p>
         <td class="member-name">
 
           <code onmouseout="hideTip(event, '12', 12)" onmouseover="showTip(event, '12', 12)">
-            empty
+            distinctUntilChangedWithAsync(...)
           </code>
           <div class="tip" id="12">
+            <strong>Signature:</strong> mapping:(&#39;T -&gt; &#39;T -&gt; Async&lt;bool&gt;) -&gt; source:AsyncSeq&lt;&#39;T&gt; -&gt; AsyncSeq&lt;&#39;T&gt;<br />
+                          <strong>Type parameters:</strong> 'T          </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L1153-1153" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Returns an async sequence which contains no contiguous duplicate elements based on the specified comparison function.</p>
+
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '13', 13)" onmouseover="showTip(event, '13', 13)">
+            empty
+          </code>
+          <div class="tip" id="13">
             <strong>Signature:</strong> AsyncSeq&lt;&#39;T&gt;<br />
                           <strong>Type parameters:</strong> 'T          </div>
         </td>
@@ -337,15 +359,36 @@ the 'for' keyword in asyncSeq computation).</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '13', 13)" onmouseover="showTip(event, '13', 13)">
+          <code onmouseout="hideTip(event, '14', 14)" onmouseover="showTip(event, '14', 14)">
+            exists(predicate source)
+          </code>
+          <div class="tip" id="14">
+            <strong>Signature:</strong> predicate:(&#39;T -&gt; bool) -&gt; source:AsyncSeq&lt;&#39;T&gt; -&gt; Async&lt;bool&gt;<br />
+                          <strong>Type parameters:</strong> 'T          </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L671-671" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Asynchronously determine if there is a value in the sequence for which the predicate returns true</p>
+
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '15', 15)" onmouseover="showTip(event, '15', 15)">
             filter(predicate source)
           </code>
-          <div class="tip" id="13">
+          <div class="tip" id="15">
             <strong>Signature:</strong> predicate:(&#39;T -&gt; bool) -&gt; source:AsyncSeq&lt;&#39;T&gt; -&gt; AsyncSeq&lt;&#39;T&gt;<br />
                           <strong>Type parameters:</strong> 'T          </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L682-682" class="github-link">
+            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L730-730" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -359,15 +402,15 @@ and processes the input element immediately.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '14', 14)" onmouseover="showTip(event, '14', 14)">
+          <code onmouseout="hideTip(event, '16', 16)" onmouseover="showTip(event, '16', 16)">
             filterAsync(predicate source)
           </code>
-          <div class="tip" id="14">
+          <div class="tip" id="16">
             <strong>Signature:</strong> predicate:(&#39;T -&gt; Async&lt;bool&gt;) -&gt; source:AsyncSeq&lt;&#39;T&gt; -&gt; AsyncSeq&lt;&#39;T&gt;<br />
                           <strong>Type parameters:</strong> 'T          </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L575-575" class="github-link">
+            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L582-582" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -384,15 +427,15 @@ be asked for the next element after the processing of an element completes).</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '15', 15)" onmouseover="showTip(event, '15', 15)">
+          <code onmouseout="hideTip(event, '17', 17)" onmouseover="showTip(event, '17', 17)">
             firstOrDefault(default source)
           </code>
-          <div class="tip" id="15">
+          <div class="tip" id="17">
             <strong>Signature:</strong> default:&#39;T -&gt; source:AsyncSeq&lt;&#39;T&gt; -&gt; Async&lt;&#39;T&gt;<br />
                           <strong>Type parameters:</strong> 'T          </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L607-607" class="github-link">
+            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L614-614" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -406,19 +449,20 @@ given asynchronous sequence (or the specified default value).</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '16', 16)" onmouseover="showTip(event, '16', 16)">
+          <code onmouseout="hideTip(event, '18', 18)" onmouseover="showTip(event, '18', 18)">
             fold(folder state source)
           </code>
-          <div class="tip" id="16">
+          <div class="tip" id="18">
             <strong>Signature:</strong> folder:(&#39;State -&gt; &#39;T -&gt; &#39;State) -&gt; state:&#39;State -&gt; source:AsyncSeq&lt;&#39;T&gt; -&gt; Async&lt;&#39;State&gt;<br />
                           <strong>Type parameters:</strong> 'State, 'T          </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L644-644" class="github-link">
+            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L680-680" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
-          <p>Same as AsyncSeq.foldAsync, but the specified function is synchronous.</p>
+          <p>Asynchronously aggregate the elements of the input asynchronous sequence using the
+specified 'aggregation' function.</p>
 
 
 
@@ -427,24 +471,20 @@ given asynchronous sequence (or the specified default value).</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '17', 17)" onmouseover="showTip(event, '17', 17)">
+          <code onmouseout="hideTip(event, '19', 19)" onmouseover="showTip(event, '19', 19)">
             foldAsync(folder state source)
           </code>
-          <div class="tip" id="17">
+          <div class="tip" id="19">
             <strong>Signature:</strong> folder:(&#39;State -&gt; &#39;T -&gt; Async&lt;&#39;State&gt;) -&gt; state:&#39;State -&gt; source:AsyncSeq&lt;&#39;T&gt; -&gt; Async&lt;&#39;State&gt;<br />
                           <strong>Type parameters:</strong> 'State, 'T          </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L641-641" class="github-link">
+            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L677-677" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
-          <p>Aggregates the elements of the input asynchronous sequence using the
-specified 'aggregation' function. The result is an asynchronous 
-workflow that returns the final result.</p>
-
-<p>The aggregation function is asynchronous (and the input sequence will
-be asked for the next element after the processing of an element completes).</p>
+          <p>Asynchronously aggregate the elements of the input asynchronous sequence using the
+specified asynchronous 'aggregation' function.</p>
 
 
 
@@ -453,15 +493,36 @@ be asked for the next element after the processing of an element completes).</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '18', 18)" onmouseover="showTip(event, '18', 18)">
+          <code onmouseout="hideTip(event, '20', 20)" onmouseover="showTip(event, '20', 20)">
+            forall(predicate source)
+          </code>
+          <div class="tip" id="20">
+            <strong>Signature:</strong> predicate:(&#39;T -&gt; bool) -&gt; source:AsyncSeq&lt;&#39;T&gt; -&gt; Async&lt;bool&gt;<br />
+                          <strong>Type parameters:</strong> 'T          </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L674-674" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Asynchronously determine if the predicate returns true for all values in the sequence</p>
+
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '21', 21)" onmouseover="showTip(event, '21', 21)">
             getIterator(source)
           </code>
-          <div class="tip" id="18">
+          <div class="tip" id="21">
             <strong>Signature:</strong> source:AsyncSeq&lt;&#39;T&gt; -&gt; unit -&gt; Async&lt;&#39;T option&gt;<br />
                           <strong>Type parameters:</strong> 'T          </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L1131-1131" class="github-link">
+            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L1176-1176" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -471,15 +532,36 @@ be asked for the next element after the processing of an element completes).</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '19', 19)" onmouseover="showTip(event, '19', 19)">
+          <code onmouseout="hideTip(event, '22', 22)" onmouseover="showTip(event, '22', 22)">
+            indexed(source)
+          </code>
+          <div class="tip" id="22">
+            <strong>Signature:</strong> source:AsyncSeq&lt;&#39;T&gt; -&gt; AsyncSeq&lt;int64 * &#39;T&gt;<br />
+                          <strong>Type parameters:</strong> 'T          </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L721-721" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Return an asynhronous sequence which, when iterated, includes an integer indicating the index of each element in the sequence.</p>
+
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '23', 23)" onmouseover="showTip(event, '23', 23)">
             init(count mapping)
           </code>
-          <div class="tip" id="19">
+          <div class="tip" id="23">
             <strong>Signature:</strong> count:int64 -&gt; mapping:(int64 -&gt; &#39;T) -&gt; AsyncSeq&lt;&#39;T&gt;<br />
                           <strong>Type parameters:</strong> 'T          </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L667-667" class="github-link">
+            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L709-709" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -492,15 +574,15 @@ be asked for the next element after the processing of an element completes).</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '20', 20)" onmouseover="showTip(event, '20', 20)">
+          <code onmouseout="hideTip(event, '24', 24)" onmouseover="showTip(event, '24', 24)">
             initAsync(count mapping)
           </code>
-          <div class="tip" id="20">
+          <div class="tip" id="24">
             <strong>Signature:</strong> count:int64 -&gt; mapping:(int64 -&gt; Async&lt;&#39;T&gt;) -&gt; AsyncSeq&lt;&#39;T&gt;<br />
                           <strong>Type parameters:</strong> 'T          </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L658-658" class="github-link">
+            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L700-700" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -513,15 +595,15 @@ be asked for the next element after the processing of an element completes).</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '21', 21)" onmouseover="showTip(event, '21', 21)">
+          <code onmouseout="hideTip(event, '25', 25)" onmouseover="showTip(event, '25', 25)">
             initInfinite(mapping)
           </code>
-          <div class="tip" id="21">
+          <div class="tip" id="25">
             <strong>Signature:</strong> mapping:(int64 -&gt; &#39;T) -&gt; AsyncSeq&lt;&#39;T&gt;<br />
                           <strong>Type parameters:</strong> 'T          </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L670-670" class="github-link">
+            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L712-712" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -534,15 +616,15 @@ be asked for the next element after the processing of an element completes).</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '22', 22)" onmouseover="showTip(event, '22', 22)">
+          <code onmouseout="hideTip(event, '26', 26)" onmouseover="showTip(event, '26', 26)">
             initInfiniteAsync(mapping)
           </code>
-          <div class="tip" id="22">
+          <div class="tip" id="26">
             <strong>Signature:</strong> mapping:(int64 -&gt; Async&lt;&#39;T&gt;) -&gt; AsyncSeq&lt;&#39;T&gt;<br />
                           <strong>Type parameters:</strong> 'T          </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L653-653" class="github-link">
+            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L695-695" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -555,15 +637,15 @@ be asked for the next element after the processing of an element completes).</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '23', 23)" onmouseover="showTip(event, '23', 23)">
+          <code onmouseout="hideTip(event, '27', 27)" onmouseover="showTip(event, '27', 27)">
             interleave(source1 source2)
           </code>
-          <div class="tip" id="23">
+          <div class="tip" id="27">
             <strong>Signature:</strong> source1:AsyncSeq&lt;&#39;T&gt; -&gt; source2:AsyncSeq&lt;&#39;T&gt; -&gt; AsyncSeq&lt;&#39;T&gt;<br />
                           <strong>Type parameters:</strong> 'T          </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L969-969" class="github-link">
+            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L1014-1014" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -577,15 +659,15 @@ sequences are consumed in lock-step.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '24', 24)" onmouseover="showTip(event, '24', 24)">
+          <code onmouseout="hideTip(event, '28', 28)" onmouseover="showTip(event, '28', 28)">
             interleaveChoice(source1 source2)
           </code>
-          <div class="tip" id="24">
+          <div class="tip" id="28">
             <strong>Signature:</strong> source1:AsyncSeq&lt;&#39;T1&gt; -&gt; source2:AsyncSeq&lt;&#39;T2&gt; -&gt; AsyncSeq&lt;Choice&lt;&#39;T1,&#39;T2&gt;&gt;<br />
                           <strong>Type parameters:</strong> 'T1, 'T2          </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L954-954" class="github-link">
+            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L999-999" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -599,20 +681,20 @@ sequences are consumed in lock-step.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '25', 25)" onmouseover="showTip(event, '25', 25)">
+          <code onmouseout="hideTip(event, '29', 29)" onmouseover="showTip(event, '29', 29)">
             iter(action source)
           </code>
-          <div class="tip" id="25">
+          <div class="tip" id="29">
             <strong>Signature:</strong> action:(&#39;T -&gt; unit) -&gt; source:AsyncSeq&lt;&#39;T&gt; -&gt; Async&lt;unit&gt;<br />
                           <strong>Type parameters:</strong> 'T          </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L676-676" class="github-link">
+            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L724-724" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
-          <p>Same as AsyncSeq.iterAsync, but the specified function is synchronous
-and performs the side-effect immediately.</p>
+          <p>Iterates over the input sequence and calls the specified function for
+every value.</p>
 
 
 
@@ -621,10 +703,10 @@ and performs the side-effect immediately.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '26', 26)" onmouseover="showTip(event, '26', 26)">
+          <code onmouseout="hideTip(event, '30', 30)" onmouseover="showTip(event, '30', 30)">
             iterAsync(action source)
           </code>
-          <div class="tip" id="26">
+          <div class="tip" id="30">
             <strong>Signature:</strong> action:(&#39;T -&gt; Async&lt;unit&gt;) -&gt; source:AsyncSeq&lt;&#39;T&gt; -&gt; Async&lt;unit&gt;<br />
                           <strong>Type parameters:</strong> 'T          </div>
         </td>
@@ -633,11 +715,8 @@ and performs the side-effect immediately.</p>
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
-          <p>Iterates over the input sequence and calls the specified function for
-every value (to perform some side-effect asynchronously).</p>
-
-<p>The specified function is asynchronous (and the input sequence will
-be asked for the next element after the processing of an element completes).</p>
+          <p>Iterates over the input sequence and calls the specified asynchronous function for
+every value. The input sequence will be asked for the next element after</p>
 
 
 
@@ -646,15 +725,15 @@ be asked for the next element after the processing of an element completes).</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '27', 27)" onmouseover="showTip(event, '27', 27)">
+          <code onmouseout="hideTip(event, '31', 31)" onmouseover="showTip(event, '31', 31)">
             lastOrDefault(default source)
           </code>
-          <div class="tip" id="27">
+          <div class="tip" id="31">
             <strong>Signature:</strong> default:&#39;T -&gt; source:AsyncSeq&lt;&#39;T&gt; -&gt; Async&lt;&#39;T&gt;<br />
                           <strong>Type parameters:</strong> 'T          </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L591-591" class="github-link">
+            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L598-598" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -668,15 +747,36 @@ given asynchronous sequence (or the specified default value).</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '28', 28)" onmouseover="showTip(event, '28', 28)">
+          <code onmouseout="hideTip(event, '32', 32)" onmouseover="showTip(event, '32', 32)">
+            length(source)
+          </code>
+          <div class="tip" id="32">
+            <strong>Signature:</strong> source:AsyncSeq&lt;&#39;T&gt; -&gt; Async&lt;int64&gt;<br />
+                          <strong>Type parameters:</strong> 'T          </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L683-683" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Asynchronously determine the number of elements in the sequence</p>
+
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '33', 33)" onmouseover="showTip(event, '33', 33)">
             map(folder source)
           </code>
-          <div class="tip" id="28">
+          <div class="tip" id="33">
             <strong>Signature:</strong> folder:(&#39;T -&gt; &#39;U) -&gt; source:AsyncSeq&lt;&#39;T&gt; -&gt; AsyncSeq&lt;&#39;U&gt;<br />
                           <strong>Type parameters:</strong> 'T, 'U          </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L673-673" class="github-link">
+            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L718-718" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -689,10 +789,10 @@ given asynchronous sequence (or the specified default value).</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '29', 29)" onmouseover="showTip(event, '29', 29)">
+          <code onmouseout="hideTip(event, '34', 34)" onmouseover="showTip(event, '34', 34)">
             mapAsync(mapping source)
           </code>
-          <div class="tip" id="29">
+          <div class="tip" id="34">
             <strong>Signature:</strong> mapping:(&#39;T -&gt; Async&lt;&#39;TResult&gt;) -&gt; source:AsyncSeq&lt;&#39;T&gt; -&gt; AsyncSeq&lt;&#39;TResult&gt;<br />
                           <strong>Type parameters:</strong> 'T, 'TResult          </div>
         </td>
@@ -714,15 +814,15 @@ be asked for the next element after the processing of an element completes).</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '30', 30)" onmouseover="showTip(event, '30', 30)">
+          <code onmouseout="hideTip(event, '35', 35)" onmouseover="showTip(event, '35', 35)">
             mapiAsync(mapping source)
           </code>
-          <div class="tip" id="30">
-            <strong>Signature:</strong> mapping:(int -&gt; &#39;T -&gt; Async&lt;&#39;U&gt;) -&gt; source:AsyncSeq&lt;&#39;T&gt; -&gt; AsyncSeq&lt;&#39;U&gt;<br />
+          <div class="tip" id="35">
+            <strong>Signature:</strong> mapping:(int64 -&gt; &#39;T -&gt; Async&lt;&#39;U&gt;) -&gt; source:AsyncSeq&lt;&#39;T&gt; -&gt; AsyncSeq&lt;&#39;U&gt;<br />
                           <strong>Type parameters:</strong> 'T, 'U          </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L810-810" class="github-link">
+            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L568-568" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -739,15 +839,15 @@ be asked for the next element after the processing of an element completes).</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '31', 31)" onmouseover="showTip(event, '31', 31)">
+          <code onmouseout="hideTip(event, '36', 36)" onmouseover="showTip(event, '36', 36)">
             merge(source1 source2)
           </code>
-          <div class="tip" id="31">
+          <div class="tip" id="36">
             <strong>Signature:</strong> source1:AsyncSeq&lt;&#39;T&gt; -&gt; source2:AsyncSeq&lt;&#39;T&gt; -&gt; AsyncSeq&lt;&#39;T&gt;<br />
                           <strong>Type parameters:</strong> 'T          </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L1068-1068" class="github-link">
+            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L1113-1113" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -760,15 +860,15 @@ be asked for the next element after the processing of an element completes).</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '32', 32)" onmouseover="showTip(event, '32', 32)">
+          <code onmouseout="hideTip(event, '37', 37)" onmouseover="showTip(event, '37', 37)">
             mergeAll(sources)
           </code>
-          <div class="tip" id="32">
+          <div class="tip" id="37">
             <strong>Signature:</strong> sources:AsyncSeq&lt;&#39;T&gt; list -&gt; AsyncSeq&lt;&#39;T&gt;<br />
                           <strong>Type parameters:</strong> 'T          </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L1081-1081" class="github-link">
+            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L1126-1126" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -781,15 +881,15 @@ be asked for the next element after the processing of an element completes).</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '33', 33)" onmouseover="showTip(event, '33', 33)">
+          <code onmouseout="hideTip(event, '38', 38)" onmouseover="showTip(event, '38', 38)">
             mergeChoice(source1 source2)
           </code>
-          <div class="tip" id="33">
+          <div class="tip" id="38">
             <strong>Signature:</strong> source1:AsyncSeq&lt;&#39;T1&gt; -&gt; source2:AsyncSeq&lt;&#39;T2&gt; -&gt; AsyncSeq&lt;Choice&lt;&#39;T1,&#39;T2&gt;&gt;<br />
                           <strong>Type parameters:</strong> 'T1, 'T2          </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L1028-1028" class="github-link">
+            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L1073-1073" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -802,15 +902,15 @@ be asked for the next element after the processing of an element completes).</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '34', 34)" onmouseover="showTip(event, '34', 34)">
+          <code onmouseout="hideTip(event, '39', 39)" onmouseover="showTip(event, '39', 39)">
             ofObservable(source)
           </code>
-          <div class="tip" id="34">
+          <div class="tip" id="39">
             <strong>Signature:</strong> source:IObservable&lt;&#39;T&gt; -&gt; AsyncSeq&lt;&#39;T&gt;<br />
                           <strong>Type parameters:</strong> 'T          </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L712-712" class="github-link">
+            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L760-760" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -820,15 +920,15 @@ be asked for the next element after the processing of an element completes).</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '35', 35)" onmouseover="showTip(event, '35', 35)">
+          <code onmouseout="hideTip(event, '40', 40)" onmouseover="showTip(event, '40', 40)">
             ofObservableBuffered(source)
           </code>
-          <div class="tip" id="35">
+          <div class="tip" id="40">
             <strong>Signature:</strong> source:IObservable&lt;&#39;T&gt; -&gt; AsyncSeq&lt;&#39;T&gt;<br />
                           <strong>Type parameters:</strong> 'T          </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L689-689" class="github-link">
+            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L737-737" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -843,10 +943,10 @@ an unbounded buffer and are returned as next elements of the async sequence.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '36', 36)" onmouseover="showTip(event, '36', 36)">
+          <code onmouseout="hideTip(event, '41', 41)" onmouseover="showTip(event, '41', 41)">
             ofSeq(source)
           </code>
-          <div class="tip" id="36">
+          <div class="tip" id="41">
             <strong>Signature:</strong> source:seq&lt;&#39;T&gt; -&gt; AsyncSeq&lt;&#39;T&gt;<br />
                           <strong>Type parameters:</strong> 'T          </div>
         </td>
@@ -865,15 +965,15 @@ input synchronous sequence and returns them one-by-one.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '37', 37)" onmouseover="showTip(event, '37', 37)">
+          <code onmouseout="hideTip(event, '42', 42)" onmouseover="showTip(event, '42', 42)">
             pairwise(source)
           </code>
-          <div class="tip" id="37">
+          <div class="tip" id="42">
             <strong>Signature:</strong> source:AsyncSeq&lt;&#39;T&gt; -&gt; AsyncSeq&lt;&#39;T * &#39;T&gt;<br />
                           <strong>Type parameters:</strong> 'T          </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L626-626" class="github-link">
+            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L633-633" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -888,10 +988,10 @@ singleton input sequence.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '38', 38)" onmouseover="showTip(event, '38', 38)">
+          <code onmouseout="hideTip(event, '43', 43)" onmouseover="showTip(event, '43', 43)">
             replicate(count v)
           </code>
-          <div class="tip" id="38">
+          <div class="tip" id="43">
             <strong>Signature:</strong> count:int -&gt; v:&#39;T -&gt; AsyncSeq&lt;&#39;T&gt;<br />
                           <strong>Type parameters:</strong> 'T          </div>
         </td>
@@ -909,10 +1009,10 @@ singleton input sequence.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '39', 39)" onmouseover="showTip(event, '39', 39)">
+          <code onmouseout="hideTip(event, '44', 44)" onmouseover="showTip(event, '44', 44)">
             replicateInfinite(v)
           </code>
-          <div class="tip" id="39">
+          <div class="tip" id="44">
             <strong>Signature:</strong> v:&#39;T -&gt; AsyncSeq&lt;&#39;T&gt;<br />
                           <strong>Type parameters:</strong> 'T          </div>
         </td>
@@ -930,15 +1030,15 @@ singleton input sequence.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '40', 40)" onmouseover="showTip(event, '40', 40)">
+          <code onmouseout="hideTip(event, '45', 45)" onmouseover="showTip(event, '45', 45)">
             scan(folder state source)
           </code>
-          <div class="tip" id="40">
+          <div class="tip" id="45">
             <strong>Signature:</strong> folder:(&#39;State -&gt; &#39;T -&gt; &#39;State) -&gt; state:&#39;State -&gt; source:AsyncSeq&lt;&#39;T&gt; -&gt; AsyncSeq&lt;&#39;State&gt;<br />
                           <strong>Type parameters:</strong> 'State, 'T          </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L647-647" class="github-link">
+            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L689-689" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -951,15 +1051,15 @@ singleton input sequence.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '41', 41)" onmouseover="showTip(event, '41', 41)">
+          <code onmouseout="hideTip(event, '46', 46)" onmouseover="showTip(event, '46', 46)">
             scanAsync(folder state source)
           </code>
-          <div class="tip" id="41">
+          <div class="tip" id="46">
             <strong>Signature:</strong> folder:(&#39;State -&gt; &#39;T -&gt; Async&lt;&#39;State&gt;) -&gt; state:&#39;State -&gt; source:AsyncSeq&lt;&#39;T&gt; -&gt; AsyncSeq&lt;&#39;State&gt;<br />
                           <strong>Type parameters:</strong> 'State, 'T          </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L613-613" class="github-link">
+            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L620-620" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -977,10 +1077,10 @@ be asked for the next element after the processing of an element completes).</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '42', 42)" onmouseover="showTip(event, '42', 42)">
+          <code onmouseout="hideTip(event, '47', 47)" onmouseover="showTip(event, '47', 47)">
             singleton(v)
           </code>
-          <div class="tip" id="42">
+          <div class="tip" id="47">
             <strong>Signature:</strong> v:&#39;T -&gt; AsyncSeq&lt;&#39;T&gt;<br />
                           <strong>Type parameters:</strong> 'T          </div>
         </td>
@@ -998,15 +1098,15 @@ be asked for the next element after the processing of an element completes).</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '43', 43)" onmouseover="showTip(event, '43', 43)">
+          <code onmouseout="hideTip(event, '48', 48)" onmouseover="showTip(event, '48', 48)">
             skip(count source)
           </code>
-          <div class="tip" id="43">
+          <div class="tip" id="48">
             <strong>Signature:</strong> count:int -&gt; source:AsyncSeq&lt;&#39;T&gt; -&gt; AsyncSeq&lt;&#39;T&gt;<br />
                           <strong>Type parameters:</strong> 'T          </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L915-915" class="github-link">
+            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L960-960" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -1020,15 +1120,15 @@ then returns the rest of the sequence unmodified.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '44', 44)" onmouseover="showTip(event, '44', 44)">
+          <code onmouseout="hideTip(event, '49', 49)" onmouseover="showTip(event, '49', 49)">
             skipUntil(signal source)
           </code>
-          <div class="tip" id="44">
+          <div class="tip" id="49">
             <strong>Signature:</strong> signal:Async&lt;unit&gt; -&gt; source:AsyncSeq&lt;&#39;T&gt; -&gt; AsyncSeq&lt;&#39;T&gt;<br />
                           <strong>Type parameters:</strong> 'T          </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L895-895" class="github-link">
+            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L940-940" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -1038,15 +1138,15 @@ then returns the rest of the sequence unmodified.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '45', 45)" onmouseover="showTip(event, '45', 45)">
+          <code onmouseout="hideTip(event, '50', 50)" onmouseover="showTip(event, '50', 50)">
             skipUntilSignal(signal source)
           </code>
-          <div class="tip" id="45">
+          <div class="tip" id="50">
             <strong>Signature:</strong> signal:Async&lt;unit&gt; -&gt; source:AsyncSeq&lt;&#39;T&gt; -&gt; AsyncSeq&lt;&#39;T&gt;<br />
                           <strong>Type parameters:</strong> 'T          </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L870-870" class="github-link">
+            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L915-915" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -1059,15 +1159,15 @@ then returns the rest of the sequence unmodified.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '46', 46)" onmouseover="showTip(event, '46', 46)">
+          <code onmouseout="hideTip(event, '51', 51)" onmouseover="showTip(event, '51', 51)">
             skipWhile(predicate source)
           </code>
-          <div class="tip" id="46">
+          <div class="tip" id="51">
             <strong>Signature:</strong> predicate:(&#39;T -&gt; bool) -&gt; source:AsyncSeq&lt;&#39;T&gt; -&gt; AsyncSeq&lt;&#39;T&gt;<br />
                           <strong>Type parameters:</strong> 'T          </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L897-897" class="github-link">
+            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L942-942" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -1082,15 +1182,15 @@ predicate is evaluated asynchronously.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '47', 47)" onmouseover="showTip(event, '47', 47)">
+          <code onmouseout="hideTip(event, '52', 52)" onmouseover="showTip(event, '52', 52)">
             skipWhileAsync(predicate source)
           </code>
-          <div class="tip" id="47">
+          <div class="tip" id="52">
             <strong>Signature:</strong> predicate:(&#39;T -&gt; Async&lt;bool&gt;) -&gt; source:AsyncSeq&lt;&#39;T&gt; -&gt; AsyncSeq&lt;&#39;T&gt;<br />
                           <strong>Type parameters:</strong> 'T          </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L853-853" class="github-link">
+            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L898-898" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -1105,15 +1205,36 @@ predicate is evaluated asynchronously.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '48', 48)" onmouseover="showTip(event, '48', 48)">
+          <code onmouseout="hideTip(event, '53', 53)" onmouseover="showTip(event, '53', 53)">
+            sum(source)
+          </code>
+          <div class="tip" id="53">
+            <strong>Signature:</strong> source:AsyncSeq&lt;^T&gt; -&gt; Async&lt;^T&gt;<br />
+                          <strong>Type parameters:</strong> ^T          </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L686-686" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Asynchronously sum the elements of the input asynchronous sequence using the specified function.</p>
+
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '54', 54)" onmouseover="showTip(event, '54', 54)">
             take(count source)
           </code>
-          <div class="tip" id="48">
+          <div class="tip" id="54">
             <strong>Signature:</strong> count:int -&gt; source:AsyncSeq&lt;&#39;T&gt; -&gt; AsyncSeq&lt;&#39;T&gt;<br />
                           <strong>Type parameters:</strong> 'T          </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L900-900" class="github-link">
+            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L945-945" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -1126,15 +1247,15 @@ predicate is evaluated asynchronously.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '49', 49)" onmouseover="showTip(event, '49', 49)">
+          <code onmouseout="hideTip(event, '55', 55)" onmouseover="showTip(event, '55', 55)">
             takeUntil(signal source)
           </code>
-          <div class="tip" id="49">
+          <div class="tip" id="55">
             <strong>Signature:</strong> signal:Async&lt;unit&gt; -&gt; source:AsyncSeq&lt;&#39;T&gt; -&gt; AsyncSeq&lt;&#39;T&gt;<br />
                           <strong>Type parameters:</strong> 'T          </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L851-851" class="github-link">
+            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L896-896" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -1144,15 +1265,15 @@ predicate is evaluated asynchronously.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '50', 50)" onmouseover="showTip(event, '50', 50)">
+          <code onmouseout="hideTip(event, '56', 56)" onmouseover="showTip(event, '56', 56)">
             takeUntilSignal(signal source)
           </code>
-          <div class="tip" id="50">
+          <div class="tip" id="56">
             <strong>Signature:</strong> signal:Async&lt;unit&gt; -&gt; source:AsyncSeq&lt;&#39;T&gt; -&gt; AsyncSeq&lt;&#39;T&gt;<br />
                           <strong>Type parameters:</strong> 'T          </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L838-838" class="github-link">
+            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L883-883" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -1166,15 +1287,15 @@ the sequences completes.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '51', 51)" onmouseover="showTip(event, '51', 51)">
+          <code onmouseout="hideTip(event, '57', 57)" onmouseover="showTip(event, '57', 57)">
             takeWhile(predicate source)
           </code>
-          <div class="tip" id="51">
+          <div class="tip" id="57">
             <strong>Signature:</strong> predicate:(&#39;T -&gt; bool) -&gt; source:AsyncSeq&lt;&#39;T&gt; -&gt; AsyncSeq&lt;&#39;T&gt;<br />
                           <strong>Type parameters:</strong> 'T          </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L835-835" class="github-link">
+            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L880-880" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -1188,15 +1309,15 @@ predicate holds. The predicate is evaluated synchronously.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '52', 52)" onmouseover="showTip(event, '52', 52)">
+          <code onmouseout="hideTip(event, '58', 58)" onmouseover="showTip(event, '58', 58)">
             takeWhileAsync(predicate source)
           </code>
-          <div class="tip" id="52">
+          <div class="tip" id="58">
             <strong>Signature:</strong> predicate:(&#39;T -&gt; Async&lt;bool&gt;) -&gt; source:AsyncSeq&lt;&#39;T&gt; -&gt; AsyncSeq&lt;&#39;T&gt;<br />
                           <strong>Type parameters:</strong> 'T          </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L821-821" class="github-link">
+            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L866-866" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -1210,15 +1331,15 @@ predicate holds. The predicate is evaluated asynchronously.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '53', 53)" onmouseover="showTip(event, '53', 53)">
+          <code onmouseout="hideTip(event, '59', 59)" onmouseover="showTip(event, '59', 59)">
             threadStateAsync(folder st source)
           </code>
-          <div class="tip" id="53">
+          <div class="tip" id="59">
             <strong>Signature:</strong> folder:(&#39;State -&gt; &#39;T -&gt; Async&lt;&#39;U * &#39;State&gt;) -&gt; st:&#39;State -&gt; source:AsyncSeq&lt;&#39;T&gt; -&gt; AsyncSeq&lt;&#39;U&gt;<br />
                           <strong>Type parameters:</strong> 'State, 'T, 'U          </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L776-776" class="github-link">
+            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L824-824" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -1231,15 +1352,15 @@ predicate holds. The predicate is evaluated asynchronously.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '54', 54)" onmouseover="showTip(event, '54', 54)">
+          <code onmouseout="hideTip(event, '60', 60)" onmouseover="showTip(event, '60', 60)">
             toArray(source)
           </code>
-          <div class="tip" id="54">
+          <div class="tip" id="60">
             <strong>Signature:</strong> source:AsyncSeq&lt;&#39;T&gt; -&gt; &#39;T []<br />
                           <strong>Type parameters:</strong> 'T          </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L942-942" class="github-link">
+            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L987-987" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -1252,15 +1373,15 @@ predicate holds. The predicate is evaluated asynchronously.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '55', 55)" onmouseover="showTip(event, '55', 55)">
+          <code onmouseout="hideTip(event, '61', 61)" onmouseover="showTip(event, '61', 61)">
             toArrayAsync(source)
           </code>
-          <div class="tip" id="55">
+          <div class="tip" id="61">
             <strong>Signature:</strong> source:AsyncSeq&lt;&#39;T&gt; -&gt; Async&lt;&#39;T []&gt;<br />
                           <strong>Type parameters:</strong> 'T          </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L929-929" class="github-link">
+            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L974-974" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -1273,15 +1394,15 @@ predicate holds. The predicate is evaluated asynchronously.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '56', 56)" onmouseover="showTip(event, '56', 56)">
+          <code onmouseout="hideTip(event, '62', 62)" onmouseover="showTip(event, '62', 62)">
             toBlockingSeq(source)
           </code>
-          <div class="tip" id="56">
+          <div class="tip" id="62">
             <strong>Signature:</strong> source:AsyncSeq&lt;&#39;T&gt; -&gt; seq&lt;&#39;T&gt;<br />
                           <strong>Type parameters:</strong> 'T          </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L726-726" class="github-link">
+            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L774-774" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -1295,15 +1416,15 @@ The elements of the asynchronous sequence are consumed lazily.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '57', 57)" onmouseover="showTip(event, '57', 57)">
+          <code onmouseout="hideTip(event, '63', 63)" onmouseover="showTip(event, '63', 63)">
             toList(source)
           </code>
-          <div class="tip" id="57">
+          <div class="tip" id="63">
             <strong>Signature:</strong> source:AsyncSeq&lt;&#39;T&gt; -&gt; &#39;T list<br />
                           <strong>Type parameters:</strong> 'T          </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L941-941" class="github-link">
+            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L986-986" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -1316,15 +1437,15 @@ The elements of the asynchronous sequence are consumed lazily.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '58', 58)" onmouseover="showTip(event, '58', 58)">
+          <code onmouseout="hideTip(event, '64', 64)" onmouseover="showTip(event, '64', 64)">
             toListAsync(source)
           </code>
-          <div class="tip" id="58">
+          <div class="tip" id="64">
             <strong>Signature:</strong> source:AsyncSeq&lt;&#39;T&gt; -&gt; Async&lt;&#39;T list&gt;<br />
                           <strong>Type parameters:</strong> 'T          </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L940-940" class="github-link">
+            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L985-985" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -1337,15 +1458,15 @@ The elements of the asynchronous sequence are consumed lazily.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '59', 59)" onmouseover="showTip(event, '59', 59)">
+          <code onmouseout="hideTip(event, '65', 65)" onmouseover="showTip(event, '65', 65)">
             toObservable(source)
           </code>
-          <div class="tip" id="59">
+          <div class="tip" id="65">
             <strong>Signature:</strong> source:AsyncSeq&lt;&#39;T&gt; -&gt; IObservable&lt;&#39;T&gt;<br />
                           <strong>Type parameters:</strong> 'T          </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L714-714" class="github-link">
+            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L762-762" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -1361,15 +1482,15 @@ observer cancels the iteration over asynchronous sequence.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '60', 60)" onmouseover="showTip(event, '60', 60)">
+          <code onmouseout="hideTip(event, '66', 66)" onmouseover="showTip(event, '66', 66)">
             traverseChoiceAsync(mapping source)
           </code>
-          <div class="tip" id="60">
+          <div class="tip" id="66">
             <strong>Signature:</strong> mapping:(&#39;T -&gt; Async&lt;Choice&lt;&#39;U,&#39;e&gt;&gt;) -&gt; source:AsyncSeq&lt;&#39;T&gt; -&gt; Async&lt;Choice&lt;AsyncSeq&lt;&#39;U&gt;,&#39;e&gt;&gt;<br />
                           <strong>Type parameters:</strong> 'T, 'U, 'e          </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L1155-1155" class="github-link">
+            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L1200-1200" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -1383,15 +1504,15 @@ and Choice2Of2 is returned as the result. Otherwise, the entire sequence is trav
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '61', 61)" onmouseover="showTip(event, '61', 61)">
+          <code onmouseout="hideTip(event, '67', 67)" onmouseover="showTip(event, '67', 67)">
             traverseOptionAsync(mapping source)
           </code>
-          <div class="tip" id="61">
+          <div class="tip" id="67">
             <strong>Signature:</strong> mapping:(&#39;T -&gt; Async&lt;&#39;U option&gt;) -&gt; source:AsyncSeq&lt;&#39;T&gt; -&gt; Async&lt;AsyncSeq&lt;&#39;U&gt; option&gt;<br />
                           <strong>Type parameters:</strong> 'T, 'U          </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L1135-1135" class="github-link">
+            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L1180-1180" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -1405,15 +1526,36 @@ and None is returned as the result. Otherwise, the entire sequence is traversed 
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '62', 62)" onmouseover="showTip(event, '62', 62)">
+          <code onmouseout="hideTip(event, '68', 68)" onmouseover="showTip(event, '68', 68)">
+            tryFind(predicate source)
+          </code>
+          <div class="tip" id="68">
+            <strong>Signature:</strong> predicate:(&#39;T -&gt; bool) -&gt; source:AsyncSeq&lt;&#39;T&gt; -&gt; Async&lt;&#39;T option&gt;<br />
+                          <strong>Type parameters:</strong> 'T          </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L668-668" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Asynchronously find the first value in a sequence for which the predicate returns true</p>
+
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '69', 69)" onmouseover="showTip(event, '69', 69)">
             tryFirst(source)
           </code>
-          <div class="tip" id="62">
+          <div class="tip" id="69">
             <strong>Signature:</strong> source:AsyncSeq&lt;&#39;T&gt; -&gt; Async&lt;&#39;T option&gt;<br />
                           <strong>Type parameters:</strong> 'T          </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L598-598" class="github-link">
+            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L605-605" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -1427,15 +1569,15 @@ given asynchronous sequence (or None if the sequence is empty).</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '63', 63)" onmouseover="showTip(event, '63', 63)">
+          <code onmouseout="hideTip(event, '70', 70)" onmouseover="showTip(event, '70', 70)">
             tryLast(source)
           </code>
-          <div class="tip" id="63">
+          <div class="tip" id="70">
             <strong>Signature:</strong> source:AsyncSeq&lt;&#39;T&gt; -&gt; Async&lt;&#39;T option&gt;<br />
                           <strong>Type parameters:</strong> 'T          </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L580-580" class="github-link">
+            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L587-587" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -1449,15 +1591,36 @@ given asynchronous sequence (or None if the sequence is empty).</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '64', 64)" onmouseover="showTip(event, '64', 64)">
+          <code onmouseout="hideTip(event, '71', 71)" onmouseover="showTip(event, '71', 71)">
+            tryPick(chooser source)
+          </code>
+          <div class="tip" id="71">
+            <strong>Signature:</strong> chooser:(&#39;T -&gt; &#39;TResult option) -&gt; source:AsyncSeq&lt;&#39;T&gt; -&gt; Async&lt;&#39;TResult option&gt;<br />
+                          <strong>Type parameters:</strong> 'T, 'TResult          </div>
+        </td>
+        <td class="xmldoc">
+            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L662-662" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Asynchronously pick a value from a sequence</p>
+
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+
+          <code onmouseout="hideTip(event, '72', 72)" onmouseover="showTip(event, '72', 72)">
             unfold(generator state)
           </code>
-          <div class="tip" id="64">
+          <div class="tip" id="72">
             <strong>Signature:</strong> generator:(&#39;State -&gt; (&#39;T * &#39;State) option) -&gt; state:&#39;State -&gt; AsyncSeq&lt;&#39;T&gt;<br />
                           <strong>Type parameters:</strong> 'State, 'T          </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L650-650" class="github-link">
+            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L692-692" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -1470,10 +1633,10 @@ given asynchronous sequence (or None if the sequence is empty).</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '65', 65)" onmouseover="showTip(event, '65', 65)">
+          <code onmouseout="hideTip(event, '73', 73)" onmouseover="showTip(event, '73', 73)">
             unfoldAsync(generator state)
           </code>
-          <div class="tip" id="65">
+          <div class="tip" id="73">
             <strong>Signature:</strong> generator:(&#39;State -&gt; Async&lt;(&#39;T * &#39;State) option&gt;) -&gt; state:&#39;State -&gt; AsyncSeq&lt;&#39;T&gt;<br />
                           <strong>Type parameters:</strong> 'State, 'T          </div>
         </td>
@@ -1491,15 +1654,15 @@ given asynchronous sequence (or None if the sequence is empty).</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '66', 66)" onmouseover="showTip(event, '66', 66)">
+          <code onmouseout="hideTip(event, '74', 74)" onmouseover="showTip(event, '74', 74)">
             zapp(functions source)
           </code>
-          <div class="tip" id="66">
+          <div class="tip" id="74">
             <strong>Signature:</strong> functions:AsyncSeq&lt;(&#39;T -&gt; &#39;U)&gt; -&gt; source:AsyncSeq&lt;&#39;T&gt; -&gt; AsyncSeq&lt;&#39;U&gt;<br />
                           <strong>Type parameters:</strong> 'T, 'U          </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L818-818" class="github-link">
+            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L863-863" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -1512,15 +1675,15 @@ given asynchronous sequence (or None if the sequence is empty).</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '67', 67)" onmouseover="showTip(event, '67', 67)">
+          <code onmouseout="hideTip(event, '75', 75)" onmouseover="showTip(event, '75', 75)">
             zappAsync(functions source)
           </code>
-          <div class="tip" id="67">
+          <div class="tip" id="75">
             <strong>Signature:</strong> functions:AsyncSeq&lt;(&#39;T -&gt; Async&lt;&#39;U&gt;)&gt; -&gt; source:AsyncSeq&lt;&#39;T&gt; -&gt; AsyncSeq&lt;&#39;U&gt;<br />
                           <strong>Type parameters:</strong> 'T, 'U          </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L815-815" class="github-link">
+            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L860-860" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -1533,15 +1696,15 @@ given asynchronous sequence (or None if the sequence is empty).</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '68', 68)" onmouseover="showTip(event, '68', 68)">
+          <code onmouseout="hideTip(event, '76', 76)" onmouseover="showTip(event, '76', 76)">
             zip(input1 input2)
           </code>
-          <div class="tip" id="68">
+          <div class="tip" id="76">
             <strong>Signature:</strong> input1:AsyncSeq&lt;&#39;T1&gt; -&gt; input2:AsyncSeq&lt;&#39;T2&gt; -&gt; AsyncSeq&lt;&#39;T1 * &#39;T2&gt;<br />
                           <strong>Type parameters:</strong> 'T1, 'T2          </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L804-804" class="github-link">
+            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L852-852" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -1556,15 +1719,15 @@ The resulting sequence stops when either of the argument sequences stop.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '69', 69)" onmouseover="showTip(event, '69', 69)">
+          <code onmouseout="hideTip(event, '77', 77)" onmouseover="showTip(event, '77', 77)">
             zipWith(mapping source1 source2)
           </code>
-          <div class="tip" id="69">
+          <div class="tip" id="77">
             <strong>Signature:</strong> mapping:(&#39;T1 -&gt; &#39;T2 -&gt; &#39;U) -&gt; source1:AsyncSeq&lt;&#39;T1&gt; -&gt; source2:AsyncSeq&lt;&#39;T2&gt; -&gt; AsyncSeq&lt;&#39;U&gt;<br />
                           <strong>Type parameters:</strong> 'T1, 'T2, 'U          </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L807-807" class="github-link">
+            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L855-855" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -1579,15 +1742,15 @@ The resulting sequence stops when either of the argument sequences stop.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '70', 70)" onmouseover="showTip(event, '70', 70)">
+          <code onmouseout="hideTip(event, '78', 78)" onmouseover="showTip(event, '78', 78)">
             zipWithAsync(mapping source1 source2)
           </code>
-          <div class="tip" id="70">
+          <div class="tip" id="78">
             <strong>Signature:</strong> mapping:(&#39;T1 -&gt; &#39;T2 -&gt; Async&lt;&#39;U&gt;) -&gt; source1:AsyncSeq&lt;&#39;T1&gt; -&gt; source2:AsyncSeq&lt;&#39;T2&gt; -&gt; AsyncSeq&lt;&#39;U&gt;<br />
                           <strong>Type parameters:</strong> 'T1, 'T2, 'U          </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L789-789" class="github-link">
+            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L837-837" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -1602,15 +1765,15 @@ The resulting sequence stops when either of the argument sequences stop.</p>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '71', 71)" onmouseover="showTip(event, '71', 71)">
+          <code onmouseout="hideTip(event, '79', 79)" onmouseover="showTip(event, '79', 79)">
             zipWithIndexAsync(mapping source)
           </code>
-          <div class="tip" id="71">
-            <strong>Signature:</strong> mapping:(int -&gt; &#39;T -&gt; Async&lt;&#39;U&gt;) -&gt; source:AsyncSeq&lt;&#39;T&gt; -&gt; AsyncSeq&lt;&#39;U&gt;<br />
+          <div class="tip" id="79">
+            <strong>Signature:</strong> mapping:(int64 -&gt; &#39;T -&gt; Async&lt;&#39;U&gt;) -&gt; source:AsyncSeq&lt;&#39;T&gt; -&gt; AsyncSeq&lt;&#39;U&gt;<br />
                           <strong>Type parameters:</strong> 'T, 'U          </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L813-813" class="github-link">
+            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L858-858" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
