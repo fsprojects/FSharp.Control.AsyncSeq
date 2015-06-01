@@ -205,6 +205,37 @@ let ``AsyncSeq.bufferByCount empty``() =
   let s' = s |> AsyncSeq.bufferByCount 2 |> AsyncSeq.toList 
   Assert.True(([] = s'))
 
+
+[<Test>]
+let ``AsyncSeq.bufferByTimeAndCount``() =      
+  let s = asyncSeq {
+    yield 1
+    yield 2
+    yield 3
+    do! Async.Sleep 250
+    yield 4
+    yield 5
+  }
+  let actual = AsyncSeq.bufferByCountAndTime 2 50 s |> AsyncSeq.toList
+  Assert.True((actual = [ [|1;2|] ; [|3|] ; [|4;5|] ]))
+
+[<Test>]
+let ``AsyncSeq.bufferByCountAndTime various sizes``() =
+  for sz in 0 .. 10 do
+      let s = asyncSeq {
+        for i in 1 .. sz do
+           yield i
+      }
+      let s' = s |> AsyncSeq.bufferByCountAndTime 1 1 |> AsyncSeq.toList 
+      Assert.True(([for i in 1 .. sz -> [|i|]] = s'))
+
+[<Test>]
+let ``AsyncSeq.bufferByTimeAndCount empty``() =      
+  let s = AsyncSeq.empty<int>
+  let actual = AsyncSeq.bufferByCountAndTime 2 10 s |> AsyncSeq.toList
+  Assert.True((actual = []))
+
+
 [<Test>]
 let ``try finally works no exception``() =
   let x = ref 0

@@ -986,6 +986,44 @@ module AsyncSeq =
       if (buffer.Count > 0) then 
           yield buffer.ToArray() }
 
+  let bufferByCountAndTime (bufferSize:int) (timeoutMs:int) (source:AsyncSeq<'T>) : AsyncSeq<'T[]> = 
+    if (bufferSize < 1) then invalidArg "bufferSize" "must be positive"
+    if (timeoutMs < 1) then invalidArg "timeoutMs" "must be positive"
+    asyncSeq {
+      let buffer = new ResizeArray<_>()
+      use ie = source.GetEnumerator()
+      let rec loop rem rt = asyncSeq {
+        let! move = 
+          match rem with
+          | Some rem -> async.Return rem
+          | None -> Async.StartChildAsTask(ie.MoveNext())
+        let t = DateTime.Now
+        let! time = Async.StartChildAsTask(Async.Sleep (max 0 rt))
+        let! moveOr = Async.chooseTasks move time
+        let delta = int (DateTime.Now - t).TotalMilliseconds      
+        match moveOr with
+        | Choice1Of2 (None, _) -> 
+          if buffer.Count > 0 then
+            yield buffer.ToArray()
+        | Choice1Of2 (Some v, _) ->
+          buffer.Add v
+          if buffer.Count = bufferSize then
+            yield buffer.ToArray()
+            buffer.Clear()
+            yield! loop None timeoutMs
+          else
+            yield! loop None (rt - delta)
+        | Choice2Of2 (_, rest) ->
+          if buffer.Count > 0 then
+            yield buffer.ToArray()
+            buffer.Clear()
+            yield! loop (Some rest) timeoutMs
+          else
+            yield! loop (Some rest) timeoutMs
+      }
+      yield! loop None timeoutMs
+    }
+
   let mergeChoice (source1:AsyncSeq<'T1>) (source2:AsyncSeq<'T2>) : AsyncSeq<Choice<'T1,'T2>> = asyncSeq {
       use ie1 = source1.GetEnumerator() 
       use ie2 = source2.GetEnumerator() 
