@@ -8,6 +8,7 @@ open System
 open System.IO
 open System.Threading
 open System.Threading.Tasks
+open System.Runtime.ExceptionServices
 
 #nowarn "40"
 
@@ -41,7 +42,7 @@ module internal Utils =
         /// just OnNext method that gets 'ObservableUpdate' as an argument.
         type internal ObservableUpdate<'T> = 
             | Next of 'T
-            | Error of exn
+            | Error of ExceptionDispatchInfo
             | Completed
 
 
@@ -55,7 +56,7 @@ module internal Utils =
                   ({ new IObserver<_> with
                       member x.OnNext(v) = observer.OnNext(Next v)
                       member x.OnCompleted() = observer.OnNext(Completed) 
-                      member x.OnError(e) = observer.OnNext(Error e) }) }
+                      member x.OnError(e) = observer.OnNext(Error (ExceptionDispatchInfo.Capture e)) }) }
 
     type Microsoft.FSharp.Control.Async with       
       /// Starts the specified operation using a new CancellationToken and returns
@@ -258,7 +259,7 @@ module AsyncSeq =
                                         let res = ref Unchecked.defaultof<_>
                                         try 
                                             res := Choice1Of2 (inp.GetEnumerator())
-                                        with exn -> 
+                                        with exn ->
                                             res := Choice2Of2 exn
                                         match res.Value with
                                         | Choice1Of2 r ->
@@ -700,7 +701,7 @@ module AsyncSeq =
         while not fin.Value do 
           let! msg = agent.Receive()
           match msg with
-          | Observable.ObservableUpdate.Error e -> raise e
+          | Observable.ObservableUpdate.Error e -> e.Throw()
           | Observable.Completed -> fin := true
           | Observable.Next v -> yield v 
       finally 
@@ -735,7 +736,7 @@ module AsyncSeq =
                      do! iter (Observable.Next >> buf.Add) source 
                      buf.CompleteAdding()
                   with err -> 
-                     buf.Add(Observable.Error err)
+                     buf.Add(Observable.Error (ExceptionDispatchInfo.Capture err))
                      buf.CompleteAdding()
               }
               |> fun p -> Async.StartAsTask(p, cancellationToken = cts.Token)
@@ -744,7 +745,7 @@ module AsyncSeq =
           for x in buf.GetConsumingEnumerable() do 
             match x with
             | Observable.Next v -> yield v
-            | Observable.Error err -> raise err
+            | Observable.Error err -> err.Throw()
             | Observable.Completed -> failwith "unexpected"
       }
 
@@ -1072,9 +1073,9 @@ module AsyncSeq =
        member x.Dispose() = 
         let err = ref None
         for i in ss.Length - 1 .. -1 ..  0 do 
-            try dispose ss.[i] with e -> err := Some e
+            try dispose ss.[i] with e -> err := Some (ExceptionDispatchInfo.Capture e)
         match !err with 
-        | Some e -> raise e
+        | Some e -> e.Throw()
         | None -> ()
       
   let mergeAll (ss:AsyncSeq<'T> list) : AsyncSeq<'T> =
