@@ -1,3 +1,6 @@
+### 2.0.1 - 01.06.2015
+* Add AsyncSeq.sum, length, contains, exists, forall, tryPick, tryFind
+
 ### 2.0.0 - 28.05.2015
 * Simplify ofObservableBuffered and toBlockingSeq
 * Move to IAsyncEnumerable model to support try/finally and try/with
