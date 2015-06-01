@@ -159,11 +159,9 @@ module AsyncSeq =
     /// be asked for the next element after the processing of an element completes).
     val scanAsync : folder:('State -> 'T -> Async<'State>) -> state:'State -> source:AsyncSeq<'T> -> AsyncSeq<'State>
 
-    /// Iterates over the input sequence and calls the specified function for
-    /// every value (to perform some side-effect asynchronously).
-    ///
-    /// The specified function is asynchronous (and the input sequence will
-    /// be asked for the next element after the processing of an element completes).
+    /// Iterates over the input sequence and calls the specified asynchronous function for
+    /// every value. The input sequence will be asked for the next element after 
+    //// the processing of an element completes.
     val iterAsync : action:('T -> Async<unit>) -> source:AsyncSeq<'T> -> Async<unit>
 
     /// Returns an asynchronous sequence that returns pairs containing an element
@@ -171,16 +169,39 @@ module AsyncSeq =
     /// singleton input sequence.
     val pairwise : source:AsyncSeq<'T> -> AsyncSeq<'T * 'T>
 
-    /// Aggregates the elements of the input asynchronous sequence using the
-    /// specified 'aggregation' function. The result is an asynchronous 
-    /// workflow that returns the final result.
-    ///
-    /// The aggregation function is asynchronous (and the input sequence will
-    /// be asked for the next element after the processing of an element completes).
+    /// Asynchronously aggregate the elements of the input asynchronous sequence using the
+    /// specified asynchronous 'aggregation' function. 
     val foldAsync : folder:('State -> 'T -> Async<'State>) -> state:'State -> source:AsyncSeq<'T> -> Async<'State>
 
-    /// Same as AsyncSeq.foldAsync, but the specified function is synchronous.
+    /// Asynchronously aggregate the elements of the input asynchronous sequence using the
+    /// specified 'aggregation' function. 
     val fold : folder:('State -> 'T -> 'State) -> state:'State -> source:AsyncSeq<'T> -> Async<'State>
+
+    /// Asynchronously sum the elements of the input asynchronous sequence using the specified function. 
+    val inline sum : source:AsyncSeq< ^T > -> Async< ^T>
+                                when ^T : (static member ( + ) : ^T * ^T -> ^T) 
+                                and  ^T : (static member Zero : ^T)
+
+    /// Asynchronously determine if the sequence contains the given value
+    val contains : value:'T -> source:AsyncSeq<'T> -> Async<bool> when 'T : equality
+
+    /// Asynchronously pick a value from a sequence
+    val tryPick : chooser:('T -> 'TResult option) -> source:AsyncSeq<'T> -> Async<'TResult option>
+
+    /// Asynchronously find the first value in a sequence for which the predicate returns true
+    val tryFind : predicate:('T -> bool) -> source:AsyncSeq<'T> -> Async<'T option>
+
+    /// Asynchronously determine if there is a value in the sequence for which the predicate returns true
+    val exists : predicate:('T -> bool) -> source:AsyncSeq<'T> -> Async<bool>
+
+    /// Asynchronously determine if the predicate returns true for all values in the sequence 
+    val forall : predicate:('T -> bool) -> source:AsyncSeq<'T> -> Async<bool>
+
+    /// Return an asynhronous sequence which, when iterated, includes an integer indicating the index of each element in the sequence.
+    val indexed : source:AsyncSeq<'T> -> AsyncSeq<int64 * 'T>
+
+    /// Asynchronously determine the number of elements in the sequence
+    val length : source:AsyncSeq<'T> -> Async<int64>
 
     /// Same as AsyncSeq.scanAsync, but the specified function is synchronous.
     val scan : folder:('State -> 'T -> 'State) -> state:'State -> source:AsyncSeq<'T> -> AsyncSeq<'State>
@@ -188,12 +209,13 @@ module AsyncSeq =
     /// Same as AsyncSeq.mapAsync, but the specified function is synchronous.
     val map : folder:('T -> 'U) -> source:AsyncSeq<'T> -> AsyncSeq<'U>
 
-    /// Same as AsyncSeq.iterAsync, but the specified function is synchronous
-    /// and performs the side-effect immediately.
+    /// Iterates over the input sequence and calls the specified function for
+    /// every value.
     val iter : action:('T -> unit) -> source:AsyncSeq<'T> -> Async<unit>
 
-    /// Same as AsyncSeq.chooseAsync, but the specified function is synchronous
-    /// and processes the input element immediately.
+    /// Asynchronously iterates over the input sequence and generates 'x' for 
+    /// every input element for which the specified function 
+    /// returned 'Some(x)' 
     val choose : chooser:('T -> 'U option) -> source:AsyncSeq<'T> -> AsyncSeq<'U>
 
     /// Same as AsyncSeq.filterAsync, but the specified predicate is synchronous
@@ -250,10 +272,10 @@ module AsyncSeq =
     ///
     /// The specified function is asynchronous (and the input sequence will
     /// be asked for the next element after the processing of an element completes).
-    val mapiAsync : mapping:(int -> 'T -> Async<'U>) -> source:AsyncSeq<'T> -> AsyncSeq<'U>
+    val mapiAsync : mapping:(int64 -> 'T -> Async<'U>) -> source:AsyncSeq<'T> -> AsyncSeq<'U>
 
     [<System.Obsolete("Renamed to mapiAsync") >]
-    val zipWithIndexAsync : mapping:(int -> 'T -> Async<'U>) -> source:AsyncSeq<'T> -> AsyncSeq<'U>
+    val zipWithIndexAsync : mapping:(int64 -> 'T -> Async<'U>) -> source:AsyncSeq<'T> -> AsyncSeq<'U>
 
     /// Feeds an async sequence of values into an async sequence of async functions.
     val zappAsync : functions:AsyncSeq<('T -> Async<'U>)> -> source:AsyncSeq<'T> -> AsyncSeq<'U>

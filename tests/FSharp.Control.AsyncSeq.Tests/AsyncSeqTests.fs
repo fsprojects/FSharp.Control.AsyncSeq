@@ -60,6 +60,67 @@ let ``AsyncSeq.concatSeq works``() =
   Assert.True(EQ expected actual)
 
 [<Test>]
+let ``AsyncSeq.sum works``() =  
+  for i in 0 .. 10 do 
+      let ls = [ 1 .. i ]
+      let actual = AsyncSeq.ofSeq ls |> AsyncSeq.sum |> Async.RunSynchronously
+      let expected = ls |> List.sum
+      Assert.True((expected = actual))
+
+
+[<Test>]
+let ``AsyncSeq.length works``() =  
+  for i in 0 .. 10 do 
+      let ls = [ 1 .. i ]
+      let actual = AsyncSeq.ofSeq ls |> AsyncSeq.length |> Async.RunSynchronously |> int32
+      let expected = ls |> List.length
+      Assert.True((expected = actual))
+
+[<Test>]
+let ``AsyncSeq.contains works``() =  
+  for i in 0 .. 10 do 
+      let ls = [ 1 .. i ]
+      for j in [0;i;i+1] do
+          let actual = AsyncSeq.ofSeq ls |> AsyncSeq.contains j |> Async.RunSynchronously
+          let expected = ls |> List.exists (fun x -> x = j)
+          Assert.True((expected = actual))
+
+[<Test>]
+let ``AsyncSeq.tryPick works``() =  
+  for i in 0 .. 10 do 
+      let ls = [ 1 .. i ]
+      for j in [0;i;i+1] do
+          let actual = AsyncSeq.ofSeq ls |> AsyncSeq.tryPick (fun x -> if x = j then Some (string (x+1)) else None) |> Async.RunSynchronously
+          let expected = ls |> Seq.tryPick (fun x -> if x = j then Some (string (x+1)) else None)
+          Assert.True((expected = actual))
+
+[<Test>]
+let ``AsyncSeq.tryFind works``() =  
+  for i in 0 .. 10 do 
+      let ls = [ 1 .. i ]
+      for j in [0;i;i+1] do
+          let actual = AsyncSeq.ofSeq ls |> AsyncSeq.tryFind (fun x -> x = j) |> Async.RunSynchronously
+          let expected = ls |> Seq.tryFind (fun x -> x = j)
+          Assert.True((expected = actual))
+
+[<Test>]
+let ``AsyncSeq.exists works``() =  
+  for i in 0 .. 10 do 
+      let ls = [ 1 .. i ]
+      for j in [0;i;i+1] do
+          let actual = AsyncSeq.ofSeq ls |> AsyncSeq.exists (fun x -> x = j) |> Async.RunSynchronously
+          let expected = ls |> Seq.exists (fun x -> x = j)
+          Assert.True((expected = actual))
+
+[<Test>]
+let ``AsyncSeq.forall works``() =  
+  for i in 0 .. 10 do 
+      let ls = [ 1 .. i ]
+      for j in [0;i;i+1] do
+          let actual = AsyncSeq.ofSeq ls |> AsyncSeq.forall (fun x -> x = j) |> Async.RunSynchronously
+          let expected = ls |> Seq.forall (fun x -> x = j)
+          Assert.True((expected = actual))
+[<Test>]
 let ``AsyncSeq.cache works``() =  
   for n in 0 .. 10 do 
           let ls = [ for i in 1 .. n do for j in 1 .. i do yield i ]
