@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8"/>
-    <title>AsyncSeqExtensions - FSharp.Control.AsyncSeq</title>
+    <title>IAsyncEnumerable<'T> - FSharp.Control.AsyncSeq</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <meta name="description" content=""/>
     <meta name="author" content="Thomas Petricek, David Thomas, Steffen Forkmann"/>
@@ -35,62 +35,32 @@
 
 
 
-<h1>AsyncSeqExtensions</h1>
+<h1>IAsyncEnumerable<'T></h1>
 <div class="xmldoc">
-<p>An automatically-opened module tht contains the <code>asyncSeq</code> builder and an extension method</p>
+<p>An asynchronous sequence represents a delayed computation that can be
+started to give an enumerator for pulling results asynchronously</p>
 
 
 </div>
-
-<!-- Render nested types and modules, if there are any -->
-
-  <h3>Functions and values</h3>
+  <h3>Instance members</h3>
   <table class="table table-bordered member-list">
     <thead>
-      <tr><td>Function or value</td><td>Description</td></tr>
+      <tr><td>Instance member</td><td>Description</td></tr>
     </thead>
     <tbody>
       <tr>
         <td class="member-name">
 
-          <code onmouseout="hideTip(event, '72', 72)" onmouseover="showTip(event, '72', 72)">
-            asyncSeq 
+          <code onmouseout="hideTip(event, '89', 89)" onmouseover="showTip(event, '89', 89)">
+            GetEnumerator()
           </code>
-          <div class="tip" id="72">
-            <strong>Signature:</strong> AsyncSeqBuilder<br />
+          <div class="tip" id="89">
+            <strong>Signature:</strong> unit -&gt; IAsyncEnumerator&lt;&#39;T&gt;<br />
+              <strong>Modifiers:</strong> abstract<br />
                       </div>
         </td>
         <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L1178-1178" class="github-link">
-              <img src="../content/img/github.png" class="normal" />
-              <img src="../content/img/github-blue.png" class="hover" />
-            </a>
-          <p>Builds an asynchronou sequence using the computation builder syntax</p>
-
-
-
-        </td>
-      </tr>
-    </tbody>
-  </table>
-  <h3>Type extensions</h3>
-  <table class="table table-bordered member-list">
-    <thead>
-      <tr><td>Type extension</td><td>Description</td></tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td class="member-name">
-
-          <code onmouseout="hideTip(event, '73', 73)" onmouseover="showTip(event, '73', 73)">
-            For(seq, action)
-          </code>
-          <div class="tip" id="73">
-            <strong>Signature:</strong> (seq:AsyncSeq&lt;&#39;T&gt; * action:(&#39;T -&gt; Async&lt;unit&gt;)) -&gt; Async&lt;unit&gt;<br />
-                          <strong>Type parameters:</strong> 'T          </div>
-        </td>
-        <td class="xmldoc">
-            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L1182-1182" class="github-link">
+            <a href="http://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L22-22" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>

@@ -32,9 +32,36 @@
       <div class="row">
         <div class="span9" id="main">
           
-<h3><a name="1-14-31-03-2015" class="anchor" href="#1-14-31-03-2015">1.14 - 31.03.2015</a></h3>
+<h3><a name="2-0-0-28-05-2015" class="anchor" href="#2-0-0-28-05-2015">2.0.0 - 28.05.2015</a></h3>
 
 <ul>
+<li>Simplify ofObservableBuffered and toBlockingSeq</li>
+<li>Move to IAsyncEnumerable model to support try/finally and try/with</li>
+<li>Rename replicate to replicateInfinite</li>
+<li>Rename toList to toListAsync</li>
+<li>Rename toArray to toArrayAsync</li>
+<li>Rename zipWithIndexAsync to mapiAsync</li>
+<li>Rename interleave to interleaveChoice</li>
+<li>Add interleave</li>
+<li>Add mergeChoice</li>
+<li>Fix performance of mergeAll</li>
+<li>Add init, initInfinite</li>
+<li>Add initAsync, initInfiniteAsync, replicateInfinite</li>
+<li>Add RequireQualifiedAccess to AsyncSeq</li>
+</ul>
+
+<h3><a name="1-15-0-30-03-2015" class="anchor" href="#1-15-0-30-03-2015">1.15.0 - 30.03.2015</a></h3>
+
+<ul>
+<li>Add AsyncSeq.getIterator (unblocks use of AsyncSeq in FSharpx.Async)</li>
+</ul>
+
+<h3><a name="1-14-30-03-2015" class="anchor" href="#1-14-30-03-2015">1.14 - 30.03.2015</a></h3>
+
+<ul>
+<li>Cancellable AsyncSeq.toBlockingSeq</li>
+<li>Fix AsyncSeq.scanAsync to also return first state</li>
+<li>Add a signature file</li>
 <li>AsyncSeq got extracted as separate project and is now a dependency - <a href="https://github.com/fsprojects/FSharpx.Async/pull/24">https://github.com/fsprojects/FSharpx.Async/pull/24</a></li>
 </ul>
 

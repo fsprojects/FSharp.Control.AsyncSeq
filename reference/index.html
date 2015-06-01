@@ -48,17 +48,28 @@
             <a href="fsharp-control-asyncseq-1.html">AsyncSeq<'T></a>
           </td>
           <td class="xmldoc"><p>An asynchronous sequence represents a delayed computation that can be
-started to produce either Cons value consisting of the next element of the 
-sequence (head) together with the next asynchronous sequence (tail) or a 
-special value representing the end of the sequence (Nil)</p>
+started to give an enumerator for pulling results asynchronously</p>
+
+
 </td>
         </tr>
         <tr>
           <td class="type-name">
-            <a href="fsharp-control-asyncseqinner-1.html">AsyncSeqInner<'T></a>
+            <a href="fsharp-control-iasyncenumerable-1.html">IAsyncEnumerable<'T></a>
           </td>
-          <td class="xmldoc"><p>The interanl type that represents a value returned as a result of
-evaluating a step of an asynchronous sequence</p>
+          <td class="xmldoc"><p>An asynchronous sequence represents a delayed computation that can be
+started to give an enumerator for pulling results asynchronously</p>
+
+
+</td>
+        </tr>
+        <tr>
+          <td class="type-name">
+            <a href="fsharp-control-iasyncenumerator-1.html">IAsyncEnumerator<'T></a>
+          </td>
+          <td class="xmldoc"><p>An enumerator for pulling results asynchronously</p>
+
+
 </td>
         </tr>
     </tbody>
@@ -79,6 +90,8 @@ evaluating a step of an asynchronous sequence</p>
             <a href="fsharp-control-asyncseqextensions.html">AsyncSeqExtensions</a>
           </td>
           <td class="xmldoc"><p>An automatically-opened module tht contains the <code>asyncSeq</code> builder and an extension method</p>
+
+
 </td>
         </tr>
         <tr>
