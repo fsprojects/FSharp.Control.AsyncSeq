@@ -695,6 +695,20 @@ let ``AsyncSeq.takeUntil should take entire sequence with never signal``() =
   Assert.True(EQ expected actual)
 
 [<Test>]
+let ``AsyncSeq.takeUntil should take some sequence elements before signal``() =
+  let s = asyncSeq {
+    yield 1
+    yield 2
+    do! Async.Sleep 20
+    yield 3
+    yield 4
+  }
+  let signal = async { do! Async.Sleep 10 }
+  let actual = AsyncSeq.takeUntilSignal signal s
+  let expected = [1;2] |> AsyncSeq.ofSeq
+  Assert.True(EQ expected actual)
+
+[<Test>]
 let ``AsyncSeq.singleton works``() =
   let expected = [1] |> AsyncSeq.ofSeq
   let actual = AsyncSeq.singleton 1 
@@ -712,6 +726,20 @@ let ``AsyncSeq.skipUntil should not skip with completed signal``() =
 let ``AsyncSeq.skipUntil should skip everything with never signal``() =
   let actual = [1;2;3;4] |> AsyncSeq.ofSeq |> AsyncSeq.skipUntilSignal AsyncOps.never
   Assert.True(EQ AsyncSeq.empty actual)
+
+[<Test>]
+let ``AsyncSeq.skipUntil should skip some sequence elements before signal``() =
+  let s = asyncSeq {
+    yield 1
+    yield 2
+    do! Async.Sleep 20
+    yield 3
+    yield 4
+  }
+  let signal = async { do! Async.Sleep 10 }
+  let actual = AsyncSeq.skipUntilSignal signal s
+  let expected = [3;4] |> AsyncSeq.ofSeq
+  Assert.True(EQ expected actual)
 
 [<Test>]
 let ``AsyncSeq.toBlockingSeq should work length 1``() =
