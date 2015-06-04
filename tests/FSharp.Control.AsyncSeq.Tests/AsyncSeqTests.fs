@@ -699,11 +699,11 @@ let ``AsyncSeq.takeUntil should take some sequence elements before signal``() =
   let s = asyncSeq {
     yield 1
     yield 2
-    do! Async.Sleep 20
+    do! Async.Sleep 200
     yield 3
     yield 4
   }
-  let signal = async { do! Async.Sleep 10 }
+  let signal = async { do! Async.Sleep 50 }
   let actual = AsyncSeq.takeUntilSignal signal s
   let expected = [1;2] |> AsyncSeq.ofSeq
   Assert.True(EQ expected actual)
@@ -732,11 +732,11 @@ let ``AsyncSeq.skipUntil should skip some sequence elements before signal``() =
   let s = asyncSeq {
     yield 1
     yield 2
-    do! Async.Sleep 20
+    do! Async.Sleep 200
     yield 3
     yield 4
   }
-  let signal = async { do! Async.Sleep 10 }
+  let signal = async { do! Async.Sleep 100 }
   let actual = AsyncSeq.skipUntilSignal signal s
   let expected = [3;4] |> AsyncSeq.ofSeq
   Assert.True(EQ expected actual)
