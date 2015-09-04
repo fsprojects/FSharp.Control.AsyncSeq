@@ -1040,7 +1040,7 @@ let SearchPackagesByName(sources, search) =
 
 [<Test>]
 let ``Async.cache should work``() =  
-  let expected = List.init 10 id
+  let expected = List.init 100 id
   let effects = ref 0
   let s = asyncSeq {
     for item in expected do      
@@ -1050,4 +1050,6 @@ let ``Async.cache should work``() =
   }
   let cached = s |> AsyncSeq.cache
   let actual = cached |> AsyncSeq.toList
-  Assert.True((expected = actual), "cached sequence was different from the original")
+  let actual = cached |> AsyncSeq.toList
+  Assert.True((expected = actual), "cached sequence was different from the source")
+  Assert.True((!effects = expected.Length), "iterating cached sequence resulted in multiple iterations of source")
