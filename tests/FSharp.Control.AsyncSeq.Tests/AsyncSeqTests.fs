@@ -1038,3 +1038,16 @@ let SearchPackagesByName(sources, search) =
 *)
 
 
+[<Test>]
+let ``Async.cache should work``() =  
+  let expected = List.init 10 id
+  let effects = ref 0
+  let s = asyncSeq {
+    for item in expected do      
+      yield item
+      do! Async.Sleep 1
+      incr effects
+  }
+  let cached = s |> AsyncSeq.cache
+  let actual = cached |> AsyncSeq.toList
+  Assert.True((expected = actual), "cached sequence was different from the original")
