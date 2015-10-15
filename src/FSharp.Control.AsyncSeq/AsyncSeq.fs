@@ -103,6 +103,7 @@ module AsyncSeq =
                                                       return (if res then Some v else None) }
                         member x.Dispose() = () } }
     
+  [<RequireQualifiedAccess>]
   type AppendState<'T> =
      | NotStarted1     of AsyncSeq<'T> * AsyncSeq<'T>
      | HaveEnumerator1 of IAsyncEnumerator<'T> * AsyncSeq<'T>
@@ -111,11 +112,9 @@ module AsyncSeq =
      | Finished        
 
   let append (inp1: AsyncSeq<'T>) (inp2: AsyncSeq<'T>) : AsyncSeq<'T> =
-        // Note: this is put outside the object deliberately, so the object doesn't permanently capture inp1 and inp2
-        let initialState = NotStarted1 (inp1, inp2) 
         { new IAsyncEnumerable<'T> with 
               member x.GetEnumerator() = 
-                  let state = ref initialState
+                  let state = ref (AppendState.NotStarted1 (inp1, inp2) )
                   { new IAsyncEnumerator<'T> with 
                         member x.MoveNext() = 
                             async { match !state with 
@@ -164,17 +163,16 @@ module AsyncSeq =
           member x.GetEnumerator() = f().GetEnumerator() }
 
 
+  [<RequireQualifiedAccess>]
   type BindState<'T,'U> =
      | NotStarted of Async<'T>
      | HaveEnumerator of IAsyncEnumerator<'U>
      | Finished        
 
   let bindAsync (f: 'T -> AsyncSeq<'U>) (inp : Async<'T>) : AsyncSeq<'U> = 
-        // Note: this is put outside the object deliberately, so the object doesn't permanently capture inp1 and inp2
-        let initialState = NotStarted inp
         { new IAsyncEnumerable<'U> with 
               member x.GetEnumerator() = 
-                  let state = ref initialState
+                  let state = ref (BindState.NotStarted inp)
                   { new IAsyncEnumerator<'U> with 
                         member x.MoveNext() = 
                             async { match !state with 
@@ -234,6 +232,7 @@ module AsyncSeq =
           let! moven = ie.MoveNext() 
           b := moven }
 
+  [<RequireQualifiedAccess>]
   type TryWithState<'T> =
      | NotStarted of AsyncSeq<'T>
      | HaveBodyEnumerator of IAsyncEnumerator<'T>
@@ -243,14 +242,13 @@ module AsyncSeq =
   /// Implements the 'TryWith' functionality for computation builder
   let tryWith (inp: AsyncSeq<'T>) (handler : exn -> AsyncSeq<'T>) : AsyncSeq<'T> = 
         // Note: this is put outside the object deliberately, so the object doesn't permanently capture inp1 and inp2
-        let initialState = NotStarted inp
         { new IAsyncEnumerable<'T> with 
               member x.GetEnumerator() = 
-                  let state = ref initialState
+                  let state = ref (TryWithState.NotStarted inp)
                   { new IAsyncEnumerator<'T> with 
                         member x.MoveNext() = 
                             async { match !state with 
-                                    | NotStarted inp -> 
+                                    | TryWithState.NotStarted inp -> 
                                         let res = ref Unchecked.defaultof<_>
                                         try 
                                             res := Choice1Of2 (inp.GetEnumerator())
@@ -302,6 +300,7 @@ module AsyncSeq =
                             | _ -> () } }
  
 
+  [<RequireQualifiedAccess>]
   type TryFinallyState<'T> =
      | NotStarted    of AsyncSeq<'T>
      | HaveBodyEnumerator of IAsyncEnumerator<'T>
@@ -310,11 +309,9 @@ module AsyncSeq =
   // This pushes the handler through all the async computations
   // The (synchronous) compensation is run when the Dispose() is called
   let tryFinally (inp: AsyncSeq<'T>) (compensation : unit -> unit) : AsyncSeq<'T> = 
-        // Note: this is put outside the object deliberately, so the object doesn't permanently capture inp1 and inp2
-        let initialState = NotStarted inp
         { new IAsyncEnumerable<'T> with 
               member x.GetEnumerator() = 
-                  let state = ref initialState
+                  let state = ref (TryFinallyState.NotStarted inp)
                   { new IAsyncEnumerator<'T> with 
                         member x.MoveNext() = 
                             async { match !state with 
@@ -341,6 +338,7 @@ module AsyncSeq =
                             | _ -> () } }
 
 
+  [<RequireQualifiedAccess>]
   type CollectState<'T,'U> =
      | NotStarted    of AsyncSeq<'T>
      | HaveInputEnumerator of IAsyncEnumerator<'T>
@@ -348,34 +346,32 @@ module AsyncSeq =
      | Finished 
 
   let collect (f: 'T -> AsyncSeq<'U>) (inp: AsyncSeq<'T>) : AsyncSeq<'U> = 
-        // Note: this is put outside the object deliberately, so the object doesn't permanently capture inp1 and inp2
-        let initialState = NotStarted inp
         { new IAsyncEnumerable<'U> with 
               member x.GetEnumerator() = 
-                  let state = ref initialState
+                  let state = ref (CollectState.NotStarted inp)
                   { new IAsyncEnumerator<'U> with 
                         member x.MoveNext() = 
                             async { match !state with 
-                                    | NotStarted inp -> 
+                                    | CollectState.NotStarted inp -> 
                                         return! 
                                            (let e1 = inp.GetEnumerator()
-                                            state := HaveInputEnumerator e1
+                                            state := CollectState.HaveInputEnumerator e1
                                             x.MoveNext())
-                                    | HaveInputEnumerator e1 ->   
+                                    | CollectState.HaveInputEnumerator e1 ->   
                                         let! res1 = e1.MoveNext() 
                                         return! 
                                            (match res1 with
                                             | Some v1 ->
                                                 let e2 = (f v1).GetEnumerator()
-                                                state := HaveInnerEnumerator (e1, e2)
+                                                state := CollectState.HaveInnerEnumerator (e1, e2)
                                             | None -> 
                                                 x.Dispose()
                                             x.MoveNext())
-                                    | HaveInnerEnumerator (e1, e2) ->   
+                                    | CollectState.HaveInnerEnumerator (e1, e2) ->   
                                         let! res2 = e2.MoveNext() 
                                         match res2 with 
                                         | None ->
-                                            state := HaveInputEnumerator e1
+                                            state := CollectState.HaveInputEnumerator e1
                                             dispose e2
                                             return! x.MoveNext()
                                         | Some _ -> 
@@ -384,15 +380,16 @@ module AsyncSeq =
                                         return None }
                         member x.Dispose() = 
                             match !state with 
-                            | HaveInputEnumerator e1 -> 
-                                state := Finished
+                            | CollectState.HaveInputEnumerator e1 -> 
+                                state := CollectState.Finished
                                 dispose e1 
-                            | HaveInnerEnumerator (e1, e2) -> 
-                                state := Finished
+                            | CollectState.HaveInnerEnumerator (e1, e2) -> 
+                                state := CollectState.Finished
                                 dispose e2
                                 dispose e1 
                             | _ -> () } }
 
+  [<RequireQualifiedAccess>]
   type CollectSeqState<'T,'U> =
      | NotStarted    of seq<'T>
      | HaveInputEnumerator of IEnumerator<'T>
@@ -401,33 +398,31 @@ module AsyncSeq =
 
   // Like collect, but the input is a sequence, where no bind is required on each step of the enumeration
   let collectSeq (f: 'T -> AsyncSeq<'U>) (inp: seq<'T>) : AsyncSeq<'U> = 
-        // Note: this is put outside the object deliberately, so the object doesn't permanently capture inp1 and inp2
-        let initialState = NotStarted inp
         { new IAsyncEnumerable<'U> with 
               member x.GetEnumerator() = 
-                  let state = ref initialState
+                  let state = ref (CollectSeqState.NotStarted inp)
                   { new IAsyncEnumerator<'U> with 
                         member x.MoveNext() = 
                             async { match !state with 
-                                    | NotStarted inp -> 
+                                    | CollectSeqState.NotStarted inp -> 
                                         return! 
                                            (let e1 = inp.GetEnumerator()
-                                            state := HaveInputEnumerator e1
+                                            state := CollectSeqState.HaveInputEnumerator e1
                                             x.MoveNext())
-                                    | HaveInputEnumerator e1 ->   
+                                    | CollectSeqState.HaveInputEnumerator e1 ->   
                                         return! 
                                           (if e1.MoveNext()  then 
                                                let e2 = (f e1.Current).GetEnumerator()
-                                               state := HaveInnerEnumerator (e1, e2)
+                                               state := CollectSeqState.HaveInnerEnumerator (e1, e2)
                                            else
                                                x.Dispose()
                                            x.MoveNext())
-                                    | HaveInnerEnumerator (e1, e2)->   
+                                    | CollectSeqState.HaveInnerEnumerator (e1, e2)->   
                                         let! res2 = e2.MoveNext() 
                                         match res2 with 
                                         | None ->
                                             return! 
-                                              (state := HaveInputEnumerator e1
+                                              (state := CollectSeqState.HaveInputEnumerator e1
                                                dispose e2
                                                x.MoveNext())
                                         | Some _ -> 
@@ -435,35 +430,34 @@ module AsyncSeq =
                                     | _ -> return None}
                         member x.Dispose() = 
                             match !state with 
-                            | HaveInputEnumerator e1 -> 
-                                state := Finished
+                            | CollectSeqState.HaveInputEnumerator e1 -> 
+                                state := CollectSeqState.Finished
                                 dispose e1 
-                            | HaveInnerEnumerator (e1, e2) -> 
-                                state := Finished
+                            | CollectSeqState.HaveInnerEnumerator (e1, e2) -> 
+                                state := CollectSeqState.Finished
                                 dispose e2
                                 dispose e1
                                 x.Dispose()
                             | _ -> () } }
 
+  [<RequireQualifiedAccess>]
   type MapState<'T> =
      | NotStarted    of seq<'T>
      | HaveEnumerator of IEnumerator<'T>
      | Finished 
 
   let ofSeq (inp: seq<'T>) : AsyncSeq<'T> = 
-        // Note: this is put outside the object deliberately, so the object doesn't permanently capture inp1 and inp2
-        let initialState = NotStarted inp
         { new IAsyncEnumerable<'T> with 
               member x.GetEnumerator() = 
-                  let state = ref initialState
+                  let state = ref (MapState.NotStarted inp)
                   { new IAsyncEnumerator<'T> with 
                         member x.MoveNext() = 
                             async { match !state with 
-                                    | NotStarted inp -> 
+                                    | MapState.NotStarted inp -> 
                                         let e = inp.GetEnumerator()
                                         state := MapState.HaveEnumerator e
                                         return! x.MoveNext()
-                                    | HaveEnumerator e ->   
+                                    | MapState.HaveEnumerator e ->   
                                         return 
                                             (if e.MoveNext()  then 
                                                  Some e.Current
@@ -473,7 +467,7 @@ module AsyncSeq =
                                     | _ -> return None }
                         member x.Dispose() = 
                             match !state with 
-                            | HaveEnumerator e -> 
+                            | MapState.HaveEnumerator e -> 
                                 state := MapState.Finished
                                 dispose e 
                             | _ -> () } }
