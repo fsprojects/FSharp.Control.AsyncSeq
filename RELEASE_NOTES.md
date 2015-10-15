@@ -1,3 +1,6 @@
+### 2.0.2 - 15.10.2015
+* Fix leak in AsyncSeq.append and other derived generators
+
 ### 2.0.1 - 01.06.2015
 * Add AsyncSeq.sum, length, contains, exists, forall, tryPick, tryFind
 
