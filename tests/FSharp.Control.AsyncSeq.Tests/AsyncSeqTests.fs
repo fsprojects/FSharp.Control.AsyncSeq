@@ -945,6 +945,7 @@ let ``AsyncSeq.interleave should fail with Exception if a task fails``() =
           |> AsyncSeq.toList
           |> ignore) |> ignore
 
+
 let perfTest1 n = 
     let empty = async { return () }
     Seq.init n id
@@ -1020,21 +1021,18 @@ let perfTest4 n =
 //perfTest4 100000          0.362       0.442
 //perfTest4 1000000         3.533       4.656
 
-(*
-let FindPackages(_,_,_,_) = [| "package" |]
 
-type Source = { IsNuget: bool; Url: string }
-let DefaultNugetSource = { IsNuget = true; Url = "http://nuget.org" }
+[<Test>]
+let ``AsyncSeq.unfoldAsync should be iterable in finite resources``() =
+    let generator state =
+        async {
+            if state < 10000 then
+                return Some ((), state + 1)
+            else
+                return None
+        }
 
-//-------------------------------
-
-let SearchPackagesByName(sources, search) = 
-    let sources = [ yield! sources; yield  DefaultNugetSource ]    
-    [ for source in sources ->
-        asyncSeq { if source.IsNuget then 
-                     for p in FindPackages(None, source.Url, search, 1000) do
-                        yield p } ]
-    |> AsyncSeq.mergeAll
-*)
-
+    AsyncSeq.unfoldAsync generator 0
+    |> AsyncSeq.iter ignore
+    |> Async.RunSynchronously
 
