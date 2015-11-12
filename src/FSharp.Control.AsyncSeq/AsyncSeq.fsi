@@ -161,7 +161,7 @@ module AsyncSeq =
 
     /// Iterates over the input sequence and calls the specified asynchronous function for
     /// every value. The input sequence will be asked for the next element after 
-    //// the processing of an element completes.
+    /// the processing of an element completes.
     val iterAsync : action:('T -> Async<unit>) -> source:AsyncSeq<'T> -> Async<unit>
 
     /// Returns an asynchronous sequence that returns pairs containing an element
