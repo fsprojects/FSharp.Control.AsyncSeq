@@ -1036,3 +1036,28 @@ let ``AsyncSeq.unfoldAsync should be iterable in finite resources``() =
     |> AsyncSeq.iter ignore
     |> Async.RunSynchronously
 
+[<Test>]
+let ``AsyncSeq.cache should work``() =  
+  let expected = List.init 100 id
+  let effects = ref 0
+  let s = asyncSeq {
+    for item in expected do      
+      yield item
+      do! Async.Sleep 1
+      incr effects
+  }
+  let cached = s |> AsyncSeq.cache
+  let actual = cached |> AsyncSeq.toList
+  let actual = cached |> AsyncSeq.toList
+  Assert.True((expected = actual), "cached sequence was different from the source")
+  Assert.True((!effects = expected.Length), "iterating cached sequence resulted in multiple iterations of source")
+
+
+[<Test>]
+let ``AsyncSeq.take should work``() =  
+  let s = asyncSeq {
+    yield ["a",1] |> Map.ofList
+  }
+  let ss = s |> AsyncSeq.take 1
+  let ls = ss |> AsyncSeq.toList
+  ()

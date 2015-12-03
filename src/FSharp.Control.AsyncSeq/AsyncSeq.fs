@@ -776,25 +776,30 @@ module AsyncSeq =
 
   let cache (source : AsyncSeq<'T>) = 
       let cache = ResizeArray<_>()
+      let fin = ref false
       asyncSeq {
-          use ie = source.GetEnumerator() 
-          let iRef = ref 0
-          let fin = ref false
-          while not fin.Value do
-              let i = iRef.Value
-              let lockTaken = ref false
-              try 
-                  System.Threading.Monitor.Enter(iRef, lockTaken);
-                  if i >= cache.Count then 
-                      let! move = ie.MoveNext()
-                      cache.Add(move)
-                      iRef := i + 1
-              finally
-                  if lockTaken.Value then
-                      System.Threading.Monitor.Exit(iRef)
-              match cache.[i] with 
-              | Some v -> yield v
-              | None -> fin := true }
+          if !fin then yield! ofSeq cache
+          else
+              use mre = new ManualResetEventSlim(true)
+              use ie = source.GetEnumerator() 
+              let iRef = ref 0            
+              while not fin.Value do
+                  let i = iRef.Value
+                  try 
+                      // the following is non-blocking but it allocates a waithandle and doesn't spin
+                      // consider an AsyncManualResetEvent which spins like ManualResetEventSlim before allocating waithandle
+                      //do! mre.WaitHandle |> Async.AwaitWaitHandle |> Async.Ignore
+                      mre.Wait()
+                      if i >= cache.Count then 
+                          let! move = ie.MoveNext()
+                          match move with
+                          | Some v -> cache.Add v
+                          | None -> fin := true
+                          iRef := i + 1
+                  finally
+                      mre.Set()
+                  if not !fin then 
+                    yield cache.[i] }
 
   // --------------------------------------------------------------------------
 
