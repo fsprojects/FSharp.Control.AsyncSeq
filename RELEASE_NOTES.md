@@ -1,3 +1,6 @@
+### 2.0.3 - 03.12.2015
+* Fix bug in Async.cache [#33](https://github.com/fsprojects/FSharp.Control.AsyncSeq/issues/33)
+
 ### 2.0.2 - 15.10.2015
 * Fix leak in AsyncSeq.append and other derived generators
 
