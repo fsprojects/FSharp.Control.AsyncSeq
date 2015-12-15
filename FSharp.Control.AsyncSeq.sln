@@ -1,6 +1,6 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2013
-VisualStudioVersion = 12.0.31101.0
+# Visual Studio 14
+VisualStudioVersion = 14.0.24720.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".paket", ".paket", "{63297B98-5CED-492C-A5B7-A5B4F73CF142}"
 	ProjectSection(SolutionItems) = preProject
@@ -41,6 +41,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "library", "library", "{B4BB
 		docs\content\library\AsyncSeq.fsx = docs\content\library\AsyncSeq.fsx
 	EndProjectSection
 EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FSharp.Control.AsyncSeq.Profile7", "src\FSharp.Control.AsyncSeq.Profile7\FSharp.Control.AsyncSeq.Profile7.fsproj", "{114DCF3C-D7CC-4E53-AFF0-AFBFC0C8B966}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -55,6 +57,10 @@ Global
 		{ADBD32DB-B7AC-4E81-9507-28F329AF23E7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{ADBD32DB-B7AC-4E81-9507-28F329AF23E7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{ADBD32DB-B7AC-4E81-9507-28F329AF23E7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{114DCF3C-D7CC-4E53-AFF0-AFBFC0C8B966}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{114DCF3C-D7CC-4E53-AFF0-AFBFC0C8B966}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{114DCF3C-D7CC-4E53-AFF0-AFBFC0C8B966}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{114DCF3C-D7CC-4E53-AFF0-AFBFC0C8B966}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
