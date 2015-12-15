@@ -19,3 +19,12 @@ summary
     Asynchronous sequences for F#
 description
     Asynchronous sequences for F#
+files
+    ../../bin/FSharp.Control.AsyncSeq.dll ==> lib/net45
+    ../../bin/FSharp.Control.AsyncSeq.xml ==> lib/net45
+    ../../bin/FSharp.Control.AsyncSeq.?db ==> lib/net45
+    ../../bin/FSharp.Control.AsyncSeq.dll.?db ==> lib/net45
+    ../../bin/profile7/FSharp.Control.AsyncSeq.dll ==> lib/portable-net45+netcore45+MonoAndroid1+MonoTouch1
+    ../../bin/profile7/FSharp.Control.AsyncSeq.xml ==> lib/portable-net45+netcore45+MonoAndroid1+MonoTouch1
+    ../../bin/profile7/FSharp.Control.AsyncSeq.?db ==> lib/portable-net45+netcore45+MonoAndroid1+MonoTouch1
+    ../../bin/profile7/FSharp.Control.AsyncSeq.dll.?db ==> lib/portable-net45+netcore45+MonoAndroid1+MonoTouch1

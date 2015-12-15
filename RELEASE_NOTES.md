@@ -1,3 +1,6 @@
+### 2.0.4 - 15.12.2015
+* Add portable7 profile
+
 ### 2.0.3 - 03.12.2015
 * Fix bug in Async.cache [#33](https://github.com/fsprojects/FSharp.Control.AsyncSeq/issues/33)
 
