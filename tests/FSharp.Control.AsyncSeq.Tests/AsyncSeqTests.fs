@@ -704,7 +704,13 @@ let ``AsyncSeq.singleton works``() =
 [<Test>]
 let ``AsyncSeq.skipUntil should not skip with completed signal``() =
   let expected = [1;2;3;4] |> AsyncSeq.ofSeq
-  let actual = expected |> AsyncSeq.skipUntilSignal AsyncOps.unit
+  let actual = 
+      asyncSeq {
+          do! Async.Sleep 100
+          yield! expected 
+      } 
+      |> AsyncSeq.skipUntilSignal AsyncOps.unit
+
   Assert.True(EQ expected actual)
 
 
