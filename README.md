@@ -14,9 +14,9 @@ Please also join the [F# Open Source Group](http://fsharp.github.com)
 
 # Maintainer(s)
 
-- [@forki](https://github.com/forki)
+- [@dsyme](https://github.com/dsyme)
 - [@tpetricek](https://github.com/tpetricek)
-- [@mausch](https://github.com/mausch)
-- [@panesofglass](https://github.com/panesofglass)
+- [@eulerfx](https://github.com/eulerfx)
+
 
 The default maintainer account for projects under "fsprojects" is [@fsprojectsgit](https://github.com/fsprojectsgit) - F# Community Project Incubation Space (repo management)
