@@ -5,6 +5,7 @@
 namespace FSharp.Control
 
 open System
+open System.Diagnostics
 open System.IO
 open System.Collections.Generic
 open System.Threading
@@ -1025,10 +1026,10 @@ module AsyncSeq =
           match rem with
           | Some rem -> async.Return rem
           | None -> Async.StartChildAsTask(ie.MoveNext())
-        let t = DateTime.Now
+        let t = Stopwatch.GetTimestamp()
         let! time = Async.StartChildAsTask(Async.Sleep (max 0 rt))
         let! moveOr = Async.chooseTasks move time
-        let delta = int (DateTime.Now - t).TotalMilliseconds      
+        let delta = int ((Stopwatch.GetTimestamp() - t) * 1000L / Stopwatch.Frequency)
         match moveOr with
         | Choice1Of2 (None, _) -> 
           if buffer.Count > 0 then
