@@ -4,9 +4,9 @@ open System.Reflection
 [<assembly: AssemblyTitleAttribute("FSharp.Control.AsyncSeq.Profile7")>]
 [<assembly: AssemblyProductAttribute("FSharp.Control.AsyncSeq")>]
 [<assembly: AssemblyDescriptionAttribute("Asynchronous sequences for F#")>]
-[<assembly: AssemblyVersionAttribute("2.0.5")>]
-[<assembly: AssemblyFileVersionAttribute("2.0.5")>]
+[<assembly: AssemblyVersionAttribute("2.0.6")>]
+[<assembly: AssemblyFileVersionAttribute("2.0.6")>]
 do ()
 
 module internal AssemblyVersionInformation =
-    let [<Literal>] Version = "2.0.5"
+    let [<Literal>] Version = "2.0.6"
