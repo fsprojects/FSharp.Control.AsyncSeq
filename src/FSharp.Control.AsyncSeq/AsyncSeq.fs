@@ -25,6 +25,8 @@ type IAsyncEnumerable<'T> =
 type AsyncSeq<'T> = IAsyncEnumerable<'T>
 //    abstract GetEnumerator : unit -> IAsyncEnumerator<'T>
 
+type AsyncSeqSrc<'a> = private { mutable tl : TaskCompletionSource<('a * AsyncSeqSrc<'a>) option> }
+
 [<AutoOpen>]
 module internal Utils = 
     module internal Choice =
@@ -78,6 +80,138 @@ module internal Utils =
             if i = 0 then return (Choice1Of2 (a.Result, b))
             elif i = 1 then return (Choice2Of2 (b.Result, a)) 
             else return! failwith (sprintf "unreachable, i = %d" i) }
+
+
+    type internal MbReq<'a> =
+      | Put of 'a
+      | Take of AsyncReplyChannel<'a>
+
+    /// An unbounded FIFO mailbox.
+    type Mb<'a> internal () =
+
+      let agent = MailboxProcessor.Start <| fun agent ->
+
+        let queue = new Queue<_>()
+
+        let rec loop () = async {
+          match queue.Count with
+          | 0 -> do! tryReceive ()
+          | _ -> do! trySendOrReceive () 
+          return! loop () }
+
+        and tryReceive () = 
+          agent.Scan (function
+            | Put (a) -> Some (receive(a))
+            | _ -> None)
+
+        and receive (a:'a) = async {
+          return queue.Enqueue a }
+
+        and send (rep:AsyncReplyChannel<'a>) = async {
+          let a = queue.Dequeue ()
+          return rep.Reply a }
+
+        and trySendOrReceive () = async {
+          let! msg = agent.Receive ()
+          match msg with
+          | Put a -> return! receive a
+          | Take rep -> return! send rep }
+
+        loop ()
+
+      member __.Put (a:'a) =
+        agent.Post (Put a)
+
+      member __.Take =
+        agent.PostAndAsyncReply (fun ch -> Take ch)
+
+      interface IDisposable with
+        member __.Dispose () = (agent :> IDisposable).Dispose()
+
+
+    /// Operations on unbounded FIFO mailboxes.
+    module Mb =
+  
+      /// Creates a new unbounded mailbox.
+      let create () = new Mb<'a> ()
+
+      /// Puts a message into a mailbox, no waiting.
+      let put (a:'a) (mb:Mb<'a>) = mb.Put a
+
+      /// Creates an async computation that completes when a message is available in a mailbox.
+      let take (mb:Mb<'a>) = mb.Take    
+
+
+    type internal BoundedMbReq<'a> =
+      | Put of 'a * AsyncReplyChannel<unit>
+      | Take of AsyncReplyChannel<'a>
+
+    type BoundedMb<'a> internal (capacity:int) =
+      do if capacity <= 0 then invalidArg "capacity" "must be greater than 0"
+      
+      let agent = MailboxProcessor.Start <| fun agent ->
+        
+        let queue = new Queue<_>()
+
+        let rec loop () = async {
+          match queue.Count with
+          | 0 -> do! tryReceive ()
+          | n when n = capacity -> do! trySend ()
+          | _ -> do! trySendOrReceive () 
+          return! loop () }
+
+        and tryReceive () = 
+          agent.Scan (function
+            | Put (a,rep) -> Some (receive (a,rep))
+            | _ -> None)
+
+        and receive (a:'a, rep:AsyncReplyChannel<unit>) = async {
+          queue.Enqueue a
+          rep.Reply () }
+
+        and trySend () = 
+          agent.Scan (function
+            | Take rep -> Some (send rep)
+            | _ -> None)
+
+        and send (rep:AsyncReplyChannel<'a>) = async {
+          let a = queue.Dequeue ()
+          return rep.Reply a }
+
+        and trySendOrReceive () = async {
+          let! msg = agent.Receive ()
+          match msg with
+          | Put (a,rep) -> return! receive (a,rep)
+          | Take rep -> return! send rep }
+
+        loop ()
+
+      member __.Put (a:'a) =
+        agent.PostAndAsyncReply (fun ch -> Put (a, ch))
+
+      member __.Take =
+        agent.PostAndAsyncReply (fun ch -> Take ch)
+
+      interface IDisposable with
+        member __.Dispose () = (agent :> IDisposable).Dispose()
+
+    /// Operations on bounded FIFO mailboxes.
+    module BoundedMb =
+  
+      /// Creates a new unbounded mailbox.
+      let create (capacity:int) = new BoundedMb<'a> (capacity)
+
+      /// Puts a message into a mailbox, no waiting.
+      let put (a:'a) (mb:BoundedMb<'a>) = mb.Put a
+
+      /// Creates an async computation that completes when a message is available in a mailbox.
+      let take (mb:BoundedMb<'a>) = mb.Take   
+
+      
+
+
+
+
 
 /// Module with helper functions for working with asynchronous sequences
 module AsyncSeq = 
@@ -548,6 +682,38 @@ module AsyncSeq =
       let! v = f i.Value itm
       i := i.Value + 1L
       yield v }
+
+  let mapAsyncParallel (f:'a -> Async<'b>) (s:AsyncSeq<'a>) = asyncSeq {
+    use mb = Mb.create ()
+    do! s |> iterAsync (fun a -> async {
+      let! b = Async.StartChild (f a)
+      mb |> Mb.put (Some b) })
+    mb.Put None
+    let rec loop () = asyncSeq {
+      let! b = Mb.take mb
+      match b with
+      | None -> ()
+      | Some b -> 
+        let! b = b
+        yield b
+        yield! loop () }
+    yield! loop () }
+
+  let mapAsyncParallelBounded (parallelism:int) (f:'a -> Async<'b>) (s:AsyncSeq<'a>) = asyncSeq {
+    use mb = BoundedMb.create (parallelism)
+    do! s |> iterAsync (fun a -> async {
+      let! b = Async.StartChild (f a)
+      do! mb |> BoundedMb.put (Some b) })
+    do! mb |> BoundedMb.put None
+    let rec loop () = asyncSeq {
+      let! b = BoundedMb.take mb
+      match b with
+      | None -> ()
+      | Some b -> 
+        let! b = b
+        yield b
+        yield! loop () }
+    yield! loop () }
 
   let chooseAsync f (source : AsyncSeq<'T>) : AsyncSeq<'R> = asyncSeq {
     for itm in source do
@@ -1200,6 +1366,62 @@ module AsyncSeq =
        }
 
 
+  module AsyncSeqSrcImpl =
+    
+    let create () : AsyncSeqSrc<'a> =
+      { tl = new TaskCompletionSource<_>() }
+
+    let put (a:'a) (s:AsyncSeqSrc<'a>) : unit =
+      let s' = create ()
+      s.tl.SetResult(Some(a, s'))
+      s.tl <- s'.tl
+
+    let close (s:AsyncSeqSrc<'a>) : unit =
+      s.tl.SetResult(None)
+
+    let rec toAsyncSeq (s:AsyncSeqSrc<'a>) : AsyncSeq<'a> = asyncSeq {
+      let! next = s.tl.Task |> Async.AwaitTask
+      match next with
+      | None -> ()
+      | Some (a,tl) ->
+        yield a
+        yield! toAsyncSeq tl }
+
+  
+  type private Group<'k, 'a> = { key : 'k ; src : AsyncSeqSrc<'a> }
+    
+  let groupByAsync (p:'a -> Async<'k>) (s:AsyncSeq<'a>) : AsyncSeq<'k * AsyncSeq<'a>> = asyncSeq {
+    let groups = Collections.Generic.Dictionary<'k, Group<'k, 'a>>()
+    let close g =
+      groups.Remove(g.key) |> ignore
+      AsyncSeqSrcImpl.close g.src
+    use enum = s.GetEnumerator()
+    let rec go () = asyncSeq {            
+      let! next = enum.MoveNext ()
+      match next with
+      | None -> 
+        groups.Values |> Seq.toArray |> Array.iter close
+      | Some a ->
+        let! k = p a
+        let mutable g = Unchecked.defaultof<_>
+        if groups.TryGetValue(k, &g) then
+          AsyncSeqSrcImpl.put a g.src
+          yield! go ()
+        else
+          let src = AsyncSeqSrcImpl.create ()
+          AsyncSeqSrcImpl.put a src
+          let g = { key = k ; src = src }
+          groups.Add(k, g)
+          yield k,src |> AsyncSeqSrcImpl.toAsyncSeq
+          yield! go () }
+    yield! go () }
+
+  let groupBy (p:'a -> 'k) (s:AsyncSeq<'a>) : AsyncSeq<'k * AsyncSeq<'a>> =
+    groupByAsync (p >> async.Return) s
+
+
+
+
 [<AutoOpen>]
 module AsyncSeqExtensions = 
   let asyncSeq = new AsyncSeq.AsyncSeqBuilder()
@@ -1208,6 +1430,13 @@ module AsyncSeqExtensions =
   type Microsoft.FSharp.Control.AsyncBuilder with
     member x.For (seq:AsyncSeq<'T>, action:'T -> Async<unit>) = 
       seq |> AsyncSeq.iterAsync action 
+
+module AsyncSeqSrc =
+    
+  let create () = AsyncSeq.AsyncSeqSrcImpl.create ()
+  let put a s = AsyncSeq.AsyncSeqSrcImpl.put a s
+  let close s = AsyncSeq.AsyncSeqSrcImpl.close s
+  let toAsyncSeq s = AsyncSeq.AsyncSeqSrcImpl.toAsyncSeq s
 
 module Seq = 
 
