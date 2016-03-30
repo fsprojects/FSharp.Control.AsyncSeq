@@ -25,7 +25,7 @@ type IAsyncEnumerable<'T> =
 type AsyncSeq<'T> = IAsyncEnumerable<'T>
 //    abstract GetEnumerator : unit -> IAsyncEnumerator<'T>
 
-type AsyncSeqSrc<'a> = private { mutable tl : TaskCompletionSource<('a * AsyncSeqSrc<'a>) option> }
+type AsyncSeqSrc<'a> = private { mutable tail : TaskCompletionSource<('a * AsyncSeqSrc<'a>) option> }
 
 [<AutoOpen>]
 module internal Utils = 
@@ -1369,23 +1369,29 @@ module AsyncSeq =
   module AsyncSeqSrcImpl =
     
     let create () : AsyncSeqSrc<'a> =
-      { tl = new TaskCompletionSource<_>() }
+      { tail = new TaskCompletionSource<_>() }
 
-    let put (a:'a) (s:AsyncSeqSrc<'a>) : unit =
-      let s' = create ()
-      s.tl.SetResult(Some(a, s'))
-      s.tl <- s'.tl
-
+    let put (a:'a) (s:AsyncSeqSrc<'a>) : unit =      
+      let newTail = create ()
+      let tail = s.tail
+      s.tail <- newTail.tail
+      tail.SetResult(Some(a, newTail))
+      
     let close (s:AsyncSeqSrc<'a>) : unit =
-      s.tl.SetResult(None)
+      s.tail.SetResult(None)
 
-    let rec toAsyncSeq (s:AsyncSeqSrc<'a>) : AsyncSeq<'a> = asyncSeq {
-      let! next = s.tl.Task |> Async.AwaitTask
-      match next with
-      | None -> ()
-      | Some (a,tl) ->
-        yield a
-        yield! toAsyncSeq tl }
+    let fail (ex:exn) (s:AsyncSeqSrc<'a>) : unit =
+      s.tail.SetException ex
+
+    let rec toAsyncSeq (s:AsyncSeqSrc<'a>) : AsyncSeq<'a> = 
+      let tail = s.tail
+      asyncSeq {
+        let! next = tail.Task |> Async.AwaitTask
+        match next with
+        | None -> ()
+        | Some (a,tl) ->
+          yield a
+          yield! toAsyncSeq tl }
 
   
   type private Group<'k, 'a> = { key : 'k ; src : AsyncSeqSrc<'a> }

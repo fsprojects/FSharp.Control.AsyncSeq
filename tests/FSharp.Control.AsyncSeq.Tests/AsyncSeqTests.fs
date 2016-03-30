@@ -28,6 +28,15 @@ let EQ (a:AsyncSeq<'a>) (b:AsyncSeq<'a>) =
     printfn "actual=%A" act
     false
 
+type Assert with  
+  /// Determines equality of two async sequences by convering them to lists, ignoring side-effects.
+  static member AreEqual (expected:AsyncSeq<'a>, actual:AsyncSeq<'a>) =
+    let exp = expected |> AsyncSeq.toList 
+    let act = actual |> AsyncSeq.toList 
+    let message = sprintf "expected=%A actual=%A" exp act
+    Assert.True((exp = act), message)
+    
+
 
 [<Test>]
 let ``AsyncSeq.toArray``() =  
@@ -1067,3 +1076,44 @@ let ``AsyncSeq.take should work``() =
   let ss = s |> AsyncSeq.take 1
   let ls = ss |> AsyncSeq.toList
   ()
+
+
+[<Test>]
+let ``AsyncSeqSource.create should create empty sequence`` () =  
+  let src = AsyncSeqSrc.create ()
+  let s = src |> AsyncSeqSrc.toAsyncSeq
+  src |> AsyncSeqSrc.close
+  let expected = AsyncSeq.empty
+  Assert.True(EQ expected s)
+
+
+[<Test>]
+let ``AsyncSeqSource.put should yield`` () =  
+  let item = 1
+  let src = AsyncSeqSrc.create ()  
+  let actual = src |> AsyncSeqSrc.toAsyncSeq  
+  src |> AsyncSeqSrc.put item
+  src |> AsyncSeqSrc.close
+  let expected = AsyncSeq.singleton item
+  Assert.AreEqual (expected, actual)
+
+[<Test>]
+let ``AsyncSeqSource.put should yield after async sequence is created`` () =  
+  let item1 = 1
+  let item2 = 2
+  let src = AsyncSeqSrc.create ()  
+  src |> AsyncSeqSrc.put item1
+  let actual = src |> AsyncSeqSrc.toAsyncSeq  
+  src |> AsyncSeqSrc.put item2
+  src |> AsyncSeqSrc.close
+  let expected = AsyncSeq.ofSeq [item2]
+  Assert.AreEqual (expected, actual)
+
+
+[<Test>]
+let ``AsyncSeq.groupBy should work``() =
+  let ls = List.init 4 id
+  let p i = i % 2
+  let expected = ls |> Seq.groupBy p |> Seq.map (snd >> Seq.toList) |> Seq.toList |> AsyncSeq.ofSeq
+  let actual = ls |> AsyncSeq.ofSeq |> AsyncSeq.groupBy p |> AsyncSeq.mapAsyncParallel (snd >> AsyncSeq.toListAsync)
+  Assert.True(EQ expected actual)
