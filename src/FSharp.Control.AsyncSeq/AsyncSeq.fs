@@ -25,13 +25,11 @@ type IAsyncEnumerable<'T> =
 type AsyncSeq<'T> = IAsyncEnumerable<'T>
 //    abstract GetEnumerator : unit -> IAsyncEnumerator<'T>
 
-type AsyncSeqSrc<'a> = private { mutable tail : AsyncSeqSrcNode<'a> }
+type AsyncSeqSrc<'a> = private { tail : AsyncSeqSrcNode<'a> ref }
 
 and private AsyncSeqSrcNode<'a> =
-  struct
-    val tcs : TaskCompletionSource<('a * AsyncSeqSrcNode<'a>) option>
-    new (tcs) = { tcs = tcs }
-  end
+  val tcs : TaskCompletionSource<('a * AsyncSeqSrcNode<'a>) option>
+  new (tcs) = { tcs = tcs }
 
 [<AutoOpen>]
 module internal Utils = 
@@ -1400,19 +1398,18 @@ module AsyncSeq =
       new AsyncSeqSrcNode<_>(new TaskCompletionSource<_>())
     
     let create () : AsyncSeqSrc<'a> =
-      { tail = createNode () }
+      { tail = ref (createNode ()) }
       
     let put (a:'a) (s:AsyncSeqSrc<'a>) =      
       let newTail = createNode ()
-      let tail = s.tail
-      s.tail <- newTail
+      let tail = Interlocked.Exchange(s.tail, newTail)
       tail.tcs.SetResult(Some(a, newTail))
       
     let close (s:AsyncSeqSrc<'a>) : unit =
-      s.tail.tcs.SetResult(None)
+      s.tail.Value.tcs.SetResult(None)
 
     let error (ex:exn) (s:AsyncSeqSrc<'a>) : unit =
-      s.tail.tcs.SetException(ex)
+      s.tail.Value.tcs.SetException(ex)
 
     let rec private toAsyncSeqImpl (s:AsyncSeqSrcNode<'a>) : AsyncSeq<'a> = 
       asyncSeq {
@@ -1424,7 +1421,7 @@ module AsyncSeq =
           yield! toAsyncSeqImpl tl }
 
     let toAsyncSeq (s:AsyncSeqSrc<'a>) : AsyncSeq<'a> =
-      toAsyncSeqImpl s.tail
+      toAsyncSeqImpl s.tail.Value
       
 
   

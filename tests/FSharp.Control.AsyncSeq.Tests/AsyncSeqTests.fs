@@ -1162,22 +1162,16 @@ let ``AsyncSeq.mapParallelAsync should be parallel`` () =
 
 
 [<Test>]
-let ``AsyncSeqSrc.create should create empty sequence`` () =  
-  let src = AsyncSeqSrc.create ()
-  let s = src |> AsyncSeqSrc.toAsyncSeq
-  src |> AsyncSeqSrc.close
-  let expected = AsyncSeq.empty
-  Assert.True(EQ expected s)
-
-[<Test>]
-let ``AsyncSeqSrc.put should yield when tapped before put`` () =  
-  let item = 1
-  let src = AsyncSeqSrc.create ()  
-  let actual = src |> AsyncSeqSrc.toAsyncSeq
-  src |> AsyncSeqSrc.put item
-  src |> AsyncSeqSrc.close
-  let expected = AsyncSeq.singleton item
-  Assert.AreEqual (expected, actual)
+let ``AsyncSeqSrc.should work`` () =  
+  for n in 0..100 do
+    let items = List.init n id
+    let src = AsyncSeqSrc.create ()  
+    let actual = src |> AsyncSeqSrc.toAsyncSeq
+    for item in items do
+      src |> AsyncSeqSrc.put item
+    src |> AsyncSeqSrc.close
+    let expected = items |> AsyncSeq.ofSeq
+    Assert.AreEqual (expected, actual)
 
 [<Test>]
 let ``AsyncSeqSrc.put should yield when tapped after put`` () =  
