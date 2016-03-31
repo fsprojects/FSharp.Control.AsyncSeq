@@ -1147,17 +1147,17 @@ let ``AsyncSeq.mapParallelAsync should be parallel`` () =
   Assert.AreEqual(expected, actual, timeout=200)
 
 //[<Test>]
-let ``AsyncSeq.mapParallelAsyncBounded should maintain order`` () =
-  let ls = List.init 500 id
-  let expected = 
-    ls 
-    |> AsyncSeq.ofSeq
-    |> AsyncSeq.mapAsync (async.Return)
-  let actual = 
-    ls 
-    |> AsyncSeq.ofSeq 
-    |> AsyncSeq.mapAsyncParallelBounded 10 (async.Return)
-  Assert.AreEqual(expected, actual, timeout=200)
+//let ``AsyncSeq.mapParallelAsyncBounded should maintain order`` () =
+//  let ls = List.init 500 id
+//  let expected = 
+//    ls 
+//    |> AsyncSeq.ofSeq
+//    |> AsyncSeq.mapAsync (async.Return)
+//  let actual = 
+//    ls 
+//    |> AsyncSeq.ofSeq 
+//    |> AsyncSeq.mapAsyncParallelBounded 10 (async.Return)
+//  Assert.AreEqual(expected, actual, timeout=200)
 
 
 
