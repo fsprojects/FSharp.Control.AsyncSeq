@@ -25,7 +25,13 @@ type IAsyncEnumerable<'T> =
 type AsyncSeq<'T> = IAsyncEnumerable<'T>
 //    abstract GetEnumerator : unit -> IAsyncEnumerator<'T>
 
-type AsyncSeqSrc<'a> = private { mutable tail : TaskCompletionSource<('a * AsyncSeqSrc<'a>) option> }
+type AsyncSeqSrc<'a> = private { mutable tail : AsyncSeqSrcNode<'a> }
+
+and private AsyncSeqSrcNode<'a> =
+  struct
+    val tcs : TaskCompletionSource<('a * AsyncSeqSrcNode<'a>) option>
+    new (tcs) = { tcs = tcs }
+  end
 
 [<AutoOpen>]
 module internal Utils = 
@@ -93,7 +99,7 @@ module internal Utils =
 
         let queue = new Queue<_>()
 
-        let rec loop () = async {
+        let rec loop () = async {          
           match queue.Count with
           | 0 -> do! tryReceive ()
           | _ -> do! trySendOrReceive () 
@@ -140,6 +146,7 @@ module internal Utils =
 
       /// Creates an async computation that completes when a message is available in a mailbox.
       let take (mb:Mb<'a>) = mb.Take    
+    
 
 
     type internal BoundedMbReq<'a> =
@@ -153,6 +160,14 @@ module internal Utils =
         
         let queue = new Queue<_>()
 
+        let receive (a:'a, rep:AsyncReplyChannel<unit>) = async {
+          queue.Enqueue a
+          return rep.Reply () }
+
+        let send (rep:AsyncReplyChannel<'a>) = async {
+          let a = queue.Dequeue ()
+          return rep.Reply a }
+
         let rec loop () = async {
           match queue.Count with
           | 0 -> do! tryReceive ()
@@ -165,18 +180,10 @@ module internal Utils =
             | Put (a,rep) -> Some (receive (a,rep))
             | _ -> None)
 
-        and receive (a:'a, rep:AsyncReplyChannel<unit>) = async {
-          queue.Enqueue a
-          rep.Reply () }
-
         and trySend () = 
           agent.Scan (function
             | Take rep -> Some (send rep)
             | _ -> None)
-
-        and send (rep:AsyncReplyChannel<'a>) = async {
-          let a = queue.Dequeue ()
-          return rep.Reply a }
 
         and trySendOrReceive () = async {
           let! msg = agent.Receive ()
@@ -198,10 +205,10 @@ module internal Utils =
     /// Operations on bounded FIFO mailboxes.
     module BoundedMb =
   
-      /// Creates a new unbounded mailbox.
+      /// Creates a new bounded mailbox.
       let create (capacity:int) = new BoundedMb<'a> (capacity)
 
-      /// Puts a message into a mailbox, no waiting.
+      /// Puts a message into a mailbox, waiting if at capacity.
       let put (a:'a) (mb:BoundedMb<'a>) = mb.Put a
 
       /// Creates an async computation that completes when a message is available in a mailbox.
@@ -1367,59 +1374,71 @@ module AsyncSeq =
 
 
   module AsyncSeqSrcImpl =
+
+    let private createNode () =
+      new AsyncSeqSrcNode<_>(new TaskCompletionSource<_>())
     
     let create () : AsyncSeqSrc<'a> =
-      { tail = new TaskCompletionSource<_>() }
-
-    let put (a:'a) (s:AsyncSeqSrc<'a>) : unit =      
-      let newTail = create ()
+      { tail = createNode () }
+      
+    let put (a:'a) (s:AsyncSeqSrc<'a>) =      
+      let newTail = createNode ()
       let tail = s.tail
-      s.tail <- newTail.tail
-      tail.SetResult(Some(a, newTail))
+      s.tail <- newTail
+      tail.tcs.SetResult(Some(a, newTail))
       
     let close (s:AsyncSeqSrc<'a>) : unit =
-      s.tail.SetResult(None)
+      s.tail.tcs.SetResult(None)
 
     let fail (ex:exn) (s:AsyncSeqSrc<'a>) : unit =
-      s.tail.SetException ex
+      s.tail.tcs.SetException(ex)
 
-    let rec toAsyncSeq (s:AsyncSeqSrc<'a>) : AsyncSeq<'a> = 
-      let tail = s.tail
+    let rec private toAsyncSeqImpl (s:AsyncSeqSrcNode<'a>) : AsyncSeq<'a> = 
       asyncSeq {
-        let! next = tail.Task |> Async.AwaitTask
+        let! next = s.tcs.Task |> Async.AwaitTask
         match next with
         | None -> ()
         | Some (a,tl) ->
           yield a
-          yield! toAsyncSeq tl }
+          yield! toAsyncSeqImpl tl }
+
+    let toAsyncSeq (s:AsyncSeqSrc<'a>) : AsyncSeq<'a> =
+      toAsyncSeqImpl s.tail
+      
 
   
   type private Group<'k, 'a> = { key : 'k ; src : AsyncSeqSrc<'a> }
     
   let groupByAsync (p:'a -> Async<'k>) (s:AsyncSeq<'a>) : AsyncSeq<'k * AsyncSeq<'a>> = asyncSeq {
     let groups = Collections.Generic.Dictionary<'k, Group<'k, 'a>>()
-    let close g =
-      groups.Remove(g.key) |> ignore
-      AsyncSeqSrcImpl.close g.src
+    let close group =
+      groups.Remove(group.key) |> ignore
+      AsyncSeqSrcImpl.close group.src
+    let closeGroups () =
+      groups.Values |> Seq.toArray |> Array.iter close
     use enum = s.GetEnumerator()
-    let rec go () = asyncSeq {            
-      let! next = enum.MoveNext ()
-      match next with
-      | None -> 
-        groups.Values |> Seq.toArray |> Array.iter close
-      | Some a ->
-        let! k = p a
-        let mutable g = Unchecked.defaultof<_>
-        if groups.TryGetValue(k, &g) then
-          AsyncSeqSrcImpl.put a g.src
-          yield! go ()
-        else
-          let src = AsyncSeqSrcImpl.create ()
-          AsyncSeqSrcImpl.put a src
-          let g = { key = k ; src = src }
-          groups.Add(k, g)
-          yield k,src |> AsyncSeqSrcImpl.toAsyncSeq
-          yield! go () }
+    let rec go () = asyncSeq {
+      try            
+        let! next = enum.MoveNext ()
+        match next with
+        | None -> closeGroups ()
+        | Some a ->
+          let! key = p a
+          let mutable group = Unchecked.defaultof<_>
+          if groups.TryGetValue(key, &group) then
+            AsyncSeqSrcImpl.put a group.src
+            yield! go ()
+          else
+            let src = AsyncSeqSrcImpl.create ()
+            let subSeq = src |> AsyncSeqSrcImpl.toAsyncSeq
+            AsyncSeqSrcImpl.put a src
+            let group = { key = key ; src = src }
+            groups.Add(key, group)
+            yield key,subSeq
+            yield! go ()
+      with ex ->
+        closeGroups ()
+        raise ex }
     yield! go () }
 
   let groupBy (p:'a -> 'k) (s:AsyncSeq<'a>) : AsyncSeq<'k * AsyncSeq<'a>> =
@@ -1443,6 +1462,7 @@ module AsyncSeqSrc =
   let put a s = AsyncSeq.AsyncSeqSrcImpl.put a s
   let close s = AsyncSeq.AsyncSeqSrcImpl.close s
   let toAsyncSeq s = AsyncSeq.AsyncSeqSrcImpl.toAsyncSeq s
+  let fail e s = AsyncSeq.AsyncSeqSrcImpl.fail e s
 
 module Seq = 
 

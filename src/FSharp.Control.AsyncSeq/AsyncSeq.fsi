@@ -435,6 +435,9 @@ module AsyncSeqSrc =
   /// Closes the async sequence source casuing any created async sequences to terminate.
   val close : src:AsyncSeqSrc<'T> -> unit
 
+  /// Causes async sequence created immediately before the call to raise an exception.
+  val fail : exn:exn -> src:AsyncSeqSrc<'T> -> unit
+
   /// Creates an async sequence which yields values as they are put into the source and terminates
-  /// when the source is closed.
+  /// when the source is closed. This sequence will yield items starting with the next put.
   val toAsyncSeq : src:AsyncSeqSrc<'T> -> AsyncSeq<'T>
