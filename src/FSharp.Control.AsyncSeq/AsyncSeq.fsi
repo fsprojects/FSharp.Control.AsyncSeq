@@ -19,11 +19,11 @@ type AsyncSeq<'T> = IAsyncEnumerable<'T>
 
 [<RequireQualifiedAccess>]
 module AsyncSeq = 
-    /// Creates an empty asynchronou sequence that immediately ends
+    /// Creates an empty asynchronous sequence that immediately ends.
     [<GeneralizableValueAttribute>]
     val empty<'T> : AsyncSeq<'T>
 
-    /// Creates an asynchronous sequence that generates a single element and then ends
+    /// Creates an asynchronous sequence that generates a single element and then ends.
     val singleton : v:'T -> AsyncSeq<'T>
 
     /// Generates a finite async sequence using the specified asynchronous initialization function.
@@ -32,10 +32,10 @@ module AsyncSeq =
     /// Generates a finite async sequence using the specified initialization function.
     val init : count: int64 -> mapping:(int64 -> 'T) -> AsyncSeq<'T>
 
-    /// Generates an async sequence using the specified asynchronous initialization function.
+    /// Generates an infinite async sequence using the specified asynchronous initialization function.
     val initInfiniteAsync : mapping:(int64 -> Async<'T>) -> AsyncSeq<'T>
 
-    /// Generates an async sequence using the specified initialization function.
+    /// Generates an infinite async sequence using the specified initialization function.
     val initInfinite : mapping:(int64 -> 'T) -> AsyncSeq<'T>
 
     /// Generates an async sequence using the specified asynchronous generator function.
@@ -47,7 +47,7 @@ module AsyncSeq =
     /// Creates an async sequence which repeats the specified value the indicated number of times.
     val replicate : count: int -> v:'T -> AsyncSeq<'T>
 
-    /// Creates an async sequence which repeats the specified value indefinitely.
+    /// Creates an infinite async sequence which repeats the specified value.
     val replicateInfinite : v:'T -> AsyncSeq<'T>
 
     /// Yields all elements of the first asynchronous sequence and then 
@@ -185,8 +185,19 @@ module AsyncSeq =
     /// Asynchronously determine if the sequence contains the given value
     val contains : value:'T -> source:AsyncSeq<'T> -> Async<bool> when 'T : equality
 
-    /// Asynchronously pick a value from a sequence
+    /// Asynchronously pick a value from a sequence based on the specified chooser function.
+    val tryPickAsync : chooser:('T -> Async<'TResult option>) -> source:AsyncSeq<'T> -> Async<'TResult option>
+
+    /// Asynchronously pick a value from a sequence based on the specified chooser function.
     val tryPick : chooser:('T -> 'TResult option) -> source:AsyncSeq<'T> -> Async<'TResult option>
+
+    /// Asynchronously pick a value from a sequence based on the specified chooser function.
+    /// Raises KeyNotFoundException if the chooser function can't find a matching key.
+    val pickAsync : chooser:('T -> Async<'TResult option>) -> source:AsyncSeq<'T> -> Async<'TResult>
+
+    /// Asynchronously pick a value from a sequence based on the specified chooser function.
+    /// Raises KeyNotFoundException if the chooser function can't find a matching key.
+    val pick : chooser:('T -> 'TResult option) -> source:AsyncSeq<'T> -> Async<'TResult>
 
     /// Asynchronously find the first value in a sequence for which the predicate returns true
     val tryFind : predicate:('T -> bool) -> source:AsyncSeq<'T> -> Async<'T option>
@@ -420,7 +431,7 @@ module Seq =
     val ofAsyncSeq : source:AsyncSeq<'T> -> seq<'T>
 
 
-/// An async sequence source.
+/// An async sequence source produces async sequences.
 type AsyncSeqSrc<'T>
 
 /// Operations on async sequence sources.
@@ -429,15 +440,16 @@ module AsyncSeqSrc =
   /// Creates a new async sequence source.
   val create : unit -> AsyncSeqSrc<'T>
 
-  /// Puts an item into the async sequence source causing any created async sequences to yield the item.
+  /// Causes any async sequences created before the call to yield the item.
   val put : item:'T -> src:AsyncSeqSrc<'T> -> unit
 
-  /// Closes the async sequence source casuing any created async sequences to terminate.
+  /// Closes the async sequence source casuing any created async sequences to complete.
   val close : src:AsyncSeqSrc<'T> -> unit
 
-  /// Causes async sequence created immediately before the call to raise an exception.
-  val fail : exn:exn -> src:AsyncSeqSrc<'T> -> unit
+  /// Causes async sequence created before the call to raise an exception.
+  val error : exn:exn -> src:AsyncSeqSrc<'T> -> unit
 
   /// Creates an async sequence which yields values as they are put into the source and terminates
   /// when the source is closed. This sequence will yield items starting with the next put.
+  /// Many async sequences can be created from once source.
   val toAsyncSeq : src:AsyncSeqSrc<'T> -> AsyncSeq<'T>

@@ -706,6 +706,7 @@ module AsyncSeq =
         yield! loop () }
     yield! loop () }
 
+  // TODO
   let mapAsyncParallelBounded (parallelism:int) (f:'a -> Async<'b>) (s:AsyncSeq<'a>) = asyncSeq {
     use mb = BoundedMb.create (parallelism)
     do! s |> iterAsync (fun a -> async {
@@ -793,6 +794,26 @@ module AsyncSeq =
           prev := Some v
           let! moven = ie.MoveNext()
           b := moven }
+
+  let pickAsync (f:'T -> Async<'U option>) (source:AsyncSeq<'T>) = async { 
+      use ie = source.GetEnumerator() 
+      let! v = ie.MoveNext()
+      let b = ref v
+      let res = ref None
+      while b.Value.IsSome && not res.Value.IsSome do
+          let! fv = f b.Value.Value
+          match fv with 
+          | None -> 
+              let! moven = ie.MoveNext()
+              b := moven
+          | Some _ as r -> 
+              res := r
+      match res.Value with
+      | Some _ -> return res.Value.Value
+      | None -> return raise(KeyNotFoundException()) }
+
+  let pick f (source:AsyncSeq<'T>) =
+    pickAsync (f >> async.Return) source
 
   let tryPickAsync f (source : AsyncSeq<'T>) = async { 
       use ie = source.GetEnumerator() 
@@ -1390,7 +1411,7 @@ module AsyncSeq =
     let close (s:AsyncSeqSrc<'a>) : unit =
       s.tail.tcs.SetResult(None)
 
-    let fail (ex:exn) (s:AsyncSeqSrc<'a>) : unit =
+    let error (ex:exn) (s:AsyncSeqSrc<'a>) : unit =
       s.tail.tcs.SetException(ex)
 
     let rec private toAsyncSeqImpl (s:AsyncSeqSrcNode<'a>) : AsyncSeq<'a> = 
@@ -1462,7 +1483,7 @@ module AsyncSeqSrc =
   let put a s = AsyncSeq.AsyncSeqSrcImpl.put a s
   let close s = AsyncSeq.AsyncSeqSrcImpl.close s
   let toAsyncSeq s = AsyncSeq.AsyncSeqSrcImpl.toAsyncSeq s
-  let fail e s = AsyncSeq.AsyncSeqSrcImpl.fail e s
+  let error e s = AsyncSeq.AsyncSeqSrcImpl.error e s
 
 module Seq = 
 
