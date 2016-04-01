@@ -22,7 +22,9 @@ This includes additional brief samples on using most of the functions.
 
 [Terminology](terminology.html) a reference for some of the terminology around F# async.
  
-[FSharp.Control.AsyncSeq](library/AsyncSeq.html) contains narrative and code samples explaining asynchronous sequences.
+[AsyncSeq](library/AsyncSeq.html) contains narrative and code samples explaining asynchronous sequences.
+
+[AsyncSeq Examples](library/AsyncSeqExamples.html) contains examples.
 
 Contributing and copyright
 --------------------------
