@@ -93,41 +93,24 @@ module internal Utils =
     /// An unbounded FIFO mailbox.
     type Mb<'a> internal () =
 
-      let agent = MailboxProcessor.Start <| fun agent ->
-
-        let queue = new Queue<_>()
-
-        let rec loop () = async {          
-          match queue.Count with
-          | 0 -> do! tryReceive ()
-          | _ -> do! trySendOrReceive () 
-          return! loop () }
-
-        and tryReceive () = 
-          agent.Scan (function
-            | Put (a) -> Some (receive(a))
-            | _ -> None)
-
-        and receive (a:'a) = async {
-          return queue.Enqueue a }
-
-        and send (rep:AsyncReplyChannel<'a>) = async {
-          let a = queue.Dequeue ()
-          return rep.Reply a }
-
-        and trySendOrReceive () = async {
-          let! msg = agent.Receive ()
-          match msg with
-          | Put a -> return! receive a
-          | Take rep -> return! send rep }
-
-        loop ()
+      let agent = MailboxProcessor.Start (fun agent ->
+        let rec receive () = async {
+          return!
+            agent.Scan(function
+              | Put a -> Some (send a)
+              | _ -> None ) }
+        and send (a:'a) = async {
+          return!
+            agent.Scan(function
+              | Take rep -> Some (rep.Reply a ; receive ())
+              | _ -> None) }
+        receive ())
 
       member __.Put (a:'a) =
         agent.Post (Put a)
 
       member __.Take =
-        agent.PostAndAsyncReply (fun ch -> Take ch)
+        agent.PostAndAsyncReply (Take)
 
       interface IDisposable with
         member __.Dispose () = (agent :> IDisposable).Dispose()
@@ -144,78 +127,7 @@ module internal Utils =
 
       /// Creates an async computation that completes when a message is available in a mailbox.
       let take (mb:Mb<'a>) = mb.Take    
-    
-
-
-    type internal BoundedMbReq<'a> =
-      | Put of 'a * AsyncReplyChannel<unit>
-      | Take of AsyncReplyChannel<'a>
-
-    type BoundedMb<'a> internal (capacity:int) =
-      do if capacity <= 0 then invalidArg "capacity" "must be greater than 0"
-      
-      let agent = MailboxProcessor.Start <| fun agent ->
-        
-        let queue = new Queue<_>()
-
-        let receive (a:'a, rep:AsyncReplyChannel<unit>) = async {
-          queue.Enqueue a
-          return rep.Reply () }
-
-        let send (rep:AsyncReplyChannel<'a>) = async {
-          let a = queue.Dequeue ()
-          return rep.Reply a }
-
-        let rec loop () = async {
-          match queue.Count with
-          | 0 -> do! tryReceive ()
-          | n when n = capacity -> do! trySend ()
-          | _ -> do! trySendOrReceive () 
-          return! loop () }
-
-        and tryReceive () = 
-          agent.Scan (function
-            | Put (a,rep) -> Some (receive (a,rep))
-            | _ -> None)
-
-        and trySend () = 
-          agent.Scan (function
-            | Take rep -> Some (send rep)
-            | _ -> None)
-
-        and trySendOrReceive () = async {
-          let! msg = agent.Receive ()
-          match msg with
-          | Put (a,rep) -> return! receive (a,rep)
-          | Take rep -> return! send rep }
-
-        loop ()
-
-      member __.Put (a:'a) =
-        agent.PostAndAsyncReply (fun ch -> Put (a, ch))
-
-      member __.Take =
-        agent.PostAndAsyncReply (fun ch -> Take ch)
-
-      interface IDisposable with
-        member __.Dispose () = (agent :> IDisposable).Dispose()
-
-    /// Operations on bounded FIFO mailboxes.
-    module BoundedMb =
-  
-      /// Creates a new bounded mailbox.
-      let create (capacity:int) = new BoundedMb<'a> (capacity)
-
-      /// Puts a message into a mailbox, waiting if at capacity.
-      let put (a:'a) (mb:BoundedMb<'a>) = mb.Put a
-
-      /// Creates an async computation that completes when a message is available in a mailbox.
-      let take (mb:BoundedMb<'a>) = mb.Take   
-
-      
-
-
-
+     
 
 
 /// Module with helper functions for working with asynchronous sequences
@@ -696,23 +608,6 @@ module AsyncSeq =
     mb.Put None
     let rec loop () = asyncSeq {
       let! b = Mb.take mb
-      match b with
-      | None -> ()
-      | Some b -> 
-        let! b = b
-        yield b
-        yield! loop () }
-    yield! loop () }
-
-  // TODO
-  let mapAsyncParallelBounded (parallelism:int) (f:'a -> Async<'b>) (s:AsyncSeq<'a>) = asyncSeq {
-    use mb = BoundedMb.create (parallelism)
-    do! s |> iterAsync (fun a -> async {
-      let! b = Async.StartChild (f a)
-      do! mb |> BoundedMb.put (Some b) })
-    do! mb |> BoundedMb.put None
-    let rec loop () = asyncSeq {
-      let! b = BoundedMb.take mb
       match b with
       | None -> ()
       | Some b -> 
