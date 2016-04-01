@@ -39,6 +39,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "library", "library", "{B4BB88FA-DB8C-4651-9869-A8FEA79F044E}"
 	ProjectSection(SolutionItems) = preProject
 		docs\content\library\AsyncSeq.fsx = docs\content\library\AsyncSeq.fsx
+		docs\content\library\AsyncSeqExamples.fsx = docs\content\library\AsyncSeqExamples.fsx
 	EndProjectSection
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FSharp.Control.AsyncSeq.Profile7", "src\FSharp.Control.AsyncSeq.Profile7\FSharp.Control.AsyncSeq.Profile7.fsproj", "{114DCF3C-D7CC-4E53-AFF0-AFBFC0C8B966}"
