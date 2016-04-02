@@ -18,6 +18,11 @@ module AsyncOps =
     let unit = async.Return()
     let never = Async.Sleep(-1)
 
+let catch (f:'a -> 'b) : 'a -> Choice<'b, exn> =
+  fun a ->
+    try f a |> Choice1Of2
+    with ex -> ex |> Choice2Of2
+
 /// Determines equality of two async sequences by convering them to lists, ignoring side-effects.
 let EQ (a:AsyncSeq<'a>) (b:AsyncSeq<'a>) = 
   let exp = a |> AsyncSeq.toList 
@@ -27,6 +32,43 @@ let EQ (a:AsyncSeq<'a>) (b:AsyncSeq<'a>) =
     printfn "expected=%A" exp
     printfn "actual=%A" act
     false
+
+type Assert with  
+  /// Determines equality of two async sequences by convering them to lists, ignoring side-effects.
+  static member AreEqual (expected:AsyncSeq<'a>, actual:AsyncSeq<'a>) =
+    Assert.AreEqual (expected, actual, 1000, exnEq=(fun _ _ -> true))
+  /// Determines equality of two async sequences by convering them to lists, ignoring side-effects.
+  static member AreEqual (expected:AsyncSeq<'a>, actual:AsyncSeq<'a>, timeout) =
+    Assert.AreEqual (expected, actual, timeout=timeout, exnEq=(fun _ _ -> true))
+  /// Determines equality of two async sequences by convering them to lists, ignoring side-effects.
+  static member AreEqual (expected:AsyncSeq<'a>, actual:AsyncSeq<'a>, timeout, exnEq:exn -> exn -> bool) =
+    let exp = expected |> AsyncSeq.toListAsync |> Async.Catch
+    let exp = Async.RunSynchronously (exp, timeout)
+    let act = actual |> AsyncSeq.toListAsync |> Async.Catch 
+    let act = Async.RunSynchronously(act, timeout)
+    let message = sprintf "expected=%A actual=%A" exp act
+    match exp,act with
+    | Choice1Of2 exp, Choice1Of2 act ->
+      Assert.True((exp = act), message)
+    | Choice2Of2 exp, Choice2Of2 act ->
+      Assert.True((exnEq exp act), message)
+    | _ ->
+      Assert.Fail(message)
+
+  static member AreEqual (expected:unit -> 'a, actual:unit -> 'a) =
+    let expected = (catch expected) ()
+    let actual = (catch actual) ()
+    let message = sprintf "expected=%A actual=%A" expected actual
+    match expected,actual with
+    | Choice1Of2 exp, Choice1Of2 act ->
+      Assert.True((exp = act), message)
+    | Choice2Of2 exp, Choice2Of2 act ->
+      ()
+    | _ ->
+      Assert.Fail(message)
+
+    
+    
 
 
 [<Test>]
@@ -93,6 +135,16 @@ let ``AsyncSeq.tryPick works``() =
           let actual = AsyncSeq.ofSeq ls |> AsyncSeq.tryPick (fun x -> if x = j then Some (string (x+1)) else None) |> Async.RunSynchronously
           let expected = ls |> Seq.tryPick (fun x -> if x = j then Some (string (x+1)) else None)
           Assert.True((expected = actual))
+
+[<Test>]
+let ``AsyncSeq.pick works``() =  
+  for i in 0 .. 10 do 
+      let ls = [ 1 .. i ]
+      for j in [0;i;i+1] do
+          let chooser x = if x = j then Some (string (x+1)) else None
+          let actual () = AsyncSeq.ofSeq ls |> AsyncSeq.pick chooser |> Async.RunSynchronously
+          let expected () = ls |> Seq.pick chooser
+          Assert.AreEqual(actual, expected)
 
 [<Test>]
 let ``AsyncSeq.tryFind works``() =  
@@ -1067,3 +1119,104 @@ let ``AsyncSeq.take should work``() =
   let ss = s |> AsyncSeq.take 1
   let ls = ss |> AsyncSeq.toList
   ()
+
+[<Test>]
+let ``AsyncSeq.mapParallelAsync should maintain order`` () =
+  for i in 0..100 do
+    let ls = List.init i id
+    let expected = 
+      ls 
+      |> AsyncSeq.ofSeq
+      |> AsyncSeq.mapAsync (async.Return)
+    let actual = 
+      ls 
+      |> AsyncSeq.ofSeq 
+      |> AsyncSeq.mapAsyncParallel (async.Return)
+    Assert.AreEqual(expected, actual)
+
+//[<Test>]
+let ``AsyncSeq.mapParallelAsync should be parallel`` () =
+  let parallelism = 3
+  let barrier = new Threading.Barrier(parallelism)
+  let s = AsyncSeq.init (int64 parallelism) int
+  let expected =
+    s |> AsyncSeq.map id
+  let actual = 
+    s
+    |> AsyncSeq.mapAsyncParallel (fun i -> async { barrier.SignalAndWait () ; return i }) // can deadlock
+  Assert.AreEqual(expected, actual, timeout=200)
+
+//[<Test>]
+//let ``AsyncSeq.mapParallelAsyncBounded should maintain order`` () =
+//  let ls = List.init 500 id
+//  let expected = 
+//    ls 
+//    |> AsyncSeq.ofSeq
+//    |> AsyncSeq.mapAsync (async.Return)
+//  let actual = 
+//    ls 
+//    |> AsyncSeq.ofSeq 
+//    |> AsyncSeq.mapAsyncParallelBounded 10 (async.Return)
+//  Assert.AreEqual(expected, actual, timeout=200)
+
+
+
+[<Test>]
+let ``AsyncSeqSrc.should work`` () =  
+  for n in 0..100 do
+    let items = List.init n id
+    let src = AsyncSeqSrc.create ()  
+    let actual = src |> AsyncSeqSrc.toAsyncSeq
+    for item in items do
+      src |> AsyncSeqSrc.put item
+    src |> AsyncSeqSrc.close
+    let expected = items |> AsyncSeq.ofSeq
+    Assert.AreEqual (expected, actual)
+
+[<Test>]
+let ``AsyncSeqSrc.put should yield when tapped after put`` () =  
+  let item = 1
+  let src = AsyncSeqSrc.create ()    
+  src |> AsyncSeqSrc.put item  
+  let actual = src |> AsyncSeqSrc.toAsyncSeq
+  src |> AsyncSeqSrc.close  
+  let expected = AsyncSeq.empty
+  Assert.AreEqual (expected, actual)
+
+[<Test>]
+let ``AsyncSeqSrc.fail should throw`` () =  
+  let item = 1
+  let src = AsyncSeqSrc.create ()    
+  let actual = src |> AsyncSeqSrc.toAsyncSeq
+  src |> AsyncSeqSrc.error (exn("test"))  
+  let expected = asyncSeq { raise (exn("test")) }
+  Assert.AreEqual (expected, actual)
+
+
+[<Test>]
+let ``AsyncSeq.groupBy should work``() =
+  for i in 0..100 do
+    for j in 1..3 do
+      let ls = List.init i id
+      let p x = x % j
+      let expected = 
+        ls 
+        |> Seq.groupBy p 
+        |> Seq.map (snd >> Seq.toList) 
+        |> Seq.toList 
+        |> AsyncSeq.ofSeq
+      let actual = 
+        ls 
+        |> AsyncSeq.ofSeq 
+        |> AsyncSeq.groupBy p 
+        |> AsyncSeq.mapAsyncParallel (snd >> AsyncSeq.toListAsync)
+      Assert.AreEqual(expected, actual)
+
+[<Test>]
+let ``AsyncSeq.groupBy should propagate exception and terminate all groups``() =
+  let expected = asyncSeq { raise (exn("test")) }
+  let actual = 
+    asyncSeq { raise (exn("test")) } 
+    |> AsyncSeq.groupBy (fun i -> i % 3) 
+    |> AsyncSeq.mapAsyncParallel (snd >> AsyncSeq.toListAsync)
+  Assert.AreEqual(expected, actual)
