@@ -86,50 +86,6 @@ module internal Utils =
             else return! failwith (sprintf "unreachable, i = %d" i) }
 
 
-    type internal MbReq<'a> =
-      | Put of 'a
-      | Take of AsyncReplyChannel<'a>
-
-    /// An unbounded FIFO mailbox.
-    type Mb<'a> internal () =
-
-      let agent = MailboxProcessor.Start (fun agent ->
-        let rec receive () = async {
-          return!
-            agent.Scan(function
-              | Put a -> Some (send a)
-              | _ -> None ) }
-        and send (a:'a) = async {
-          return!
-            agent.Scan(function
-              | Take rep -> Some (rep.Reply a ; receive ())
-              | _ -> None) }
-        receive ())
-
-      member __.Put (a:'a) =
-        agent.Post (Put a)
-
-      member __.Take =
-        agent.PostAndAsyncReply (Take)
-
-      interface IDisposable with
-        member __.Dispose () = (agent :> IDisposable).Dispose()
-
-
-    /// Operations on unbounded FIFO mailboxes.
-    module Mb =
-  
-      /// Creates a new unbounded mailbox.
-      let create () = new Mb<'a> ()
-
-      /// Puts a message into a mailbox, no waiting.
-      let put (a:'a) (mb:Mb<'a>) = mb.Put a
-
-      /// Creates an async computation that completes when a message is available in a mailbox.
-      let take (mb:Mb<'a>) = mb.Take    
-     
-
-
 /// Module with helper functions for working with asynchronous sequences
 module AsyncSeq = 
 
@@ -601,13 +557,13 @@ module AsyncSeq =
       yield v }
 
   let mapAsyncParallel (f:'a -> Async<'b>) (s:AsyncSeq<'a>) = asyncSeq {
-    use mb = Mb.create ()
+    use mbp = MailboxProcessor.Start (fun _ -> async.Return())
     do! s |> iterAsync (fun a -> async {
       let! b = Async.StartChild (f a)
-      mb |> Mb.put (Some b) })
-    mb.Put None
+      mbp.Post (Some b) })
+    mbp.Post None
     let rec loop () = asyncSeq {
-      let! b = Mb.take mb
+      let! b = mbp.Receive()
       match b with
       | None -> ()
       | Some b -> 
