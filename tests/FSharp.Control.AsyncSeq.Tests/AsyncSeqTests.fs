@@ -35,18 +35,23 @@ let EQ (a:AsyncSeq<'a>) (b:AsyncSeq<'a>) =
 
 type Assert with  
   /// Determines equality of two async sequences by convering them to lists, ignoring side-effects.
+  static member AreEqual (expected:AsyncSeq<'a>, actual:AsyncSeq<'a>, message:string) =
+    Assert.AreEqual (expected, actual, 2000, exnEq=(fun _ _ -> true), message=message)
+  /// Determines equality of two async sequences by convering them to lists, ignoring side-effects.
   static member AreEqual (expected:AsyncSeq<'a>, actual:AsyncSeq<'a>) =
-    Assert.AreEqual (expected, actual, 1000, exnEq=(fun _ _ -> true))
+    Assert.AreEqual (expected, actual, 2000, exnEq=(fun _ _ -> true), message=null)
   /// Determines equality of two async sequences by convering them to lists, ignoring side-effects.
   static member AreEqual (expected:AsyncSeq<'a>, actual:AsyncSeq<'a>, timeout) =
-    Assert.AreEqual (expected, actual, timeout=timeout, exnEq=(fun _ _ -> true))
+    Assert.AreEqual (expected, actual, timeout=timeout, exnEq=(fun _ _ -> true), message=null)
   /// Determines equality of two async sequences by convering them to lists, ignoring side-effects.
-  static member AreEqual (expected:AsyncSeq<'a>, actual:AsyncSeq<'a>, timeout, exnEq:exn -> exn -> bool) =
+  static member AreEqual (expected:AsyncSeq<'a>, actual:AsyncSeq<'a>, timeout, exnEq:exn -> exn -> bool, message:string) =
     let exp = expected |> AsyncSeq.toListAsync |> Async.Catch
     let exp = Async.RunSynchronously (exp, timeout)
     let act = actual |> AsyncSeq.toListAsync |> Async.Catch 
     let act = Async.RunSynchronously(act, timeout)
-    let message = sprintf "expected=%A actual=%A" exp act
+    let message = 
+      if message = null then sprintf "expected=%A actual=%A" exp act
+      else sprintf "message=%s expected=%A actual=%A" message exp act
     match exp,act with
     | Choice1Of2 exp, Choice1Of2 act ->
       Assert.True((exp = act), message)
@@ -1220,3 +1225,18 @@ let ``AsyncSeq.groupBy should propagate exception and terminate all groups``() =
     |> AsyncSeq.groupBy (fun i -> i % 3) 
     |> AsyncSeq.mapAsyncParallel (snd >> AsyncSeq.toListAsync)
   Assert.AreEqual(expected, actual)
+
+[<Test>]
+let ``AsyncSeq.combineLatest should behave like merge after initial``() =  
+  for n in 0..20 do
+    for m in 0..10 do
+      let ls1 = List.init n id
+      let ls2 = List.init m id 
+      // expect each element to increase combined sum by 1
+      // expected count is sum of source counts minus 1 for first result
+      let expectedCount = 
+        if n = 0 || m = 0 then 0
+        else max (n + m - 1) 0
+      let expected = List.init expectedCount id |> AsyncSeq.ofSeq
+      let actual = AsyncSeq.combineLatest (+) (AsyncSeq.ofSeq ls1) (AsyncSeq.ofSeq ls2)
+      Assert.AreEqual(expected, actual, (sprintf "n=%i m=%i" n m))
