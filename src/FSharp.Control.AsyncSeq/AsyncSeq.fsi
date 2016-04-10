@@ -50,6 +50,12 @@ module AsyncSeq =
     /// Creates an infinite async sequence which repeats the specified value.
     val replicateInfinite : v:'T -> AsyncSeq<'T>
 
+    /// Creates an infinite async sequence which repeatedly evaluates and emits the specified async value.
+    val replicateInfiniteAsync : v:Async<'T> -> AsyncSeq<'T>
+
+    /// Returns an async sequence which emits an element on a specified period.
+    val intervalMs : periodMs:int -> AsyncSeq<DateTime>
+
     /// Yields all elements of the first asynchronous sequence and then 
     /// all elements of the second asynchronous sequence.
     val append : seq1:AsyncSeq<'T> -> seq2:AsyncSeq<'T> -> AsyncSeq<'T>

@@ -524,23 +524,40 @@ module AsyncSeq =
       seq |> iterAsync action 
 
   let rec unfoldAsync (f:'State -> Async<('T * 'State) option>) (s:'State) : AsyncSeq<'T> = 
-    asyncSeq { 
-        let! v = f s 
-        match v with 
-        | None -> ()
-        | Some (v,s2) -> 
-            yield v
-            yield! unfoldAsync f s2 }
+    asyncSeq {       
+      let s = ref s
+      let fin = ref false
+      while not !fin do
+        let! next = f !s
+        match next with
+        | None ->
+          fin := true
+        | Some (a,s') ->
+          yield a
+          s := s' }
 
   let replicateInfinite (v:'T) : AsyncSeq<'T> =    
     asyncSeq { 
         while true do 
             yield v }
 
+  let replicateInfiniteAsync (v:Async<'T>) : AsyncSeq<'T> =
+    asyncSeq { 
+        while true do 
+            let! v = v
+            yield v }
+
   let replicate (count:int) (v:'T) : AsyncSeq<'T> =    
     asyncSeq { 
         for i in 1 .. count do 
            yield v }
+
+  let intervalMs (periodMs:int) = asyncSeq {
+    yield DateTime.UtcNow
+    while true do
+      do! Async.Sleep periodMs
+      yield DateTime.UtcNow }
+
   // --------------------------------------------------------------------------
   // Additional combinators (implemented as async/asyncSeq computations)
 
