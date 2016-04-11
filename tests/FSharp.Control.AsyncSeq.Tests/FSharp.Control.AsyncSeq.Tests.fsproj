@@ -59,6 +59,7 @@
   <ItemGroup>
     <Compile Include="AsyncSeqTests.fs" />
     <None Include="paket.references" />
+    <None Include="AsyncSeqTests.fsx" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="mscorlib" />

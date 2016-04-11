@@ -91,119 +91,314 @@ module AsyncSeq =
 
   let private dispose (d:System.IDisposable) = match d with null -> () | _ -> d.Dispose()
 
+  type private EmptyEnumerator<'a> (r) =
+    interface IAsyncEnumerator<'a> with
+      member __.MoveNext () = r
+      member __.Dispose () = ()
+  
+  and private EmptyEnumerable<'a> () =
+    let r = async.Return None
+    interface IAsyncEnumerable<'a> with
+      member __.GetEnumerator () = 
+        new EmptyEnumerator<'a> (r) :> IAsyncEnumerator<_>
 
   [<GeneralizableValue>]
   let empty<'T> : AsyncSeq<'T> = 
-        { new IAsyncEnumerable<'T> with 
-              member x.GetEnumerator() = 
-                  { new IAsyncEnumerator<'T> with 
-                        member x.MoveNext() = async { return None }
-                        member x.Dispose() = () } }
+    new EmptyEnumerable<'T>() :> IAsyncEnumerable<_>
+
+//  [<GeneralizableValue>]
+//  let empty<'T> : AsyncSeq<'T> = 
+//        { new IAsyncEnumerable<'T> with 
+//              member x.GetEnumerator() = 
+//                  { new IAsyncEnumerator<'T> with 
+//                        member x.MoveNext() = async { return None }
+//                        member x.Dispose() = () } }
  
-  let singleton (v:'T) : AsyncSeq<'T> = 
-        { new IAsyncEnumerable<'T> with 
-              member x.GetEnumerator() = 
-                  let state = ref 0
-                  { new IAsyncEnumerator<'T> with 
-                        member x.MoveNext() = async { let res = state.Value = 0
-                                                      incr state; 
-                                                      return (if res then Some v else None) }
-                        member x.Dispose() = () } }
+  type private SingletonEnumerable<'a> (a:'a) as x =
+    member x.Value = a
+    member __.GetEnumerator () = 
+      new SingletonEnumerator<'a>(a)
+    interface IAsyncEnumerable<'a> with
+      member __.GetEnumerator () = x.GetEnumerator() :> IAsyncEnumerator<'a>
+
+  and private SingletonEnumerator<'a> (a:'a) as x =
+    let mutable st = 0    
+    member x.Moved () = st <- 1
+    member x.MoveNext () = async { 
+      if st = 0 then
+        x.Moved()
+        return Some a
+      else
+        return None }
+    member x.Dispose () = ()
+    interface IAsyncEnumerator<'a> with
+      member __.MoveNext() = x.MoveNext()
+      member __.Dispose () = x.Dispose()
+
+  let singleton (v:'T) : AsyncSeq<'T> =
+    new SingletonEnumerable<_>(v) :> IAsyncEnumerable<_>
+
+//        { new IAsyncEnumerable<'T> with 
+//              member x.GetEnumerator() = 
+//                  let state = ref 0
+//                  { new IAsyncEnumerator<'T> with 
+//                        member x.MoveNext() = async { let res = state.Value = 0
+//                                                      incr state; 
+//                                                      return (if res then Some v else None) }
+//                        member x.Dispose() = () } }
     
-  [<RequireQualifiedAccess>]
-  type AppendState<'T> =
-     | NotStarted1     of AsyncSeq<'T> * AsyncSeq<'T>
-     | HaveEnumerator1 of IAsyncEnumerator<'T> * AsyncSeq<'T>
-     | NotStarted2     of AsyncSeq<'T>
-     | HaveEnumerator2 of IAsyncEnumerator<'T> 
-     | Finished        
+//  [<RequireQualifiedAccess>]
+//  type AppendState<'T> =
+//     | NotStarted1     of AsyncSeq<'T> * AsyncSeq<'T>
+//     | HaveEnumerator1 of IAsyncEnumerator<'T> * AsyncSeq<'T>
+//     | NotStarted2     of AsyncSeq<'T>
+//     | HaveEnumerator2 of IAsyncEnumerator<'T> 
+//     | Finished        
+
+  type private ConcatEnumerator<'a> (inps: seq<AsyncSeq<'a>>) =
+    member x.Inputs = inps
+    interface IAsyncEnumerator<'a> with
+      member x.MoveNext () = failwith ""
+      member x.Dispose () = ()
+
+  and private ConcatEnumerable<'a> (inps: seq<AsyncSeq<'a>>) =
+    member x.Inputs = inps
+    interface IAsyncEnumerable<'a> with
+      member __.GetEnumerator () = 
+        new ConcatEnumerator<'a>(inps) :> IAsyncEnumerator<'a>
+
+
+
+  type private ConcatSeqEnumerator<'a> (inps: seq<'a>) =
+    member x.Inputs = inps
+    interface IAsyncEnumerator<'a> with
+      member x.MoveNext () = failwith ""
+      member x.Dispose () = ()
+
+  and private ConcatSeqEnumerable<'a> (inps: seq<'a>) =
+    member x.Inputs = inps
+    interface IAsyncEnumerable<'a> with
+      member __.GetEnumerator () = 
+        new ConcatSeqEnumerator<'a>(inps) :> IAsyncEnumerator<'a>
+
+
+  type private AppendEnumerator<'a> (inp1: AsyncSeq<'a>, inp2: AsyncSeq<'a>) as x =
+    let mutable state = 0 // 0 - note started, 1 - have enum1, 2 = not started 2, 3 - have enum2, 4 - finished
+    let mutable enum1 : IAsyncEnumerator<_> = Unchecked.defaultof<_>
+    let mutable enum2 : IAsyncEnumerator<_> = Unchecked.defaultof<_>
+    
+    member x.HaveEnum1 () = 
+      enum1 <- inp1.GetEnumerator()
+      state <- 1
+    member x.NotStarted2 () =      
+      state <- 2
+    member x.HaveEnum2 () = 
+      enum2 <- inp2.GetEnumerator()
+      state <- 3
+    member x.Finished () =
+      state <- 4
+
+    member x.MoveNext () = async { 
+      match state with 
+      | 0 -> 
+          return! 
+            (x.HaveEnum1 ()
+             x.MoveNext())
+      | 1 ->   
+          let! res = enum1.MoveNext() 
+          match res with 
+          | None -> 
+              return! 
+                (x.NotStarted2()
+                 dispose enum1
+                 x.MoveNext())
+          | Some _ -> 
+              return res
+      | 2 -> 
+          return! 
+            (x.HaveEnum2()
+             x.MoveNext())
+      | 3 ->   
+          let! res = enum2.MoveNext() 
+          return (match res with
+                  | None -> 
+                      x.Finished()
+                      dispose enum2
+                      None
+                  | Some _ -> 
+                      res)
+      | _ -> return None }
+
+    member x.Dispose () =
+      match state with 
+      | 1 -> dispose enum1 ; x.Finished()
+      | 3 -> dispose enum2 ; x.Finished()
+      | _ -> () 
+
+    interface IAsyncEnumerator<'a> with 
+      member __.MoveNext () = x.MoveNext()
+      member __.Dispose () = x.Dispose()
+         
 
   let append (inp1: AsyncSeq<'T>) (inp2: AsyncSeq<'T>) : AsyncSeq<'T> =
         { new IAsyncEnumerable<'T> with 
-              member x.GetEnumerator() = 
-                  let state = ref (AppendState.NotStarted1 (inp1, inp2) )
-                  { new IAsyncEnumerator<'T> with 
-                        member x.MoveNext() = 
-                            async { match !state with 
-                                    | AppendState.NotStarted1 (inp1, inp2) -> 
-                                        return! 
-                                         (let enum1 = inp1.GetEnumerator()
-                                          state := AppendState.HaveEnumerator1 (enum1, inp2)
-                                          x.MoveNext())
-                                    | AppendState.HaveEnumerator1 (enum1, inp2) ->   
-                                        let! res = enum1.MoveNext() 
-                                        match res with 
-                                        | None -> 
-                                            return! 
-                                              (state := AppendState.NotStarted2 inp2
-                                               dispose enum1
-                                               x.MoveNext())
-                                        | Some _ -> 
-                                            return res
-                                    | AppendState.NotStarted2 inp2 -> 
-                                        return! 
-                                         (let enum2 = inp2.GetEnumerator()
-                                          state := AppendState.HaveEnumerator2 enum2
-                                          x.MoveNext())
-                                    | AppendState.HaveEnumerator2 enum2 ->   
-                                        let! res = enum2.MoveNext() 
-                                        return (match res with
-                                                | None -> 
-                                                    state := AppendState.Finished
-                                                    dispose enum2
-                                                    None
-                                                | Some _ -> 
-                                                    res)
-                                    | _ -> 
-                                        return None }
-                        member x.Dispose() = 
-                            match !state with 
-                            | AppendState.HaveEnumerator1 (enum, _) 
-                            | AppendState.HaveEnumerator2 enum -> 
-                                state := AppendState.Finished
-                                dispose enum 
-                            | _ -> () } }
+              member x.GetEnumerator() = new AppendEnumerator<_>(inp1, inp2) :> IAsyncEnumerator<_> }
+//                  let state = ref (AppendState.NotStarted1 (inp1, inp2) )
+//                  { new IAsyncEnumerator<'T> with 
+//                        member x.MoveNext() = 
+//                            async { match !state with 
+//                                    | AppendState.NotStarted1 (inp1, inp2) -> 
+//                                        return! 
+//                                         (let enum1 = inp1.GetEnumerator()
+//                                          state := AppendState.HaveEnumerator1 (enum1, inp2)
+//                                          x.MoveNext())
+//                                    | AppendState.HaveEnumerator1 (enum1, inp2) ->   
+//                                        let! res = enum1.MoveNext() 
+//                                        match res with 
+//                                        | None -> 
+//                                            return! 
+//                                              (state := AppendState.NotStarted2 inp2
+//                                               dispose enum1
+//                                               x.MoveNext())
+//                                        | Some _ -> 
+//                                            return res
+//                                    | AppendState.NotStarted2 inp2 -> 
+//                                        return! 
+//                                         (let enum2 = inp2.GetEnumerator()
+//                                          state := AppendState.HaveEnumerator2 enum2
+//                                          x.MoveNext())
+//                                    | AppendState.HaveEnumerator2 enum2 ->   
+//                                        let! res = enum2.MoveNext() 
+//                                        return (match res with
+//                                                | None -> 
+//                                                    state := AppendState.Finished
+//                                                    dispose enum2
+//                                                    None
+//                                                | Some _ -> 
+//                                                    res)
+//                                    | _ -> 
+//                                        return None }
+//                        member x.Dispose() = 
+//                            match !state with 
+//                            | AppendState.HaveEnumerator1 (enum, _) 
+//                            | AppendState.HaveEnumerator2 enum -> 
+//                                state := AppendState.Finished
+//                                dispose enum 
+//                            | _ -> () } }
 
+
+  type private DelayEnumerable<'a> (f:unit -> AsyncSeq<'a>) =
+    member x.Delay = f
+    interface IAsyncEnumerable<'a> with
+      member __.GetEnumerator() = f().GetEnumerator()
 
   let delay (f: unit -> AsyncSeq<'T>) : AsyncSeq<'T> = 
-      { new IAsyncEnumerable<'T> with 
-          member x.GetEnumerator() = f().GetEnumerator() }
+    new DelayEnumerable<'T>(f) :> IAsyncEnumerable<_>
 
 
-  [<RequireQualifiedAccess>]
-  type BindState<'T,'U> =
-     | NotStarted of Async<'T>
-     | HaveEnumerator of IAsyncEnumerator<'U>
-     | Finished        
+  type private BindEnumerator<'a, 'b> (f:'a -> AsyncSeq<'b>, inp:Async<'a>) as x =    
+    let mutable st = 0 // 0 = NotStarted, 1 = HaveEnum, 2 = Finished
+    let mutable enum : IAsyncEnumerator<'b> = Unchecked.defaultof<_>
+    member x.HaveEnum (s:AsyncSeq<'b>) =
+      enum <- s.GetEnumerator()
+      st <- 1
+    member x.Finished () =
+      st <- 2
+    member x.MoveNext () = async { 
+      match st with 
+      | 0 -> 
+          let! v = inp 
+          return! 
+              (let s = f v
+               x.HaveEnum(s)              
+               x.MoveNext())
+      | 1 ->   
+          let! res = enum.MoveNext() 
+          return (match res with
+                  | None -> x.Dispose()
+                  | Some _ -> ()
+                  res)
+      | _ -> 
+          return None }
+
+    member x.Dispose () = 
+      match st with 
+      | 1 -> 
+          x.Finished()
+          dispose enum
+      | _ -> () 
+
+    interface IAsyncEnumerator<'b> with
+      member __.MoveNext() = x.MoveNext()
+      member __.Dispose() = x.Dispose()
 
   let bindAsync (f: 'T -> AsyncSeq<'U>) (inp : Async<'T>) : AsyncSeq<'U> = 
         { new IAsyncEnumerable<'U> with 
-              member x.GetEnumerator() = 
-                  let state = ref (BindState.NotStarted inp)
-                  { new IAsyncEnumerator<'U> with 
-                        member x.MoveNext() = 
-                            async { match !state with 
-                                    | BindState.NotStarted inp -> 
-                                        let! v = inp 
-                                        return! 
-                                           (let s = f v
-                                            let e = s.GetEnumerator()
-                                            state := BindState.HaveEnumerator e
-                                            x.MoveNext())
-                                    | BindState.HaveEnumerator e ->   
-                                        let! res = e.MoveNext() 
-                                        return (match res with
-                                                | None -> x.Dispose()
-                                                | Some _ -> ()
-                                                res)
-                                    | _ -> 
-                                        return None }
-                        member x.Dispose() = 
-                            match !state with 
-                            | BindState.HaveEnumerator e -> 
-                                state := BindState.Finished
-                                dispose e 
-                            | _ -> () } }
+              member x.GetEnumerator() = new BindEnumerator<'T,'U>(f, inp) :> IAsyncEnumerator<_> }
+
+
+
+
+
+  let deforestEnums (s1:AsyncSeq<'a>) (s2:AsyncSeq<'a>) : AsyncSeq<'a> =
+    match s1, s2 with
+    | (:? EmptyEnumerable<'a>), _ -> s2
+    | _, (:? EmptyEnumerable<'a>) -> s1
+
+    | (:? ConcatSeqEnumerable<'a> as s1), (:? ConcatSeqEnumerable<'a> as s2) -> 
+      new ConcatSeqEnumerable<'a> (Seq.append s1.Inputs s2.Inputs) :> AsyncSeq<'a>
+
+    | (:? ConcatSeqEnumerable<'a> as s1), (:? SingletonEnumerable<'a> as s2) -> 
+      new ConcatSeqEnumerable<'a> (Seq.append s1.Inputs (Seq.singleton s2.Value)) :> AsyncSeq<'a>
+
+    | (:? SingletonEnumerable<'a> as s1), (:? ConcatSeqEnumerable<'a> as s2) -> 
+      new ConcatSeqEnumerable<'a> (Seq.append (Seq.singleton s1.Value) s2.Inputs) :> AsyncSeq<'a>
+
+    | (:? SingletonEnumerable<'a> as s1), (:? SingletonEnumerable<'a> as s2) -> 
+      new ConcatSeqEnumerable<'a> (seq { yield s1.Value ; yield s2.Value }) :> AsyncSeq<'a>
+
+    | (:? DelayEnumerable<'a> as s1), (:? DelayEnumerable<'a> as s2) -> 
+      new DelayEnumerable<'a>(fun () -> new ConcatEnumerable<'a>(seq { yield (s1.Delay ()) ; yield (s2.Delay ()) }) :> AsyncSeq<_>) :> AsyncSeq<'a>
+    
+    | _ -> failwith ""
+
+
+
+
+//  [<RequireQualifiedAccess>]
+//  type BindState<'T,'U> =
+//     | NotStarted of Async<'T>
+//     | HaveEnumerator of IAsyncEnumerator<'U>
+//     | Finished        
+//
+//  let bindAsync (f: 'T -> AsyncSeq<'U>) (inp : Async<'T>) : AsyncSeq<'U> = 
+//        { new IAsyncEnumerable<'U> with 
+//              member x.GetEnumerator() = 
+//                  let state = ref (BindState.NotStarted inp)
+//                  { new IAsyncEnumerator<'U> with 
+//                        member x.MoveNext() = 
+//                            async { match !state with 
+//                                    | BindState.NotStarted inp -> 
+//                                        let! v = inp 
+//                                        return! 
+//                                           (let s = f v
+//                                            let e = s.GetEnumerator()
+//                                            state := BindState.HaveEnumerator e
+//                                            x.MoveNext())
+//                                    | BindState.HaveEnumerator e ->   
+//                                        let! res = e.MoveNext() 
+//                                        return (match res with
+//                                                | None -> x.Dispose()
+//                                                | Some _ -> ()
+//                                                res)
+//                                    | _ -> 
+//                                        return None }
+//                        member x.Dispose() = 
+//                            match !state with 
+//                            | BindState.HaveEnumerator e -> 
+//                                state := BindState.Finished
+//                                dispose e 
+//                            | _ -> () } }
 
 
 
@@ -219,11 +414,14 @@ module AsyncSeq =
     member x.YieldFrom(s:AsyncSeq<'T>) = s
     member x.Zero () = empty
     member x.Bind (inp:Async<'T>, body : 'T -> AsyncSeq<'U>) : AsyncSeq<'U> = bindAsync body inp
-    member x.Combine (seq1:AsyncSeq<'T>,seq2:AsyncSeq<'T>) = append seq1 seq2
+    member x.Combine (seq1:AsyncSeq<'T>, seq2:AsyncSeq<'T>) = append seq1 seq2
+//    member x.While (guard, body:AsyncSeq<'T>) = 
+//      // Use F#'s support for Landin's knot for a low-allocation fixed-point
+//      let rec fix = delay (fun () -> if guard() then append body fix else empty)
+//      fix
     member x.While (guard, body:AsyncSeq<'T>) = 
       // Use F#'s support for Landin's knot for a low-allocation fixed-point
-      let rec fix = delay (fun () -> if guard() then append body fix else empty)
-      fix
+      delay (fun () -> if guard() then append body (x.While (guard, body)) else empty)
     member x.Delay (f:unit -> AsyncSeq<'T>) = 
       delay f
 
