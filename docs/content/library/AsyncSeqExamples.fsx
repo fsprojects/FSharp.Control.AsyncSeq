@@ -170,7 +170,7 @@ where
 c0 = f a0 b0
 c1 = f a0 b1
 c2 = f a1 b1
-c4 = f a2 b1
+c3 = f a2 b1
 
 
 ```
