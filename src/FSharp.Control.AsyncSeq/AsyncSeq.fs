@@ -1193,7 +1193,7 @@ module AsyncSeq =
                   fin := fin.Value - 1
       }
 
-  let combineLatestAsync (f:'a -> 'b -> Async<'c>) (source1:AsyncSeq<'a>) (source2:AsyncSeq<'b>) : AsyncSeq<'c> =
+  let combineLatestWithAsync (f:'a -> 'b -> Async<'c>) (source1:AsyncSeq<'a>) (source2:AsyncSeq<'b>) : AsyncSeq<'c> =
     asyncSeq {
       use en1 = source1.GetEnumerator()
       use en2 = source2.GetEnumerator()
@@ -1222,8 +1222,11 @@ module AsyncSeq =
         yield! loop (a,b)
       | _ -> () }
     
-  let combineLatest (f:'a -> 'b -> 'c) (source1:AsyncSeq<'a>) (source2:AsyncSeq<'b>) : AsyncSeq<'c> =
-    combineLatestAsync (fun a b -> f a b |> async.Return) source1 source2
+  let combineLatestWith (f:'a -> 'b -> 'c) (source1:AsyncSeq<'a>) (source2:AsyncSeq<'b>) : AsyncSeq<'c> =
+    combineLatestWithAsync (fun a b -> f a b |> async.Return) source1 source2
+
+  let combineLatest (source1:AsyncSeq<'a>) (source2:AsyncSeq<'b>) : AsyncSeq<'a * 'b> =
+    combineLatestWith (fun a b -> a,b) source1 source2
 
   let distinctUntilChangedWithAsync (f:'T -> 'T -> Async<bool>) (source:AsyncSeq<'T>) : AsyncSeq<'T> = asyncSeq {
       use ie = source.GetEnumerator() 

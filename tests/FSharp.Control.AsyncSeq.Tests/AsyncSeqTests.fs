@@ -1284,13 +1284,13 @@ let ``AsyncSeq.combineLatest should behave like merge after initial``() =
         if n = 0 || m = 0 then 0
         else (n + m - 1)
       let expected = List.init expectedCount id |> AsyncSeq.ofSeq
-      let actual = AsyncSeq.combineLatest (+) (AsyncSeq.ofSeq ls1 |> randomDelayDefault) (AsyncSeq.ofSeq ls2 |> randomDelayDefault)
+      let actual = AsyncSeq.combineLatestWith (+) (AsyncSeq.ofSeq ls1 |> randomDelayDefault) (AsyncSeq.ofSeq ls2 |> randomDelayDefault)
       Assert.AreEqual(expected, actual, (sprintf "n=%i m=%i" n m))
 
 [<Test>]
 let ``AsyncSeq.combineLatest should be never when either argument is never``() =
   let expected = AsyncSeq.never
-  let actual1 = AsyncSeq.combineLatest (fun _ _ -> 0) (AsyncSeq.never) (AsyncSeq.singleton 1)
-  let actual2 = AsyncSeq.combineLatest (fun _ _ -> 0) (AsyncSeq.singleton 1) (AsyncSeq.never)
+  let actual1 = AsyncSeq.combineLatestWith (fun _ _ -> 0) (AsyncSeq.never) (AsyncSeq.singleton 1)
+  let actual2 = AsyncSeq.combineLatestWith (fun _ _ -> 0) (AsyncSeq.singleton 1) (AsyncSeq.never)
   Assert.AreEqual(expected, actual1, timeout=100, exnEq=AreCancellationExns)
   Assert.AreEqual(expected, actual2, timeout=100, exnEq=AreCancellationExns)
