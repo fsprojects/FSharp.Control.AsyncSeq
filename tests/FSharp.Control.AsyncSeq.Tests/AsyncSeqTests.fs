@@ -15,13 +15,43 @@ open FSharp.Control
 open System
 
 module AsyncOps = 
-    let unit = async.Return()
-    let never = Async.Sleep(-1)
+    let unit = async.Return()    
+    let never = Async.Sleep(-1)    
+    let timeoutMs (timeoutMs:int) (a:Async<'a>) = async {
+      let! a = Async.StartChild(a, timeoutMs)
+      return! a }
+      
+module AsyncSeq =
+  [<GeneralizableValue>]
+  let never<'a> : AsyncSeq<'a> = asyncSeq {
+    do! AsyncOps.never
+    yield invalidOp "" }
+
+
+let DEFAULT_TIMEOUT_MS = 2000
+
+let randomDelayMs (minMs:int) (maxMs:int) (s:AsyncSeq<'a>) =
+  let rand = new Random(int DateTime.Now.Ticks)
+  let randSleep = async { do! Async.Sleep(rand.Next(minMs, maxMs)) }    
+  AsyncSeq.zipWith (fun _ a -> a) (AsyncSeq.replicateInfiniteAsync randSleep) s
+
+let randomDelayDefault (s:AsyncSeq<'a>) =
+  randomDelayMs 0 50 s
 
 let catch (f:'a -> 'b) : 'a -> Choice<'b, exn> =
   fun a ->
     try f a |> Choice1Of2
     with ex -> ex |> Choice2Of2
+
+let rec IsCancellationExn (e:exn) =
+  match e with
+  | :? OperationCanceledException -> true
+  | :? TimeoutException -> true
+  | :? AggregateException as x -> x.InnerExceptions |> Seq.filter (IsCancellationExn) |> Seq.isEmpty |> not
+  | _ -> false
+
+let AreCancellationExns (e1:exn) (e2:exn) =
+  IsCancellationExn e1 && IsCancellationExn e2
 
 /// Determines equality of two async sequences by convering them to lists, ignoring side-effects.
 let EQ (a:AsyncSeq<'a>) (b:AsyncSeq<'a>) = 
@@ -34,20 +64,39 @@ let EQ (a:AsyncSeq<'a>) (b:AsyncSeq<'a>) =
     false
 
 type Assert with  
+
   /// Determines equality of two async sequences by convering them to lists, ignoring side-effects.
   static member AreEqual (expected:AsyncSeq<'a>, actual:AsyncSeq<'a>) =
-    Assert.AreEqual (expected, actual, 1000, exnEq=(fun _ _ -> true))
+    Assert.AreEqual (expected, actual, DEFAULT_TIMEOUT_MS, exnEq=(fun _ _ -> true), message=null)
+  
+  /// Determines equality of two async sequences by convering them to lists, ignoring side-effects.
+  static member AreEqual (expected:AsyncSeq<'a>, actual:AsyncSeq<'a>, message:string) =
+    Assert.AreEqual (expected, actual, DEFAULT_TIMEOUT_MS, exnEq=(fun _ _ -> true), message=message)
+    
+  /// Determines equality of two async sequences by convering them to lists, ignoring side-effects.
+  static member AreEqual (expected:AsyncSeq<'a>, actual:AsyncSeq<'a>, exnEq) =
+    Assert.AreEqual (expected, actual, timeout=DEFAULT_TIMEOUT_MS, exnEq=exnEq, message=null)
+
   /// Determines equality of two async sequences by convering them to lists, ignoring side-effects.
   static member AreEqual (expected:AsyncSeq<'a>, actual:AsyncSeq<'a>, timeout) =
-    Assert.AreEqual (expected, actual, timeout=timeout, exnEq=(fun _ _ -> true))
+    Assert.AreEqual (expected, actual, timeout=timeout, exnEq=(fun _ _ -> true), message=null)
+
   /// Determines equality of two async sequences by convering them to lists, ignoring side-effects.
-  static member AreEqual (expected:AsyncSeq<'a>, actual:AsyncSeq<'a>, timeout, exnEq:exn -> exn -> bool) =
-    let exp = expected |> AsyncSeq.toListAsync |> Async.Catch
-    let exp = Async.RunSynchronously (exp, timeout)
-    let act = actual |> AsyncSeq.toListAsync |> Async.Catch 
-    let act = Async.RunSynchronously(act, timeout)
-    let message = sprintf "expected=%A actual=%A" exp act
-    match exp,act with
+  static member AreEqual (expected:AsyncSeq<'a>, actual:AsyncSeq<'a>, timeout, exnEq) =
+    Assert.AreEqual (expected, actual, timeout=timeout, exnEq=exnEq, message=null)
+  
+  /// Determines equality of two async sequences by convering them to lists, ignoring side-effects.
+  /// Exceptions are caught and compared for equality.
+  /// Timeouts ensure liveness.
+  static member AreEqual (expected:AsyncSeq<'a>, actual:AsyncSeq<'a>, timeout, exnEq:exn -> exn -> bool, message:string) =
+    let expected = expected |> AsyncSeq.toListAsync |> AsyncOps.timeoutMs timeout |> Async.Catch
+    let expected = Async.RunSynchronously (expected)
+    let actual = actual |> AsyncSeq.toListAsync |> AsyncOps.timeoutMs timeout |> Async.Catch 
+    let actual = Async.RunSynchronously (actual)
+    let message = 
+      if message = null then sprintf "expected=%A actual=%A" expected actual
+      else sprintf "message=%s expected=%A actual=%A" message expected actual
+    match expected,actual with
     | Choice1Of2 exp, Choice1Of2 act ->
       Assert.True((exp = act), message)
     | Choice2Of2 exp, Choice2Of2 act ->
@@ -68,8 +117,10 @@ type Assert with
       Assert.Fail(message)
 
     
-    
 
+[<Test>]
+let ``AsyncSeq.never should equal itself`` () =
+  Assert.AreEqual(AsyncSeq.never<int>, AsyncSeq.never<int>, timeout=100, exnEq=AreCancellationExns)
 
 [<Test>]
 let ``AsyncSeq.toArray``() =  
@@ -99,7 +150,7 @@ let ``AsyncSeq.concatSeq works``() =
   let ls = [ [1;2] ; [3;4] ]
   let actual = AsyncSeq.ofSeq ls |> AsyncSeq.concatSeq    
   let expected = ls |> List.concat |> AsyncSeq.ofSeq
-  Assert.True(EQ expected actual)
+  Assert.AreEqual(expected, actual)
 
 [<Test>]
 let ``AsyncSeq.sum works``() =  
@@ -653,7 +704,7 @@ let ``AsyncSeq.collect works``() =
   for c in [0; 1; 10] do
       let actual = AsyncSeq.collect (fun i -> AsyncSeq.ofSeq [ 0 .. i]) (AsyncSeq.ofSeq [ 0 .. c ])
       let expected = [ for i in 0 .. c do yield! [ 0 .. i ] ] |> AsyncSeq.ofSeq
-      Assert.True(EQ expected actual)
+      Assert.AreEqual(expected, actual)
 
 
 [<Test>]
@@ -1220,3 +1271,26 @@ let ``AsyncSeq.groupBy should propagate exception and terminate all groups``() =
     |> AsyncSeq.groupBy (fun i -> i % 3) 
     |> AsyncSeq.mapAsyncParallel (snd >> AsyncSeq.toListAsync)
   Assert.AreEqual(expected, actual)
+
+[<Test>]
+let ``AsyncSeq.combineLatest should behave like merge after initial``() =  
+  for n in 0..20 do
+    for m in 0..10 do
+      let ls1 = List.init n id
+      let ls2 = List.init m id 
+      // expect each element to increase combined sum by 1
+      // expected count is sum of source counts minus 1 for first result
+      let expectedCount = 
+        if n = 0 || m = 0 then 0
+        else (n + m - 1)
+      let expected = List.init expectedCount id |> AsyncSeq.ofSeq
+      let actual = AsyncSeq.combineLatestWith (+) (AsyncSeq.ofSeq ls1 |> randomDelayDefault) (AsyncSeq.ofSeq ls2 |> randomDelayDefault)
+      Assert.AreEqual(expected, actual, (sprintf "n=%i m=%i" n m))
+
+[<Test>]
+let ``AsyncSeq.combineLatest should be never when either argument is never``() =
+  let expected = AsyncSeq.never
+  let actual1 = AsyncSeq.combineLatestWith (fun _ _ -> 0) (AsyncSeq.never) (AsyncSeq.singleton 1)
+  let actual2 = AsyncSeq.combineLatestWith (fun _ _ -> 0) (AsyncSeq.singleton 1) (AsyncSeq.never)
+  Assert.AreEqual(expected, actual1, timeout=100, exnEq=AreCancellationExns)
+  Assert.AreEqual(expected, actual2, timeout=100, exnEq=AreCancellationExns)

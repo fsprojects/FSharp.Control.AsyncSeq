@@ -525,23 +525,40 @@ module AsyncSeq =
       seq |> iterAsync action 
 
   let rec unfoldAsync (f:'State -> Async<('T * 'State) option>) (s:'State) : AsyncSeq<'T> = 
-    asyncSeq { 
-        let! v = f s 
-        match v with 
-        | None -> ()
-        | Some (v,s2) -> 
-            yield v
-            yield! unfoldAsync f s2 }
+    asyncSeq {       
+      let s = ref s
+      let fin = ref false
+      while not !fin do
+        let! next = f !s
+        match next with
+        | None ->
+          fin := true
+        | Some (a,s') ->
+          yield a
+          s := s' }
 
   let replicateInfinite (v:'T) : AsyncSeq<'T> =    
     asyncSeq { 
         while true do 
             yield v }
 
+  let replicateInfiniteAsync (v:Async<'T>) : AsyncSeq<'T> =
+    asyncSeq { 
+        while true do 
+            let! v = v
+            yield v }
+
   let replicate (count:int) (v:'T) : AsyncSeq<'T> =    
     asyncSeq { 
         for i in 1 .. count do 
            yield v }
+
+  let intervalMs (periodMs:int) = asyncSeq {
+    yield DateTime.UtcNow
+    while true do
+      do! Async.Sleep periodMs
+      yield DateTime.UtcNow }
+
   // --------------------------------------------------------------------------
   // Additional combinators (implemented as async/asyncSeq computations)
 
@@ -888,7 +905,7 @@ module AsyncSeq =
 
   let zapp (fs:AsyncSeq<'T -> 'U>) (s:AsyncSeq<'T>) : AsyncSeq<'U> =
       zipWith (|>) s fs
-
+    
   let takeWhileAsync p (source : AsyncSeq<'T>) : AsyncSeq<_> = asyncSeq {
       use ie = source.GetEnumerator() 
       let! move = ie.MoveNext()
@@ -1096,9 +1113,7 @@ module AsyncSeq =
       yield! loop None timeoutMs
     }
 
-  let mergeChoice (source1:AsyncSeq<'T1>) (source2:AsyncSeq<'T2>) : AsyncSeq<Choice<'T1,'T2>> = asyncSeq {
-      use ie1 = source1.GetEnumerator() 
-      use ie2 = source2.GetEnumerator() 
+  let private mergeChoiceEnum (ie1:IAsyncEnumerator<'T1>) (ie2:IAsyncEnumerator<'T2>) : AsyncSeq<Choice<'T1,'T2>> = asyncSeq {
       let! move1T = Async.StartChildAsTask (ie1.MoveNext())
       let! move2T = Async.StartChildAsTask (ie2.MoveNext())
       let! move = Async.chooseTasks move1T move2T
@@ -1135,6 +1150,10 @@ module AsyncSeq =
               b1 := move1n 
       | _ -> failwith "unreachable" }
 
+  let mergeChoice (source1:AsyncSeq<'T1>) (source2:AsyncSeq<'T2>) : AsyncSeq<Choice<'T1,'T2>> = asyncSeq {
+      use ie1 = source1.GetEnumerator() 
+      use ie2 = source2.GetEnumerator()
+      yield! mergeChoiceEnum ie1 ie2 }
 
   let merge (source1:AsyncSeq<'T>) (source2:AsyncSeq<'T>) : AsyncSeq<'T> = 
     mergeChoice source1 source2 |> map (function Choice1Of2 x -> x | Choice2Of2 x -> x)
@@ -1175,6 +1194,40 @@ module AsyncSeq =
                   fin := fin.Value - 1
       }
 
+  let combineLatestWithAsync (f:'a -> 'b -> Async<'c>) (source1:AsyncSeq<'a>) (source2:AsyncSeq<'b>) : AsyncSeq<'c> =
+    asyncSeq {
+      use en1 = source1.GetEnumerator()
+      use en2 = source2.GetEnumerator()
+      let! a = Async.StartChild (en1.MoveNext())
+      let! b = Async.StartChild (en2.MoveNext())
+      let! a = a
+      let! b = b      
+      match a,b with
+      | Some a, Some b ->
+        let! c = f a b
+        yield c        
+        let merged = mergeChoiceEnum en1 en2
+        use mergedEnum = merged.GetEnumerator()
+        let rec loop (prevA:'a, prevB:'b) = asyncSeq {
+          let! next = mergedEnum.MoveNext ()
+          match next with
+          | None -> ()
+          | Some (Choice1Of2 nextA) ->
+            let! c = f nextA prevB
+            yield c
+            yield! loop (nextA,prevB)                                  
+          | Some (Choice2Of2 nextB) ->
+            let! c = f prevA nextB
+            yield c
+            yield! loop (prevA,nextB) }
+        yield! loop (a,b)
+      | _ -> () }
+    
+  let combineLatestWith (f:'a -> 'b -> 'c) (source1:AsyncSeq<'a>) (source2:AsyncSeq<'b>) : AsyncSeq<'c> =
+    combineLatestWithAsync (fun a b -> f a b |> async.Return) source1 source2
+
+  let combineLatest (source1:AsyncSeq<'a>) (source2:AsyncSeq<'b>) : AsyncSeq<'a * 'b> =
+    combineLatestWith (fun a b -> a,b) source1 source2
 
   let distinctUntilChangedWithAsync (f:'T -> 'T -> Async<bool>) (source:AsyncSeq<'T>) : AsyncSeq<'T> = asyncSeq {
       use ie = source.GetEnumerator() 
@@ -1242,7 +1295,6 @@ module AsyncSeq =
          let res = buffer.ToArray() 
          return Choice1Of2 (asyncSeq { for v in res do yield v })
        }
-
 
   module AsyncSeqSrcImpl =
 

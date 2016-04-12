@@ -50,6 +50,12 @@ module AsyncSeq =
     /// Creates an infinite async sequence which repeats the specified value.
     val replicateInfinite : v:'T -> AsyncSeq<'T>
 
+    /// Creates an infinite async sequence which repeatedly evaluates and emits the specified async value.
+    val replicateInfiniteAsync : v:Async<'T> -> AsyncSeq<'T>
+
+    /// Returns an async sequence which emits an element on a specified period.
+    val intervalMs : periodMs:int -> AsyncSeq<DateTime>
+
     /// Yields all elements of the first asynchronous sequence and then 
     /// all elements of the second asynchronous sequence.
     val append : seq1:AsyncSeq<'T> -> seq2:AsyncSeq<'T> -> AsyncSeq<'T>
@@ -293,6 +299,21 @@ module AsyncSeq =
 
     /// Feeds an async sequence of values into an async sequence of functions.
     val zapp : functions:AsyncSeq<('T -> 'U)> -> source:AsyncSeq<'T> -> AsyncSeq<'U>
+
+    /// Merges two async sequences using the specified combine function. The resulting async sequence produces an element when either
+    /// input sequence produces an element, passing the new element from the emitting sequence and the previously emitted element from the other sequence.
+    /// If either of the input sequences is empty, the resulting sequence is empty.
+    val combineLatestWithAsync : combine:('T -> 'U -> Async<'V>) -> source1:AsyncSeq<'T> -> source2:AsyncSeq<'U> -> AsyncSeq<'V>
+
+    /// Merges two async sequences using the specified combine function. The resulting async sequence produces an element when either
+    /// input sequence produces an element, passing the new element from the emitting sequence and the previously emitted element from the other sequence.
+    /// If either of the input sequences is empty, the resulting sequence is empty.
+    val combineLatestWith : combine:('T -> 'U -> 'V) -> source1:AsyncSeq<'T> -> source2:AsyncSeq<'U> -> AsyncSeq<'V>
+
+    /// Merges two async sequences. The resulting async sequence produces an element when either
+    /// input sequence produces an element, passing the new element from the emitting sequence and the previously emitted element from the other sequence.
+    /// If either of the input sequences is empty, the resulting sequence is empty.
+    val combineLatest : source1:AsyncSeq<'a> -> source2:AsyncSeq<'b> -> AsyncSeq<'a * 'b>
 
     /// Traverses an async sequence an applies to specified function such that if None is returned the traversal short-circuits
     /// and None is returned as the result. Otherwise, the entire sequence is traversed and the result returned as Some.
