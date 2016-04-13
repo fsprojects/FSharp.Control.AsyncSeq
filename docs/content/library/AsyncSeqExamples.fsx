@@ -16,7 +16,24 @@ open FSharp.Control
 `AsyncSeq.groupBy` partitions an input sequence into sub-sequences with respect to the specified `projection` function. This operation is the asynchronous analog to `Seq.groupBy`.
 
 
-## Use Case
+### Example Execution
+
+An example execution can be depicted visually as follows:
+
+--------------------------------------------------
+| source  | a0 | a2 | a3 | a4 | a5 |             |
+| key     | k1 | k2 | k1 | k3 |    |             | 
+| result  | k1 * [a1,a3] | k2 * [a2] | k3 * [a4] |
+--------------------------------------------------
+
+
+
+a0
+k0
+
+
+
+### Use Case
 
 Suppose we would like to consume a stream of events `AsyncSeq<Event>` and perform an operation on each event. The operation on each event is of type `Event -> Async<unit>`. This can be done as follows:
 
@@ -158,7 +175,6 @@ The sequence `either` emits an element every 20ms and every 30ms.
 An example execution can be depicted visually as follows:
 
 ```
-
 ----------------------------------------
 | source1 | a0 |    |    | a1 |   | a2 |
 | source2 |    | b0 | b1 |    |   |    |
@@ -171,7 +187,6 @@ c0 = f a0 b0
 c1 = f a0 b1
 c2 = f a1 b1
 c3 = f a2 b1
-
 
 ```
 
@@ -220,7 +235,7 @@ Putting it all together:
 *)
 
 let changesOrInterval : AsyncSeq<Value> =
-  AsyncSeq.combineLatest (fun v _ -> v) (changes ("myKey", 0L)) (intervalMs (1000 * 60))
+  AsyncSeq.combineLatestWith (fun v _ -> v) (changes ("myKey", 0L)) (intervalMs (1000 * 60))
 
 
 (**
@@ -241,7 +256,7 @@ We can now consume this async sequence and use it to trigger downstream operatio
 
 `AsyncSeq.distinctUntilChanged` returns an async sequence which returns every element of the source sequence, skipping elements which equal its predecessor.
 
-## Example
+## Example Execution
 
 An example execution can be visualized as follows:
 
@@ -250,7 +265,7 @@ An example execution can be visualized as follows:
 | result  | a |   | b |   |   | a |
 -----------------------------------
 
-## Use Case
+### Use Case
 
 Suppose you're polling a resource which returns status information of a background job.
 
@@ -301,18 +316,89 @@ let result : Async<string> =
 
 ---
 
-*)    
+*)
+
+
+(**
+
+## Zip
+
+
+`AsyncSeq.zip : AsyncSeq<'a> -> AsyncSeq<'b> -> AsyncSeq<'a * 'b>` takes a pair of sequences and combines them into a sequence of pairs element wise - the first element of one sequence is paired with the first element of the other, and so on. It can be used to pair sequences of related elements into a single sequence. It can also be used to combine a sequence of elements with a sequence of effects. 
+
+### Example Execution
+
+An example execution can be visually depicted as follows:
+
+```
+---------------------------------------------
+| source1  |    a1    |    a2    |          |
+| source2  |    b1    |    b2    |    b3    |
+| result   |  a1 * b1 |  a2 * b2 |          | 
+---------------------------------------------
+``` 
+
+Note that the resulting sequence terminates when either input sequence terminates. 
+
+### Use Case
+
+Suppose that we have an async sequence of events consumed from a message bus. We would like to process this sequence but we want to ensure that we're not processing to fast. We can pair the sequence of events with a sequence of durations corresponding to the minimum consumption time. We can do this as follows:
+
+*)
+
+let events : AsyncSeq<Event> =
+  failwith "TODO"
+
+let eventsAtLeastOneSec =
+  AsyncSeq.zipWith 
+    (fun a _ -> a) 
+    events 
+    (AsyncSeq.replicateInfiniteAsync (Async.Sleep 1000))
+
+(**
+
+The resulting async sequence `eventsAtLeastOneSec` will emit an element at-most every second. Note that the input sequence of timeouts is infinite - this is to allow the other sequence to have any length since `AsyncSeq.zipWith` will terminate when either input sequence terminates.
+
+*) 
 
 
 
-  
+
+(**
+
+## Buffer by Time and Count
+
+`AsyncSeq.bufferByTimeAndCount` consumes the input sequence until a specified number of elements are consumed or a timeout expires at which point the resulting sequence emits the buffered of elements, unless no elements have been buffered. It is similar to `AsyncSeq.bufferByCount` but allows a buffer to be emitted base on a timeout in addition to buffer size. Both are useful for batching inputs before performing an operation. `AsyncSeq.bufferByTimeAndCount` allows an async workflow to proceed even if there are no inputs received during a certain time period.
+
+### Example Execution
+
+An example execution can be visually depicted as follows:
+
+```
+-------------------------------------------------------
+| source   |  a1 | a2 | a3         | a4      |        |
+| result   |     |    | [a1,a2,a3] |         |  [a4]  |
+-------------------------------------------------------
+```
+The last event `a4` is emitted after a timeout.
 
 
 
 
+### Use Case
 
+Suppose we're writing a service which consumes a stream of events and indexes them into full-text search index. We can index each event one by one, however we get a performance improvement if we buffer events into small batches. We can buffer into fixed size batches using `AsyncSeq.bufferByCount`. However, the source event stream may stop emitting events half way through a batch which would leave those events in the buffer until more events arrive. `AsyncSeq.bufferByTimeAndCount` allows the async workflow to make progress by imposing a bound on how long a non-empty but incomplete buffer can wait more additional items.
 
+*)
 
+let individualEvents : AsyncSeq<Event> =
+  failwith ""
+
+let bufferSize = 100
+let bufferTimeout = 1000
+
+let bufferedEvents : AsyncSeq<Event[]> =
+  events |> AsyncSeq.bufferByCountAndTime bufferSize bufferTimeout   
 
 
 
