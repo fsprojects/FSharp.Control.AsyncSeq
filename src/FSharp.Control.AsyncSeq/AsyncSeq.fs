@@ -23,7 +23,6 @@ type IAsyncEnumerable<'T> =
     abstract GetEnumerator : unit -> IAsyncEnumerator<'T>
 
 type AsyncSeq<'T> = IAsyncEnumerable<'T>
-//    abstract GetEnumerator : unit -> IAsyncEnumerator<'T>
 
 type AsyncSeqSrc<'a> = private { tail : AsyncSeqSrcNode<'a> ref }
 
