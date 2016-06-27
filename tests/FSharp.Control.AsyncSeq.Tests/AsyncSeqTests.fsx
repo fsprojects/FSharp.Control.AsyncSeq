@@ -1,10 +1,105 @@
 ﻿#r @"../../bin/FSharp.Control.AsyncSeq.dll"
 #r @"../../packages/NUnit/lib/nunit.framework.dll"
+#nowarn "40"
 #time "on"
 //#load "AsyncSeqTests.fs"
 
 open System
 open FSharp.Control
+
+
+/// An async sequence transducer.
+type AsyncSeqTran<'a, 'b> =
+  | Halt
+  | Await of ('a option -> Async<AsyncSeqTran<'a, 'b>>)
+  | Emit of 'b * Async<AsyncSeqTran<'a, 'b>>
+
+module AsyncSeqTran =
+  
+  let unfold (f:'s -> Async<('a * 's) option>) (s:'s) : Async<AsyncSeqTran<unit, 'a>> =
+    let rec go (s:'s) = async {
+      let! res = f s
+      match res with
+      | Some (a,s') -> return Emit (a, go s')
+      | None -> return Halt }
+    go s
+
+  let rec compose (g:Async<AsyncSeqTran<'b, 'c>>) (f:Async<AsyncSeqTran<'a, 'b>>) : Async<AsyncSeqTran<'a, 'c>> = async {
+    let! g = g
+    match g with
+    | Halt -> return Halt
+    | Emit (c,cont) -> return Emit (c,compose cont f)
+    | Await rcvB ->
+      let! f = f
+      match f with
+      | Halt -> return Halt
+      | Emit (b,cont) -> return! compose (rcvB (Some b)) cont
+      | Await rcvA -> return Await (rcvA >> compose (async.Return (Await rcvB))) }
+
+  let apply (tran:Async<AsyncSeqTran<'a, 'b>>) (source:AsyncSeq<'a>) : AsyncSeq<'b> =
+    { new IAsyncEnumerable<'b> with
+        member __.GetEnumerator () =
+          let en = source.GetEnumerator()
+          let tran = ref tran
+          { new IAsyncEnumerator<'b> with
+              member __.MoveNext () = async {
+                let! t = !tran
+                let rec go tran = async {
+                  match tran with
+                  | Halt ->
+                    return None
+                  | Await cont ->
+                    let! next = en.MoveNext()
+                    let! tran' = cont next
+                    return! go tran'
+                  | Emit (a,cont) ->
+                    return Some (a,cont) }
+                let! next = go t
+                match next with
+                | None -> 
+                  return None
+                | Some (a,tran') ->                  
+                  tran := tran'
+                  return Some a }
+              member __.Dispose () = en.Dispose() } }
+
+    
+  type AstOp<'a, 'b> =
+    | Map of ('a -> Async<'b>)
+    | Choose of ('a -> Async<'b option>)
+
+
+  type Ast<'a, 'b> (op:AstOp<'a, 'b>) =
+      
+    let mutable op : AstOp<'a, 'b> = op
+
+    // TODO: sync!
+    member __.Map (f:'a -> Async<'b>) : unit =
+      op <- Map f
+     
+    member __.Apply (source:AsyncSeq<'a>) : AsyncSeq<'b> =
+      { new IAsyncEnumerable<'b> with
+          member __.GetEnumerator () =
+            let en = source.GetEnumerator ()
+            { new IAsyncEnumerator<'b> with
+                member __.MoveNext () = async {                    
+                  let! next = en.MoveNext ()
+                  match next with
+                  | Some a ->
+                    match op with
+                    | Map f -> 
+                      let! b = f a
+                      return Some b
+                    | Choose f ->
+                      let! b = f a
+                      match b with
+                      | Some b -> return Some b
+                      | None -> return! __.MoveNext ()
+                  | None -> return None }  
+                member __.Dispose () =
+                  en.Dispose () } }
+  
+
 
 let mapFst f (a,b) = (f a, b)
 let mapSnd f (a,b) = (a, f b)
@@ -34,6 +129,9 @@ module AsyncSeq =
     abstract member Map : ('T -> 'U) -> AsyncSeq<'U>       
     abstract member Iter : ('T -> unit) -> Async<unit>
     abstract member IterAsync : ('T -> Async<unit>) -> Async<unit>
+    abstract member Apply : Async<AsyncSeqTran<'T, 'U>> -> AsyncSeq<'U>
+    default x.Apply (t:Async<AsyncSeqTran<'T, 'U>>) : AsyncSeq<'U> =
+      failwith ""
     default x.Choose (f:'T -> 'U option) : AsyncSeq<'U> =
       x.ChooseAsync (f >> async.Return)
     default x.Fold (f:'S -> 'T -> 'S) (s:'S) : Async<'S> =
@@ -132,6 +230,10 @@ module AsyncSeq =
 
   type UnfoldAsyncEnumerator<'S, 'T> (f:'S -> Async<('T * 'S) option>, init:'S, disp:IDisposable) =
     inherit AsyncSeqOp<'T> ()
+    override __.Apply (t:Async<AsyncSeqTran<'T, 'U>>) : AsyncSeq<'U> =
+      AsyncSeqTran.apply 
+        (AsyncSeqTran.compose t (AsyncSeqTran.unfold f init))
+        (AsyncSeq.empty)
     override x.Iter g = async {
       //printfn "UnfoldAsyncEnumerator.Iter"
       let rec go s = async {
@@ -413,62 +515,88 @@ module AsyncSeq =
         if n > count then return Some (a, (en, n + 1))
         else return! go (en, n + 1) }
     unfoldDisposeAsync go (en, 0) (en :> IDisposable)
+                    
+  let foldRightAsync (f:'a -> Async<'b> -> Async<'b>) (acc:Async<'b>) (source:AsyncSeq<'a>) : Async<'b> = async {
+    use en = source.GetEnumerator ()
+    let rec go (acc:Async<'b>) = async {
+      let! next = en.MoveNext ()
+      match next with
+      | None -> return! acc
+      | Some a ->
+        let! b' = f a (go acc)
+        return b' }
+    return! go acc }
 
-  type AsyncSeqTran<'a, 'b> =
-    | Halt
-    | Await of ('a option -> Async<AsyncSeqTran<'a, 'b>>)
-    | Emit of 'b * Async<AsyncSeqTran<'a, 'b>>
-
-  /// The argument sequence is disposed either when the transformer halts or the sequence halts.  
-  type AsyncSeqTranEnumerator<'a, 'b> (tran:Async<AsyncSeqTran<'a, 'b>>, source:AsyncSeq<'a>) =
-    interface IAsyncEnumerable<'b> with
-      member __.GetEnumerator () =
-        let en = source.GetEnumerator() // TODO: delay
-        let tran = ref tran
-        { new IAsyncEnumerator<_> with
-            member __.MoveNext () = async {
-              let! t = !tran
-              let rec go tran = async {
-                match tran with
-                | Halt ->
-                  return None
-                | Await cont ->
-                  let! next = en.MoveNext()
-                  let! tran' = cont next
-                  return! go tran'
-                | Emit (a,cont) ->
-                  return Some (a,cont) }
-              let! next = go t
-              match next with
-              | None -> 
-                return None
-              | Some (a,tran') ->                  
-                tran := tran'
-                return Some a }
-            member __.Dispose () = 
-              en.Dispose() }  
-
-  let tran (tran:Async<AsyncSeqTran<'a, 'b>>) (source:AsyncSeq<'a>) : AsyncSeq<'b> =
-    new AsyncSeqTranEnumerator<'a, 'b> (tran, source) :> _
+  let tryFirst (s:AsyncSeq<'a>) : Async<'a option> =
+    foldRightAsync (fun a _ -> async.Return (Some a)) (async.Return None) s
 
   let halt<'a, 'b> : Async<AsyncSeqTran<'a, 'b>> =
     async.Return Halt
 
-  let rec echo<'a> : Async<AsyncSeqTran<'a, 'a>> = async { 
-    return Await (function Some a -> async.Return (Emit (a, echo)) | None -> halt) }
+  let await (cont:'a option -> Async<AsyncSeqTran<'a, 'b>>) : Async<AsyncSeqTran<'a, 'b>> =
+    async.Return (Await cont)
 
-  let await (cont:'a option -> Async<AsyncSeqTran<'a, 'b>>) : Async<AsyncSeqTran<'a, 'b>> = async {
-    return Await (cont) }
+  let awaitHalt (cont:'a -> Async<AsyncSeqTran<'a, 'b>>) : Async<AsyncSeqTran<'a, 'b>> =
+    await (function Some a -> cont a | None -> halt)
 
-  let skip4 (count:int) (source:AsyncSeq<'a>) : AsyncSeq<'a> =    
-    let rec skip i =
-      if i >= count then echo
-      else await (fun _ -> skip (i + 1))
-    tran (skip 0) source
+  let emit (b:'b) (cont:Async<AsyncSeqTran<'a, 'b>>) : Async<AsyncSeqTran<'a, 'b>> =
+    async.Return (Emit (b, cont))
+      
+  let repeat (tran:Async<AsyncSeqTran<'a, 'b>>) : Async<AsyncSeqTran<'a, 'b>> =
+    let rec go t = async {
+      let! t = t
+      match t with
+      | Halt -> return! go tran
+      | Await rcv -> return! await (rcv >> go)
+      | Emit (b,cont) -> return! emit b (go cont) }
+    go tran
+
+  let rec id<'a> : Async<AsyncSeqTran<'a, 'a>> = 
+    awaitHalt (fun a -> emit a id)
+
+  let skip3 (count:int) : AsyncSeq<'a> -> AsyncSeq<'a> =    
+    let rec tran i =
+      if i >= count then id
+      else await (fun _ -> tran (i + 1))    
+    AsyncSeqTran.apply (tran 0)
+
+  let skip4 (count:int) : AsyncSeq<'a> -> AsyncSeq<'a> =    
+    let rec tran i =
+      if i >= count then id
+      else await (fun _ -> tran (i + 1))    
+    fun s -> 
+      match s with
+      | :? AsyncSeqOp<_> as x -> x.Apply (tran 0)
+      | _ -> AsyncSeqTran.apply (tran 0) s
+           
+  let wye (s1:AsyncSeq<'a>) (s2:AsyncSeq<'b>) (t:Async<AsyncSeqTran<Choice<'a, 'b>, 'c>>) : AsyncSeq<'c> =      
+    AsyncSeq.mergeChoice s1 s2 |> AsyncSeqTran.apply t
     
-        
-        
+  let impulseByCountAndTime (count:int) (time:TimeSpan) : AsyncSeq<'a> -> AsyncSeq<'a[]> =
+    let now () = Diagnostics.Stopwatch.GetTimestamp ()
+    let rec init c t acc =
+      let t' = now ()
+      let delta = TimeSpan.FromTicks (t' - t)
+      if delta < time then
+        awaitHalt (fun a -> init (c + 1) t' (a::acc))
+      else
+        if c >= count then
+          emit (acc |> List.toArray) (init c t [])
+        else
+          // TODO: trim
+          awaitHalt (fun a -> init (c + 1) t' (a::acc))
+    AsyncSeqTran.apply (init 0 (now ()) [])
 
+  let impulseByCountAndTime2 (count:int) (time:TimeSpan) : AsyncSeq<'a> -> AsyncSeq<'a[]> =
+    AsyncSeq.map (fun a -> Diagnostics.Stopwatch.GetTimestamp (), a)
+    >> AsyncSeq.bufferByCount count
+    >> AsyncSeq.choose (fun xs ->
+      let t = fst xs.[0]
+      let t'= fst xs.[xs.Length - 1]
+      let d = TimeSpan.FromTicks (t' - t)
+      if d >= time then Some (xs |> Array.map snd)
+      else None)
+                     
 
   // ------------------------------------------------------------------------------------
 
@@ -487,16 +615,14 @@ module AsyncSeq =
 
 
 //let N = 10000000
-let N = 50
+let N = 5000000
 
-let generator state =
-    async {
-        //printfn "gen=%A" state
-        if state < N then
-            return Some (state, state + 1)
-        else
-            return None
-    }
+let generator state = async {
+  //printfn "gen=%A" state
+  if state < N then
+      return Some (state, state + 1)
+  else
+      return None }
 
 
 //AsyncSeq.unfoldAsync generator 0
@@ -515,12 +641,14 @@ let generator state =
 
 
 AsyncSeq.unfoldAsync generator 0
-|> AsyncSeq.skip4 1
-|> AsyncSeq.iter (printfn "%A")
+|> AsyncSeq.skip3 N
+|> AsyncSeq.skip4 N
+//|> AsyncSeq.skip N
+|> AsyncSeq.iter ignore
 |> Async.RunSynchronously
 
+//Real: 00:00:02.720, CPU: 00:00:02.718, GC gen0: 371, gen1: 2, gen2: 0
 
 
-//Real: 00:00:15.558, CPU: 00:00:15.562, GC gen0: 1841, gen1: 3, gen2: 0
-//Real: 00:00:50.406, CPU: 00:00:50.437, GC gen0: 5350, gen1: 7, gen2: 0
+
 

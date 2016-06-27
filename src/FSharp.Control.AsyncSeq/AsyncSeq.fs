@@ -247,11 +247,9 @@ module AsyncSeq =
       
 
   type private DelayEnumerable<'a> (f:unit -> AsyncSeq<'a>) =
-    //do printfn "DelayEnumerable.ctor"
     member x.Delay = f
     interface IAsyncEnumerable<'a> with
       member __.GetEnumerator() = 
-        //do printfn "DelayEnumerable.GetEnumerator()"
         let rec unwrap (f:unit -> AsyncSeq<_>) =
           let s = f ()
           match s with
