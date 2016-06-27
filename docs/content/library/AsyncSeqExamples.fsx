@@ -66,10 +66,10 @@ events in batches and we can perform actions on entire batches of events.
 
 *)
 
-let batchStream : AsyncSeq<Event[]> =
+let stream : AsyncSeq<Event[]> =
   failwith "undefined"
 
-let batchAction (es:Event[]) : Async<unit> =
+let action (es:Event[]) : Async<unit> =
   failwith "undefined"
 
 
@@ -79,12 +79,15 @@ Ordering is still important. For example, the batch action could write events in
 
 *)
 
-batchStream
-|> AsyncSeq.concatSeq // flatten the sequence of event arrays
-|> AsyncSeq.groupBy (fun e -> int e.entityId % 4) // partition into 4 groups
-|> AsyncSeq.mapAsyncParallel (snd 
-  >> AsyncSeq.bufferByCountAndTime 500 1000 // buffer sub-sequences
-  >> AsyncSeq.iterAsync batchAction) // perform the batch operation
+
+
+
+stream
+|> AsyncSeq.concatSeq
+|> AsyncSeq.groupBy (fun e -> int e.entityId % 4)
+|> AsyncSeq.mapAsyncParallel (snd
+  >> AsyncSeq.bufferByCountAndTime 500 1000
+  >> AsyncSeq.iterAsync action)
 |> AsyncSeq.iter ignore
 
 
