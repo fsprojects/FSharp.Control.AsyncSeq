@@ -206,10 +206,65 @@ module AsyncGenerator =
   let append (s1:AsyncSeq<'a>) (s2:AsyncSeq<'a>) : AsyncSeq<'a> =
     fromGeneratorDelay (fun () -> bindG (toGenerator s1) (fun () -> toGenerator s2))
 
+
+[<AbstractClass>]
+type AsyncSeqOp<'T> () =
+  abstract member ChooseAsync : ('T -> Async<'U option>) -> AsyncSeq<'U>
+  abstract member FoldAsync : ('S -> 'T -> Async<'S>) -> 'S -> Async<'S>
+  abstract member MapAsync : ('T -> Async<'U>) -> AsyncSeq<'U>
+  abstract member IterAsync : ('T -> Async<unit>) -> Async<unit>
+  default x.MapAsync (f:'T -> Async<'U>) : AsyncSeq<'U> =
+    x.ChooseAsync (f >> Async.map Some)
+  default x.IterAsync (f:'T -> Async<unit>) : Async<unit> =
+    x.FoldAsync (fun () t -> f t) ()
+
 [<AutoOpen>]
 module AsyncSeqOp =
 
   type UnfoldAsyncEnumerator<'S, 'T> (f:'S -> Async<('T * 'S) option>, init:'S) =
+    inherit AsyncSeqOp<'T> ()
+    override x.IterAsync g = async {
+      let rec go s = async {
+        let! next = f s
+        match next with
+        | None -> return ()
+        | Some (t,s') ->
+          do! g t
+          return! go s' }
+      return! go init }
+    override __.FoldAsync (g:'S2 -> 'T -> Async<'S2>) (init2:'S2) = async {
+      let rec go s s2 = async {
+        let! next = f s
+        match next with
+        | None -> return s2
+        | Some (t,s') ->
+          let! s2' = g s2 t
+          return! go s' s2' }
+      return! go init init2 }
+    override __.ChooseAsync (g:'T -> Async<'U option>) : AsyncSeq<'U> =
+      let f s = async {
+        let! res = f s
+        match res with
+        | None -> 
+          return None
+        | Some (t,s) ->
+          let! res' = g t
+          match res' with
+          | Some u ->
+            return Some (u, s)
+          | None ->
+            return None }
+      new UnfoldAsyncEnumerator<'S, 'U> (f, init) :> _
+    override __.MapAsync (g:'T -> Async<'U>) : AsyncSeq<'U> =
+      let h s = async {
+        let! r = f s
+        match r with
+        | Some (t,s) ->
+          let! u = g t
+          return Some (u,s)
+        | None ->
+          return None }
+      new UnfoldAsyncEnumerator<'S, 'U> (h, init) :> _
     interface IAsyncEnumerable<'T> with
       member __.GetEnumerator () =
         let s = ref init
@@ -578,9 +633,11 @@ module AsyncSeq =
               do incr count
                  b := moven
       }
-
   
-  let iterAsync (f: 'T -> Async<unit>) (inp: AsyncSeq<'T>)  = iteriAsync (fun i x -> f x) inp
+  let iterAsync (f: 'T -> Async<unit>) (source: AsyncSeq<'T>)  = 
+    match source with
+    | :? AsyncSeqOp<'T> as source -> source.IterAsync f
+    | _ -> iteriAsync (fun i x -> f x) source
   
   let iteri (f: int -> 'T -> unit) (inp: AsyncSeq<'T>)  = iteriAsync (fun i x -> async.Return (f i x)) inp
 
@@ -639,10 +696,14 @@ module AsyncSeq =
   // --------------------------------------------------------------------------
   // Additional combinators (implemented as async/asyncSeq computations)
 
-  let mapAsync f (source : AsyncSeq<'T>) : AsyncSeq<'TResult> = asyncSeq {
-    for itm in source do 
-      let! v = f itm
-      yield v }
+  let mapAsync f (source : AsyncSeq<'T>) : AsyncSeq<'TResult> =
+    match source with
+    | :? AsyncSeqOp<'T> as source -> source.MapAsync f
+    | _ -> 
+      asyncSeq {
+        for itm in source do 
+        let! v = f itm
+        yield v }
 
   let mapiAsync f (source : AsyncSeq<'T>) : AsyncSeq<'TResult> = asyncSeq {
     let i = ref 0L
@@ -667,12 +728,16 @@ module AsyncSeq =
         yield! loop () }
     yield! loop () }
 
-  let chooseAsync f (source : AsyncSeq<'T>) : AsyncSeq<'R> = asyncSeq {
-    for itm in source do
-      let! v = f itm
-      match v with 
-      | Some v -> yield v 
-      | _ -> () }
+  let chooseAsync f (source:AsyncSeq<'T>) =
+    match source with
+    | :? AsyncSeqOp<'T> as source -> source.ChooseAsync f
+    | _ ->
+      asyncSeq {
+        for itm in source do
+          let! v = f itm
+          match v with 
+          | Some v -> yield v 
+          | _ -> () }
 
   let filterAsync f (source : AsyncSeq<'T>) = asyncSeq {
     for v in source do
@@ -789,8 +854,10 @@ module AsyncSeq =
   let forall f (source : AsyncSeq<'T>) = 
     source |> exists (f >> not) |> Async.map not
 
-  let foldAsync f (state:'State) (source : AsyncSeq<'T>) = 
-    source |> scanAsync f state |> lastOrDefault state
+  let foldAsync f (state:'State) (source : AsyncSeq<'T>) =     
+    match source with 
+    | :? AsyncSeqOp<'T> as source -> source.FoldAsync f state
+    | _ -> source |> scanAsync f state |> lastOrDefault state
 
   let fold f (state:'State) (source : AsyncSeq<'T>) = 
     foldAsync (fun st v -> f st v |> async.Return) state source 
