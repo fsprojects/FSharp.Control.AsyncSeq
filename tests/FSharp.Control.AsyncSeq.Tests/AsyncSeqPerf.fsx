@@ -30,6 +30,17 @@ N=1000000
 unfoldIter
 Real: 00:00:08.565, CPU: 00:00:08.562, GC gen0: 889, gen1: 2, gen2: 0
 ------------------------------------------------------------------------------------------------------------------------
+-- handcoded unfold
+N=1000000
+
+unfoldIter
+Real: 00:00:08.514, CPU: 00:00:08.562, GC gen0: 890, gen1: 3, gen2: 1
+Real: 00:00:00.878, CPU: 00:00:00.875, GC gen0: 96, gen1: 2, gen2: 0
+
+replicate
+Real: 00:00:01.530, CPU: 00:00:01.531, GC gen0: 156, gen1: 1, gen2: 0
+Real: 00:00:00.926, CPU: 00:00:00.937, GC gen0: 97, gen1: 2, gen2: 0
+------------------------------------------------------------------------------------------------------------------------
 
 *)
 let unfoldIter (N:int) =
@@ -51,5 +62,10 @@ let unfoldChooseIter (N:int) =
   |> AsyncSeq.chooseAsync (Some >> async.Return)
   |> AsyncSeq.iterAsync (ignore >> async.Return)
 
-run unfoldIter
+let replicate (N:int) =
+  AsyncSeq.replicate N ()
+  |> AsyncSeq.iterAsync (ignore >> async.Return)
+
+//run unfoldIter
 //run unfoldChooseIter
+run replicate
