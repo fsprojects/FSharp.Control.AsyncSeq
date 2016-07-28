@@ -6,6 +6,5 @@ nuget NUnit 2.6.4
 nuget NUnit.Runners 2.6.4
 nuget FAKE
 nuget SourceLink.Fake
-nuget FSharp.Control.AsyncSeq 1.15.0
 
 github fsharp/FAKE modules/Octokit/Octokit.fsx
