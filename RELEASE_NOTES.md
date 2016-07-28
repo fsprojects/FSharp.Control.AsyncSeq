@@ -1,3 +1,7 @@
+### 2.0.9 - 27.07.2016
+* Much improved append performance.
+* Direct implementation of unfoldAsync as IAsyncEnumerable, with chooseAsync, mapAsync and foldAsync overrides
+
 ### 2.0.8 - 29.03.2016
 * Add portable7 profile
 
