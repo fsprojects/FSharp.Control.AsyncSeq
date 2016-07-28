@@ -57,8 +57,9 @@
   <Import Project="$(FSharpTargetsPath)" />
   <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
   <ItemGroup>
-    <Compile Include="AsyncSeqTests.fs" />
     <None Include="paket.references" />
+    <Compile Include="AsyncSeqTests.fs" />
+    <None Include="AsyncSeqPerf.fsx" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="mscorlib" />

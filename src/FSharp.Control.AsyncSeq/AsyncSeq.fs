@@ -41,6 +41,11 @@ module internal Utils =
         | Choice1Of2 a -> f a |> Choice1Of2
         | Choice2Of2 e -> Choice2Of2 e
 
+    module Disposable =
+  
+      let empty : IDisposable =
+        { new IDisposable with member __.Dispose () = () }
+
     // ----------------------------------------------------------------------------
 
     module internal Observable =
@@ -87,6 +92,195 @@ module internal Utils =
             else return! failwith (sprintf "unreachable, i = %d" i) }
 
 
+// via: https://github.com/fsharp/fsharp/blob/master/src/fsharp/FSharp.Core/seq.fs
+module AsyncGenerator =
+
+  type Step<'a> =
+    | Stop
+    | Yield of 'a
+      
+    /// Jump to another generator.
+    | Goto of AsyncGenerator<'a>
+
+  and AsyncGenerator<'a> =
+    abstract Apply : unit -> Async<Step<'a>>
+    abstract Disposer : (unit -> unit) option
+    
+  let disposeG (g:AsyncGenerator<'a>) =
+    match g.Disposer with
+    | None -> ()
+    | Some f -> f ()
+  
+  let appG (g:AsyncGenerator<'a>) = async {
+    let! res = g.Apply ()
+    match res with
+    | Goto next -> return Goto next
+    | Yield _ -> return res
+    | Stop ->
+      disposeG g
+      return res }
+
+  type GenerateCont<'a> (g:AsyncGenerator<'a>, cont:unit -> AsyncGenerator<'a>) =
+    member __.Generator = g
+    member __.Cont = cont
+    interface AsyncGenerator<'a> with
+      member x.Apply () = async {
+        let! step = appG g
+        match step with
+        | Stop -> return Goto (cont ())
+        | Yield _ as res -> return res
+        | Goto next -> return Goto (GenerateCont<_>.Bind (next, cont)) }
+      member x.Disposer =
+        g.Disposer
+                
+    static member Bind (g:AsyncGenerator<'a>, cont:unit -> AsyncGenerator<'a>) =
+      match g with
+      | :? GenerateCont<'a> as g -> GenerateCont<_>.Bind (g.Generator, (fun () -> GenerateCont<_>.Bind (g.Cont(), cont)))
+      | _ -> (new GenerateCont<'a>(g, cont) :> AsyncGenerator<'a>)
+      
+  /// Right-associating binder.
+  let bindG (g:AsyncGenerator<'a>) (cont:unit -> AsyncGenerator<'a>) : AsyncGenerator<'a> =
+    GenerateCont<_>.Bind (g, cont)      
+    
+
+  /// Converts a generator to an enumerator.
+  /// The generator can point to another generator using Goto, in which case
+  /// the enumerator mutates its current generator and continues.
+  type AsyncGeneratorEnumerator<'a> (g:AsyncGenerator<'a>) =
+    let mutable g = g
+    let mutable fin = false
+    member __.Generator = g
+    interface IAsyncEnumerator<'a> with        
+      member x.MoveNext () = async {
+        let! step = appG g
+        match step with
+        | Stop ->
+          fin <- true
+          return None
+        | Yield a ->
+          return Some a
+        | Goto next ->
+          g <- next
+          return! (x :> IAsyncEnumerator<_>).MoveNext() }
+      member __.Dispose () =
+        disposeG g
+      
+  /// Converts an enumerator to a generator.
+  /// The resulting generator will either yield or stop.
+  type AsyncEnumeratorGenerator<'a> (enum:IAsyncEnumerator<'a>) =
+    member __.Enumerator = enum
+    interface AsyncGenerator<'a> with
+      member __.Apply () = async {
+        let! next = enum.MoveNext()
+        match next with
+        | Some a ->
+          return Yield a
+        | None ->
+          return Stop }
+      member __.Disposer = Some ((fun () -> (enum :> IDisposable).Dispose()))
+
+  let enumeratorFromGenerator (g:AsyncGenerator<'a>) : IAsyncEnumerator<'a> =
+    match g with
+    | :? AsyncEnumeratorGenerator<'a> as g -> g.Enumerator
+    | _ -> (new AsyncGeneratorEnumerator<_>(g) :> _)
+
+  let generatorFromEnumerator (e:IAsyncEnumerator<'a>) : AsyncGenerator<'a> =
+    match e with
+    | :? AsyncGeneratorEnumerator<'a> as e -> e.Generator
+    | _ -> (new AsyncEnumeratorGenerator<_>(e) :> _)
+      
+  let delay (f:unit -> AsyncSeq<'T>) : AsyncSeq<'T> = 
+    { new IAsyncEnumerable<'T> with 
+        member x.GetEnumerator() = f().GetEnumerator() }
+
+  let emitEnum (e:IAsyncEnumerator<'a>) : AsyncSeq<'a> =
+    { new IAsyncEnumerable<_> with
+        member __.GetEnumerator () = e }
+
+  let fromGeneratorDelay (f:unit -> AsyncGenerator<'a>) : AsyncSeq<'a> =
+    delay (fun () -> emitEnum (enumeratorFromGenerator (f ())))
+
+  let toGenerator (s:AsyncSeq<'a>) : AsyncGenerator<'a> =
+    generatorFromEnumerator (s.GetEnumerator())
+
+  let append (s1:AsyncSeq<'a>) (s2:AsyncSeq<'a>) : AsyncSeq<'a> =
+    fromGeneratorDelay (fun () -> bindG (toGenerator s1) (fun () -> toGenerator s2))
+
+
+[<AbstractClass>]
+type AsyncSeqOp<'T> () =
+  abstract member ChooseAsync : ('T -> Async<'U option>) -> AsyncSeq<'U>
+  abstract member FoldAsync : ('S -> 'T -> Async<'S>) -> 'S -> Async<'S>
+  abstract member MapAsync : ('T -> Async<'U>) -> AsyncSeq<'U>
+  abstract member IterAsync : ('T -> Async<unit>) -> Async<unit>
+  default x.MapAsync (f:'T -> Async<'U>) : AsyncSeq<'U> =
+    x.ChooseAsync (f >> Async.map Some)
+  default x.IterAsync (f:'T -> Async<unit>) : Async<unit> =
+    x.FoldAsync (fun () t -> f t) ()
+
+[<AutoOpen>]
+module AsyncSeqOp =
+
+  type UnfoldAsyncEnumerator<'S, 'T> (f:'S -> Async<('T * 'S) option>, init:'S) =
+    inherit AsyncSeqOp<'T> ()
+    override x.IterAsync g = async {
+      let rec go s = async {
+        let! next = f s
+        match next with
+        | None -> return ()
+        | Some (t,s') ->
+          do! g t
+          return! go s' }
+      return! go init }
+    override __.FoldAsync (g:'S2 -> 'T -> Async<'S2>) (init2:'S2) = async {
+      let rec go s s2 = async {
+        let! next = f s
+        match next with
+        | None -> return s2
+        | Some (t,s') ->
+          let! s2' = g s2 t
+          return! go s' s2' }
+      return! go init init2 }
+    override __.ChooseAsync (g:'T -> Async<'U option>) : AsyncSeq<'U> =
+      let f s = async {
+        let! res = f s
+        match res with
+        | None -> 
+          return None
+        | Some (t,s) ->
+          let! res' = g t
+          match res' with
+          | Some u ->
+            return Some (u, s)
+          | None ->
+            return None }
+      new UnfoldAsyncEnumerator<'S, 'U> (f, init) :> _
+    override __.MapAsync (g:'T -> Async<'U>) : AsyncSeq<'U> =
+      let h s = async {
+        let! r = f s
+        match r with
+        | Some (t,s) ->
+          let! u = g t
+          return Some (u,s)
+        | None ->
+          return None }
+      new UnfoldAsyncEnumerator<'S, 'U> (h, init) :> _
+    interface IAsyncEnumerable<'T> with
+      member __.GetEnumerator () =
+        let s = ref init
+        { new IAsyncEnumerator<'T> with
+            member __.MoveNext () : Async<'T option> = async {
+              let! next = f !s 
+              match next with
+              | None -> 
+                return None 
+              | Some (a,s') ->
+                s := s'
+                return Some a }
+            member __.Dispose () = () }
+
+
+
 /// Module with helper functions for working with asynchronous sequences
 module AsyncSeq = 
 
@@ -111,65 +305,11 @@ module AsyncSeq =
                                                       return (if res then Some v else None) }
                         member x.Dispose() = () } }
     
-  [<RequireQualifiedAccess>]
-  type AppendState<'T> =
-     | NotStarted1     of AsyncSeq<'T> * AsyncSeq<'T>
-     | HaveEnumerator1 of IAsyncEnumerator<'T> * AsyncSeq<'T>
-     | NotStarted2     of AsyncSeq<'T>
-     | HaveEnumerator2 of IAsyncEnumerator<'T> 
-     | Finished        
-
   let append (inp1: AsyncSeq<'T>) (inp2: AsyncSeq<'T>) : AsyncSeq<'T> =
-        { new IAsyncEnumerable<'T> with 
-              member x.GetEnumerator() = 
-                  let state = ref (AppendState.NotStarted1 (inp1, inp2) )
-                  { new IAsyncEnumerator<'T> with 
-                        member x.MoveNext() = 
-                            async { match !state with 
-                                    | AppendState.NotStarted1 (inp1, inp2) -> 
-                                        return! 
-                                         (let enum1 = inp1.GetEnumerator()
-                                          state := AppendState.HaveEnumerator1 (enum1, inp2)
-                                          x.MoveNext())
-                                    | AppendState.HaveEnumerator1 (enum1, inp2) ->   
-                                        let! res = enum1.MoveNext() 
-                                        match res with 
-                                        | None -> 
-                                            return! 
-                                              (state := AppendState.NotStarted2 inp2
-                                               dispose enum1
-                                               x.MoveNext())
-                                        | Some _ -> 
-                                            return res
-                                    | AppendState.NotStarted2 inp2 -> 
-                                        return! 
-                                         (let enum2 = inp2.GetEnumerator()
-                                          state := AppendState.HaveEnumerator2 enum2
-                                          x.MoveNext())
-                                    | AppendState.HaveEnumerator2 enum2 ->   
-                                        let! res = enum2.MoveNext() 
-                                        return (match res with
-                                                | None -> 
-                                                    state := AppendState.Finished
-                                                    dispose enum2
-                                                    None
-                                                | Some _ -> 
-                                                    res)
-                                    | _ -> 
-                                        return None }
-                        member x.Dispose() = 
-                            match !state with 
-                            | AppendState.HaveEnumerator1 (enum, _) 
-                            | AppendState.HaveEnumerator2 enum -> 
-                                state := AppendState.Finished
-                                dispose enum 
-                            | _ -> () } }
+    AsyncGenerator.append inp1 inp2
 
-
-  let delay (f: unit -> AsyncSeq<'T>) : AsyncSeq<'T> = 
-      { new IAsyncEnumerable<'T> with 
-          member x.GetEnumerator() = f().GetEnumerator() }
-
+  let inline delay (f: unit -> AsyncSeq<'T>) : AsyncSeq<'T> = 
+    AsyncGenerator.delay f
 
   [<RequireQualifiedAccess>]
   type BindState<'T,'U> =
@@ -220,10 +360,11 @@ module AsyncSeq =
     member x.YieldFrom(s:AsyncSeq<'T>) = s
     member x.Zero () = empty
     member x.Bind (inp:Async<'T>, body : 'T -> AsyncSeq<'U>) : AsyncSeq<'U> = bindAsync body inp
-    member x.Combine (seq1:AsyncSeq<'T>,seq2:AsyncSeq<'T>) = append seq1 seq2
+    member x.Combine (seq1:AsyncSeq<'T>, seq2:AsyncSeq<'T>) = 
+      AsyncGenerator.append seq1 seq2
     member x.While (guard, body:AsyncSeq<'T>) = 
       // Use F#'s support for Landin's knot for a low-allocation fixed-point
-      let rec fix = delay (fun () -> if guard() then append body fix else empty)
+      let rec fix = delay (fun () -> if guard() then AsyncGenerator.append body fix else empty)
       fix
     member x.Delay (f:unit -> AsyncSeq<'T>) = 
       delay f
@@ -492,9 +633,11 @@ module AsyncSeq =
               do incr count
                  b := moven
       }
-
   
-  let iterAsync (f: 'T -> Async<unit>) (inp: AsyncSeq<'T>)  = iteriAsync (fun i x -> f x) inp
+  let iterAsync (f: 'T -> Async<unit>) (source: AsyncSeq<'T>)  = 
+    match source with
+    | :? AsyncSeqOp<'T> as source -> source.IterAsync f
+    | _ -> iteriAsync (fun i x -> f x) source
   
   let iteri (f: int -> 'T -> unit) (inp: AsyncSeq<'T>)  = iteriAsync (fun i x -> async.Return (f i x)) inp
 
@@ -524,34 +667,25 @@ module AsyncSeq =
     member internal x.For (seq:AsyncSeq<'T>, action:'T -> Async<unit>) = 
       seq |> iterAsync action 
 
-  let rec unfoldAsync (f:'State -> Async<('T * 'State) option>) (s:'State) : AsyncSeq<'T> = 
-    asyncSeq {       
-      let s = ref s
-      let fin = ref false
-      while not !fin do
-        let! next = f !s
-        match next with
-        | None ->
-          fin := true
-        | Some (a,s') ->
-          yield a
-          s := s' }
+  let unfoldAsync (f:'State -> Async<('T * 'State) option>) (s:'State) : AsyncSeq<'T> = 
+    new UnfoldAsyncEnumerator<_, _>(f, s) :> _
 
   let replicateInfinite (v:'T) : AsyncSeq<'T> =    
-    asyncSeq { 
-        while true do 
-            yield v }
+    let gen _ = async {
+      return Some (v,0) }
+    unfoldAsync gen 0
 
   let replicateInfiniteAsync (v:Async<'T>) : AsyncSeq<'T> =
-    asyncSeq { 
-        while true do 
-            let! v = v
-            yield v }
+    let gen _ = async {
+      let! v = v
+      return Some (v,0) }
+    unfoldAsync gen 0
 
   let replicate (count:int) (v:'T) : AsyncSeq<'T> =    
-    asyncSeq { 
-        for i in 1 .. count do 
-           yield v }
+    let gen i = async {
+      if i = count then return None
+      else return Some (v,i + 1) }
+    unfoldAsync gen 0
 
   let intervalMs (periodMs:int) = asyncSeq {
     yield DateTime.UtcNow
@@ -562,10 +696,14 @@ module AsyncSeq =
   // --------------------------------------------------------------------------
   // Additional combinators (implemented as async/asyncSeq computations)
 
-  let mapAsync f (source : AsyncSeq<'T>) : AsyncSeq<'TResult> = asyncSeq {
-    for itm in source do 
-      let! v = f itm
-      yield v }
+  let mapAsync f (source : AsyncSeq<'T>) : AsyncSeq<'TResult> =
+    match source with
+    | :? AsyncSeqOp<'T> as source -> source.MapAsync f
+    | _ -> 
+      asyncSeq {
+        for itm in source do 
+        let! v = f itm
+        yield v }
 
   let mapiAsync f (source : AsyncSeq<'T>) : AsyncSeq<'TResult> = asyncSeq {
     let i = ref 0L
@@ -590,12 +728,16 @@ module AsyncSeq =
         yield! loop () }
     yield! loop () }
 
-  let chooseAsync f (source : AsyncSeq<'T>) : AsyncSeq<'R> = asyncSeq {
-    for itm in source do
-      let! v = f itm
-      match v with 
-      | Some v -> yield v 
-      | _ -> () }
+  let chooseAsync f (source:AsyncSeq<'T>) =
+    match source with
+    | :? AsyncSeqOp<'T> as source -> source.ChooseAsync f
+    | _ ->
+      asyncSeq {
+        for itm in source do
+          let! v = f itm
+          match v with 
+          | Some v -> yield v 
+          | _ -> () }
 
   let filterAsync f (source : AsyncSeq<'T>) = asyncSeq {
     for v in source do
@@ -712,8 +854,10 @@ module AsyncSeq =
   let forall f (source : AsyncSeq<'T>) = 
     source |> exists (f >> not) |> Async.map not
 
-  let foldAsync f (state:'State) (source : AsyncSeq<'T>) = 
-    source |> scanAsync f state |> lastOrDefault state
+  let foldAsync f (state:'State) (source : AsyncSeq<'T>) =     
+    match source with 
+    | :? AsyncSeqOp<'T> as source -> source.FoldAsync f state
+    | _ -> source |> scanAsync f state |> lastOrDefault state
 
   let fold f (state:'State) (source : AsyncSeq<'T>) = 
     foldAsync (fun st v -> f st v |> async.Return) state source 

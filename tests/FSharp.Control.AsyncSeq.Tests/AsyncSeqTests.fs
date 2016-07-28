@@ -38,6 +38,9 @@ let randomDelayMs (minMs:int) (maxMs:int) (s:AsyncSeq<'a>) =
 let randomDelayDefault (s:AsyncSeq<'a>) =
   randomDelayMs 0 50 s
 
+let randomDelayMax m (s:AsyncSeq<'a>) =
+  randomDelayMs 0 m s
+
 let catch (f:'a -> 'b) : 'a -> Choice<'b, exn> =
   fun a ->
     try f a |> Choice1Of2
@@ -1274,7 +1277,7 @@ let ``AsyncSeq.groupBy should propagate exception and terminate all groups``() =
 
 [<Test>]
 let ``AsyncSeq.combineLatest should behave like merge after initial``() =  
-  for n in 0..20 do
+  for n in 0..10 do
     for m in 0..10 do
       let ls1 = List.init n id
       let ls2 = List.init m id 
@@ -1284,7 +1287,7 @@ let ``AsyncSeq.combineLatest should behave like merge after initial``() =
         if n = 0 || m = 0 then 0
         else (n + m - 1)
       let expected = List.init expectedCount id |> AsyncSeq.ofSeq
-      let actual = AsyncSeq.combineLatestWith (+) (AsyncSeq.ofSeq ls1 |> randomDelayDefault) (AsyncSeq.ofSeq ls2 |> randomDelayDefault)
+      let actual = AsyncSeq.combineLatestWith (+) (AsyncSeq.ofSeq ls1 |> randomDelayMax 2) (AsyncSeq.ofSeq ls2 |> randomDelayMax 2)
       Assert.AreEqual(expected, actual, (sprintf "n=%i m=%i" n m))
 
 [<Test>]
