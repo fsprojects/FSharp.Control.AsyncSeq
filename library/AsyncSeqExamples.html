@@ -34,7 +34,6 @@
         <div class="span9" id="main">
           
 <h1><a name="F-AsyncSeq-Examples" class="anchor" href="#F-AsyncSeq-Examples">F# AsyncSeq Examples</a></h1>
-
 <table class="pre"><tr><td class="lines"><pre class="fssnip"><span class="l">1: </span>
 <span class="l">2: </span>
 <span class="l">3: </span>
@@ -45,12 +44,18 @@
 </code></pre></td>
 </tr>
 </table>
-
-<h3><a name="Group-By" class="anchor" href="#Group-By">Group By</a></h3>
-
-<p>Suppose we would like to consume a stream of events <code>AsyncSeq&lt;Event&gt;</code> and perform an operation on each event. 
-The operation on each event is of type <code>Event -&gt; Async&lt;unit&gt;</code>. This can be done as follows:</p>
-
+<h2><a name="Group-By" class="anchor" href="#Group-By">Group By</a></h2>
+<p><code>AsyncSeq.groupBy</code> partitions an input sequence into sub-sequences with respect to the specified <code>projection</code> function. This operation is the asynchronous analog to <code>Seq.groupBy</code>.</p>
+<h3><a name="Example-Execution" class="anchor" href="#Example-Execution">Example Execution</a></h3>
+<p>An example execution can be depicted visually as follows:</p>
+<hr />
+<p>| source  | a0 | a2 | a3 | a4 | a5 |             |
+| key     | k1 | k2 | k1 | k3 |    |             |</p>
+<h2><a name="result-k1-k2-k3" class="anchor" href="#result-k1-k2-k3">| result  | k1 <em> [a1,a3] | k2 </em> [a2] | k3 * [a4] |</a></h2>
+<p>a0
+k0</p>
+<h3><a name="Use-Case" class="anchor" href="#Use-Case">Use Case</a></h3>
+<p>Suppose we would like to consume a stream of events <code>AsyncSeq&lt;Event&gt;</code> and perform an operation on each event. The operation on each event is of type <code>Event -&gt; Async&lt;unit&gt;</code>. This can be done as follows:</p>
 <table class="pre"><tr><td class="lines"><pre class="fssnip"><span class="l"> 1: </span>
 <span class="l"> 2: </span>
 <span class="l"> 3: </span>
@@ -81,15 +86,13 @@ The operation on each event is of type <code>Event -&gt; Async&lt;unit&gt;</code
 </code></pre></td>
 </tr>
 </table>
-
 <p>The above workflow will read an event from the stream, perform an operation and then read the next event.
 While the read operation and the operation on the event are <em>asynchronous</em>, the stream is processed <em>sequentially</em>.
-It may be desirable to parallelize the processing of the stream. Suppose that events correspond to some entity, 
+It may be desirable to parallelize the processing of the stream. Suppose that events correspond to some entity,
 such as a shopping cart. Events belonging to some shopping cart must be processed in a sequential order, however they
 are independent from events belonging to other shopping carts. Therefore, events belonging to distinct shopping carts
-can be processed in parallel. Using <code>AsyncSeq.groupBy</code>, we can partition the stream into a fixed set of sub-streams 
+can be processed in parallel. Using <code>AsyncSeq.groupBy</code>, we can partition the stream into a fixed set of sub-streams
 and then process the sub-streams in parallel using <code>AsyncSeq.mapAsyncParallel</code>:</p>
-
 <table class="pre"><tr><td class="lines"><pre class="fssnip"><span class="l">1: </span>
 <span class="l">2: </span>
 <span class="l">3: </span>
@@ -102,14 +105,11 @@ and then process the sub-streams in parallel using <code>AsyncSeq.mapAsyncParall
 </code></pre></td>
 </tr>
 </table>
-
-<p><code>AsyncSeq.groupBy</code> partitions the input sequence into sub-sequences based on a key returned by a projection function. 
-The resulting sub-sequences emit elements when the source sequence emits an element corresponding to the key of the 
+<p><code>AsyncSeq.groupBy</code> partitions the input sequence into sub-sequences based on a key returned by a projection function.
+The resulting sub-sequences emit elements when the source sequence emits an element corresponding to the key of the
 sub-sequence. Elements of the resulting sequence are pairs of keys and sub-sequences, in this case <code>int * AsyncSeq&lt;Event&gt;</code>. Since by definition, these sub-sequences are independent, they can be processed in parallel. In fact, the sub-sequences <em>must</em> be processed in parallel, because it isn't possible to complete the processing of a sub-sequence until all elements of the source sequence are exhausted.</p>
-
 <p>To continue improving the efficiency of our workflow, we can make use of batching. Specifically, we can read the incoming
 events in batches and we can perform actions on entire batches of events.</p>
-
 <table class="pre"><tr><td class="lines"><pre class="fssnip"><span class="l">1: </span>
 <span class="l">2: </span>
 <span class="l">3: </span>
@@ -124,9 +124,7 @@ events in batches and we can perform actions on entire batches of events.</p>
 </code></pre></td>
 </tr>
 </table>
-
 <p>Ordering is still important. For example, the batch action could write events into a full-text search index. We would like the full-text search index to be sequentially consistent. As such, the events need to be applied in the order they were emitted. The following workflow has the desired properties:</p>
-
 <table class="pre"><tr><td class="lines"><pre class="fssnip"><span class="l">1: </span>
 <span class="l">2: </span>
 <span class="l">3: </span>
@@ -145,9 +143,7 @@ events in batches and we can perform actions on entire batches of events.</p>
 </code></pre></td>
 </tr>
 </table>
-
 <p>The above workflow:</p>
-
 <ol>
 <li>Reads events in batches.</li>
 <li>Flattens the batches.</li>
@@ -155,20 +151,82 @@ events in batches and we can perform actions on entire batches of events.</p>
 <li>Buffers elements of each sub-sequence by time and space.</li>
 <li>Processes the sub-sequences in parallel, but individual sub-sequences sequentially.</li>
 </ol>
+<hr />
+<h2><a name="Merge" class="anchor" href="#Merge">Merge</a></h2>
+<p><code>AsyncSeq.merge</code> non-deterministically merges two async sequences into one. It is non-deterministic in the sense that the resulting sequence emits elements whenever <em>either</em> input sequence emits a value. Since it isn't always known which will emit a value first, if at all, the operation is non-deterministic. This operation is in contrast to <code>AsyncSeq.zip</code> which also takes two async sequences and returns a single async sequence, but as opposed to emitting an element when <em>either</em> input sequence produces a value, it emits an element when <em>both</em> sequences emit a value. This operation is also in contrast to <code>AsyncSeq.append</code> which concatenates two async sequences, emitting all element of one, followed by all elements of the another.</p>
+<h3><a name="Example-Execution-1" class="anchor" href="#Example-Execution-1">Example Execution</a></h3>
+<p>An example execution can be depicted visually as follows:</p>
+<hr />
+<p>| source1 | t0 |    | t1 |    |    | t2 |
+| source2 |    | u0 |    |    | u1 |    |</p>
+<h2><a name="result-t0-u0-t1-u1-t2" class="anchor" href="#result-t0-u0-t1-u1-t2">| result  | t0 | u0 | t1 |    | u1 | t2 |</a></h2>
+<h3><a name="Use-Case-1" class="anchor" href="#Use-Case-1">Use Case</a></h3>
+<p>Suppose you wish to perform an operation when either of two async sequences emits an element. One way to do this is two start consuming both async sequences in parallel. If we would like to perform only one operation at a time, we can use <code>AsyncSeq.merge</code> as follows:</p>
+<table class="pre"><tr><td class="lines"><pre class="fssnip"><span class="l"> 1: </span>
+<span class="l"> 2: </span>
+<span class="l"> 3: </span>
+<span class="l"> 4: </span>
+<span class="l"> 5: </span>
+<span class="l"> 6: </span>
+<span class="l"> 7: </span>
+<span class="l"> 8: </span>
+<span class="l"> 9: </span>
+<span class="l">10: </span>
+<span class="l">11: </span>
+</pre></td>
+<td class="snippet"><pre class="fssnip highlighted"><code lang="fsharp"><span class="c">/// Represents an stream emitting elements on a specified interval.</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs28', 69)" onmouseover="showTip(event, 'fs28', 69)" class="f">intervalMs</span> (<span onmouseout="hideTip(event, 'fs29', 70)" onmouseover="showTip(event, 'fs29', 70)" class="i">periodMs</span><span class="o">:</span><span onmouseout="hideTip(event, 'fs18', 71)" onmouseover="showTip(event, 'fs18', 71)" class="t">int</span>) <span class="o">=</span> <span class="i">asyncSeq</span> {
+  <span class="k">yield</span> <span class="i">DateTime</span><span class="o">.</span><span class="i">UtcNow</span>
+  <span class="k">while</span> <span class="k">true</span> <span class="k">do</span>
+    <span class="k">do!</span> <span onmouseout="hideTip(event, 'fs14', 72)" onmouseover="showTip(event, 'fs14', 72)" class="i">Async</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs30', 73)" onmouseover="showTip(event, 'fs30', 73)" class="i">Sleep</span> <span onmouseout="hideTip(event, 'fs29', 74)" onmouseover="showTip(event, 'fs29', 74)" class="i">periodMs</span>
+    <span class="k">yield</span> <span class="i">DateTime</span><span class="o">.</span><span class="i">UtcNow</span> }
 
-<h3><a name="Merge" class="anchor" href="#Merge">Merge</a></h3>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs31', 75)" onmouseover="showTip(event, 'fs31', 75)" class="i">either</span> <span class="o">:</span> <span class="i">AsyncSeq</span><span class="o">&lt;</span><span class="i">DateTime</span><span class="o">&gt;</span> <span class="o">=</span>
+  <span class="i">AsyncSeq</span><span class="o">.</span><span class="i">merge</span> (<span onmouseout="hideTip(event, 'fs28', 76)" onmouseover="showTip(event, 'fs28', 76)" class="i">intervalMs</span> <span class="n">20</span>) (<span onmouseout="hideTip(event, 'fs28', 77)" onmouseover="showTip(event, 'fs28', 77)" class="i">intervalMs</span> <span class="n">30</span>)
 
-<p><code>AsyncSeq.merge</code> non-deterministically merges two async sequences into one. It is non-deterministic in the sense that the resulting sequence emits elements 
-whenever <em>either</em> input sequence emits a value. Since it isn't always known which will emit a value first, if at all, the operation is non-deterministic. This operation
-is in contrast to <code>AsyncSeq.zip</code> which also takes two async sequences and returns a single async sequence, but as opposed to emitting an element when <em>either</em> input
-sequence produces a value, it emits an element when <em>both</em> sequences emit a value.</p>
+<span class="i">The</span> <span class="i">sequence</span> <span class="k">`</span><span onmouseout="hideTip(event, 'fs31', 78)" onmouseover="showTip(event, 'fs31', 78)" class="i">either</span><span class="k">`</span> <span class="i">emits</span> <span class="i">an</span> <span class="i">element</span> <span class="i">every</span> <span class="n">20ms</span> <span class="k">and</span> <span class="i">every</span> <span class="n">30ms</span><span class="o">.</span>
+</code></pre></td>
+</tr>
+</table>
+<hr />
+<h2><a name="Combine-Latest" class="anchor" href="#Combine-Latest">Combine Latest</a></h2>
+<p><code>AsyncSeq.combineLatest</code> non-deterministically merges two async sequences much like <code>AsyncSeq.merge</code>, combining their elements using the specified <code>combine</code> function. The resulting async sequence will only contain elements if both of the source sequences produce at least one element. After combining the first elements the source sequences, this operation emits elements when either source sequence emits an element, passing the newly emitted element as one of the arguments to the <code>combine</code> function, the other being the previously emitted element of that type.</p>
+<h3><a name="Example-Execution-2" class="anchor" href="#Example-Execution-2">Example Execution</a></h3>
+<p>An example execution can be depicted visually as follows:</p>
+<table class="pre"><tr><td class="lines"><pre class="fssnip"><span class="l"> 1: </span>
+<span class="l"> 2: </span>
+<span class="l"> 3: </span>
+<span class="l"> 4: </span>
+<span class="l"> 5: </span>
+<span class="l"> 6: </span>
+<span class="l"> 7: </span>
+<span class="l"> 8: </span>
+<span class="l"> 9: </span>
+<span class="l">10: </span>
+<span class="l">11: </span>
+<span class="l">12: </span>
+</pre></td>
+<td class="snippet"><pre class="fssnip highlighted"><code lang="fsharp"><span class="o">----------------------------------------</span>
+| <span class="i">source1</span> | <span class="i">a0</span> |    |    | <span class="i">a1</span> |   | <span class="i">a2</span> |
+| <span class="i">source2</span> |    | <span class="i">b0</span> | <span class="i">b1</span> |    |   |    |
+| <span class="i">result</span>  |    | <span class="i">c0</span> | <span class="i">c1</span> | <span class="i">c2</span> |   | <span class="i">c3</span> |
+<span class="o">----------------------------------------</span>
 
+<span class="i">where</span>
+
+<span class="i">c0</span> <span class="o">=</span> <span class="i">f</span> <span class="i">a0</span> <span class="i">b0</span>
+<span class="i">c1</span> <span class="o">=</span> <span class="i">f</span> <span class="i">a0</span> <span class="i">b1</span>
+<span class="i">c2</span> <span class="o">=</span> <span class="i">f</span> <span class="i">a1</span> <span class="i">b1</span>
+<span class="i">c3</span> <span class="o">=</span> <span class="i">f</span> <span class="i">a2</span> <span class="i">b1</span>
+</code></pre></td>
+</tr>
+</table>
+<h3><a name="Use-Case-2" class="anchor" href="#Use-Case-2">Use Case</a></h3>
 <p>Suppose we would like to trigger an operation whenever a change occurs. We can represent changes as an <code>AsyncSeq</code>. To gain intuition for this, consider the <a href="https://www.consul.io/">Consul</a>
 configuration management system. It stores configuration information in a tree-like structure. For this purpose of this discussion, it can be thought of as a key-value store
-exposed via HTTP. In addition, <code>Consul</code> supports change notifications using HTTP long-polling - when an HTTP GET request is made to retrieve the value of a key, 
-if the request specified a modify-index, <code>Consul</code> won't respond to the request until a change has occurred <em>since</em> the modify-index. We can represent this operation using 
+exposed via HTTP. In addition, <code>Consul</code> supports change notifications using HTTP long-polling - when an HTTP GET request is made to retrieve the value of a key,
+if the request specified a modify-index, <code>Consul</code> won't respond to the request until a change has occurred <em>since</em> the modify-index. We can represent this operation using
 the type <code>Key * ModifyIndex -&gt; Async&lt;Value * ModifyIndex&gt;</code>. Next, we can take this operation and turn it into an <code>AsyncSeq</code> of changes as follows:</p>
-
 <table class="pre"><tr><td class="lines"><pre class="fssnip"><span class="l"> 1: </span>
 <span class="l"> 2: </span>
 <span class="l"> 3: </span>
@@ -185,55 +243,206 @@ the type <code>Key * ModifyIndex -&gt; Async&lt;Value * ModifyIndex&gt;</code>. 
 <span class="l">14: </span>
 <span class="l">15: </span>
 </pre></td>
-<td class="snippet"><pre class="fssnip highlighted"><code lang="fsharp"><span class="k">type</span> <span onmouseout="hideTip(event, 'fs28', 69)" onmouseover="showTip(event, 'fs28', 69)" class="t">Key</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs8', 70)" onmouseover="showTip(event, 'fs8', 70)" class="t">string</span>
+<td class="snippet"><pre class="fssnip highlighted"><code lang="fsharp"><span class="k">type</span> <span onmouseout="hideTip(event, 'fs32', 79)" onmouseover="showTip(event, 'fs32', 79)" class="t">Key</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs8', 80)" onmouseover="showTip(event, 'fs8', 80)" class="t">string</span>
 
-<span class="k">type</span> <span onmouseout="hideTip(event, 'fs29', 71)" onmouseover="showTip(event, 'fs29', 71)" class="t">Value</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs8', 72)" onmouseover="showTip(event, 'fs8', 72)" class="t">string</span>
+<span class="k">type</span> <span onmouseout="hideTip(event, 'fs33', 81)" onmouseover="showTip(event, 'fs33', 81)" class="t">Value</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs8', 82)" onmouseover="showTip(event, 'fs8', 82)" class="t">string</span>
 
-<span class="k">type</span> <span onmouseout="hideTip(event, 'fs30', 73)" onmouseover="showTip(event, 'fs30', 73)" class="t">ModifyIndex</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs6', 74)" onmouseover="showTip(event, 'fs6', 74)" class="t">int64</span>
+<span class="k">type</span> <span onmouseout="hideTip(event, 'fs34', 83)" onmouseover="showTip(event, 'fs34', 83)" class="t">ModifyIndex</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs6', 84)" onmouseover="showTip(event, 'fs6', 84)" class="t">int64</span>
 
-<span class="k">let</span> <span onmouseout="hideTip(event, 'fs31', 75)" onmouseover="showTip(event, 'fs31', 75)" class="f">longPollKey</span> (<span onmouseout="hideTip(event, 'fs32', 76)" onmouseover="showTip(event, 'fs32', 76)" class="i">key</span><span class="o">:</span><span onmouseout="hideTip(event, 'fs28', 77)" onmouseover="showTip(event, 'fs28', 77)" class="t">Key</span>, <span onmouseout="hideTip(event, 'fs33', 78)" onmouseover="showTip(event, 'fs33', 78)" class="i">mi</span><span class="o">:</span><span onmouseout="hideTip(event, 'fs30', 79)" onmouseover="showTip(event, 'fs30', 79)" class="t">ModifyIndex</span>) <span class="o">:</span> <span onmouseout="hideTip(event, 'fs14', 80)" onmouseover="showTip(event, 'fs14', 80)" class="t">Async</span><span class="o">&lt;</span><span onmouseout="hideTip(event, 'fs29', 81)" onmouseover="showTip(event, 'fs29', 81)" class="t">Value</span> <span class="o">*</span> <span onmouseout="hideTip(event, 'fs30', 82)" onmouseover="showTip(event, 'fs30', 82)" class="t">ModifyIndex</span><span class="o">&gt;</span> <span class="o">=</span>
-  <span onmouseout="hideTip(event, 'fs11', 83)" onmouseover="showTip(event, 'fs11', 83)" class="f">failwith</span> <span class="s">&quot;undefined&quot;</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs35', 85)" onmouseover="showTip(event, 'fs35', 85)" class="f">longPollKey</span> (<span onmouseout="hideTip(event, 'fs36', 86)" onmouseover="showTip(event, 'fs36', 86)" class="i">key</span><span class="o">:</span><span onmouseout="hideTip(event, 'fs32', 87)" onmouseover="showTip(event, 'fs32', 87)" class="t">Key</span>, <span onmouseout="hideTip(event, 'fs37', 88)" onmouseover="showTip(event, 'fs37', 88)" class="i">mi</span><span class="o">:</span><span onmouseout="hideTip(event, 'fs34', 89)" onmouseover="showTip(event, 'fs34', 89)" class="t">ModifyIndex</span>) <span class="o">:</span> <span onmouseout="hideTip(event, 'fs14', 90)" onmouseover="showTip(event, 'fs14', 90)" class="t">Async</span><span class="o">&lt;</span><span onmouseout="hideTip(event, 'fs33', 91)" onmouseover="showTip(event, 'fs33', 91)" class="t">Value</span> <span class="o">*</span> <span onmouseout="hideTip(event, 'fs34', 92)" onmouseover="showTip(event, 'fs34', 92)" class="t">ModifyIndex</span><span class="o">&gt;</span> <span class="o">=</span>
+  <span onmouseout="hideTip(event, 'fs11', 93)" onmouseover="showTip(event, 'fs11', 93)" class="f">failwith</span> <span class="s">&quot;undefined&quot;</span>
 
-<span class="k">let</span> <span onmouseout="hideTip(event, 'fs34', 84)" onmouseover="showTip(event, 'fs34', 84)" class="f">changes</span> (<span onmouseout="hideTip(event, 'fs32', 85)" onmouseover="showTip(event, 'fs32', 85)" class="i">key</span><span class="o">:</span><span onmouseout="hideTip(event, 'fs28', 86)" onmouseover="showTip(event, 'fs28', 86)" class="t">Key</span>, <span onmouseout="hideTip(event, 'fs33', 87)" onmouseover="showTip(event, 'fs33', 87)" class="i">mi</span><span class="o">:</span><span onmouseout="hideTip(event, 'fs30', 88)" onmouseover="showTip(event, 'fs30', 88)" class="t">ModifyIndex</span>) <span class="o">:</span> <span onmouseout="hideTip(event, 'fs10', 89)" onmouseover="showTip(event, 'fs10', 89)" class="t">AsyncSeq</span><span class="o">&lt;</span><span onmouseout="hideTip(event, 'fs29', 90)" onmouseover="showTip(event, 'fs29', 90)" class="t">Value</span><span class="o">&gt;</span> <span class="o">=</span>
-  <span onmouseout="hideTip(event, 'fs10', 91)" onmouseover="showTip(event, 'fs10', 91)" class="t">AsyncSeq</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs35', 92)" onmouseover="showTip(event, 'fs35', 92)" class="f">unfoldAsync</span> 
-    (<span class="k">fun</span> (<span onmouseout="hideTip(event, 'fs33', 93)" onmouseover="showTip(event, 'fs33', 93)" class="i">mi</span><span class="o">:</span><span onmouseout="hideTip(event, 'fs30', 94)" onmouseover="showTip(event, 'fs30', 94)" class="t">ModifyIndex</span>) <span class="k">-&gt;</span> <span onmouseout="hideTip(event, 'fs36', 95)" onmouseover="showTip(event, 'fs36', 95)" class="i">async</span> {
-      <span class="k">let!</span> <span onmouseout="hideTip(event, 'fs37', 96)" onmouseover="showTip(event, 'fs37', 96)" class="i">value</span>,<span onmouseout="hideTip(event, 'fs33', 97)" onmouseover="showTip(event, 'fs33', 97)" class="i">mi</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs31', 98)" onmouseover="showTip(event, 'fs31', 98)" class="f">longPollKey</span> (<span onmouseout="hideTip(event, 'fs32', 99)" onmouseover="showTip(event, 'fs32', 99)" class="i">key</span>, <span onmouseout="hideTip(event, 'fs33', 100)" onmouseover="showTip(event, 'fs33', 100)" class="i">mi</span>)
-      <span class="k">return</span> <span onmouseout="hideTip(event, 'fs38', 101)" onmouseover="showTip(event, 'fs38', 101)" class="p">Some</span> (<span class="i">value</span>,<span onmouseout="hideTip(event, 'fs33', 102)" onmouseover="showTip(event, 'fs33', 102)" class="i">mi</span>) })
-    <span onmouseout="hideTip(event, 'fs33', 103)" onmouseover="showTip(event, 'fs33', 103)" class="i">mi</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs38', 94)" onmouseover="showTip(event, 'fs38', 94)" class="f">changes</span> (<span onmouseout="hideTip(event, 'fs36', 95)" onmouseover="showTip(event, 'fs36', 95)" class="i">key</span><span class="o">:</span><span onmouseout="hideTip(event, 'fs32', 96)" onmouseover="showTip(event, 'fs32', 96)" class="t">Key</span>, <span onmouseout="hideTip(event, 'fs37', 97)" onmouseover="showTip(event, 'fs37', 97)" class="i">mi</span><span class="o">:</span><span onmouseout="hideTip(event, 'fs34', 98)" onmouseover="showTip(event, 'fs34', 98)" class="t">ModifyIndex</span>) <span class="o">:</span> <span onmouseout="hideTip(event, 'fs10', 99)" onmouseover="showTip(event, 'fs10', 99)" class="t">AsyncSeq</span><span class="o">&lt;</span><span onmouseout="hideTip(event, 'fs33', 100)" onmouseover="showTip(event, 'fs33', 100)" class="t">Value</span><span class="o">&gt;</span> <span class="o">=</span>
+  <span onmouseout="hideTip(event, 'fs10', 101)" onmouseover="showTip(event, 'fs10', 101)" class="t">AsyncSeq</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs39', 102)" onmouseover="showTip(event, 'fs39', 102)" class="f">unfoldAsync</span> 
+    (<span class="k">fun</span> (<span onmouseout="hideTip(event, 'fs37', 103)" onmouseover="showTip(event, 'fs37', 103)" class="i">mi</span><span class="o">:</span><span onmouseout="hideTip(event, 'fs34', 104)" onmouseover="showTip(event, 'fs34', 104)" class="t">ModifyIndex</span>) <span class="k">-&gt;</span> <span onmouseout="hideTip(event, 'fs40', 105)" onmouseover="showTip(event, 'fs40', 105)" class="i">async</span> {
+      <span class="k">let!</span> <span onmouseout="hideTip(event, 'fs41', 106)" onmouseover="showTip(event, 'fs41', 106)" class="i">value</span>,<span onmouseout="hideTip(event, 'fs37', 107)" onmouseover="showTip(event, 'fs37', 107)" class="i">mi</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs35', 108)" onmouseover="showTip(event, 'fs35', 108)" class="f">longPollKey</span> (<span onmouseout="hideTip(event, 'fs36', 109)" onmouseover="showTip(event, 'fs36', 109)" class="i">key</span>, <span onmouseout="hideTip(event, 'fs37', 110)" onmouseover="showTip(event, 'fs37', 110)" class="i">mi</span>)
+      <span class="k">return</span> <span onmouseout="hideTip(event, 'fs42', 111)" onmouseover="showTip(event, 'fs42', 111)" class="p">Some</span> (<span class="i">value</span>,<span onmouseout="hideTip(event, 'fs37', 112)" onmouseover="showTip(event, 'fs37', 112)" class="i">mi</span>) })
+    <span onmouseout="hideTip(event, 'fs37', 113)" onmouseover="showTip(event, 'fs37', 113)" class="i">mi</span>
 </code></pre></td>
 </tr>
 </table>
-
 <p>The function <code>changes</code> produces an async sequence which emits elements whenever the value corresponding to the key changes. Suppose also that we would like to trigger an operation
 whenever the key changes or based on a fixed interval. We can represent a fixed interval as an async sequence as follows:</p>
-
 <table class="pre"><tr><td class="lines"><pre class="fssnip"><span class="l">1: </span>
 <span class="l">2: </span>
 <span class="l">3: </span>
 <span class="l">4: </span>
 <span class="l">5: </span>
 </pre></td>
-<td class="snippet"><pre class="fssnip highlighted"><code lang="fsharp"><span class="k">let</span> <span onmouseout="hideTip(event, 'fs39', 104)" onmouseover="showTip(event, 'fs39', 104)" class="f">intervalMs</span> (<span onmouseout="hideTip(event, 'fs40', 105)" onmouseover="showTip(event, 'fs40', 105)" class="i">periodMs</span><span class="o">:</span><span onmouseout="hideTip(event, 'fs18', 106)" onmouseover="showTip(event, 'fs18', 106)" class="t">int</span>) <span class="o">=</span> <span onmouseout="hideTip(event, 'fs41', 107)" onmouseover="showTip(event, 'fs41', 107)" class="i">asyncSeq</span> {
-  <span class="k">yield</span> <span onmouseout="hideTip(event, 'fs42', 108)" onmouseover="showTip(event, 'fs42', 108)" class="t">DateTime</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs43', 109)" onmouseover="showTip(event, 'fs43', 109)" class="i">UtcNow</span>
+<td class="snippet"><pre class="fssnip highlighted"><code lang="fsharp"><span class="k">let</span> <span onmouseout="hideTip(event, 'fs43', 114)" onmouseover="showTip(event, 'fs43', 114)" class="f">intervalMs</span> (<span onmouseout="hideTip(event, 'fs29', 115)" onmouseover="showTip(event, 'fs29', 115)" class="i">periodMs</span><span class="o">:</span><span onmouseout="hideTip(event, 'fs18', 116)" onmouseover="showTip(event, 'fs18', 116)" class="t">int</span>) <span class="o">=</span> <span onmouseout="hideTip(event, 'fs44', 117)" onmouseover="showTip(event, 'fs44', 117)" class="i">asyncSeq</span> {
+  <span class="k">yield</span> <span onmouseout="hideTip(event, 'fs45', 118)" onmouseover="showTip(event, 'fs45', 118)" class="t">DateTime</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs46', 119)" onmouseover="showTip(event, 'fs46', 119)" class="i">UtcNow</span>
   <span class="k">while</span> <span class="k">true</span> <span class="k">do</span>
-    <span class="k">do!</span> <span onmouseout="hideTip(event, 'fs14', 110)" onmouseover="showTip(event, 'fs14', 110)" class="t">Async</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs44', 111)" onmouseover="showTip(event, 'fs44', 111)" class="f">Sleep</span> <span onmouseout="hideTip(event, 'fs40', 112)" onmouseover="showTip(event, 'fs40', 112)" class="i">periodMs</span>
-    <span class="k">yield</span> <span onmouseout="hideTip(event, 'fs42', 113)" onmouseover="showTip(event, 'fs42', 113)" class="t">DateTime</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs43', 114)" onmouseover="showTip(event, 'fs43', 114)" class="i">UtcNow</span> }
+    <span class="k">do!</span> <span onmouseout="hideTip(event, 'fs14', 120)" onmouseover="showTip(event, 'fs14', 120)" class="t">Async</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs30', 121)" onmouseover="showTip(event, 'fs30', 121)" class="f">Sleep</span> <span onmouseout="hideTip(event, 'fs29', 122)" onmouseover="showTip(event, 'fs29', 122)" class="i">periodMs</span>
+    <span class="k">yield</span> <span onmouseout="hideTip(event, 'fs45', 123)" onmouseover="showTip(event, 'fs45', 123)" class="t">DateTime</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs46', 124)" onmouseover="showTip(event, 'fs46', 124)" class="i">UtcNow</span> }
 </code></pre></td>
 </tr>
 </table>
-
 <p>Putting it all together:</p>
-
 <table class="pre"><tr><td class="lines"><pre class="fssnip"><span class="l">1: </span>
 <span class="l">2: </span>
 </pre></td>
-<td class="snippet"><pre class="fssnip highlighted"><code lang="fsharp"><span class="k">let</span> <span onmouseout="hideTip(event, 'fs45', 115)" onmouseover="showTip(event, 'fs45', 115)" class="i">changesOrInterval</span> <span class="o">:</span> <span onmouseout="hideTip(event, 'fs10', 116)" onmouseover="showTip(event, 'fs10', 116)" class="t">AsyncSeq</span><span class="o">&lt;</span><span onmouseout="hideTip(event, 'fs46', 117)" onmouseover="showTip(event, 'fs46', 117)" class="t">Choice</span><span class="o">&lt;</span><span onmouseout="hideTip(event, 'fs29', 118)" onmouseover="showTip(event, 'fs29', 118)" class="t">Value</span>, <span onmouseout="hideTip(event, 'fs42', 119)" onmouseover="showTip(event, 'fs42', 119)" class="t">DateTime</span><span class="o">&gt;</span><span class="o">&gt;</span> <span class="o">=</span>
-  <span onmouseout="hideTip(event, 'fs10', 120)" onmouseover="showTip(event, 'fs10', 120)" class="t">AsyncSeq</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs47', 121)" onmouseover="showTip(event, 'fs47', 121)" class="f">mergeChoice</span> (<span onmouseout="hideTip(event, 'fs34', 122)" onmouseover="showTip(event, 'fs34', 122)" class="f">changes</span> (<span class="s">&quot;myKey&quot;</span>, <span class="n">0L</span>)) (<span onmouseout="hideTip(event, 'fs39', 123)" onmouseover="showTip(event, 'fs39', 123)" class="f">intervalMs</span> (<span class="n">1000</span> <span class="o">*</span> <span class="n">60</span>))
+<td class="snippet"><pre class="fssnip highlighted"><code lang="fsharp"><span class="k">let</span> <span onmouseout="hideTip(event, 'fs47', 125)" onmouseover="showTip(event, 'fs47', 125)" class="i">changesOrInterval</span> <span class="o">:</span> <span onmouseout="hideTip(event, 'fs10', 126)" onmouseover="showTip(event, 'fs10', 126)" class="t">AsyncSeq</span><span class="o">&lt;</span><span onmouseout="hideTip(event, 'fs33', 127)" onmouseover="showTip(event, 'fs33', 127)" class="t">Value</span><span class="o">&gt;</span> <span class="o">=</span>
+  <span onmouseout="hideTip(event, 'fs10', 128)" onmouseover="showTip(event, 'fs10', 128)" class="t">AsyncSeq</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs48', 129)" onmouseover="showTip(event, 'fs48', 129)" class="f">combineLatestWith</span> (<span class="k">fun</span> <span onmouseout="hideTip(event, 'fs49', 130)" onmouseover="showTip(event, 'fs49', 130)" class="i">v</span> _ <span class="k">-&gt;</span> <span onmouseout="hideTip(event, 'fs49', 131)" onmouseover="showTip(event, 'fs49', 131)" class="i">v</span>) (<span onmouseout="hideTip(event, 'fs38', 132)" onmouseover="showTip(event, 'fs38', 132)" class="f">changes</span> (<span class="s">&quot;myKey&quot;</span>, <span class="n">0L</span>)) (<span onmouseout="hideTip(event, 'fs43', 133)" onmouseover="showTip(event, 'fs43', 133)" class="f">intervalMs</span> (<span class="n">1000</span> <span class="o">*</span> <span class="n">60</span>))
 </code></pre></td>
 </tr>
 </table>
-
 <p>We can now consume this async sequence and use it to trigger downstream operations, such as updating the configuration of a running program, in flight.</p>
+<hr />
+<h2><a name="Distinct-Until-Changed" class="anchor" href="#Distinct-Until-Changed">Distinct Until Changed</a></h2>
+<p><code>AsyncSeq.distinctUntilChanged</code> returns an async sequence which returns every element of the source sequence, skipping elements which equal its predecessor.</p>
+<h2><a name="Example-Execution-3" class="anchor" href="#Example-Execution-3">Example Execution</a></h2>
+<p>An example execution can be visualized as follows:</p>
+<hr />
+<p>| source  | a | a | b | b | b | a |</p>
+<h2><a name="result-a-b-a" class="anchor" href="#result-a-b-a">| result  | a |   | b |   |   | a |</a></h2>
+<h3><a name="Use-Case-3" class="anchor" href="#Use-Case-3">Use Case</a></h3>
+<p>Suppose you're polling a resource which returns status information of a background job.</p>
+<table class="pre"><tr><td class="lines"><pre class="fssnip"><span class="l"> 1: </span>
+<span class="l"> 2: </span>
+<span class="l"> 3: </span>
+<span class="l"> 4: </span>
+<span class="l"> 5: </span>
+<span class="l"> 6: </span>
+<span class="l"> 7: </span>
+<span class="l"> 8: </span>
+<span class="l"> 9: </span>
+<span class="l">10: </span>
+<span class="l">11: </span>
+<span class="l">12: </span>
+<span class="l">13: </span>
+<span class="l">14: </span>
+<span class="l">15: </span>
+<span class="l">16: </span>
+<span class="l">17: </span>
+</pre></td>
+<td class="snippet"><pre class="fssnip highlighted"><code lang="fsharp"><span class="k">type</span> <span onmouseout="hideTip(event, 'fs50', 134)" onmouseover="showTip(event, 'fs50', 134)" class="t">Status</span> <span class="o">=</span> {
+  <span onmouseout="hideTip(event, 'fs51', 135)" onmouseover="showTip(event, 'fs51', 135)" class="i">completed</span> <span class="o">:</span> <span onmouseout="hideTip(event, 'fs18', 136)" onmouseover="showTip(event, 'fs18', 136)" class="t">int</span>
+  <span onmouseout="hideTip(event, 'fs52', 137)" onmouseover="showTip(event, 'fs52', 137)" class="i">finished</span> <span class="o">:</span> <span onmouseout="hideTip(event, 'fs53', 138)" onmouseover="showTip(event, 'fs53', 138)" class="t">bool</span>
+  <span onmouseout="hideTip(event, 'fs54', 139)" onmouseover="showTip(event, 'fs54', 139)" class="i">result</span> <span class="o">:</span> <span onmouseout="hideTip(event, 'fs8', 140)" onmouseover="showTip(event, 'fs8', 140)" class="t">string</span>
+}
+
+<span class="c">/// Gets the status of a job.</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs55', 141)" onmouseover="showTip(event, 'fs55', 141)" class="i">status</span> <span class="o">:</span> <span onmouseout="hideTip(event, 'fs14', 142)" onmouseover="showTip(event, 'fs14', 142)" class="t">Async</span><span class="o">&lt;</span><span onmouseout="hideTip(event, 'fs50', 143)" onmouseover="showTip(event, 'fs50', 143)" class="t">Status</span><span class="o">&gt;</span> <span class="o">=</span>
+  <span onmouseout="hideTip(event, 'fs11', 144)" onmouseover="showTip(event, 'fs11', 144)" class="f">failwith</span> <span class="s">&quot;&quot;</span>
+
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs56', 145)" onmouseover="showTip(event, 'fs56', 145)" class="i">statuses</span> <span class="o">:</span> <span onmouseout="hideTip(event, 'fs10', 146)" onmouseover="showTip(event, 'fs10', 146)" class="t">AsyncSeq</span><span class="o">&lt;</span><span onmouseout="hideTip(event, 'fs50', 147)" onmouseover="showTip(event, 'fs50', 147)" class="t">Status</span><span class="o">&gt;</span> <span class="o">=</span>
+  <span onmouseout="hideTip(event, 'fs44', 148)" onmouseover="showTip(event, 'fs44', 148)" class="i">asyncSeq</span> {
+    <span class="k">let!</span> <span onmouseout="hideTip(event, 'fs57', 149)" onmouseover="showTip(event, 'fs57', 149)" class="i">s</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs55', 150)" onmouseover="showTip(event, 'fs55', 150)" class="i">status</span>
+    <span class="k">while</span> <span class="k">true</span> <span class="k">do</span>
+      <span class="k">do!</span> <span onmouseout="hideTip(event, 'fs14', 151)" onmouseover="showTip(event, 'fs14', 151)" class="t">Async</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs30', 152)" onmouseover="showTip(event, 'fs30', 152)" class="f">Sleep</span> <span class="n">1000</span>
+      <span class="k">let!</span> <span onmouseout="hideTip(event, 'fs57', 153)" onmouseover="showTip(event, 'fs57', 153)" class="i">s</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs55', 154)" onmouseover="showTip(event, 'fs55', 154)" class="i">status</span>
+      <span class="k">yield</span> <span onmouseout="hideTip(event, 'fs57', 155)" onmouseover="showTip(event, 'fs57', 155)" class="i">s</span> }
+</code></pre></td>
+</tr>
+</table>
+<p>The async sequence <code>statuses</code> will return a status every second. It will return a status regardless of whether the status changed. Assuming the status changes monotonically, we can use <code>AsyncSeq.distinctUntilChanged</code> to transform <code>statuses</code> into an async sequence of distinct statuses:</p>
+<table class="pre"><tr><td class="lines"><pre class="fssnip"><span class="l">1: </span>
+<span class="l">2: </span>
+</pre></td>
+<td class="snippet"><pre class="fssnip highlighted"><code lang="fsharp"><span class="k">let</span> <span onmouseout="hideTip(event, 'fs58', 156)" onmouseover="showTip(event, 'fs58', 156)" class="i">distinctStatuses</span> <span class="o">:</span> <span onmouseout="hideTip(event, 'fs10', 157)" onmouseover="showTip(event, 'fs10', 157)" class="t">AsyncSeq</span><span class="o">&lt;</span><span onmouseout="hideTip(event, 'fs50', 158)" onmouseover="showTip(event, 'fs50', 158)" class="t">Status</span><span class="o">&gt;</span> <span class="o">=</span>
+  <span onmouseout="hideTip(event, 'fs56', 159)" onmouseover="showTip(event, 'fs56', 159)" class="i">statuses</span> <span class="o">|&gt;</span> <span onmouseout="hideTip(event, 'fs10', 160)" onmouseover="showTip(event, 'fs10', 160)" class="t">AsyncSeq</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs59', 161)" onmouseover="showTip(event, 'fs59', 161)" class="f">distinctUntilChanged</span>
+</code></pre></td>
+</tr>
+</table>
+<p>Finally, we can create a workflow which prints the status every time a change is detected and terminates when the underlying job reaches the <code>finished</code> state:</p>
+<table class="pre"><tr><td class="lines"><pre class="fssnip"><span class="l">1: </span>
+<span class="l">2: </span>
+<span class="l">3: </span>
+<span class="l">4: </span>
+<span class="l">5: </span>
+<span class="l">6: </span>
+</pre></td>
+<td class="snippet"><pre class="fssnip highlighted"><code lang="fsharp"><span class="k">let</span> <span onmouseout="hideTip(event, 'fs60', 162)" onmouseover="showTip(event, 'fs60', 162)" class="i">result</span> <span class="o">:</span> <span onmouseout="hideTip(event, 'fs14', 163)" onmouseover="showTip(event, 'fs14', 163)" class="t">Async</span><span class="o">&lt;</span><span onmouseout="hideTip(event, 'fs8', 164)" onmouseover="showTip(event, 'fs8', 164)" class="t">string</span><span class="o">&gt;</span> <span class="o">=</span>
+  <span onmouseout="hideTip(event, 'fs58', 165)" onmouseover="showTip(event, 'fs58', 165)" class="i">distinctStatuses</span>
+  <span class="o">|&gt;</span> <span onmouseout="hideTip(event, 'fs10', 166)" onmouseover="showTip(event, 'fs10', 166)" class="t">AsyncSeq</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs61', 167)" onmouseover="showTip(event, 'fs61', 167)" class="f">pick</span> (<span class="k">fun</span> <span onmouseout="hideTip(event, 'fs62', 168)" onmouseover="showTip(event, 'fs62', 168)" class="i">st</span> <span class="k">-&gt;</span> 
+    <span onmouseout="hideTip(event, 'fs63', 169)" onmouseover="showTip(event, 'fs63', 169)" class="f">printfn</span> <span class="s">&quot;status=</span><span class="pf">%A</span><span class="s">&quot;</span> <span onmouseout="hideTip(event, 'fs62', 170)" onmouseover="showTip(event, 'fs62', 170)" class="i">st</span>
+    <span class="k">if</span> <span onmouseout="hideTip(event, 'fs62', 171)" onmouseover="showTip(event, 'fs62', 171)" class="i">st</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs52', 172)" onmouseover="showTip(event, 'fs52', 172)" class="i">finished</span> <span class="k">then</span> <span onmouseout="hideTip(event, 'fs42', 173)" onmouseover="showTip(event, 'fs42', 173)" class="p">Some</span> <span onmouseout="hideTip(event, 'fs62', 174)" onmouseover="showTip(event, 'fs62', 174)" class="i">st</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs54', 175)" onmouseover="showTip(event, 'fs54', 175)" class="i">result</span>
+    <span class="k">else</span> <span onmouseout="hideTip(event, 'fs64', 176)" onmouseover="showTip(event, 'fs64', 176)" class="p">None</span>)
+</code></pre></td>
+</tr>
+</table>
+<hr />
+<h2><a name="Zip" class="anchor" href="#Zip">Zip</a></h2>
+<p><code>AsyncSeq.zip : AsyncSeq&lt;'a&gt; -&gt; AsyncSeq&lt;'b&gt; -&gt; AsyncSeq&lt;'a * 'b&gt;</code> takes a pair of sequences and combines them into a sequence of pairs element wise - the first element of one sequence is paired with the first element of the other, and so on. It can be used to pair sequences of related elements into a single sequence. It can also be used to combine a sequence of elements with a sequence of effects.</p>
+<h3><a name="Example-Execution-4" class="anchor" href="#Example-Execution-4">Example Execution</a></h3>
+<p>An example execution can be visually depicted as follows:</p>
+<table class="pre"><tr><td class="lines"><pre class="fssnip"><span class="l">1: </span>
+<span class="l">2: </span>
+<span class="l">3: </span>
+<span class="l">4: </span>
+<span class="l">5: </span>
+</pre></td>
+<td class="snippet"><pre class="fssnip highlighted"><code lang="fsharp"><span class="o">---------------------------------------------</span>
+| <span class="i">source1</span>  |    <span class="i">a1</span>    |    <span class="i">a2</span>    |          |
+| <span class="i">source2</span>  |    <span class="i">b1</span>    |    <span class="i">b2</span>    |    <span class="i">b3</span>    |
+| <span class="i">result</span>   |  <span class="i">a1</span> <span class="o">*</span> <span class="i">b1</span> |  <span class="i">a2</span> <span class="o">*</span> <span class="i">b2</span> |          | 
+<span class="o">---------------------------------------------</span>
+</code></pre></td>
+</tr>
+</table>
+<p>Note that the resulting sequence terminates when either input sequence terminates.</p>
+<h3><a name="Use-Case-4" class="anchor" href="#Use-Case-4">Use Case</a></h3>
+<p>Suppose that we have an async sequence of events consumed from a message bus. We would like to process this sequence but we want to ensure that we're not processing to fast. We can pair the sequence of events with a sequence of durations corresponding to the minimum consumption time. We can do this as follows:</p>
+<table class="pre"><tr><td class="lines"><pre class="fssnip"><span class="l">1: </span>
+<span class="l">2: </span>
+<span class="l">3: </span>
+<span class="l">4: </span>
+<span class="l">5: </span>
+<span class="l">6: </span>
+<span class="l">7: </span>
+<span class="l">8: </span>
+</pre></td>
+<td class="snippet"><pre class="fssnip highlighted"><code lang="fsharp"><span class="k">let</span> <span onmouseout="hideTip(event, 'fs65', 177)" onmouseover="showTip(event, 'fs65', 177)" class="i">events</span> <span class="o">:</span> <span onmouseout="hideTip(event, 'fs10', 178)" onmouseover="showTip(event, 'fs10', 178)" class="t">AsyncSeq</span><span class="o">&lt;</span><span onmouseout="hideTip(event, 'fs4', 179)" onmouseover="showTip(event, 'fs4', 179)" class="t">Event</span><span class="o">&gt;</span> <span class="o">=</span>
+  <span onmouseout="hideTip(event, 'fs11', 180)" onmouseover="showTip(event, 'fs11', 180)" class="f">failwith</span> <span class="s">&quot;TODO&quot;</span>
+
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs66', 181)" onmouseover="showTip(event, 'fs66', 181)" class="i">eventsAtLeastOneSec</span> <span class="o">=</span>
+  <span onmouseout="hideTip(event, 'fs10', 182)" onmouseover="showTip(event, 'fs10', 182)" class="t">AsyncSeq</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs67', 183)" onmouseover="showTip(event, 'fs67', 183)" class="f">zipWith</span> 
+    (<span class="k">fun</span> <span onmouseout="hideTip(event, 'fs68', 184)" onmouseover="showTip(event, 'fs68', 184)" class="i">a</span> _ <span class="k">-&gt;</span> <span onmouseout="hideTip(event, 'fs68', 185)" onmouseover="showTip(event, 'fs68', 185)" class="i">a</span>) 
+    <span onmouseout="hideTip(event, 'fs65', 186)" onmouseover="showTip(event, 'fs65', 186)" class="i">events</span> 
+    (<span onmouseout="hideTip(event, 'fs10', 187)" onmouseover="showTip(event, 'fs10', 187)" class="t">AsyncSeq</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs69', 188)" onmouseover="showTip(event, 'fs69', 188)" class="f">replicateInfiniteAsync</span> (<span onmouseout="hideTip(event, 'fs14', 189)" onmouseover="showTip(event, 'fs14', 189)" class="t">Async</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs30', 190)" onmouseover="showTip(event, 'fs30', 190)" class="f">Sleep</span> <span class="n">1000</span>))
+</code></pre></td>
+</tr>
+</table>
+<p>The resulting async sequence <code>eventsAtLeastOneSec</code> will emit an element at-most every second. Note that the input sequence of timeouts is infinite - this is to allow the other sequence to have any length since <code>AsyncSeq.zipWith</code> will terminate when either input sequence terminates.</p>
+<h2><a name="Buffer-by-Time-and-Count" class="anchor" href="#Buffer-by-Time-and-Count">Buffer by Time and Count</a></h2>
+<p><code>AsyncSeq.bufferByTimeAndCount</code> consumes the input sequence until a specified number of elements are consumed or a timeout expires at which point the resulting sequence emits the buffered of elements, unless no elements have been buffered. It is similar to <code>AsyncSeq.bufferByCount</code> but allows a buffer to be emitted base on a timeout in addition to buffer size. Both are useful for batching inputs before performing an operation. <code>AsyncSeq.bufferByTimeAndCount</code> allows an async workflow to proceed even if there are no inputs received during a certain time period.</p>
+<h3><a name="Example-Execution-5" class="anchor" href="#Example-Execution-5">Example Execution</a></h3>
+<p>An example execution can be visually depicted as follows:</p>
+<table class="pre"><tr><td class="lines"><pre class="fssnip"><span class="l">1: </span>
+<span class="l">2: </span>
+<span class="l">3: </span>
+<span class="l">4: </span>
+</pre></td>
+<td class="snippet"><pre class="fssnip highlighted"><code lang="fsharp"><span class="o">-------------------------------------------------------</span>
+| <span class="i">source</span>   |  <span class="i">a1</span> | <span class="i">a2</span> | <span class="i">a3</span>         | <span class="i">a4</span>      |        |
+| <span class="i">result</span>   |     |    | [<span class="i">a1</span>,<span class="i">a2</span>,<span class="i">a3</span>] |         |  [<span class="i">a4</span>]  |
+<span class="o">-------------------------------------------------------</span>
+</code></pre></td>
+</tr>
+</table>
+<p>The last event <code>a4</code> is emitted after a timeout.</p>
+<h3><a name="Use-Case-5" class="anchor" href="#Use-Case-5">Use Case</a></h3>
+<p>Suppose we're writing a service which consumes a stream of events and indexes them into full-text search index. We can index each event one by one, however we get a performance improvement if we buffer events into small batches. We can buffer into fixed size batches using <code>AsyncSeq.bufferByCount</code>. However, the source event stream may stop emitting events half way through a batch which would leave those events in the buffer until more events arrive. <code>AsyncSeq.bufferByTimeAndCount</code> allows the async workflow to make progress by imposing a bound on how long a non-empty but incomplete buffer can wait more additional items.</p>
+<table class="pre"><tr><td class="lines"><pre class="fssnip"><span class="l">1: </span>
+<span class="l">2: </span>
+<span class="l">3: </span>
+<span class="l">4: </span>
+<span class="l">5: </span>
+<span class="l">6: </span>
+<span class="l">7: </span>
+<span class="l">8: </span>
+</pre></td>
+<td class="snippet"><pre class="fssnip highlighted"><code lang="fsharp"><span class="k">let</span> <span onmouseout="hideTip(event, 'fs70', 191)" onmouseover="showTip(event, 'fs70', 191)" class="i">individualEvents</span> <span class="o">:</span> <span onmouseout="hideTip(event, 'fs10', 192)" onmouseover="showTip(event, 'fs10', 192)" class="t">AsyncSeq</span><span class="o">&lt;</span><span onmouseout="hideTip(event, 'fs4', 193)" onmouseover="showTip(event, 'fs4', 193)" class="t">Event</span><span class="o">&gt;</span> <span class="o">=</span>
+  <span onmouseout="hideTip(event, 'fs11', 194)" onmouseover="showTip(event, 'fs11', 194)" class="f">failwith</span> <span class="s">&quot;&quot;</span>
+
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs71', 195)" onmouseover="showTip(event, 'fs71', 195)" class="i">bufferSize</span> <span class="o">=</span> <span class="n">100</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs72', 196)" onmouseover="showTip(event, 'fs72', 196)" class="i">bufferTimeout</span> <span class="o">=</span> <span class="n">1000</span>
+
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs73', 197)" onmouseover="showTip(event, 'fs73', 197)" class="i">bufferedEvents</span> <span class="o">:</span> <span onmouseout="hideTip(event, 'fs10', 198)" onmouseover="showTip(event, 'fs10', 198)" class="t">AsyncSeq</span><span class="o">&lt;</span><span onmouseout="hideTip(event, 'fs4', 199)" onmouseover="showTip(event, 'fs4', 199)" class="t">Event</span>[]<span class="o">&gt;</span> <span class="o">=</span>
+  <span onmouseout="hideTip(event, 'fs65', 200)" onmouseover="showTip(event, 'fs65', 200)" class="i">events</span> <span class="o">|&gt;</span> <span onmouseout="hideTip(event, 'fs10', 201)" onmouseover="showTip(event, 'fs10', 201)" class="t">AsyncSeq</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs27', 202)" onmouseover="showTip(event, 'fs27', 202)" class="f">bufferByCountAndTime</span> <span onmouseout="hideTip(event, 'fs71', 203)" onmouseover="showTip(event, 'fs71', 203)" class="i">bufferSize</span> <span onmouseout="hideTip(event, 'fs72', 204)" onmouseover="showTip(event, 'fs72', 204)" class="i">bufferTimeout</span>   
+</code></pre></td>
+</tr>
+</table>
 
 <div class="tip" id="fs1">namespace System</div>
 <div class="tip" id="fs2">Multiple items<br />namespace FSharp<br /><br />--------------------<br />namespace Microsoft.FSharp</div>
@@ -262,26 +471,52 @@ whenever the key changes or based on a fixed interval. We can represent a fixed 
 <div class="tip" id="fs25">val es : Event []</div>
 <div class="tip" id="fs26">val concatSeq : source:AsyncSeq&lt;#seq&lt;&#39;T&gt;&gt; -&gt; AsyncSeq&lt;&#39;T&gt;<br /><br />Full name: FSharp.Control.AsyncSeq.concatSeq</div>
 <div class="tip" id="fs27">val bufferByCountAndTime : bufferSize:int -&gt; timeoutMs:int -&gt; source:AsyncSeq&lt;&#39;T&gt; -&gt; AsyncSeq&lt;&#39;T []&gt;<br /><br />Full name: FSharp.Control.AsyncSeq.bufferByCountAndTime</div>
-<div class="tip" id="fs28">type Key = string<br /><br />Full name: AsyncSeqExamples.Key</div>
-<div class="tip" id="fs29">type Value = string<br /><br />Full name: AsyncSeqExamples.Value</div>
-<div class="tip" id="fs30">type ModifyIndex = int64<br /><br />Full name: AsyncSeqExamples.ModifyIndex</div>
-<div class="tip" id="fs31">val longPollKey : key:Key * mi:ModifyIndex -&gt; Async&lt;Value * ModifyIndex&gt;<br /><br />Full name: AsyncSeqExamples.longPollKey</div>
-<div class="tip" id="fs32">val key : Key</div>
-<div class="tip" id="fs33">val mi : ModifyIndex</div>
-<div class="tip" id="fs34">val changes : key:Key * mi:ModifyIndex -&gt; AsyncSeq&lt;Value&gt;<br /><br />Full name: AsyncSeqExamples.changes</div>
-<div class="tip" id="fs35">val unfoldAsync : generator:(&#39;State -&gt; Async&lt;(&#39;T * &#39;State) option&gt;) -&gt; state:&#39;State -&gt; AsyncSeq&lt;&#39;T&gt;<br /><br />Full name: FSharp.Control.AsyncSeq.unfoldAsync</div>
-<div class="tip" id="fs36">val async : AsyncBuilder<br /><br />Full name: Microsoft.FSharp.Core.ExtraTopLevelOperators.async</div>
-<div class="tip" id="fs37">val value : Value</div>
-<div class="tip" id="fs38">union case Option.Some: Value: &#39;T -&gt; Option&lt;&#39;T&gt;</div>
-<div class="tip" id="fs39">val intervalMs : periodMs:int -&gt; AsyncSeq&lt;DateTime&gt;<br /><br />Full name: AsyncSeqExamples.intervalMs</div>
-<div class="tip" id="fs40">val periodMs : int</div>
-<div class="tip" id="fs41">val asyncSeq : AsyncSeq.AsyncSeqBuilder<br /><br />Full name: FSharp.Control.AsyncSeqExtensions.asyncSeq</div>
-<div class="tip" id="fs42">Multiple items<br />type DateTime =<br />&#160;&#160;struct<br />&#160;&#160;&#160;&#160;new : ticks:int64 -&gt; DateTime + 10 overloads<br />&#160;&#160;&#160;&#160;member Add : value:TimeSpan -&gt; DateTime<br />&#160;&#160;&#160;&#160;member AddDays : value:float -&gt; DateTime<br />&#160;&#160;&#160;&#160;member AddHours : value:float -&gt; DateTime<br />&#160;&#160;&#160;&#160;member AddMilliseconds : value:float -&gt; DateTime<br />&#160;&#160;&#160;&#160;member AddMinutes : value:float -&gt; DateTime<br />&#160;&#160;&#160;&#160;member AddMonths : months:int -&gt; DateTime<br />&#160;&#160;&#160;&#160;member AddSeconds : value:float -&gt; DateTime<br />&#160;&#160;&#160;&#160;member AddTicks : value:int64 -&gt; DateTime<br />&#160;&#160;&#160;&#160;member AddYears : value:int -&gt; DateTime<br />&#160;&#160;&#160;&#160;...<br />&#160;&#160;end<br /><br />Full name: System.DateTime<br /><br />--------------------<br />DateTime()<br />&#160;&#160;&#160;<em>(+0 other overloads)</em><br />DateTime(ticks: int64) : unit<br />&#160;&#160;&#160;<em>(+0 other overloads)</em><br />DateTime(ticks: int64, kind: DateTimeKind) : unit<br />&#160;&#160;&#160;<em>(+0 other overloads)</em><br />DateTime(year: int, month: int, day: int) : unit<br />&#160;&#160;&#160;<em>(+0 other overloads)</em><br />DateTime(year: int, month: int, day: int, calendar: Globalization.Calendar) : unit<br />&#160;&#160;&#160;<em>(+0 other overloads)</em><br />DateTime(year: int, month: int, day: int, hour: int, minute: int, second: int) : unit<br />&#160;&#160;&#160;<em>(+0 other overloads)</em><br />DateTime(year: int, month: int, day: int, hour: int, minute: int, second: int, kind: DateTimeKind) : unit<br />&#160;&#160;&#160;<em>(+0 other overloads)</em><br />DateTime(year: int, month: int, day: int, hour: int, minute: int, second: int, calendar: Globalization.Calendar) : unit<br />&#160;&#160;&#160;<em>(+0 other overloads)</em><br />DateTime(year: int, month: int, day: int, hour: int, minute: int, second: int, millisecond: int) : unit<br />&#160;&#160;&#160;<em>(+0 other overloads)</em><br />DateTime(year: int, month: int, day: int, hour: int, minute: int, second: int, millisecond: int, kind: DateTimeKind) : unit<br />&#160;&#160;&#160;<em>(+0 other overloads)</em></div>
-<div class="tip" id="fs43">property DateTime.UtcNow: DateTime</div>
-<div class="tip" id="fs44">static member Async.Sleep : millisecondsDueTime:int -&gt; Async&lt;unit&gt;</div>
-<div class="tip" id="fs45">val changesOrInterval : AsyncSeq&lt;Choice&lt;Value,DateTime&gt;&gt;<br /><br />Full name: AsyncSeqExamples.changesOrInterval</div>
-<div class="tip" id="fs46">Multiple items<br />type Choice&lt;&#39;T1,&#39;T2&gt; =<br />&#160;&#160;| Choice1Of2 of &#39;T1<br />&#160;&#160;| Choice2Of2 of &#39;T2<br /><br />Full name: Microsoft.FSharp.Core.Choice&lt;_,_&gt;<br /><br />--------------------<br />type Choice&lt;&#39;T1,&#39;T2,&#39;T3&gt; =<br />&#160;&#160;| Choice1Of3 of &#39;T1<br />&#160;&#160;| Choice2Of3 of &#39;T2<br />&#160;&#160;| Choice3Of3 of &#39;T3<br /><br />Full name: Microsoft.FSharp.Core.Choice&lt;_,_,_&gt;<br /><br />--------------------<br />type Choice&lt;&#39;T1,&#39;T2,&#39;T3,&#39;T4&gt; =<br />&#160;&#160;| Choice1Of4 of &#39;T1<br />&#160;&#160;| Choice2Of4 of &#39;T2<br />&#160;&#160;| Choice3Of4 of &#39;T3<br />&#160;&#160;| Choice4Of4 of &#39;T4<br /><br />Full name: Microsoft.FSharp.Core.Choice&lt;_,_,_,_&gt;<br /><br />--------------------<br />type Choice&lt;&#39;T1,&#39;T2,&#39;T3,&#39;T4,&#39;T5&gt; =<br />&#160;&#160;| Choice1Of5 of &#39;T1<br />&#160;&#160;| Choice2Of5 of &#39;T2<br />&#160;&#160;| Choice3Of5 of &#39;T3<br />&#160;&#160;| Choice4Of5 of &#39;T4<br />&#160;&#160;| Choice5Of5 of &#39;T5<br /><br />Full name: Microsoft.FSharp.Core.Choice&lt;_,_,_,_,_&gt;<br /><br />--------------------<br />type Choice&lt;&#39;T1,&#39;T2,&#39;T3,&#39;T4,&#39;T5,&#39;T6&gt; =<br />&#160;&#160;| Choice1Of6 of &#39;T1<br />&#160;&#160;| Choice2Of6 of &#39;T2<br />&#160;&#160;| Choice3Of6 of &#39;T3<br />&#160;&#160;| Choice4Of6 of &#39;T4<br />&#160;&#160;| Choice5Of6 of &#39;T5<br />&#160;&#160;| Choice6Of6 of &#39;T6<br /><br />Full name: Microsoft.FSharp.Core.Choice&lt;_,_,_,_,_,_&gt;<br /><br />--------------------<br />type Choice&lt;&#39;T1,&#39;T2,&#39;T3,&#39;T4,&#39;T5,&#39;T6,&#39;T7&gt; =<br />&#160;&#160;| Choice1Of7 of &#39;T1<br />&#160;&#160;| Choice2Of7 of &#39;T2<br />&#160;&#160;| Choice3Of7 of &#39;T3<br />&#160;&#160;| Choice4Of7 of &#39;T4<br />&#160;&#160;| Choice5Of7 of &#39;T5<br />&#160;&#160;| Choice6Of7 of &#39;T6<br />&#160;&#160;| Choice7Of7 of &#39;T7<br /><br />Full name: Microsoft.FSharp.Core.Choice&lt;_,_,_,_,_,_,_&gt;</div>
-<div class="tip" id="fs47">val mergeChoice : source1:AsyncSeq&lt;&#39;T1&gt; -&gt; source2:AsyncSeq&lt;&#39;T2&gt; -&gt; AsyncSeq&lt;Choice&lt;&#39;T1,&#39;T2&gt;&gt;<br /><br />Full name: FSharp.Control.AsyncSeq.mergeChoice</div>
+<div class="tip" id="fs28">val intervalMs : periodMs:int -&gt; &#39;a<br /><br />Full name: AsyncSeqExamples.intervalMs<br /><em><br /><br />&#160;Represents an stream emitting elements on a specified interval.</em></div>
+<div class="tip" id="fs29">val periodMs : int</div>
+<div class="tip" id="fs30">static member Async.Sleep : millisecondsDueTime:int -&gt; Async&lt;unit&gt;</div>
+<div class="tip" id="fs31">val either : obj<br /><br />Full name: AsyncSeqExamples.either</div>
+<div class="tip" id="fs32">type Key = string<br /><br />Full name: AsyncSeqExamples.Key</div>
+<div class="tip" id="fs33">type Value = string<br /><br />Full name: AsyncSeqExamples.Value</div>
+<div class="tip" id="fs34">type ModifyIndex = int64<br /><br />Full name: AsyncSeqExamples.ModifyIndex</div>
+<div class="tip" id="fs35">val longPollKey : key:Key * mi:ModifyIndex -&gt; Async&lt;Value * ModifyIndex&gt;<br /><br />Full name: AsyncSeqExamples.longPollKey</div>
+<div class="tip" id="fs36">val key : Key</div>
+<div class="tip" id="fs37">val mi : ModifyIndex</div>
+<div class="tip" id="fs38">val changes : key:Key * mi:ModifyIndex -&gt; AsyncSeq&lt;Value&gt;<br /><br />Full name: AsyncSeqExamples.changes</div>
+<div class="tip" id="fs39">val unfoldAsync : generator:(&#39;State -&gt; Async&lt;(&#39;T * &#39;State) option&gt;) -&gt; state:&#39;State -&gt; AsyncSeq&lt;&#39;T&gt;<br /><br />Full name: FSharp.Control.AsyncSeq.unfoldAsync</div>
+<div class="tip" id="fs40">val async : AsyncBuilder<br /><br />Full name: Microsoft.FSharp.Core.ExtraTopLevelOperators.async</div>
+<div class="tip" id="fs41">val value : Value</div>
+<div class="tip" id="fs42">union case Option.Some: Value: &#39;T -&gt; Option&lt;&#39;T&gt;</div>
+<div class="tip" id="fs43">val intervalMs : periodMs:int -&gt; AsyncSeq&lt;DateTime&gt;<br /><br />Full name: AsyncSeqExamples.intervalMs</div>
+<div class="tip" id="fs44">val asyncSeq : AsyncSeq.AsyncSeqBuilder<br /><br />Full name: FSharp.Control.AsyncSeqExtensions.asyncSeq</div>
+<div class="tip" id="fs45">Multiple items<br />type DateTime =<br />&#160;&#160;struct<br />&#160;&#160;&#160;&#160;new : ticks:int64 -&gt; DateTime + 10 overloads<br />&#160;&#160;&#160;&#160;member Add : value:TimeSpan -&gt; DateTime<br />&#160;&#160;&#160;&#160;member AddDays : value:float -&gt; DateTime<br />&#160;&#160;&#160;&#160;member AddHours : value:float -&gt; DateTime<br />&#160;&#160;&#160;&#160;member AddMilliseconds : value:float -&gt; DateTime<br />&#160;&#160;&#160;&#160;member AddMinutes : value:float -&gt; DateTime<br />&#160;&#160;&#160;&#160;member AddMonths : months:int -&gt; DateTime<br />&#160;&#160;&#160;&#160;member AddSeconds : value:float -&gt; DateTime<br />&#160;&#160;&#160;&#160;member AddTicks : value:int64 -&gt; DateTime<br />&#160;&#160;&#160;&#160;member AddYears : value:int -&gt; DateTime<br />&#160;&#160;&#160;&#160;...<br />&#160;&#160;end<br /><br />Full name: System.DateTime<br /><br />--------------------<br />DateTime()<br />&#160;&#160;&#160;<em>(+0 other overloads)</em><br />DateTime(ticks: int64) : unit<br />&#160;&#160;&#160;<em>(+0 other overloads)</em><br />DateTime(ticks: int64, kind: DateTimeKind) : unit<br />&#160;&#160;&#160;<em>(+0 other overloads)</em><br />DateTime(year: int, month: int, day: int) : unit<br />&#160;&#160;&#160;<em>(+0 other overloads)</em><br />DateTime(year: int, month: int, day: int, calendar: Globalization.Calendar) : unit<br />&#160;&#160;&#160;<em>(+0 other overloads)</em><br />DateTime(year: int, month: int, day: int, hour: int, minute: int, second: int) : unit<br />&#160;&#160;&#160;<em>(+0 other overloads)</em><br />DateTime(year: int, month: int, day: int, hour: int, minute: int, second: int, kind: DateTimeKind) : unit<br />&#160;&#160;&#160;<em>(+0 other overloads)</em><br />DateTime(year: int, month: int, day: int, hour: int, minute: int, second: int, calendar: Globalization.Calendar) : unit<br />&#160;&#160;&#160;<em>(+0 other overloads)</em><br />DateTime(year: int, month: int, day: int, hour: int, minute: int, second: int, millisecond: int) : unit<br />&#160;&#160;&#160;<em>(+0 other overloads)</em><br />DateTime(year: int, month: int, day: int, hour: int, minute: int, second: int, millisecond: int, kind: DateTimeKind) : unit<br />&#160;&#160;&#160;<em>(+0 other overloads)</em></div>
+<div class="tip" id="fs46">property DateTime.UtcNow: DateTime</div>
+<div class="tip" id="fs47">val changesOrInterval : AsyncSeq&lt;Value&gt;<br /><br />Full name: AsyncSeqExamples.changesOrInterval</div>
+<div class="tip" id="fs48">val combineLatestWith : combine:(&#39;T -&gt; &#39;U -&gt; &#39;V) -&gt; source1:AsyncSeq&lt;&#39;T&gt; -&gt; source2:AsyncSeq&lt;&#39;U&gt; -&gt; AsyncSeq&lt;&#39;V&gt;<br /><br />Full name: FSharp.Control.AsyncSeq.combineLatestWith</div>
+<div class="tip" id="fs49">val v : Value</div>
+<div class="tip" id="fs50">type Status =<br />&#160;&#160;{completed: int;<br />&#160;&#160;&#160;finished: bool;<br />&#160;&#160;&#160;result: string;}<br /><br />Full name: AsyncSeqExamples.Status</div>
+<div class="tip" id="fs51">Status.completed: int</div>
+<div class="tip" id="fs52">Status.finished: bool</div>
+<div class="tip" id="fs53">type bool = Boolean<br /><br />Full name: Microsoft.FSharp.Core.bool</div>
+<div class="tip" id="fs54">Status.result: string</div>
+<div class="tip" id="fs55">val status : Async&lt;Status&gt;<br /><br />Full name: AsyncSeqExamples.status<br /><em><br /><br />&#160;Gets the status of a job.</em></div>
+<div class="tip" id="fs56">val statuses : AsyncSeq&lt;Status&gt;<br /><br />Full name: AsyncSeqExamples.statuses</div>
+<div class="tip" id="fs57">val s : Status</div>
+<div class="tip" id="fs58">val distinctStatuses : AsyncSeq&lt;Status&gt;<br /><br />Full name: AsyncSeqExamples.distinctStatuses</div>
+<div class="tip" id="fs59">val distinctUntilChanged : source:AsyncSeq&lt;&#39;T&gt; -&gt; AsyncSeq&lt;&#39;T&gt; (requires equality)<br /><br />Full name: FSharp.Control.AsyncSeq.distinctUntilChanged</div>
+<div class="tip" id="fs60">val result : Async&lt;string&gt;<br /><br />Full name: AsyncSeqExamples.result</div>
+<div class="tip" id="fs61">val pick : chooser:(&#39;T -&gt; &#39;TResult option) -&gt; source:AsyncSeq&lt;&#39;T&gt; -&gt; Async&lt;&#39;TResult&gt;<br /><br />Full name: FSharp.Control.AsyncSeq.pick</div>
+<div class="tip" id="fs62">val st : Status</div>
+<div class="tip" id="fs63">val printfn : format:Printf.TextWriterFormat&lt;&#39;T&gt; -&gt; &#39;T<br /><br />Full name: Microsoft.FSharp.Core.ExtraTopLevelOperators.printfn</div>
+<div class="tip" id="fs64">union case Option.None: Option&lt;&#39;T&gt;</div>
+<div class="tip" id="fs65">val events : AsyncSeq&lt;Event&gt;<br /><br />Full name: AsyncSeqExamples.events</div>
+<div class="tip" id="fs66">val eventsAtLeastOneSec : AsyncSeq&lt;Event&gt;<br /><br />Full name: AsyncSeqExamples.eventsAtLeastOneSec</div>
+<div class="tip" id="fs67">val zipWith : mapping:(&#39;T1 -&gt; &#39;T2 -&gt; &#39;U) -&gt; source1:AsyncSeq&lt;&#39;T1&gt; -&gt; source2:AsyncSeq&lt;&#39;T2&gt; -&gt; AsyncSeq&lt;&#39;U&gt;<br /><br />Full name: FSharp.Control.AsyncSeq.zipWith</div>
+<div class="tip" id="fs68">val a : Event</div>
+<div class="tip" id="fs69">val replicateInfiniteAsync : v:Async&lt;&#39;T&gt; -&gt; AsyncSeq&lt;&#39;T&gt;<br /><br />Full name: FSharp.Control.AsyncSeq.replicateInfiniteAsync</div>
+<div class="tip" id="fs70">val individualEvents : AsyncSeq&lt;Event&gt;<br /><br />Full name: AsyncSeqExamples.individualEvents</div>
+<div class="tip" id="fs71">val bufferSize : int<br /><br />Full name: AsyncSeqExamples.bufferSize</div>
+<div class="tip" id="fs72">val bufferTimeout : int<br /><br />Full name: AsyncSeqExamples.bufferTimeout</div>
+<div class="tip" id="fs73">val bufferedEvents : AsyncSeq&lt;Event []&gt;<br /><br />Full name: AsyncSeqExamples.bufferedEvents</div>
 
         </div>
         <div class="span3">

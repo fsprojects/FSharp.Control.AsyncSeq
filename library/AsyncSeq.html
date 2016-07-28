@@ -34,17 +34,14 @@
         <div class="span9" id="main">
           
 <h1><a name="F-Async-FSharp-Control-AsyncSeq" class="anchor" href="#F-Async-FSharp-Control-AsyncSeq">F# Async: FSharp.Control.AsyncSeq</a></h1>
-
 <p>An AsyncSeq is a sequence in which individual elements are retrieved using an <code>Async</code> computation.
 It is similar to <code>seq&lt;'a&gt;</code> in that subsequent elements are pulled on-demand. Structurally it is
 similar to <code>list&lt;'a&gt;</code> with the difference being that each head and tail node or empty node is wrapped
 in <code>Async</code>. <code>AsyncSeq</code> also bears similarity to <code>IObservable&lt;'a&gt;</code> with the former being based on an "asynchronous pull" and the
-latter based on a "synchronous push". Analogs for most operations defined for <code>Seq</code>, <code>List</code> and <code>IObservable</code> are also defined for 
-<code>AsyncSeq</code>. The power of <code>AsyncSeq</code> lies in that many of these operations also have analogs based on <code>Async</code> 
+latter based on a "synchronous push". Analogs for most operations defined for <code>Seq</code>, <code>List</code> and <code>IObservable</code> are also defined for
+<code>AsyncSeq</code>. The power of <code>AsyncSeq</code> lies in that many of these operations also have analogs based on <code>Async</code>
 allowing composition of complex asynchronous workflows.</p>
-
 <p>The <code>AsyncSeq</code> type is located in the <code>FSharp.Control.AsyncSeq.dll</code> assembly which can be loaded in F# Interactive as follows:</p>
-
 <table class="pre"><tr><td class="lines"><pre class="fssnip"><span class="l">1: </span>
 <span class="l">2: </span>
 </pre></td>
@@ -53,11 +50,8 @@ allowing composition of complex asynchronous workflows.</p>
 </code></pre></td>
 </tr>
 </table>
-
 <h3><a name="Generating-asynchronous-sequences" class="anchor" href="#Generating-asynchronous-sequences">Generating asynchronous sequences</a></h3>
-
 <p>An <code>AsyncSeq&lt;'a&gt;</code> can be generated using computation expression syntax much like <code>seq&lt;'a&gt;</code>:</p>
-
 <table class="pre"><tr><td class="lines"><pre class="fssnip"><span class="l">1: </span>
 <span class="l">2: </span>
 <span class="l">3: </span>
@@ -70,24 +64,19 @@ allowing composition of complex asynchronous workflows.</p>
 </code></pre></td>
 </tr>
 </table>
-
 <p>Another way to generate an asynchronous sequence is using the <code>Async.unfoldAsync</code> function. This
-function accepts as an argument a function which can generate individual elements based on a state and 
+function accepts as an argument a function which can generate individual elements based on a state and
 signal completion of the sequence.</p>
-
 <p>For example, suppose that you're writing a program which consumes the Twitter API and stores tweets
-which satisfy some criteria into a database. There are several asynchronous request-reply interactions at play - 
+which satisfy some criteria into a database. There are several asynchronous request-reply interactions at play -
 one to retrieve a batch of tweets from the Twitter API, another to determine whether a tweet satisfies some
 criteria and finally an operation to write the desired tweet to a database.</p>
-
-<p>Given the type <code>Tweet</code> to represent an individual tweet, the operation to retrieve a batch of tweets can 
-be modeled with type <code>int -&gt; Async&lt;(Tweet[] * int) option&gt;</code> where the incoming <code>int</code> represents the 
+<p>Given the type <code>Tweet</code> to represent an individual tweet, the operation to retrieve a batch of tweets can
+be modeled with type <code>int -&gt; Async&lt;(Tweet[] * int) option&gt;</code> where the incoming <code>int</code> represents the
 offset into the tweet stream. The asynchronous result is an <code>Option</code> which when <code>None</code> indicates the
 end of the stream, and otherwise contains the batch of retrieved tweets as well as the next offset.</p>
-
-<p>The above function to retrieve a batch of tweets can be used to generate an asynchronous sequence 
+<p>The above function to retrieve a batch of tweets can be used to generate an asynchronous sequence
 of tweet batches as follows:</p>
-
 <table class="pre"><tr><td class="lines"><pre class="fssnip"><span class="l"> 1: </span>
 <span class="l"> 2: </span>
 <span class="l"> 3: </span>
@@ -112,13 +101,10 @@ of tweet batches as follows:</p>
 </code></pre></td>
 </tr>
 </table>
-
 <p>The asynchronous sequence <code>tweetBatches</code> will when iterated, incrementally consume the entire tweet stream.</p>
-
 <p>Next, suppose that the tweet filtering function makes a call to a web service which determines
 whether a particular tweet is of interest and should be stored in the database. This function can be modeled with
 type <code>Tweet -&gt; Async&lt;bool&gt;</code>. We can flatten the <code>tweetBatches</code> sequence and then filter it as follows:</p>
-
 <table class="pre"><tr><td class="lines"><pre class="fssnip"><span class="l">1: </span>
 <span class="l">2: </span>
 <span class="l">3: </span>
@@ -137,13 +123,10 @@ type <code>Tweet -&gt; Async&lt;bool&gt;</code>. We can flatten the <code>tweetB
 </code></pre></td>
 </tr>
 </table>
-
 <p>When the resulting sequence <code>filteredTweets</code> is consumed, it will lazily consume the underlying
 sequence <code>tweetBatches</code>, select individual tweets and filter them using the function <code>filterTweets</code>.</p>
-
 <p>Finally, the function which stores a tweet in the database can be modeled by type <code>Tweet -&gt; Async&lt;unit&gt;</code>.
 We can store all filtered tweets as follows:</p>
-
 <table class="pre"><tr><td class="lines"><pre class="fssnip"><span class="l">1: </span>
 <span class="l">2: </span>
 <span class="l">3: </span>
@@ -160,12 +143,10 @@ We can store all filtered tweets as follows:</p>
 </code></pre></td>
 </tr>
 </table>
-
 <p>Note that the value <code>storeFilteredTweets</code> is an asynchronous computation of type <code>Async&lt;unit&gt;</code>. At this point,
 it is a <em>representation</em> of the workflow which consists of reading batches of tweets, filtering them and storing them
 in the database. When executed, the workflow will consume the entire tweet stream. The entire workflow can be
 succinctly declared and executed as follows:</p>
-
 <table class="pre"><tr><td class="lines"><pre class="fssnip"><span class="l">1: </span>
 <span class="l">2: </span>
 <span class="l">3: </span>
@@ -180,18 +161,14 @@ succinctly declared and executed as follows:</p>
 </code></pre></td>
 </tr>
 </table>
-
 <p>The above snippet effectively orchestrates several asynchronous request-reply interactions into a cohesive unit
 composed using familiar operations on sequences. Furthermore, it will be executed efficiently in a non-blocking manner.</p>
-
 <h3><a name="Comparison-with-seq-a" class="anchor" href="#Comparison-with-seq-a">Comparison with seq<'a></a></h3>
-
-<p>The central difference between <code>seq&lt;'a&gt;</code> and <code>AsyncSeq&lt;'a&gt;</code> two can be illustrated by introducing the notion of time. 
-Suppose that generating subsequent elements of a sequence requires an IO-bound operation. Invoking long 
-running IO-bound operations from within a <code>seq&lt;'a&gt;</code> will <em>block</em> the thread which calls <code>MoveNext</code> on the 
-corresponding <code>IEnumerator</code>. An <code>AsyncSeq</code> on the other hand can use facilities provided by the F# <code>Async</code> type to make 
+<p>The central difference between <code>seq&lt;'a&gt;</code> and <code>AsyncSeq&lt;'a&gt;</code> two can be illustrated by introducing the notion of time.
+Suppose that generating subsequent elements of a sequence requires an IO-bound operation. Invoking long
+running IO-bound operations from within a <code>seq&lt;'a&gt;</code> will <em>block</em> the thread which calls <code>MoveNext</code> on the
+corresponding <code>IEnumerator</code>. An <code>AsyncSeq</code> on the other hand can use facilities provided by the F# <code>Async</code> type to make
 more efficient use of system resources.</p>
-
 <table class="pre"><tr><td class="lines"><pre class="fssnip"><span class="l"> 1: </span>
 <span class="l"> 2: </span>
 <span class="l"> 3: </span>
@@ -222,36 +199,30 @@ more efficient use of system resources.</p>
 </code></pre></td>
 </tr>
 </table>
-
 <p>When the asynchronous sequence <code>withTime'</code> is iterated, the calls to <code>Async.Sleep</code> won't block threads. Instead,
-the <em>continuation</em> of the sequence will be scheduled by <code>Async</code> while the calling thread will be free to perform other work. 
+the <em>continuation</em> of the sequence will be scheduled by <code>Async</code> while the calling thread will be free to perform other work.
 Overall, a <code>seq&lt;'a&gt;</code> can be viewed as a special case of an <code>AsyncSeq&lt;'a&gt;</code> where subsequent elements are retrieved
 in a blocking manner.</p>
-
 <h3><a name="Comparison-with-IObservable-a" class="anchor" href="#Comparison-with-IObservable-a">Comparison with IObservable<'a></a></h3>
-
 <p>Both <code>IObservable&lt;'a&gt;</code> and <code>AsyncSeq&lt;'a&gt;</code> represent collections of items and both provide similar operations
 for transformation and composition. The central difference between the two is that the former uses a <em>synchronous push</em>
-to a subscriber and the latter uses an <em>asynchronous pull</em> by a consumer. 
+to a subscriber and the latter uses an <em>asynchronous pull</em> by a consumer.
 Consumers of an <code>IObservable&lt;'a&gt;</code> <em>subscribe</em> to receive notifications about
 new items or the end of the sequence. By contrast, consumers of an <code>AsyncSeq&lt;'a&gt;</code> <em>asynchronously retrieve</em> subsequent items on their own
 terms. Some domains are more naturally modeled with one or the other, however it is less clear which is a more
-suitable tool for a specific task. In many cases, a combination of the two provides the optimal solution and 
+suitable tool for a specific task. In many cases, a combination of the two provides the optimal solution and
 restricting yourself to one, while simplifying the programming model, can lead one to view all problems as a nail.</p>
-
-<p>A more specific difference between the two is that <code>IObservable&lt;'a&gt;</code> subscribers have the basic type <code>'a -&gt; unit</code> 
-and are therefore inherently synchronous and imperative. The observer can certainly make a blocking call, but this 
+<p>A more specific difference between the two is that <code>IObservable&lt;'a&gt;</code> subscribers have the basic type <code>'a -&gt; unit</code>
+and are therefore inherently synchronous and imperative. The observer can certainly make a blocking call, but this
 can defeat the purpose of the observable sequence all together. Alternatively, the observer can spawn an operation, but
-this can break composition because one can no longer rely on the observer returning to determine that it has 
+this can break composition because one can no longer rely on the observer returning to determine that it has
 completed. With the observable model however, we can model blocking operations through composition on sequences rather
 than observers.</p>
-
 <p>To illustrate, lets try to implement the above Tweet retrieval, filtering and storage workflow using observable sequences.
-Suppose we already have an observable sequence representing tweets <code>IObservable&lt;Tweet&gt;</code> and we simply wish 
+Suppose we already have an observable sequence representing tweets <code>IObservable&lt;Tweet&gt;</code> and we simply wish
 to filter it and store the resulting tweets. The function <code>Observable.filter</code> allows one to filter observable
 sequences based on a predicate, however in this case it doesn't quite cut it because the predicate passed to it must
 be synchronous <code>'a -&gt; bool</code>:</p>
-
 <table class="pre"><tr><td class="lines"><pre class="fssnip"><span class="l">1: </span>
 <span class="l">2: </span>
 <span class="l">3: </span>
@@ -272,12 +243,10 @@ be synchronous <code>'a -&gt; bool</code>:</p>
 </code></pre></td>
 </tr>
 </table>
-
 <p>To remedy the blocking IO-call we can better adapt the filtering function to the <code>IObservable&lt;'a&gt;</code> model. A value
-of type <code>Async&lt;'a&gt;</code> can be modeled as an <code>IObservable&lt;'a&gt;</code> with one element. Suppose that we have 
+of type <code>Async&lt;'a&gt;</code> can be modeled as an <code>IObservable&lt;'a&gt;</code> with one element. Suppose that we have
 <code>Tweet -&gt; IObservable&lt;bool&gt;</code>. We can define a few helper operators on observables to allow filtering using
 an asynchronous predicate as follows:</p>
-
 <table class="pre"><tr><td class="lines"><pre class="fssnip"><span class="l"> 1: </span>
 <span class="l"> 2: </span>
 <span class="l"> 3: </span>
@@ -346,11 +315,9 @@ an asynchronous predicate as follows:</p>
 </code></pre></td>
 </tr>
 </table>
-
 <p>With a little effort, we were able to adapt <code>IObservable&lt;'a&gt;</code> to our needs. Next lets try implementing the storage of
 filtered tweets. Again, we can adapt the function <code>storeTweet</code> defined above to the observable model and bind the
 observable of filtered tweets to it:</p>
-
 <table class="pre"><tr><td class="lines"><pre class="fssnip"><span class="l">1: </span>
 <span class="l">2: </span>
 <span class="l">3: </span>
@@ -361,10 +328,8 @@ observable of filtered tweets to it:</p>
 </code></pre></td>
 </tr>
 </table>
-
 <p>The observable sequence <code>storedTweetsObs</code> will produces a value each time a filtered tweet is stored. The entire
 workflow can be expressed as follows:</p>
-
 <table class="pre"><tr><td class="lines"><pre class="fssnip"><span class="l">1: </span>
 <span class="l">2: </span>
 <span class="l">3: </span>
@@ -377,32 +342,26 @@ workflow can be expressed as follows:</p>
 </code></pre></td>
 </tr>
 </table>
-
-<p>Overall, both solutions are succinct and composable and deciding which one to use can ultimately be a matter of preference. 
-Some things to consider are the "synchronous push" vs. "asynchronous pull" semantics. On the one hand, tweets are pushed based - the consumer has no control 
-over their generation. On the other hand, the program at hand will process the tweets on its own terms regardless of how quickly 
-they are being generated. Moreover, the underlying Twitter API will likely utilize a request-reply protocol to retrieve batches of 
-tweets from persistent storage. As such, the distinction between "synchronous push" vs. "asynchronous pull" becomes less interesting. If the underlying source 
-is truly push-based, then one can buffer its output and consume it using an asynchronous sequence. If the underlying source is pull-based, 
-then one can turn it into an observable sequence by first pulling, then pushing. Note however that in a true real-time reactive system, 
+<p>Overall, both solutions are succinct and composable and deciding which one to use can ultimately be a matter of preference.
+Some things to consider are the "synchronous push" vs. "asynchronous pull" semantics. On the one hand, tweets are pushed based - the consumer has no control
+over their generation. On the other hand, the program at hand will process the tweets on its own terms regardless of how quickly
+they are being generated. Moreover, the underlying Twitter API will likely utilize a request-reply protocol to retrieve batches of
+tweets from persistent storage. As such, the distinction between "synchronous push" vs. "asynchronous pull" becomes less interesting. If the underlying source
+is truly push-based, then one can buffer its output and consume it using an asynchronous sequence. If the underlying source is pull-based,
+then one can turn it into an observable sequence by first pulling, then pushing. Note however that in a true real-time reactive system,
 notifications must be pushed immediately without delay.</p>
-
 <p>Upon closer inspection, the consumption approaches between the two models aren't all too different. While <code>AsyncSeq</code> is based on an asynchronous-pull operation,
-it is usually consumed using an operator such as <code>AsyncSeq.iterAsync</code> as shown above. This is a function of type 
-<code>('a -&gt; Async&lt;unit&gt;) -&gt; AsyncSeq&lt;'a&gt; -&gt; Async&lt;unit&gt;</code> where the first argument is a function <code>'a -&gt; Async&lt;unit&gt;</code> which performs 
-some work on an item of the sequence and is applied repeatedly to subsequent items. In a sense, <code>iterAsync</code> <em>pushes</em> values to this 
+it is usually consumed using an operator such as <code>AsyncSeq.iterAsync</code> as shown above. This is a function of type
+<code>('a -&gt; Async&lt;unit&gt;) -&gt; AsyncSeq&lt;'a&gt; -&gt; Async&lt;unit&gt;</code> where the first argument is a function <code>'a -&gt; Async&lt;unit&gt;</code> which performs
+some work on an item of the sequence and is applied repeatedly to subsequent items. In a sense, <code>iterAsync</code> <em>pushes</em> values to this
 function. The primary difference from observers of observable sequences is the return type <code>Async&lt;unit&gt;</code> rather than simply <code>unit</code>.</p>
-
 <h3><a name="Performance-Considerations" class="anchor" href="#Performance-Considerations">Performance Considerations</a></h3>
-
 <p>While an asynchronous computation obviates the need to block an OS thread for the duration of an operation, it isn't always the case
 that this will improve the overall performance of an application. Note however that an async computation does not <em>require</em> a
 non-blocking operation, it simply allows for it. Also of note is that unlike calling <code>IEnumerable.MoveNext()</code>, consuming
 and item from an asynchronous sequence requires several allocations. Usually this is greatly outweighed by the
 benefits, it can make a difference in some scenarios.</p>
-
 <h2><a name="Related-Articles" class="anchor" href="#Related-Articles">Related Articles</a></h2>
-
 <ul>
 <li><a href="http://tomasp.net/blog/async-sequences.aspx/">Programming with F# asynchronous sequences</a></li>
 </ul>

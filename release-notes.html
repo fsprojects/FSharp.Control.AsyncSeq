@@ -32,32 +32,28 @@
       <div class="row">
         <div class="span9" id="main">
           
+<h3><a name="2-0-9-27-07-2016" class="anchor" href="#2-0-9-27-07-2016">2.0.9 - 27.07.2016</a></h3>
+<ul>
+<li>Much improved append performance.</li>
+<li>Direct implementation of unfoldAsync as IAsyncEnumerable, with chooseAsync, mapAsync and foldAsync overrides</li>
+</ul>
 <h3><a name="2-0-8-29-03-2016" class="anchor" href="#2-0-8-29-03-2016">2.0.8 - 29.03.2016</a></h3>
-
 <ul>
 <li>Add portable7 profile</li>
 </ul>
-
 <h3><a name="2-0-3-03-12-2015" class="anchor" href="#2-0-3-03-12-2015">2.0.3 - 03.12.2015</a></h3>
-
 <ul>
 <li>Fix bug in Async.cache <a href="https://github.com/fsprojects/FSharp.Control.AsyncSeq/issues/33">#33</a></li>
 </ul>
-
 <h3><a name="2-0-2-15-10-2015" class="anchor" href="#2-0-2-15-10-2015">2.0.2 - 15.10.2015</a></h3>
-
 <ul>
 <li>Fix leak in AsyncSeq.append and other derived generators</li>
 </ul>
-
 <h3><a name="2-0-1-01-06-2015" class="anchor" href="#2-0-1-01-06-2015">2.0.1 - 01.06.2015</a></h3>
-
 <ul>
 <li>Add AsyncSeq.sum, length, contains, exists, forall, tryPick, tryFind</li>
 </ul>
-
 <h3><a name="2-0-0-28-05-2015" class="anchor" href="#2-0-0-28-05-2015">2.0.0 - 28.05.2015</a></h3>
-
 <ul>
 <li>Simplify ofObservableBuffered and toBlockingSeq</li>
 <li>Move to IAsyncEnumerable model to support try/finally and try/with</li>
@@ -73,32 +69,24 @@
 <li>Add initAsync, initInfiniteAsync, replicateInfinite</li>
 <li>Add RequireQualifiedAccess to AsyncSeq</li>
 </ul>
-
 <h3><a name="1-15-0-30-03-2015" class="anchor" href="#1-15-0-30-03-2015">1.15.0 - 30.03.2015</a></h3>
-
 <ul>
 <li>Add AsyncSeq.getIterator (unblocks use of AsyncSeq in FSharpx.Async)</li>
 </ul>
-
 <h3><a name="1-14-30-03-2015" class="anchor" href="#1-14-30-03-2015">1.14 - 30.03.2015</a></h3>
-
 <ul>
 <li>Cancellable AsyncSeq.toBlockingSeq</li>
 <li>Fix AsyncSeq.scanAsync to also return first state</li>
 <li>Add a signature file</li>
 <li>AsyncSeq got extracted as separate project and is now a dependency - <a href="https://github.com/fsprojects/FSharpx.Async/pull/24">https://github.com/fsprojects/FSharpx.Async/pull/24</a></li>
 </ul>
-
 <h3><a name="1-13-27-03-2015" class="anchor" href="#1-13-27-03-2015">1.13 - 27.03.2015</a></h3>
-
 <ul>
 <li>Renamed to FSharp.Control.AsyncSeq</li>
 <li>Remove surface area</li>
 <li>Hide Nil/Cons from representation of AsyncSeq</li>
 </ul>
-
 <h3><a name="1-12-1-27-03-2015" class="anchor" href="#1-12-1-27-03-2015">1.12.1 - 27.03.2015</a></h3>
-
 <ul>
 <li>Added Async.bindChoice, Async.ParallelIgnore, AsyncSeq.zipWithAsync, AsyncSeq.zappAsync, AsyncSeq.threadStateAsync, AsyncSeq.merge, AsyncSeq.traverseOptionAsync, AsyncSeq.traverseChoiceAsync</li>
 <li>Added AsyncSeq.toList, AsyncSeq.toArray, AsyncSeq.bufferByCount, AsyncSeq.unfoldAsync, AsyncSeq.concatSeq, AsyncSeq.interleave</li>
