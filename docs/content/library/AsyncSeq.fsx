@@ -111,7 +111,7 @@ composed using familiar operations on sequences. Furthermore, it will be execute
 (**
 ### Comparison with seq<'a>
 
-The central difference between `seq<'a>` and `AsyncSeq<'a>` two can be illustrated by introducing the notion of time. 
+The central difference between `seq<'a>` and `AsyncSeq<'a>` can be illustrated by introducing the notion of time.
 Suppose that generating subsequent elements of a sequence requires an IO-bound operation. Invoking long 
 running IO-bound operations from within a `seq<'a>` will *block* the thread which calls `MoveNext` on the 
 corresponding `IEnumerator`. An `AsyncSeq` on the other hand can use facilities provided by the F# `Async` type to make 
@@ -159,7 +159,7 @@ this can break composition because one can no longer rely on the observer return
 completed. With the observable model however, we can model blocking operations through composition on sequences rather
 than observers.
 
-To illustrate, lets try to implement the above Tweet retrieval, filtering and storage workflow using observable sequences.
+To illustrate, let's try to implement the above Tweet retrieval, filtering and storage workflow using observable sequences.
 Suppose we already have an observable sequence representing tweets `IObservable<Tweet>` and we simply wish 
 to filter it and store the resulting tweets. The function `Observable.filter` allows one to filter observable
 sequences based on a predicate, however in this case it doesn't quite cut it because the predicate passed to it must
@@ -217,7 +217,7 @@ let filteredTweetsObs' : IObservable<Tweet> =
 
 
 (**
-With a little effort, we were able to adapt `IObservable<'a>` to our needs. Next lets try implementing the storage of
+With a little effort, we were able to adapt `IObservable<'a>` to our needs. Next let's try implementing the storage of
 filtered tweets. Again, we can adapt the function `storeTweet` defined above to the observable model and bind the
 observable of filtered tweets to it:
 *)
@@ -260,7 +260,7 @@ function. The primary difference from observers of observable sequences is the r
 While an asynchronous computation obviates the need to block an OS thread for the duration of an operation, it isn't always the case
 that this will improve the overall performance of an application. Note however that an async computation does not *require* a
 non-blocking operation, it simply allows for it. Also of note is that unlike calling `IEnumerable.MoveNext()`, consuming
-and item from an asynchronous sequence requires several allocations. Usually this is greatly outweighed by the
+an item from an asynchronous sequence requires several allocations. Usually this is greatly outweighed by the
 benefits, it can make a difference in some scenarios.
 
 *)
