@@ -49,7 +49,22 @@ Real: 00:00:02.979, CPU: 00:00:02.968, GC gen0: 321, gen1: 2, gen2: 0
 Real: 00:00:00.913, CPU: 00:00:00.906, GC gen0: 115, gen1: 2, gen2: 0 (gain due to fused unfold and choose via AsyncSeqOp)
 ------------------------------------------------------------------------------------------------------------------------
 
+
+------------------------------------------------------------------------------------------------------------------------
+-- bind via AsyncGenerator (N=10000)
+
+Real: 00:01:09.394, CPU: 00:01:09.109, GC gen0: 4994, gen1: 2661, gen2: 0
+
+Real: 00:00:00.097, CPU: 00:00:00.109, GC gen0: 5, gen1: 2, gen2: 0
+Real: 00:00:04.667, CPU: 00:00:04.671, GC gen0: 478, gen1: 2, gen2: 0 (N=1000000)
+
+Real: 00:00:00.658, CPU: 00:00:00.656, GC gen0: 80, gen1: 1, gen2: 0 (N=1000000) via unfoldAsync
+
+------------------------------------------------------------------------------------------------------------------------
+
+
 *)
+
 let unfoldIter (N:int) =
   let generator state = async {
     if state < N then
@@ -73,6 +88,36 @@ let replicate (N:int) =
   AsyncSeq.replicate N ()
   |> AsyncSeq.iterAsync (ignore >> async.Return)
 
+
+let bind cnt =
+  let rec generate cnt = asyncSeq {
+    if cnt = 0 then () else
+    let! v = async.Return 1
+    yield v
+    yield! generate (cnt-1) }
+  generate cnt |> AsyncSeq.iter ignore
+
+let bindUnfold =
+  AsyncSeq.unfoldAsync (fun cnt -> async {
+    if cnt = 0 then return None
+    else
+      let! v = async.Return 1
+      return Some (v, cnt - 1) })
+  >> AsyncSeq.iter ignore
+
+
+
+let collect n = 
+  AsyncSeq.replicate n ()
+  |> AsyncSeq.collect (fun () -> AsyncSeq.singleton ())
+  |> AsyncSeq.iter ignore
+
+
 //run unfoldIter
-run unfoldChooseIter
+//run unfoldChooseIter
 //run replicate
+//run bind
+//run bindUnfold
+run collect
+
+
