@@ -164,7 +164,7 @@ succinctly declared and executed as follows:</p>
 <p>The above snippet effectively orchestrates several asynchronous request-reply interactions into a cohesive unit
 composed using familiar operations on sequences. Furthermore, it will be executed efficiently in a non-blocking manner.</p>
 <h3><a name="Comparison-with-seq-a" class="anchor" href="#Comparison-with-seq-a">Comparison with seq<'a></a></h3>
-<p>The central difference between <code>seq&lt;'a&gt;</code> and <code>AsyncSeq&lt;'a&gt;</code> two can be illustrated by introducing the notion of time.
+<p>The central difference between <code>seq&lt;'a&gt;</code> and <code>AsyncSeq&lt;'a&gt;</code> can be illustrated by introducing the notion of time.
 Suppose that generating subsequent elements of a sequence requires an IO-bound operation. Invoking long
 running IO-bound operations from within a <code>seq&lt;'a&gt;</code> will <em>block</em> the thread which calls <code>MoveNext</code> on the
 corresponding <code>IEnumerator</code>. An <code>AsyncSeq</code> on the other hand can use facilities provided by the F# <code>Async</code> type to make
@@ -218,7 +218,7 @@ can defeat the purpose of the observable sequence all together. Alternatively, t
 this can break composition because one can no longer rely on the observer returning to determine that it has
 completed. With the observable model however, we can model blocking operations through composition on sequences rather
 than observers.</p>
-<p>To illustrate, lets try to implement the above Tweet retrieval, filtering and storage workflow using observable sequences.
+<p>To illustrate, let's try to implement the above Tweet retrieval, filtering and storage workflow using observable sequences.
 Suppose we already have an observable sequence representing tweets <code>IObservable&lt;Tweet&gt;</code> and we simply wish
 to filter it and store the resulting tweets. The function <code>Observable.filter</code> allows one to filter observable
 sequences based on a predicate, however in this case it doesn't quite cut it because the predicate passed to it must
@@ -315,7 +315,7 @@ an asynchronous predicate as follows:</p>
 </code></pre></td>
 </tr>
 </table>
-<p>With a little effort, we were able to adapt <code>IObservable&lt;'a&gt;</code> to our needs. Next lets try implementing the storage of
+<p>With a little effort, we were able to adapt <code>IObservable&lt;'a&gt;</code> to our needs. Next let's try implementing the storage of
 filtered tweets. Again, we can adapt the function <code>storeTweet</code> defined above to the observable model and bind the
 observable of filtered tweets to it:</p>
 <table class="pre"><tr><td class="lines"><pre class="fssnip"><span class="l">1: </span>
@@ -359,7 +359,7 @@ function. The primary difference from observers of observable sequences is the r
 <p>While an asynchronous computation obviates the need to block an OS thread for the duration of an operation, it isn't always the case
 that this will improve the overall performance of an application. Note however that an async computation does not <em>require</em> a
 non-blocking operation, it simply allows for it. Also of note is that unlike calling <code>IEnumerable.MoveNext()</code>, consuming
-and item from an asynchronous sequence requires several allocations. Usually this is greatly outweighed by the
+an item from an asynchronous sequence requires several allocations. Usually this is greatly outweighed by the
 benefits, it can make a difference in some scenarios.</p>
 <h2><a name="Related-Articles" class="anchor" href="#Related-Articles">Related Articles</a></h2>
 <ul>
