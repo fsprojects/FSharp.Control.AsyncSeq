@@ -1,5 +1,5 @@
 ### 2.0.10 - 24.11.2016
-* Improved asyncSeq workflow performance via bindAsync (pragmatrix)
+* Improved asyncSeq workflow performance via bindAsync generator (@pragmatrix)
 
 ### 2.0.9 - 27.07.2016
 * Much improved append performance.
