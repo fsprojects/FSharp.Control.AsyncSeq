@@ -24,7 +24,6 @@ type IAsyncEnumerable<'T> =
     abstract GetEnumerator : unit -> IAsyncEnumerator<'T>
 
 type AsyncSeq<'T> = IAsyncEnumerable<'T>
-//    abstract GetEnumerator : unit -> IAsyncEnumerator<'T>
 
 type AsyncSeqSrc<'a> = private { tail : AsyncSeqSrcNode<'a> ref }
 
@@ -133,14 +132,40 @@ module AsyncGenerator =
       member x.Disposer =
         g.Disposer
                 
-    static member Bind (g:AsyncGenerator<'a>, cont:unit -> AsyncGenerator<'a>) =
+    static member Bind (g:AsyncGenerator<'a>, cont:unit -> AsyncGenerator<'a>) : AsyncGenerator<'a> =
       match g with
       | :? GenerateCont<'a> as g -> GenerateCont<_>.Bind (g.Generator, (fun () -> GenerateCont<_>.Bind (g.Cont(), cont)))
       | _ -> (new GenerateCont<'a>(g, cont) :> AsyncGenerator<'a>)
       
   /// Right-associating binder.
   let bindG (g:AsyncGenerator<'a>) (cont:unit -> AsyncGenerator<'a>) : AsyncGenerator<'a> =
-    GenerateCont<_>.Bind (g, cont)      
+    GenerateCont<_>.Bind (g, cont)
+
+//  type GenerateCollect<'a, 'b> (g:AsyncGenerator<'a>, cont:'a -> AsyncGenerator<'b>) =
+//    member __.Generator = g
+//    member __.Cont = cont
+//    interface AsyncGenerator<'b> with
+//      member x.Apply () = async {
+//        let! step = appG g
+//        match step with
+//        | Stop -> 
+//          return Stop
+//        | Yield a ->
+//          let g' = cont a
+//          return Goto (bindG g' (fun () -> x :> _))        
+//        | Goto next -> 
+//          return Goto (GenerateCollect<'a, 'b>.Bind (next, cont)) }
+//      member x.Disposer =
+//        g.Disposer
+//
+//    static member Bind (g:AsyncGenerator<'a>, cont:'a -> AsyncGenerator<'b>) : AsyncGenerator<'b> =
+//      match g with
+//      | :? GenerateCollect<'a, 'b> as g -> GenerateCollect<'a, 'b>.Bind (g.Generator, cont)
+//      | _ -> (new GenerateCollect<'a, 'b>(g, cont) :> AsyncGenerator<'b>)
+//
+//  let collectG (g:AsyncGenerator<'a>) (cont:'a -> AsyncGenerator<'b>) : AsyncGenerator<'b> =
+//    GenerateCollect<_,_>.Bind (g, cont)
+
     
 
   /// Converts a generator to an enumerator.
@@ -205,6 +230,9 @@ module AsyncGenerator =
 
   let append (s1:AsyncSeq<'a>) (s2:AsyncSeq<'a>) : AsyncSeq<'a> =
     fromGeneratorDelay (fun () -> bindG (toGenerator s1) (fun () -> toGenerator s2))
+
+//  let collect (f:'a -> AsyncSeq<'b>) (s:AsyncSeq<'a>) : AsyncSeq<'b> =
+//    fromGeneratorDelay (fun () -> collectG (toGenerator s) (f >> toGenerator))
 
 
 [<AbstractClass>]
@@ -311,45 +339,27 @@ module AsyncSeq =
   let inline delay (f: unit -> AsyncSeq<'T>) : AsyncSeq<'T> = 
     AsyncGenerator.delay f
 
-  [<RequireQualifiedAccess>]
-  type BindState<'T,'U> =
-     | NotStarted of Async<'T>
-     | HaveEnumerator of IAsyncEnumerator<'U>
-     | Finished        
-
-  let bindAsync (f: 'T -> AsyncSeq<'U>) (inp : Async<'T>) : AsyncSeq<'U> = 
-        { new IAsyncEnumerable<'U> with 
-              member x.GetEnumerator() = 
-                  let state = ref (BindState.NotStarted inp)
-                  { new IAsyncEnumerator<'U> with 
-                        member x.MoveNext() = 
-                            async { match !state with 
-                                    | BindState.NotStarted inp -> 
-                                        let! v = inp 
-                                        return! 
-                                           (let s = f v
-                                            let e = s.GetEnumerator()
-                                            state := BindState.HaveEnumerator e
-                                            x.MoveNext())
-                                    | BindState.HaveEnumerator e ->   
-                                        let! res = e.MoveNext() 
-                                        return (match res with
-                                                | None -> x.Dispose()
-                                                | Some _ -> ()
-                                                res)
-                                    | _ -> 
-                                        return None }
-                        member x.Dispose() = 
-                            match !state with 
-                            | BindState.HaveEnumerator e -> 
-                                state := BindState.Finished
-                                dispose e 
-                            | _ -> () } }
+  let bindAsync (f:'T -> AsyncSeq<'U>) (inp:Async<'T>) : AsyncSeq<'U> =
+    { new IAsyncEnumerable<'U> with
+        member x.GetEnumerator () = 
+          { new AsyncGenerator.AsyncGenerator<'U> with
+              member x.Apply () = async {
+                  let! v = inp
+                  let cont = 
+                    (f v).GetEnumerator() 
+                    |> AsyncGenerator.generatorFromEnumerator
+                  return AsyncGenerator.Goto cont
+                }
+              member x.Disposer = None
+          } 
+          |> AsyncGenerator.enumeratorFromGenerator
+    }
 
 
 
   type AsyncSeqBuilder() =
-    member x.Yield(v) = singleton v
+    member x.Yield(v) =
+      singleton v
     // This looks weird, but it is needed to allow:
     //
     //   while foo do
@@ -357,7 +367,8 @@ module AsyncSeq =
     //
     // because F# translates body as Bind(something, fun () -> Return())
     member x.Return _ = empty
-    member x.YieldFrom(s:AsyncSeq<'T>) = s
+    member x.YieldFrom(s:AsyncSeq<'T>) =
+      s
     member x.Zero () = empty
     member x.Bind (inp:Async<'T>, body : 'T -> AsyncSeq<'U>) : AsyncSeq<'U> = bindAsync body inp
     member x.Combine (seq1:AsyncSeq<'T>, seq2:AsyncSeq<'T>) = 
@@ -537,6 +548,9 @@ module AsyncSeq =
                                 dispose e2
                                 dispose e1 
                             | _ -> () } }
+
+//  let collect (f: 'T -> AsyncSeq<'U>) (inp: AsyncSeq<'T>) : AsyncSeq<'U> =
+//    AsyncGenerator.collect f inp
 
   [<RequireQualifiedAccess>]
   type CollectSeqState<'T,'U> =
