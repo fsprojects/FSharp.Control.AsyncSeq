@@ -226,14 +226,41 @@ let ``AsyncSeq.forall works``() =
           let actual = AsyncSeq.ofSeq ls |> AsyncSeq.forall (fun x -> x = j) |> Async.RunSynchronously
           let expected = ls |> Seq.forall (fun x -> x = j)
           Assert.True((expected = actual))
-[<Test>]
-let ``AsyncSeq.cache works``() =  
-  for n in 0 .. 10 do 
-          let ls = [ for i in 1 .. n do for j in 1 .. i do yield i ]
-          let actual = ls |> AsyncSeq.ofSeq |> AsyncSeq.cache
-          let expected = ls |> AsyncSeq.ofSeq
-          Assert.True(EQ expected actual)
+//[<Test>]
+//let ``AsyncSeq.cache works``() =  
+//  for n in 0 .. 10 do 
+//          let ls = [ for i in 1 .. n do for j in 1 .. i do yield i ]
+//          let actual = ls |> AsyncSeq.ofSeq |> AsyncSeq.cache
+//          let expected = ls |> AsyncSeq.ofSeq
+//          Assert.True(EQ expected actual)
 
+let shouldEqual expected actual msg =
+  if expected <> actual then
+    printfn "EXPECTED=%A" expected
+    printfn "ACTUAL=%A" actual
+    match msg with
+    | Some msg -> Assert.Fail msg
+    | None -> Assert.Fail ()
+
+[<Test>]
+let ``AsyncSeq.cache should work``() = 
+  for N in [0;1;2;3;100] do 
+    let expected = List.init N id
+    let effects = ref 0
+    let s = asyncSeq {
+      for item in expected do      
+        yield item
+        do! Async.Sleep 1
+        incr effects }
+    let cached = s |> AsyncSeq.cache
+    let actual1,actual2 = 
+      (cached, cached)
+      ||> AsyncSeq.zipParallel
+      |> AsyncSeq.toList
+      |> List.unzip
+    shouldEqual expected actual1 (Some "cached sequence1 was different")
+    shouldEqual expected actual2 (Some "cached sequence2 was different")
+    shouldEqual expected.Length !effects (Some "iterating cached sequence resulted in multiple iterations of source")
 
 [<Test>]
 let ``AsyncSeq.unfoldAsync``() =  
@@ -482,6 +509,16 @@ let ``AsyncSeq.zipWithAsync``() =
           let a = la |> AsyncSeq.ofSeq
           let b = lb |> AsyncSeq.ofSeq
           let actual = AsyncSeq.zipWithAsync (fun a b -> a + b |> async.Return) a b
+          let expected = Seq.zip la lb |> Seq.map ((<||) (+)) |> AsyncSeq.ofSeq
+          Assert.True(EQ expected actual)
+
+[<Test>]
+let ``AsyncSeq.zipWithAsyncParallel``() =  
+  for la in [ []; [1]; [1;2;3;4;5] ] do 
+     for lb in [ []; [1]; [1;2;3;4;5] ] do 
+          let a = la |> AsyncSeq.ofSeq
+          let b = lb |> AsyncSeq.ofSeq
+          let actual = AsyncSeq.zipWithAsyncParallel (fun a b -> a + b |> async.Return) a b
           let expected = Seq.zip la lb |> Seq.map ((<||) (+)) |> AsyncSeq.ofSeq
           Assert.True(EQ expected actual)
 
@@ -1148,21 +1185,7 @@ let ``AsyncSeq.unfoldAsync should be iterable in finite resources``() =
     |> AsyncSeq.iter ignore
     |> Async.RunSynchronously
 
-[<Test>]
-let ``AsyncSeq.cache should work``() =  
-  let expected = List.init 100 id
-  let effects = ref 0
-  let s = asyncSeq {
-    for item in expected do      
-      yield item
-      do! Async.Sleep 1
-      incr effects
-  }
-  let cached = s |> AsyncSeq.cache
-  let actual = cached |> AsyncSeq.toList
-  let actual = cached |> AsyncSeq.toList
-  Assert.True((expected = actual), "cached sequence was different from the source")
-  Assert.True((!effects = expected.Length), "iterating cached sequence resulted in multiple iterations of source")
+
 
 
 [<Test>]

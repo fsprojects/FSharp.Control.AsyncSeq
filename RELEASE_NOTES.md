@@ -1,3 +1,7 @@
+### 2.0.11 - 04.03.2017
+* Fixed bug in AsyncSeq.cache when used by interleaved consumers.
+* AsyncSeq.zipWithAsyncParallel (and variants)
+
 ### 2.0.10 - 24.11.2016
 * Improved asyncSeq workflow performance via bindAsync generator (@pragmatrix)
 
