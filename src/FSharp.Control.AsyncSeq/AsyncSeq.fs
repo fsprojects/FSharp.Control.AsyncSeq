@@ -90,6 +90,12 @@ module internal Utils =
             elif i = 1 then return (Choice2Of2 (b.Result, a)) 
             else return! failwith (sprintf "unreachable, i = %d" i) }
 
+    type MailboxProcessor<'Msg> with
+      member __.PostAndAsyncReplyTask (f:TaskCompletionSource<'a> -> 'Msg) : Task<'a> =
+        let tcs = new TaskCompletionSource<'a>()
+        __.Post (f tcs)
+        tcs.Task
+
 
 // via: https://github.com/fsharp/fsharp/blob/master/src/fsharp/FSharp.Core/seq.fs
 module AsyncGenerator =
@@ -139,34 +145,7 @@ module AsyncGenerator =
       
   /// Right-associating binder.
   let bindG (g:AsyncGenerator<'a>) (cont:unit -> AsyncGenerator<'a>) : AsyncGenerator<'a> =
-    GenerateCont<_>.Bind (g, cont)
-
-//  type GenerateCollect<'a, 'b> (g:AsyncGenerator<'a>, cont:'a -> AsyncGenerator<'b>) =
-//    member __.Generator = g
-//    member __.Cont = cont
-//    interface AsyncGenerator<'b> with
-//      member x.Apply () = async {
-//        let! step = appG g
-//        match step with
-//        | Stop -> 
-//          return Stop
-//        | Yield a ->
-//          let g' = cont a
-//          return Goto (bindG g' (fun () -> x :> _))        
-//        | Goto next -> 
-//          return Goto (GenerateCollect<'a, 'b>.Bind (next, cont)) }
-//      member x.Disposer =
-//        g.Disposer
-//
-//    static member Bind (g:AsyncGenerator<'a>, cont:'a -> AsyncGenerator<'b>) : AsyncGenerator<'b> =
-//      match g with
-//      | :? GenerateCollect<'a, 'b> as g -> GenerateCollect<'a, 'b>.Bind (g.Generator, cont)
-//      | _ -> (new GenerateCollect<'a, 'b>(g, cont) :> AsyncGenerator<'b>)
-//
-//  let collectG (g:AsyncGenerator<'a>) (cont:'a -> AsyncGenerator<'b>) : AsyncGenerator<'b> =
-//    GenerateCollect<_,_>.Bind (g, cont)
-
-    
+    GenerateCont<_>.Bind (g, cont)    
 
   /// Converts a generator to an enumerator.
   /// The generator can point to another generator using Goto, in which case
@@ -992,33 +971,47 @@ module AsyncSeq =
             | Observable.Error err -> err.Throw()
             | Observable.Completed -> failwith "unexpected"
       }
-
+    
   let cache (source : AsyncSeq<'T>) = 
-      let cache = ResizeArray<_>()
-      let fin = ref false
-      asyncSeq {
-          if !fin then yield! ofSeq cache
+    let cache = ResizeArray<_>()
+    let fin = TaskCompletionSource<unit>()
+    // NB: no need to dispose since we're not using timeouts
+    // NB: this MBP might have some unprocessed messages in internal queue until collected
+    let mbp = 
+      MailboxProcessor.Start (fun mbp -> async {
+        use ie = source.GetEnumerator()
+        let rec loop () = async {
+          let! (i:int, rep:TaskCompletionSource<'T option>) = mbp.Receive()
+          if i >= cache.Count then 
+            try
+              let! move = ie.MoveNext()
+              match move with
+              | Some v -> 
+                cache.Add v
+              | None -> 
+                fin.SetResult ()
+            with ex ->
+              rep.SetException ex
+          if not fin.Task.IsCompleted then
+            let a = cache.[i]
+            rep.SetResult (Some a)              
+            return! loop ()
           else
-              use mre = new ManualResetEventSlim(true)
-              use ie = source.GetEnumerator() 
-              let iRef = ref 0            
-              while not fin.Value do
-                  let i = iRef.Value
-                  try 
-                      // the following is non-blocking but it allocates a waithandle and doesn't spin
-                      // consider an AsyncManualResetEvent which spins like ManualResetEventSlim before allocating waithandle
-                      //do! mre.WaitHandle |> Async.AwaitWaitHandle |> Async.Ignore
-                      mre.Wait()
-                      if i >= cache.Count then 
-                          let! move = ie.MoveNext()
-                          match move with
-                          | Some v -> cache.Add v
-                          | None -> fin := true
-                          iRef := i + 1
-                  finally
-                      mre.Set()
-                  if not !fin then 
-                    yield cache.[i] }
+            rep.SetResult None }
+        return! loop () })
+    asyncSeq {
+      if fin.Task.IsCompleted then yield! ofSeq cache else        
+      let rec loop i = asyncSeq {
+        let! next = Async.chooseTasks (fin.Task) (mbp.PostAndAsyncReplyTask (fun rep -> (i,rep))) 
+        match next with
+        | Choice2Of2 (Some a,_) ->
+          yield a
+          yield! loop (i + 1)
+        | Choice2Of2 (None,_) -> ()
+        | Choice1Of2 _ ->
+          if i = 0 then yield! ofSeq cache
+          else yield! ofSeq (cache |> Seq.skip i) }
+      yield! loop 0 }
 
   // --------------------------------------------------------------------------
 
@@ -1050,13 +1043,39 @@ module AsyncSeq =
           b1 := move1n
           b2 := move2n }
 
+  let zipWithAsyncParallel (f:'T1 -> 'T2 -> Async<'U>) (source1:AsyncSeq<'T1>) (source2:AsyncSeq<'T2>) : AsyncSeq<'U> = asyncSeq {
+      use ie1 = source1.GetEnumerator() 
+      use ie2 = source2.GetEnumerator() 
+      let! move1 = ie1.MoveNext() |> Async.StartChild
+      let! move2 = ie2.MoveNext() |> Async.StartChild
+      let! move1 = move1
+      let! move2 = move2
+      let b1 = ref move1
+      let b2 = ref move2
+      while b1.Value.IsSome && b2.Value.IsSome do
+          let! res = f b1.Value.Value b2.Value.Value
+          yield res
+          let! move1n = ie1.MoveNext() |> Async.StartChild
+          let! move2n = ie2.MoveNext() |> Async.StartChild
+          let! move1n = move1n
+          let! move2n = move2n
+          b1 := move1n
+          b2 := move2n }
+
   let zip (source1 : AsyncSeq<'T1>) (source2 : AsyncSeq<'T2>) : AsyncSeq<_> = 
       zipWithAsync (fun a b -> async.Return (a,b)) source1 source2
+
+  let zipParallel (source1 : AsyncSeq<'T1>) (source2 : AsyncSeq<'T2>) : AsyncSeq<_> = 
+      zipWithAsyncParallel (fun a b -> async.Return (a,b)) source1 source2
 
   let zipWith (z:'T1 -> 'T2 -> 'U) (a:AsyncSeq<'T1>) (b:AsyncSeq<'T2>) : AsyncSeq<'U> =
       zipWithAsync (fun a b -> z a b |> async.Return) a b
 
-  let zipWithIndexAsync (f:int64 -> 'T -> Async<'U>) (s:AsyncSeq<'T>) : AsyncSeq<'U> = mapiAsync f s 
+  let zipWithParallel (z:'T1 -> 'T2 -> 'U) (a:AsyncSeq<'T1>) (b:AsyncSeq<'T2>) : AsyncSeq<'U> =
+      zipWithAsyncParallel (fun a b -> z a b |> async.Return) a b
+
+  let zipWithIndexAsync (f:int64 -> 'T -> Async<'U>) (s:AsyncSeq<'T>) : AsyncSeq<'U> = 
+    mapiAsync f s 
 
   let zappAsync (fs:AsyncSeq<'T -> Async<'U>>) (s:AsyncSeq<'T>) : AsyncSeq<'U> =
       zipWithAsync (|>) s fs
