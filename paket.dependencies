@@ -2,7 +2,8 @@ source https://nuget.org/api/v2
 
 nuget Nuget.CommandLine
 nuget FSharp.Formatting
-nuget NUnit 3.6.1
+nuget NUnit ~> 2
+nuget NUnit.Runners ~> 2
 nuget FAKE
 nuget SourceLink.Fake
 

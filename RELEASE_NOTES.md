@@ -1,3 +1,6 @@
+### 2.0.12 - 06.04.2017
+* Fix bug #63 in AsyncSeq.unfold >> AsyncSeq.choose
+
 ### 2.0.11 - 04.03.2017
 * Fixed bug in AsyncSeq.cache when used by interleaved consumers.
 * AsyncSeq.zipWithAsyncParallel (and variants)

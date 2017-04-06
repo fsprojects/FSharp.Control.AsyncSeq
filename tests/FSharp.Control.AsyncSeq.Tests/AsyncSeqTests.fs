@@ -273,6 +273,17 @@ let ``AsyncSeq.unfoldAsync``() =
 
 [<Test>]
 let ``AsyncSeq.unfold``() =  
+  let n = 3
+  let chooser x = if x % 2 = 0 then Some x else None
+  let gen s =
+    if s < n then (s,s + 1) |> Some
+    else None
+  let expected = Seq.unfold gen 0 |> Seq.choose chooser |> AsyncSeq.ofSeq
+  let actual = AsyncSeq.unfold gen 0 |> AsyncSeq.choose chooser
+  Assert.True(EQ expected actual)
+
+[<Test>]
+let ``AsyncSeq.unfold choose``() =  
   let gen s =
     if s < 3 then (s,s + 1) |> Some
     else None
