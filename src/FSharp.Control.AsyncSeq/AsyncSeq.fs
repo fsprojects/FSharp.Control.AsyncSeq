@@ -249,7 +249,7 @@ module AsyncSeqOp =
           return! go s' s2' }
       return! go init init2 }
     override __.ChooseAsync (g:'T -> Async<'U option>) : AsyncSeq<'U> =
-      let f s = async {
+      let rec h s = async {
         let! res = f s
         match res with
         | None -> 
@@ -260,8 +260,8 @@ module AsyncSeqOp =
           | Some u ->
             return Some (u, s)
           | None ->
-            return None }
-      new UnfoldAsyncEnumerator<'S, 'U> (f, init) :> _
+            return! h s }
+      new UnfoldAsyncEnumerator<'S, 'U> (h, init) :> _
     override __.MapAsync (g:'T -> Async<'U>) : AsyncSeq<'U> =
       let h s = async {
         let! r = f s
