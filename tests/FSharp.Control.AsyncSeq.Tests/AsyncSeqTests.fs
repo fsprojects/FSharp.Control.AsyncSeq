@@ -561,7 +561,15 @@ let ``AsyncSeq.takeWhileAsync``() =
       let expected = ls |> Seq.takeWhile p |> AsyncSeq.ofSeq
       Assert.True(EQ expected actual)
 
+[<Test>]
+let ``AsyncSeq.takeWhileInclusive``() =  
+  for ls in [ []; [1]; [1;2;3;4;5] ] do 
+      let p i = i < 4
+      let actual = ls |> AsyncSeq.ofSeq |> AsyncSeq.takeWhileInclusive p
+      let expected = ls |> Seq.filter(p) |> AsyncSeq.ofSeq
+      Assert.True(EQ expected actual)
 
+      
 [<Test>]
 let ``AsyncSeq.take 3 of 5``() =  
   let ls = [1;2;3;4;5]
