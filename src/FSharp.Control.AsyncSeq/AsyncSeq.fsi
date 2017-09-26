@@ -363,7 +363,7 @@ module AsyncSeq =
 
     /// Returns elements from an asynchronous sequence while the specified 
     /// predicate holds. The predicate is evaluated synchronously.
-    /// Does not return the first element that predicate fails 
+    /// Does return the first element that predicate fails 
     val takeWhileInclusive : predicate:('T -> bool) -> source:AsyncSeq<'T> -> AsyncSeq<'T>
 
     /// Skips elements from an asynchronous sequence while the specified 

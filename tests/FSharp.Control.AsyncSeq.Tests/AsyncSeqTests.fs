@@ -563,10 +563,11 @@ let ``AsyncSeq.takeWhileAsync``() =
 
 [<Test>]
 let ``AsyncSeq.takeWhileInclusive``() =  
-  for ls in [ []; [1]; [1;2;3;4;5] ] do 
+  for ls in [ []; [1]; [4]; [4;5]; [1;2;3;4;5] ] do 
       let p i = i < 4
-      let actual = ls |> AsyncSeq.ofSeq |> AsyncSeq.takeWhileInclusive p
-      let expected = ls |> Seq.filter(p) |> AsyncSeq.ofSeq
+      let pInclusive i = i <= 4
+      let actual = ls |> AsyncSeq.ofSeq |> AsyncSeq.takeWhileInclusive p |> AsyncSeq.toArray
+      let expected = ls |> Seq.filter(pInclusive) |> AsyncSeq.ofSeq |> AsyncSeq.toArray
       Assert.True(EQ expected actual)
 
       
