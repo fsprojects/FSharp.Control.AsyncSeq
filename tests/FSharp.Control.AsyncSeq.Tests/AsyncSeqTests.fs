@@ -13,6 +13,7 @@ module AsyncSeqTests
 open NUnit.Framework
 open FSharp.Control
 open System
+open System.Threading
 
 module AsyncOps = 
     let unit = async.Return()    
@@ -65,6 +66,11 @@ let EQ (a:AsyncSeq<'a>) (b:AsyncSeq<'a>) =
     printfn "expected=%A" exp
     printfn "actual=%A" act
     false
+
+let runTimeout (timeoutMs:int) (a:Async<'a>) : 'a =
+  Async.RunSynchronously (a, timeoutMs)
+
+let runTest a = runTimeout 5000 a
 
 type Assert with  
 
@@ -1218,7 +1224,7 @@ let ``AsyncSeq.take should work``() =
   ()
 
 [<Test>]
-let ``AsyncSeq.mapParallelAsync should maintain order`` () =
+let ``AsyncSeq.mapAsyncParallel should maintain order`` () =
   for i in 0..100 do
     let ls = List.init i id
     let expected = 
@@ -1231,6 +1237,30 @@ let ``AsyncSeq.mapParallelAsync should maintain order`` () =
       |> AsyncSeq.mapAsyncParallel (async.Return)
     Assert.AreEqual(expected, actual)
 
+[<Test>]
+let ``AsyncSeq.mapAsyncParallel should propagate exception`` () =
+  
+  for N in [100] do
+    
+    let fail = N / 2
+
+    let res = 
+      Seq.init N id
+      |> AsyncSeq.ofSeq
+      |> FSharp.Control.AsyncSeq.mapAsyncParallel (fun i -> async {
+        if i = fail then 
+          return failwith  "error"
+        return i })
+      |> FSharp.Control.AsyncSeq.mapAsyncParallel (ignore >> async.Return)
+      |> AsyncSeq.iter ignore
+      |> Async.Catch
+      |> runTest
+  
+    match res with
+    | Choice2Of2 _ -> ()
+    | Choice1Of2 _ -> Assert.Fail ("error expected")
+
+
 //[<Test>]
 let ``AsyncSeq.mapParallelAsync should be parallel`` () =
   let parallelism = 3
@@ -1242,6 +1272,85 @@ let ``AsyncSeq.mapParallelAsync should be parallel`` () =
     s
     |> AsyncSeq.mapAsyncParallel (fun i -> async { barrier.SignalAndWait () ; return i }) // can deadlock
   Assert.AreEqual(expected, actual, timeout=200)
+
+
+[<Test>]
+let ``AsyncSeq.iterAsyncParallel should propagate exception`` () =
+  
+  for N in [100] do
+    
+    let fail = N / 2
+
+    let res = 
+      Seq.init N id
+      |> AsyncSeq.ofSeq
+      |> FSharp.Control.AsyncSeq.mapAsyncParallel (fun i -> async {
+        if i = fail then 
+          return failwith  "error"
+        return i })
+//      |> AsyncSeq.iterAsyncParallel (fun i -> async {
+//        if i = fail then 
+//          return failwith "error"
+//        else () })
+      //|> AsyncSeq.iter ignore
+      |> AsyncSeq.iterAsyncParallel (async.Return >> Async.Ignore)
+      |> Async.Catch
+      |> runTest
+  
+    match res with
+    | Choice2Of2 _ -> ()
+    | Choice1Of2 _ -> Assert.Fail ("error expected")
+
+[<Test>]
+let ``AsyncSeq.iterAsyncParallelThrottled should propagate handler exception`` () =
+  
+  let res =
+    AsyncSeq.init 100L id
+    |> AsyncSeq.iterAsyncParallelThrottled 10 (fun i -> async { if i = 50L then return failwith "oh no" else return () })
+    |> Async.Catch
+    |> (fun x -> Async.RunSynchronously (x, timeout = 10000))
+
+  match res with
+  | Choice2Of2 _ -> ()
+  | Choice1Of2 _ -> Assert.Fail ("error expected") 
+
+[<Test>]
+let ``AsyncSeq.iterAsyncParallelThrottled should propagate sequence exception`` () =
+  
+  let res =
+    asyncSeq {
+      yield 1
+      yield 2
+      yield 3
+      failwith "oh no"
+    }
+    |> AsyncSeq.iterAsyncParallelThrottled 10 (async.Return >> Async.Ignore)
+    |> Async.Catch
+    |> (fun x -> Async.RunSynchronously (x, timeout = 10000))
+
+  match res with
+  | Choice2Of2 _ -> ()
+  | Choice1Of2 _ -> Assert.Fail ("error expected")    
+
+
+[<Test>]
+let ``AsyncSeq.iterAsyncParallelThrottled should throttle`` () =
+  
+  let count = ref 0
+  let parallelism = 10
+
+  let res =
+    AsyncSeq.init 100L id
+    |> AsyncSeq.iterAsyncParallelThrottled parallelism (fun i -> async {
+      let c = Interlocked.Increment count
+      if c > parallelism then
+        return failwith "oh no"
+      do! Async.Sleep 10
+      Interlocked.Decrement count |> ignore
+      return () })
+    |> Async.RunSynchronously
+  ()
+
 
 //[<Test>]
 //let ``AsyncSeq.mapParallelAsyncBounded should maintain order`` () =

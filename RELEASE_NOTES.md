@@ -1,3 +1,10 @@
+### 2.0.13 - 26.09.2017
+* NEW: AsyncSeq.takeWhileInclusive
+* NEW: AsyncSeq.replicateUntilNoneAsync
+* NEW: AsyncSeq.iterAsyncParallel
+* NEW: AsyncSeq.iterAsyncParallelThrottled
+* BUG: Fixed exception propagation in AsyncSeq.mapAsyncParallel
+
 ### 2.0.12 - 06.04.2017
 * Fix bug #63 in AsyncSeq.unfold >> AsyncSeq.choose
 

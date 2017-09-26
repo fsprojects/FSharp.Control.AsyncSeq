@@ -33,7 +33,8 @@ and private AsyncSeqSrcNode<'a> =
 
 [<AutoOpen>]
 module internal Utils = 
-    module internal Choice =
+    
+    module Choice =
   
       /// Maps over the left result type.
       let mapl (f:'T -> 'U) = function
@@ -47,7 +48,7 @@ module internal Utils =
 
     // ----------------------------------------------------------------------------
 
-    module internal Observable =
+    module Observable =
 
         /// Union type that represents different messages that can be sent to the
         /// IObserver interface. The IObserver type is equivalent to a type that has
@@ -70,7 +71,26 @@ module internal Utils =
                       member x.OnCompleted() = observer.OnNext(Completed) 
                       member x.OnError(e) = observer.OnNext(Error (ExceptionDispatchInfo.Capture e)) }) }
 
-    type Microsoft.FSharp.Control.Async with       
+    type Microsoft.FSharp.Control.Async with
+
+      static member bind (f:'a -> Async<'b>) (a:Async<'a>) : Async<'b> = async.Bind(a, f)
+
+      static member awaitTaskUnitCancellationAsError (t:Task) : Async<unit> =
+        Async.FromContinuations <| fun (ok,err,_) ->
+          t.ContinueWith (fun (t:Task) ->
+            if t.IsFaulted then err t.Exception
+            elif t.IsCanceled then err (OperationCanceledException("Task wrapped with Async has been cancelled."))
+            elif t.IsCompleted then ok ()
+            else failwith "invalid Task state!") |> ignore
+
+      static member awaitTaskCancellationAsError (t:Task<'a>) : Async<'a> =
+        Async.FromContinuations <| fun (ok,err,_) ->
+          t.ContinueWith (fun (t:Task<'a>) ->
+            if t.IsFaulted then err t.Exception
+            elif t.IsCanceled then err (OperationCanceledException("Task wrapped with Async has been cancelled."))
+            elif t.IsCompleted then ok t.Result
+            else failwith "invalid Task state!") |> ignore
+
       /// Starts the specified operation using a new CancellationToken and returns
       /// IDisposable object that cancels the computation. This method can be used
       /// when implementing the Subscribe method of IObservable interface.
@@ -95,6 +115,30 @@ module internal Utils =
         let tcs = new TaskCompletionSource<'a>()
         __.Post (f tcs)
         tcs.Task
+
+    module Task =
+
+      let inline join (t:Task<Task<'a>>) : Task<'a> =
+        t.Unwrap()
+
+      let inline extend (f:Task<'a> -> 'b) (t:Task<'a>) : Task<'b> =
+        t.ContinueWith f      
+
+      let chooseTaskAsTask (t:Task<'a>) (a:Async<'a>) = async {
+        let! a = Async.StartChildAsTask a
+        return Task.WhenAny (t, a) |> join }
+
+      let chooseTask (t:Task<'a>) (a:Async<'a>) : Async<'a> =
+        chooseTaskAsTask t a |> Async.bind Async.awaitTaskCancellationAsError
+
+      let taskFault (t:Task<'a>) : Task<'b> =
+        t 
+        |> extend (fun t -> 
+          let ivar = TaskCompletionSource<_>()
+          if t.IsFaulted then
+            ivar.SetException t.Exception
+          ivar.Task)
+        |> join
 
 
 // via: https://github.com/fsharp/fsharp/blob/master/src/fsharp/FSharp.Core/seq.fs
@@ -680,6 +724,11 @@ module AsyncSeq =
       else return Some (v,i + 1) }
     unfoldAsync gen 0
 
+  let replicateUntilNoneAsync (next:Async<'a option>) : AsyncSeq<'a> =
+    unfoldAsync 
+      (fun () -> next |> Async.map (Option.map (fun a -> a,()))) 
+      ()
+
   let intervalMs (periodMs:int) = asyncSeq {
     yield DateTime.UtcNow
     while true do
@@ -905,6 +954,36 @@ module AsyncSeq =
   let filter f (source : AsyncSeq<'T>) =
     filterAsync (f >> async.Return) source
     
+  let iterAsyncParallel (f:'a -> Async<unit>) (s:AsyncSeq<'a>) : Async<unit> = async {
+    use mb = MailboxProcessor.Start (ignore >> async.Return)
+    let! err =
+      s 
+      |> iterAsync (fun a -> async {
+        let! b = Async.StartChild (f a)
+        mb.Post (Some b) })
+      |> Async.map (fun _ -> mb.Post None)
+      |> Async.StartChildAsTask
+    return!
+      replicateUntilNoneAsync (Task.chooseTask (err |> Task.taskFault) (async.Delay mb.Receive))
+      |> iterAsync id }
+
+  let iterAsyncParallelThrottled (parallelism:int) (f:'a -> Async<unit>) (s:AsyncSeq<'a>) : Async<unit> = async {
+    use mb = MailboxProcessor.Start (ignore >> async.Return)
+    use sm = new SemaphoreSlim(parallelism)
+    let! err =
+      s 
+      |> iterAsync (fun a -> async {
+        do! sm.WaitAsync () |> Async.awaitTaskUnitCancellationAsError
+        let! b = Async.StartChild (async {
+          try do! f a
+          finally sm.Release () |> ignore })
+        mb.Post (Some b) })
+      |> Async.map (fun _ -> mb.Post None)
+      |> Async.StartChildAsTask
+    return!
+      replicateUntilNoneAsync (Task.chooseTask (err |> Task.taskFault) (async.Delay mb.Receive))
+      |> iterAsync id }
+
   // --------------------------------------------------------------------------
   // Converting from/to synchronous sequences or IObservables
 
