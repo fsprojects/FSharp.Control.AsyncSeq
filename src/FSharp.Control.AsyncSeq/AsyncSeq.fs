@@ -1115,6 +1115,29 @@ module AsyncSeq =
 
   let takeUntil signal source = takeUntilSignal signal source
 
+  let takeWhileInclusive (f : 'a -> bool) (s : AsyncSeq<'a>) : AsyncSeq<'a> = 
+      { new IAsyncEnumerable<'a> with
+           member __.GetEnumerator() = 
+             let en = s.GetEnumerator()
+             let fin = ref false
+             { new IAsyncEnumerator<'a> with
+                 
+                 member __.MoveNext() = 
+                     async { 
+                         if !fin then return None
+                         else 
+                             let! next = en.MoveNext()
+                             match next with
+                             | None -> return None
+                             | Some a -> 
+                                 if f a then return Some a
+                                 else 
+                                     fin := true
+                                     return Some a
+                     }
+                 
+                 member __.Dispose() = en.Dispose() } } 
+
   let skipWhileAsync p (source : AsyncSeq<'T>) : AsyncSeq<_> = asyncSeq {
       use ie = source.GetEnumerator() 
       let! move = ie.MoveNext()
