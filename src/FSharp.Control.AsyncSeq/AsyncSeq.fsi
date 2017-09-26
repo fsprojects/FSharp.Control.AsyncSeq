@@ -53,6 +53,9 @@ module AsyncSeq =
     /// Creates an infinite async sequence which repeatedly evaluates and emits the specified async value.
     val replicateInfiniteAsync : v:Async<'T> -> AsyncSeq<'T>
 
+    /// Creates an async sequence given by evaluating the specified async computation until it returns None.
+    val replicateUntilNoneAsync : Async<'T option> -> AsyncSeq<'T>
+
     /// Returns an async sequence which emits an element on a specified period.
     val intervalMs : periodMs:int -> AsyncSeq<DateTime>
 
@@ -169,6 +172,16 @@ module AsyncSeq =
     /// every value. The input sequence will be asked for the next element after 
     /// the processing of an element completes.
     val iterAsync : action:('T -> Async<unit>) -> source:AsyncSeq<'T> -> Async<unit>
+
+    /// Iterates over the input sequence and calls the specified asynchronous function for
+    /// every value. Each action computation is started but not awaited before consuming
+    /// the next item from the sequence, thereby iterating in parallel.
+    val iterAsyncParallel : action:('T -> Async<unit>) -> source:AsyncSeq<'T> -> Async<unit>
+
+    /// Iterates over the input sequence and calls the specified asynchronous function for
+    /// every value. Each action computation is started but not awaited before consuming
+    /// the next item from the sequence, thereby iterating in parallel with a specified degree of parallelism.
+    val iterAsyncParallelThrottled : parallelism:int -> action:('T -> Async<unit>) -> source:AsyncSeq<'T> -> Async<unit>
 
     /// Returns an asynchronous sequence that returns pairs containing an element
     /// from the input sequence and its predecessor. Empty sequence is returned for
