@@ -1,3 +1,6 @@
+### 2.0.15 - 27.09.2017
+* NEW: AsyncSeq.bufferByTime
+
 ### 2.0.14 - 27.09.2017
 * BUG: Fixed head of line blocking in AsyncSeq.mapAsyncParallel
 

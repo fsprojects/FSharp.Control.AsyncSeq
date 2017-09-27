@@ -421,6 +421,10 @@ module AsyncSeq =
     /// Buffer items from the async sequence until a specified buffer size is reached or a specified amount of time is elapsed.
     val bufferByCountAndTime : bufferSize:int -> timeoutMs:int -> source:AsyncSeq<'T> -> AsyncSeq<'T []>
 
+    /// Buffers items from the async sequence by the specified time interval.
+    /// If no items are received in an intervel and empty array is emitted.
+    val bufferByTime : timeMs:int -> source:AsyncSeq<'T> -> AsyncSeq<'T[]>
+
     /// Merges two async sequences into an async sequence non-deterministically.
     /// The resulting async sequence produces elements when any argument sequence produces an element.
     val mergeChoice: source1:AsyncSeq<'T1> -> source2:AsyncSeq<'T2> -> AsyncSeq<Choice<'T1,'T2>>

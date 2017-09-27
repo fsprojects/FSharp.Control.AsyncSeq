@@ -446,6 +446,29 @@ let ``AsyncSeq.bufferByTimeAndCount empty``() =
   let actual = AsyncSeq.bufferByCountAndTime 2 10 s |> AsyncSeq.toList
   Assert.True((actual = []))
 
+[<Test>]
+let ``AsyncSeq.bufferByTime`` () =
+  
+  let s = asyncSeq {
+    yield 1
+    yield 2
+    do! Async.Sleep 100
+    yield 3
+    yield 4
+    do! Async.Sleep 100
+    yield 5
+    yield 6
+  }
+
+  let actual = 
+    s
+    |> AsyncSeq.bufferByTime 100
+    |> AsyncSeq.map (List.ofArray)
+    |> AsyncSeq.toList
+  
+  let expected = [ [1;2] ; [3;4] ; [5;6] ]
+
+  Assert.True ((actual = expected))
 
 [<Test>]
 let ``try finally works no exception``() =
