@@ -110,6 +110,14 @@ module internal Utils =
             elif i = 1 then return (Choice2Of2 (b.Result, a)) 
             else return! failwith (sprintf "unreachable, i = %d" i) }
 
+      static member internal chooseTasks2 (a:Task<'T>) (b:Task) : Async<Choice<'T * Task, Task<'T>>> =
+        async { 
+            let! ct = Async.CancellationToken
+            let i = Task.WaitAny( [| (a :> Task);(b) |],ct)
+            if i = 0 then return (Choice1Of2 (a.Result, b))
+            elif i = 1 then return (Choice2Of2 (a)) 
+            else return! failwith (sprintf "unreachable, i = %d" i) }
+
     type MailboxProcessor<'Msg> with
       member __.PostAndAsyncReplyTask (f:TaskCompletionSource<'a> -> 'Msg) : Task<'a> =
         let tcs = new TaskCompletionSource<'a>()
@@ -130,6 +138,9 @@ module internal Utils =
 
       let chooseTask (t:Task<'a>) (a:Async<'a>) : Async<'a> =
         chooseTaskAsTask t a |> Async.bind Async.awaitTaskCancellationAsError
+
+      let toUnit (t:Task) : Task<unit> =
+        t.ContinueWith (Func<_, _>(fun (_:Task) -> ()))
 
       let taskFault (t:Task<'a>) : Task<'b> =
         t 
@@ -1388,6 +1399,35 @@ module AsyncSeq =
       }
       yield! loop None timeoutMs
     }
+
+  let bufferByTime (timeMs:int) (source:AsyncSeq<'T>) : AsyncSeq<'T[]> = asyncSeq {
+    if (timeMs < 1) then invalidArg "timeMs" "must be positive"
+    let buf = new ResizeArray<_>()
+    use ie = source.GetEnumerator()
+    let rec loop (next:Task<'T option> option, waitFor:Task option) = asyncSeq {
+      let! next = 
+        match next with
+        | Some n -> async.Return n
+        | None -> ie.MoveNext () |> Async.StartChildAsTask
+      let waitFor = 
+        match waitFor with
+        | Some w -> w
+        | None -> Task.Delay timeMs
+      let! res = Async.chooseTasks2 next waitFor
+      match res with
+      | Choice1Of2 (Some a,waitFor) ->
+        buf.Add a
+        yield! loop (None,Some waitFor)
+      | Choice1Of2 (None,_) ->
+        let arr = buf.ToArray()
+        if arr.Length > 0 then
+          yield arr
+      | Choice2Of2 next ->
+        let arr = buf.ToArray()
+        buf.Clear()
+        yield arr
+        yield! loop (Some next, None) }
+    yield! loop (None, None) }
 
   let private mergeChoiceEnum (ie1:IAsyncEnumerator<'T1>) (ie2:IAsyncEnumerator<'T2>) : AsyncSeq<Choice<'T1,'T2>> = asyncSeq {
       let! move1T = Async.StartChildAsTask (ie1.MoveNext())
