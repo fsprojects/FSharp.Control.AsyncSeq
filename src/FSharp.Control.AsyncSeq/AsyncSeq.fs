@@ -754,21 +754,18 @@ module AsyncSeq =
       i := i.Value + 1L
       yield v }
 
-  let mapAsyncParallel (f:'a -> Async<'b>) (s:AsyncSeq<'a>) = asyncSeq {
-    use mbp = MailboxProcessor.Start (fun _ -> async.Return())
-    do! s |> iterAsync (fun a -> async {
-      let! b = Async.StartChild (f a)
-      mbp.Post (Some b) })
-    mbp.Post None
-    let rec loop () = asyncSeq {
-      let! b = mbp.Receive()
-      match b with
-      | None -> ()
-      | Some b -> 
-        let! b = b
-        yield b
-        yield! loop () }
-    yield! loop () }
+  let mapAsyncParallel (f:'a -> Async<'b>) (s:AsyncSeq<'a>) : AsyncSeq<'b> = asyncSeq {
+    use mb = MailboxProcessor.Start (fun _ -> async.Return())
+    let! err =
+      s 
+      |> iterAsync (fun a -> async {
+        let! b = Async.StartChild (f a)
+        mb.Post (Some b) })
+      |> Async.map (fun _ -> mb.Post None)
+      |> Async.StartChildAsTask
+    yield! 
+      replicateUntilNoneAsync (Task.chooseTask (err |> Task.taskFault) (async.Delay mb.Receive))
+      |> mapAsync id }
 
   let chooseAsync f (source:AsyncSeq<'T>) =
     match source with
