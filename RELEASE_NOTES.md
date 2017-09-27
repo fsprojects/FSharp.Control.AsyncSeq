@@ -1,3 +1,6 @@
+### 2.0.14 - 27.09.2017
+* BUG: Fixed head of line blocking in AsyncSeq.mapAsyncParallel
+
 ### 2.0.13 - 26.09.2017
 * NEW: AsyncSeq.takeWhileInclusive
 * NEW: AsyncSeq.replicateUntilNoneAsync
