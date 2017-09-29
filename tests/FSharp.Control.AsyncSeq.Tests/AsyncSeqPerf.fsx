@@ -118,6 +118,54 @@ let collect n =
 //run replicate
 //run bind
 //run bindUnfold
-run collect
+//run collect
+
+let rec prependToAll (a:'a) (ls:'a list) : 'a list =
+  match ls with
+  | [] -> []
+  | hd::tl -> a::hd::prependToAll a tl
+
+let rec intersperse (a:'a) (ls:'a list) : 'a list =
+  match ls with
+  | [] -> []
+  | hd::tl -> hd::prependToAll a tl
+
+let intercalate (l:'a list) (xs:'a list list) : 'a list =
+  intersperse l xs |> List.concat
+
+let batch (size:int) (ls:'a list) : 'a list list =
+  let rec go batch ls =
+    match ls with
+    | [] -> [List.rev batch]
+    | _ when List.length batch = size -> (List.rev batch)::go [] ls
+    | hd::tl -> go (hd::batch) tl
+  go [] ls 
 
 
+let Y = Choice1Of2
+let S = Choice2Of2  
+let sleepMs = 100
+
+let toSeq (xs:Choice<int, int> list) = asyncSeq {
+  for x in xs do
+    match x with
+    | Choice1Of2 v -> yield v
+    | Choice2Of2 s -> do! Async.Sleep s }
+
+for (size,batchSize) in [ (0,0) ; (10,2) ; (30,2) ] do
+
+  let expected = 
+    List.init size id
+    |> batch batchSize
+   
+  let actual = 
+    expected
+    |> List.map (List.map Y)
+    |> intercalate [S sleepMs] 
+    |> toSeq
+    |> AsyncSeq.bufferByTime sleepMs
+    |> AsyncSeq.map List.ofArray
+    |> AsyncSeq.toList
+
+  //Assert.True ((actual = expected))
+  printfn "actual=%A expected=%A" actual expected

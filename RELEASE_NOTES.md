@@ -1,3 +1,6 @@
+### 2.0.16 - 29.09.2017
+* Fix previous package deployment
+
 ### 2.0.15 - 27.09.2017
 * NEW: AsyncSeq.bufferByTime
 
