@@ -452,12 +452,12 @@ let ``AsyncSeq.bufferByTime`` () =
   let Y = Choice1Of2
   let S = Choice2Of2
   
-  let timeMs = 100
+  let timeMs = 500
 
   let inp0 = [ ]
   let exp0 = [ ]
 
-  let inp1 = [ Y 1 ; Y 2 ; S 100 ; Y 3 ; Y 4 ; S 100 ; Y 5 ; Y 6 ]
+  let inp1 = [ Y 1 ; Y 2 ; S timeMs ; Y 3 ; Y 4 ; S timeMs ; Y 5 ; Y 6 ]
   let exp1 = [ [1;2] ; [3;4] ; [5;6] ]
 
 //  let inp2 : Choice<int, int> list = [ S 500 ]
@@ -473,12 +473,12 @@ let ``AsyncSeq.bufferByTime`` () =
 
     let actual = 
       toSeq inp
-      |> AsyncSeq.bufferByTime 100
+      |> AsyncSeq.bufferByTime (timeMs - 5)
       |> AsyncSeq.map List.ofArray
       |> AsyncSeq.toList
   
-    let ls = toSeq inp |> AsyncSeq.toList
-    let actualLs = actual |> List.concat
+    //let ls = toSeq inp |> AsyncSeq.toList
+    //let actualLs = actual |> List.concat
 
     Assert.True ((actual = exp))
 

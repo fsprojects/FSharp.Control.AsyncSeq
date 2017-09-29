@@ -120,52 +120,37 @@ let collect n =
 //run bindUnfold
 //run collect
 
-let rec prependToAll (a:'a) (ls:'a list) : 'a list =
-  match ls with
-  | [] -> []
-  | hd::tl -> a::hd::prependToAll a tl
-
-let rec intersperse (a:'a) (ls:'a list) : 'a list =
-  match ls with
-  | [] -> []
-  | hd::tl -> hd::prependToAll a tl
-
-let intercalate (l:'a list) (xs:'a list list) : 'a list =
-  intersperse l xs |> List.concat
-
-let batch (size:int) (ls:'a list) : 'a list list =
-  let rec go batch ls =
-    match ls with
-    | [] -> [List.rev batch]
-    | _ when List.length batch = size -> (List.rev batch)::go [] ls
-    | hd::tl -> go (hd::batch) tl
-  go [] ls 
-
-
 let Y = Choice1Of2
-let S = Choice2Of2  
-let sleepMs = 100
+let S = Choice2Of2
+  
+let timeMs = 500
+
+let inp0 = [ ]
+let exp0 = [ ]
+
+let inp1 = [ Y 1 ; Y 2 ; S timeMs ; Y 3 ; Y 4 ; S timeMs ; Y 5 ; Y 6 ]
+let exp1 = [ [1;2] ; [3;4] ; [5;6] ]
+
+//  let inp2 : Choice<int, int> list = [ S 500 ]
+//  let exp2 : int list list = [ [] ; [] ; [] ; []  ]
 
 let toSeq (xs:Choice<int, int> list) = asyncSeq {
   for x in xs do
     match x with
     | Choice1Of2 v -> yield v
-    | Choice2Of2 s -> do! Async.Sleep s }
+    | Choice2Of2 s -> do! Async.Sleep s }    
 
-for (size,batchSize) in [ (0,0) ; (10,2) ; (30,2) ] do
+for (inp,exp) in [ (inp0,exp0) ; (inp1,exp1) ] do
 
-  let expected = 
-    List.init size id
-    |> batch batchSize
-   
   let actual = 
-    expected
-    |> List.map (List.map Y)
-    |> intercalate [S sleepMs] 
-    |> toSeq
-    |> AsyncSeq.bufferByTime sleepMs
+    toSeq inp
+    |> AsyncSeq.bufferByTime (timeMs - 5)
     |> AsyncSeq.map List.ofArray
     |> AsyncSeq.toList
+  
+  printfn "actual=%A expected=%A" actual exp
 
-  //Assert.True ((actual = expected))
-  printfn "actual=%A expected=%A" actual expected
+  //let ls = toSeq inp |> AsyncSeq.toList
+  //let actualLs = actual |> List.concat
+
+  
