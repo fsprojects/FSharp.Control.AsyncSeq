@@ -1,15 +1,16 @@
 source https://api.nuget.org/v3/index.json
 
-github fsharp/FAKE modules/Octokit/Octokit.fsx
-
 group Build
     source https://api.nuget.org/v3/index.json
 
     nuget FAKE
     nuget FSharp.Formatting
     nuget Nuget.CommandLine
+    github fsharp/FAKE modules/Octokit/Octokit.fsx
 
 group Test
+    source https://api.nuget.org/v3/index.json
+
     nuget NUnit
     nuget NUnit.Runners
     nuget NUnit3TestAdapter
