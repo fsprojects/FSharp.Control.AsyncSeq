@@ -1,10 +1,15 @@
-source https://nuget.org/api/v2
-
-nuget Nuget.CommandLine
-nuget FSharp.Formatting
-nuget NUnit ~> 2
-nuget NUnit.Runners ~> 2
-nuget FAKE
-nuget SourceLink.Fake
+source https://api.nuget.org/v3/index.json
 
 github fsharp/FAKE modules/Octokit/Octokit.fsx
+
+group Build
+    source https://api.nuget.org/v3/index.json
+
+    nuget FAKE
+    nuget FSharp.Formatting
+    nuget Nuget.CommandLine
+
+group Test
+    nuget NUnit
+    nuget NUnit.Runners
+    nuget NUnit3TestAdapter
