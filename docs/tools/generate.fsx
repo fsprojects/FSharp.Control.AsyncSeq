@@ -22,9 +22,9 @@ let info =
 // For typical project, no changes are needed below
 // --------------------------------------------------------------------------------------
 
-#load "../../packages/FSharp.Formatting/FSharp.Formatting.fsx"
-#r "../../packages/FAKE/tools/NuGet.Core.dll"
-#r "../../packages/FAKE/tools/FakeLib.dll"
+#load "../../packages/build/FSharp.Formatting/FSharp.Formatting.fsx"
+#r "../../packages/build/FAKE/tools/NuGet.Core.dll"
+#r "../../packages/build/FAKE/tools/FakeLib.dll"
 open Fake
 open System.IO
 open Fake.FileHelper
@@ -45,7 +45,7 @@ let content    = __SOURCE_DIRECTORY__ @@ "../content"
 let output     = __SOURCE_DIRECTORY__ @@ "../output"
 let files      = __SOURCE_DIRECTORY__ @@ "../files"
 let templates  = __SOURCE_DIRECTORY__ @@ "templates"
-let formatting = __SOURCE_DIRECTORY__ @@ "../../packages/FSharp.Formatting/"
+let formatting = __SOURCE_DIRECTORY__ @@ "../../packages/build/FSharp.Formatting/"
 let docTemplate = formatting @@ "templates/docpage.cshtml"
 
 // Where to look for *.csproj templates (in this order)
@@ -76,12 +76,12 @@ let references =
     // We replace the list and add required items manually as mcs doesn't like duplicates...
     let getItem name = loadedList |> Seq.find (fun l -> l.Contains name)
     [ (getItem "FSharp.Core").Replace("4.3.0.0", "4.3.1.0")
-      Path.GetFullPath "./../../packages/FSharp.Compiler.Service/lib/net40/FSharp.Compiler.Service.dll"
-      Path.GetFullPath "./../../packages/FSharp.Formatting/lib/net40/System.Web.Razor.dll"
-      Path.GetFullPath "./../../packages/FSharp.Formatting/lib/net40/RazorEngine.dll"
-      Path.GetFullPath "./../../packages/FSharp.Formatting/lib/net40/FSharp.Literate.dll"
-      Path.GetFullPath "./../../packages/FSharp.Formatting/lib/net40/FSharp.CodeFormat.dll"
-      Path.GetFullPath "./../../packages/FSharp.Formatting/lib/net40/FSharp.MetadataFormat.dll" ]
+      Path.GetFullPath "./../../packages/build/FSharp.Compiler.Service/lib/net40/FSharp.Compiler.Service.dll"
+      Path.GetFullPath "./../../packages/build/FSharp.Formatting/lib/net40/System.Web.Razor.dll"
+      Path.GetFullPath "./../../packages/build/FSharp.Formatting/lib/net40/RazorEngine.dll"
+      Path.GetFullPath "./../../packages/build/FSharp.Formatting/lib/net40/FSharp.Literate.dll"
+      Path.GetFullPath "./../../packages/build/FSharp.Formatting/lib/net40/FSharp.CodeFormat.dll"
+      Path.GetFullPath "./../../packages/build/FSharp.Formatting/lib/net40/FSharp.MetadataFormat.dll" ]
     |> Some
   else None
 
