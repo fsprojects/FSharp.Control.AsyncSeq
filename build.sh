@@ -1,4 +1,6 @@
 #!/bin/bash
+export FrameworkPathOverride=$(dirname $(which mono))/../lib/mono/4.5/
+
 if test "$OS" = "Windows_NT"
 then
   # use .Net

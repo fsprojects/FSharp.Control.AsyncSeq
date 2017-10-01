@@ -6,7 +6,6 @@
 
 open Fake
 open Fake.Git
-open Fake.AssemblyInfoFile
 open Fake.ReleaseNotesHelper
 open System
 open System.IO
@@ -15,35 +14,14 @@ open System.IO
 // START TODO: Provide project-specific details below
 // --------------------------------------------------------------------------------------
 
-// Information about the project are used
-//  - for version and project name in generated AssemblyInfo file
-//  - by the generated NuGet package
-//  - to run tests and to publish documentation on GitHub gh-pages
-//  - for documentation, you also need to edit info in "docs/tools/generate.fsx"
-
 // The name of the project
 // (used by attributes in AssemblyInfo, name of a NuGet package and directory in 'src')
-let project = "FSharp.Control.AsyncSeq"
-
-// Short summary of the project
-// (used as description in AssemblyInfo and as a short summary for NuGet package)
-let summary = "Asynchronous sequences for F#"
-
-// Longer description of the project
-// (used as a description for NuGet package; line breaks are automatically cleaned up)
-let description = "Asynchronous sequences for F#"
-
-// List of author names (for NuGet package)
-let authors = [ "Tomas Petricek"; "Don Syme"; "Lev Gorodinski" ]
-
-// Tags for your project (for NuGet package)
-let tags = "F#, async, fsharpx"
+let project = "src/FSharp.Control.AsyncSeq"
 
 // File system information 
-let solutionFile  = "FSharp.Control.AsyncSeq.sln"
+let solutionFile = "FSharp.Control.AsyncSeq.sln"
 
-// Pattern specifying assemblies to be tested using NUnit
-let testAssemblies = "tests/**/bin/Release/*Tests*.dll"
+let buildDir = "bin"
 
 // Git configuration (used for publishing documentation in gh-pages branch)
 // The profile where the project is posted
@@ -63,24 +41,6 @@ let gitRaw = environVarOrDefault "gitRaw" "https://raw.github.com/fsprojects"
 // Read additional information from the release notes document
 let release = LoadReleaseNotes "RELEASE_NOTES.md"
 
-let genFSAssemblyInfo (projectPath) =
-    let projectName = System.IO.Path.GetFileNameWithoutExtension(projectPath)
-    let folderName = System.IO.Path.GetDirectoryName(projectPath)
-    let basePath = "src" @@ folderName
-    let fileName = basePath @@ "AssemblyInfo.fs"
-    CreateFSharpAssemblyInfo fileName
-      [ Attribute.Title (projectName)
-        Attribute.Product project
-        Attribute.Description summary
-        Attribute.Version release.AssemblyVersion
-        Attribute.FileVersion release.AssemblyVersion ]
-
-// Generate assembly info files with the right version & up-to-date information
-Target "AssemblyInfo" (fun _ ->
-  let fsProjs =  !! "src/**/*.fsproj"
-  fsProjs |> Seq.iter genFSAssemblyInfo
-)
-
 // --------------------------------------------------------------------------------------
 // Clean build results
 
@@ -96,37 +56,53 @@ Target "CleanDocs" (fun _ ->
 // Build library & test project
 
 Target "Build" (fun _ ->
-    !! solutionFile
-    |> MSBuildRelease "" "Rebuild"
-    |> ignore
+    DotNetCli.Build (fun p ->
+        { p with
+            Project = solutionFile
+            Configuration = "Release" })
 )
 
 // --------------------------------------------------------------------------------------
 // Run the unit tests using test runner
 
 Target "RunTests" (fun _ ->
-    !! testAssemblies
-    |> NUnit (fun p ->
-        { p with
-            DisableShadowCopy = true
-            TimeOut = TimeSpan.FromMinutes 20.
-            OutputFile = "TestResults.xml" })
+    try
+        DotNetCli.Test(fun p ->
+            { p with
+                Project = "tests/FSharp.Control.AsyncSeq.Tests"
+                Configuration = "Release"
+                TimeOut = TimeSpan.FromMinutes 20. })
+    finally
+        AppVeyor.UploadTestResultsXml AppVeyor.TestResultsType.NUnit "bin"
 )
 
 // --------------------------------------------------------------------------------------
 // Build a NuGet package
 
 Target "NuGet" (fun _ ->
-    Paket.Pack(fun p -> 
+    (*
+    Paket.Pack(fun p ->
          { p with
             Version = release.NugetVersion
-            ReleaseNotes = toLines release.Notes})
+            ReleaseNotes = toLines release.Notes })
+    *)
+    DotNetCli.Pack (fun p ->
+        { p with
+            Project = project
+            Configuration = "Release"
+            VersionSuffix = buildVersion
+            OutputPath = buildDir
+            AdditionalArgs =
+              [ "--no-build"
+                //"/p:ReleaseNotes=" + (toLines release.Notes)
+              ]
+        })
 )
 
 Target "PublishNuget" (fun _ ->
-    Paket.Push(fun p -> 
+    Paket.Push(fun p ->
         { p with
-            WorkingDir = "temp"  })
+            WorkingDir = "temp" })
 )
 
 // --------------------------------------------------------------------------------------
@@ -275,13 +251,12 @@ Target "BuildPackage" DoNothing
 Target "All" DoNothing
 
 "Clean"
-  ==> "AssemblyInfo"
   ==> "Build"
   ==> "RunTests"
-  =?> ("GenerateReferenceDocs",isLocalBuild)
-  =?> ("GenerateDocs",isLocalBuild)
+  =?> ("GenerateReferenceDocs",isLocalBuild && not isMono)
+  =?> ("GenerateDocs",isLocalBuild && not isMono)
   ==> "All"
-  =?> ("ReleaseDocs",isLocalBuild)
+  =?> ("ReleaseDocs",isLocalBuild && not isMono)
 
 "All" 
   ==> "NuGet"
