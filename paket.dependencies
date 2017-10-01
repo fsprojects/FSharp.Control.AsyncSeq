@@ -11,6 +11,7 @@ group Build
 group Test
     source https://api.nuget.org/v3/index.json
 
+    nuget Microsoft.NET.Test.Sdk
     nuget NUnit
     nuget NUnit.Runners
     nuget NUnit3TestAdapter
