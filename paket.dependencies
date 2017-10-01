@@ -1,4 +1,8 @@
 source https://api.nuget.org/v3/index.json
+redirects: on
+storage: none
+
+nuget FSharp.Core
 
 group Build
     source https://api.nuget.org/v3/index.json
@@ -10,7 +14,9 @@ group Build
 
 group Test
     source https://api.nuget.org/v3/index.json
+    storage: none
 
+    nuget FSharp.Core
     nuget Microsoft.NET.Test.Sdk
     nuget NUnit
     nuget NUnit.Runners
