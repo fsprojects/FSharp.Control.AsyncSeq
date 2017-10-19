@@ -57,9 +57,7 @@ Target "CleanDocs" (fun _ ->
 
 Target "Build" (fun _ ->
     DotNetCli.Build (fun p ->
-        { p with
-            Project = solutionFile
-            Configuration = "Release" })
+        { p with Project = solutionFile })
 )
 
 // --------------------------------------------------------------------------------------
@@ -70,7 +68,6 @@ Target "RunTests" (fun _ ->
         DotNetCli.Test(fun p ->
             { p with
                 Project = "tests/FSharp.Control.AsyncSeq.Tests"
-                Configuration = "Release"
                 TimeOut = TimeSpan.FromMinutes 20. })
     finally
         AppVeyor.UploadTestResultsXml AppVeyor.TestResultsType.NUnit "bin"
@@ -80,20 +77,14 @@ Target "RunTests" (fun _ ->
 // Build a NuGet package
 
 Target "NuGet" (fun _ ->
-    (*
-    Paket.Pack(fun p ->
-         { p with
-            Version = release.NugetVersion
-            ReleaseNotes = toLines release.Notes })
-    *)
     DotNetCli.Pack (fun p ->
         { p with
             Project = project
             Configuration = "Release"
-            VersionSuffix = buildVersion
             OutputPath = buildDir
             AdditionalArgs =
               [ "--no-build"
+                sprintf "/p:Version=%s" release.NugetVersion
                 //"/p:ReleaseNotes=" + (toLines release.Notes)
               ]
         })

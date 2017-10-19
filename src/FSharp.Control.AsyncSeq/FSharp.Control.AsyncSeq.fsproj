@@ -1,11 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;net45</TargetFrameworks>
-    <Version>2.0.14</Version>
     <Authors>Tomasz Petricek;David Thomas;Ryan Riley;Steffen Forkmann</Authors>
     <Summary>Asynchronous sequences for F#</Summary>
     <Description>Asynchronous sequences for F#</Description>
-    <Copyright>Copyright 2015</Copyright>
+    <Copyright>Copyright 2017</Copyright>
     <PackageLicenseUrl>http://fsprojects.github.io/FSharp.Control.AsyncSeq/license.html</PackageLicenseUrl>
     <PackageProjectUrl>http://fsprojects.github.io/FSharp.Control.AsyncSeq/</PackageProjectUrl>
     <PackageIconUrl>http://fsprojects.github.io/FSharp.Control.AsyncSeq/img/logo.png</PackageIconUrl>
@@ -14,6 +13,7 @@
     <RepositoryUrl>https://github.com/fsprojects/FSharp.Control.AsyncSeq</RepositoryUrl>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="AssemblyInfo.fs" Condition="Exists('AssemblyInfo.fs')" />
     <Compile Include="AsyncSeq.fsi" />
     <Compile Include="AsyncSeq.fs" />
     <None Include="paket.references" />
