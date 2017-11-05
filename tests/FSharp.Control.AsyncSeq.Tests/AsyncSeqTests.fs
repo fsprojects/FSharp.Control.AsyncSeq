@@ -15,12 +15,12 @@ open FSharp.Control
 open System
 open System.Threading
 
-module AsyncOps = 
-    let unit = async.Return()    
-    let never = Async.Sleep(-1)    
-    let timeoutMs (timeoutMs:int) (a:Async<'a>) = async {
-      let! a = Async.StartChild(a, timeoutMs)
-      return! a }
+type AsyncOps = AsyncOps with
+  static member unit : Async<unit> = async { return () }
+  static member never = async { do! Async.Sleep(-1) }
+  static member timeoutMs (timeoutMs:int) (a:Async<'a>) = async {
+    let! a = Async.StartChild(a, timeoutMs)
+    return! a }
       
 module AsyncSeq =
   [<GeneralizableValue>]
@@ -448,6 +448,7 @@ let ``AsyncSeq.bufferByTimeAndCount empty``() =
 
 //[<Test>]
 //let ``AsyncSeq.bufferByTime`` () =
+<<<<<<< HEAD
 //
 //  let Y = Choice1Of2
 //  let S = Choice2Of2
@@ -575,6 +576,29 @@ let ``AsyncSeq.bufferByTime should not block`` () =
   watch.Stop()
   cts.Cancel(false)
   Assert.Less (watch.ElapsedMilliseconds, 1000L)
+=======
+  
+//  let s = asyncSeq {
+//    yield 1
+//    yield 2
+//    do! Async.Sleep 100
+//    yield 3
+//    yield 4
+//    do! Async.Sleep 100
+//    yield 5
+//    yield 6
+//  }
+
+  //let actual = 
+  //  s
+  //  |> AsyncSeq.bufferByTime 100
+  //  |> AsyncSeq.map (List.ofArray)
+  //  |> AsyncSeq.toList
+  
+  //let expected = [ [1;2] ; [3;4] ; [5;6] ]
+
+  //Assert.True ((actual = expected))
+>>>>>>> fix tests
 
 [<Test>]
 let ``try finally works no exception``() =
