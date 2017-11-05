@@ -6,14 +6,11 @@ matrix:
       dist: trusty
       sudo: required
       dotnet: 2.0.0
-    - os: osx # OSX 10.11
-      osx_image: xcode7.2
+    - os: osx # OSX 10.12
+      osx_image: xcode9.1
       dotnet: 2.0.0
       dist: trusty
       sudo: required
-    - os: osx # OSX 10.12
-      osx_image: xcode7.3
-      dotnet: 2.0.0
 
 script: 
   - ./build.sh All
