@@ -104,19 +104,19 @@ module internal Utils =
 
       static member internal chooseTasks (a:Task<'T>) (b:Task<'U>) : Async<Choice<'T * Task<'U>, 'U * Task<'T>>> =
         async { 
-            let! ct = Async.CancellationToken
-            let i = Task.WaitAny( [| (a :> Task);(b :> Task) |],ct)
-            if i = 0 then return (Choice1Of2 (a.Result, b))
-            elif i = 1 then return (Choice2Of2 (b.Result, a)) 
-            else return! failwith (sprintf "unreachable, i = %d" i) }
+            let ta, tb = a :> Task, b :> Task
+            let! i = Task.WhenAny( ta, tb ) |> Async.AwaitTask
+            if i = ta then return (Choice1Of2 (a.Result, b))
+            elif i = tb then return (Choice2Of2 (b.Result, a)) 
+            else return! failwith "unreachable" }
 
       static member internal chooseTasks2 (a:Task<'T>) (b:Task) : Async<Choice<'T * Task, Task<'T>>> =
         async { 
-            let! ct = Async.CancellationToken
-            let i = Task.WaitAny( [| (a :> Task);(b) |],ct)
-            if i = 0 then return (Choice1Of2 (a.Result, b))
-            elif i = 1 then return (Choice2Of2 (a)) 
-            else return! failwith (sprintf "unreachable, i = %d" i) }
+            let ta = a :> Task
+            let! i = Task.WhenAny( ta, b ) |> Async.AwaitTask
+            if i = ta then return (Choice1Of2 (a.Result, b))
+            elif i = b then return (Choice2Of2 (a)) 
+            else return! failwith "unreachable" }
 
     type MailboxProcessor<'Msg> with
       member __.PostAndAsyncReplyTask (f:TaskCompletionSource<'a> -> 'Msg) : Task<'a> =
@@ -1493,20 +1493,20 @@ module AsyncSeq =
           let tasks = Array.zeroCreate n
           for i in 0 .. ss.Length - 1 do 
               let! task = Async.StartChildAsTask (ies.[i].MoveNext())
-              do tasks.[i] <- (task :> Task)
+              do tasks.[i] <- task
           let fin = ref n
           while fin.Value > 0 do 
-              let! ct = Async.CancellationToken
-              let i = Task.WaitAny(tasks, ct)
-              let v = (tasks.[i] :?> Task<'T option>).Result
+              let! ti = Task.WhenAny (tasks) |> Async.AwaitTask
+              let i  = Array.IndexOf (tasks, ti)
+              let v = ti.Result
               match v with 
               | Some res -> 
                   yield res
                   let! task = Async.StartChildAsTask (ies.[i].MoveNext())
-                  do tasks.[i] <- (task :> Task)
-              | None -> 
+                  do tasks.[i] <- task
+              | None ->
                   let t = System.Threading.Tasks.TaskCompletionSource()
-                  tasks.[i] <- (t.Task :> Task) // result never gets set
+                  tasks.[i] <- t.Task // result never gets set
                   fin := fin.Value - 1
       }
 

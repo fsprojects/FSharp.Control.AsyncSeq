@@ -471,6 +471,48 @@ let ``AsyncSeq.bufferByTime`` () =
   Assert.True ((actual = expected))
 
 [<Test>]
+let ``AsyncSeq.bufferByCountAndTime should not block`` () =
+  let op =
+    asyncSeq {
+      while true do
+      do! Async.Sleep 1000
+      yield 0
+    }
+    |> AsyncSeq.bufferByCountAndTime 10 1000
+    |> AsyncSeq.take 3
+    |> AsyncSeq.iter (ignore)
+
+  // should return immediately
+  // while a blocking call would take > 3sec
+  let watch = System.Diagnostics.Stopwatch.StartNew()
+  let cts = new CancellationTokenSource()
+  Async.StartWithContinuations(op, ignore, ignore, ignore, cts.Token)
+  watch.Stop()
+  cts.Cancel(false)
+  Assert.Less (watch.ElapsedMilliseconds, 1000L)
+
+[<Test>]
+let ``AsyncSeq.bufferByTime should not block`` () =
+  let op =
+    asyncSeq {
+      while true do
+      do! Async.Sleep 1000
+      yield 0
+    }
+    |> AsyncSeq.bufferByTime 1000
+    |> AsyncSeq.take 3
+    |> AsyncSeq.iter (ignore)
+
+  // should return immediately
+  // while a blocking call would take > 3sec
+  let watch = System.Diagnostics.Stopwatch.StartNew()
+  let cts = new CancellationTokenSource()
+  Async.StartWithContinuations(op, ignore, ignore, ignore, cts.Token)
+  watch.Stop()
+  cts.Cancel(false)
+  Assert.Less (watch.ElapsedMilliseconds, 1000L)
+
+[<Test>]
 let ``try finally works no exception``() =
   let x = ref 0
   let s = asyncSeq {
