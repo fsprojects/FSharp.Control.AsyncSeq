@@ -1,3 +1,6 @@
+### 2.0.17 - 21.11.2017
+* Improve performance of internal Async.chooseTasks function which improves performance of AsyncSeq.bufferByCountAndTime, etc (https://github.com/fsprojects/FSharp.Control.AsyncSeq/pull/73)
+
 ### 2.0.16 - 29.09.2017
 * Fix previous package deployment
 
