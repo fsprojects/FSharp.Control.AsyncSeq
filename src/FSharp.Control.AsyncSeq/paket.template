@@ -1,8 +1,8 @@
 type project
 owners
-    Tomasz Petricek, David Thomas, Ryan Riley, Steffen Forkmann
+    Tomas Petricek, Don Syme, Lev Gorodinski
 authors
-    Tomasz Petricek, David Thomas, Ryan Riley, Steffen Forkmann
+    Tomas Petricek, Don Syme, Lev Gorodinski
 projectUrl
     http://fsprojects.github.io/FSharp.Control.AsyncSeq/
 iconUrl
