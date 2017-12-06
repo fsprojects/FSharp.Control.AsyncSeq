@@ -1484,31 +1484,45 @@ module AsyncSeq =
         | Some e -> e.Throw()
         | None -> ()
       
+  /// Merges all specified async sequences into an async sequence non-deterministically.
+  // By moving the last emitted task to the end of the array, this algorithm achieves max-min fairness when merging AsyncSeqs
   let mergeAll (ss:AsyncSeq<'T> list) : AsyncSeq<'T> =
-      asyncSeq { 
-        let n = ss.Length
-        if n > 0 then 
-          let ies = [| for source in ss -> source.GetEnumerator()  |]
-          use _ies = new Disposables<_>(ies)
-          let tasks = Array.zeroCreate n
-          for i in 0 .. ss.Length - 1 do 
-              let! task = Async.StartChildAsTask (ies.[i].MoveNext())
-              do tasks.[i] <- task
-          let fin = ref n
-          while fin.Value > 0 do 
-              let! ti = Task.WhenAny (tasks) |> Async.AwaitTask
-              let i  = Array.IndexOf (tasks, ti)
-              let v = ti.Result
-              match v with 
-              | Some res -> 
-                  yield res
-                  let! task = Async.StartChildAsTask (ies.[i].MoveNext())
-                  do tasks.[i] <- task
-              | None ->
-                  let t = System.Threading.Tasks.TaskCompletionSource()
-                  tasks.[i] <- t.Task // result never gets set
-                  fin := fin.Value - 1
-      }
+    asyncSeq {
+      let n = ss.Length
+
+      let moveToEnd i (a: 'a[]) =
+        let len = a.Length
+        if i < 0 || i >= len then
+          raise <| System.ArgumentOutOfRangeException()
+        if i <> len-1 then
+          let x = a.[i]
+          System.Array.Copy(a, i+1, a, i, len-1-i)
+          a.[len-1] <- x
+
+      if n > 0 then
+        let ies = [| for source in ss -> source.GetEnumerator()  |]
+        use _ies = new Disposables<_>(ies)
+        let tasks = Array.zeroCreate n
+        for i in 0 .. ss.Length - 1 do
+            let! task = Async.StartChildAsTask (ies.[i].MoveNext())
+            do tasks.[i] <- task
+        let fin = ref n
+        while fin.Value > 0 do
+            let! ti = Task.WhenAny (tasks) |> Async.AwaitTask
+            let i  = Array.IndexOf (tasks, ti)
+            let v = ti.Result
+            match v with
+            | Some res ->
+                yield res
+                let! task = Async.StartChildAsTask (ies.[i].MoveNext())
+                do tasks.[i] <- task
+                moveToEnd i tasks
+                moveToEnd i ies
+            | None ->
+                let t = System.Threading.Tasks.TaskCompletionSource()
+                tasks.[i] <- t.Task // result never gets set
+                fin := fin.Value - 1
+    }
 
   let combineLatestWithAsync (f:'a -> 'b -> Async<'c>) (source1:AsyncSeq<'a>) (source2:AsyncSeq<'b>) : AsyncSeq<'c> =
     asyncSeq {
