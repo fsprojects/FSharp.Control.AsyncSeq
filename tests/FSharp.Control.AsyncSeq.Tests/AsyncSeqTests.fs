@@ -1194,11 +1194,11 @@ let ``Async.mergeAll should perform well``() =
 [<Test>]
 let ``Async.mergeAll should be fair``() =
   let s1 = asyncSeq {
-    do! Async.Sleep 100
+    do! Async.Sleep 1000
     yield 1
   }
   let s2 = asyncSeq {
-    do! Async.Sleep 10
+    do! Async.Sleep 100
     yield 2
   }
   let s3 = asyncSeq {
