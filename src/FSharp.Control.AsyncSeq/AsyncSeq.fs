@@ -1484,6 +1484,8 @@ module AsyncSeq =
         | Some e -> e.Throw()
         | None -> ()
       
+    /// Merges all specified async sequences into an async sequence non-deterministically.
+    // By moving the last emitted task to the end of the array, this algorithm achieves max-min fairness when merging AsyncSeqs
   let mergeAll (ss:AsyncSeq<'T> list) : AsyncSeq<'T> =
       asyncSeq { 
         let n = ss.Length
@@ -1504,6 +1506,8 @@ module AsyncSeq =
                   yield res
                   let! task = Async.StartChildAsTask (ies.[i].MoveNext())
                   do tasks.[i] <- task
+                  System.Array.Copy(tasks, i+1, tasks, i, n-1-i)
+                  tasks.[n-1] <- task
               | None ->
                   let t = System.Threading.Tasks.TaskCompletionSource()
                   tasks.[i] <- t.Task // result never gets set

@@ -1191,7 +1191,23 @@ let ``Async.mergeAll should perform well``() =
 
     Assert.DoesNotThrow(fun _ -> mergeTest 1000 |> ignore)
 
-
+[<Test>]
+let ``Async.mergeAll should be fair``() =
+  let s1 = asyncSeq {
+    do! Async.Sleep 100
+    yield 1
+  }
+  let s2 = asyncSeq {
+    do! Async.Sleep 10
+    yield 2
+  }
+  let s3 = asyncSeq {
+    yield 3
+  }
+  let actual = AsyncSeq.mergeAll [s1; s2; s3]
+  let expected = [3;2;1] |> AsyncSeq.ofSeq
+  Assert.True(EQ expected actual)
+  
 
 [<Test>]
 let ``AsyncSeq.mergeAll should fail with AggregateException if a task fails``() =
