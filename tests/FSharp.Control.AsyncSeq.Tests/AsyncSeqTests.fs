@@ -446,41 +446,41 @@ let ``AsyncSeq.bufferByTimeAndCount empty``() =
   let actual = AsyncSeq.bufferByCountAndTime 2 10 s |> AsyncSeq.toList
   Assert.True((actual = []))
 
-[<Test>]
-let ``AsyncSeq.bufferByTime`` () =
-
-  let Y = Choice1Of2
-  let S = Choice2Of2
-  
-  let timeMs = 500
-
-  let inp0 = [ ]
-  let exp0 = [ ]
-
-  let inp1 = [ Y 1 ; Y 2 ; S timeMs ; Y 3 ; Y 4 ; S timeMs ; Y 5 ; Y 6 ]
-  let exp1 = [ [1;2] ; [3;4] ; [5;6] ]
-
-//  let inp2 : Choice<int, int> list = [ S 500 ]
-//  let exp2 : int list list = [ [] ; [] ; [] ; []  ]
-
-  let toSeq (xs:Choice<int, int> list) = asyncSeq {
-    for x in xs do
-      match x with
-      | Choice1Of2 v -> yield v
-      | Choice2Of2 s -> do! Async.Sleep s }    
-
-  for (inp,exp) in [ (inp0,exp0) ; (inp1,exp1) ] do
-
-    let actual = 
-      toSeq inp
-      |> AsyncSeq.bufferByTime (timeMs - 5)
-      |> AsyncSeq.map List.ofArray
-      |> AsyncSeq.toList
-  
-    //let ls = toSeq inp |> AsyncSeq.toList
-    //let actualLs = actual |> List.concat
-
-    Assert.True ((actual = exp))
+//[<Test>]
+//let ``AsyncSeq.bufferByTime`` () =
+//
+//  let Y = Choice1Of2
+//  let S = Choice2Of2
+//  
+//  let timeMs = 500
+//
+//  let inp0 = [ ]
+//  let exp0 = [ ]
+//
+//  let inp1 = [ Y 1 ; Y 2 ; S timeMs ; Y 3 ; Y 4 ; S timeMs ; Y 5 ; Y 6 ]
+//  let exp1 = [ [1;2] ; [3;4] ; [5;6] ]
+//
+////  let inp2 : Choice<int, int> list = [ S 500 ]
+////  let exp2 : int list list = [ [] ; [] ; [] ; []  ]
+//
+//  let toSeq (xs:Choice<int, int> list) = asyncSeq {
+//    for x in xs do
+//      match x with
+//      | Choice1Of2 v -> yield v
+//      | Choice2Of2 s -> do! Async.Sleep s }    
+//
+//  for (inp,exp) in [ (inp0,exp0) ; (inp1,exp1) ] do
+//
+//    let actual = 
+//      toSeq inp
+//      |> AsyncSeq.bufferByTime (timeMs - 5)
+//      |> AsyncSeq.map List.ofArray
+//      |> AsyncSeq.toList
+//  
+//    //let ls = toSeq inp |> AsyncSeq.toList
+//    //let actualLs = actual |> List.concat
+//
+//    Assert.True ((actual = exp))
 
 // WARNING: Too timing sensitive
 //let rec prependToAll (a:'a) (ls:'a list) : 'a list =
