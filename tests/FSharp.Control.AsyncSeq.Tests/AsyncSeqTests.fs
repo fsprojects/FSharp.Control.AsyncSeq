@@ -448,7 +448,6 @@ let ``AsyncSeq.bufferByTimeAndCount empty``() =
 
 //[<Test>]
 //let ``AsyncSeq.bufferByTime`` () =
-<<<<<<< HEAD
 //
 //  let Y = Choice1Of2
 //  let S = Choice2Of2
@@ -576,7 +575,6 @@ let ``AsyncSeq.bufferByTime should not block`` () =
   watch.Stop()
   cts.Cancel(false)
   Assert.Less (watch.ElapsedMilliseconds, 1000L)
-=======
   
 //  let s = asyncSeq {
 //    yield 1
@@ -598,7 +596,6 @@ let ``AsyncSeq.bufferByTime should not block`` () =
   //let expected = [ [1;2] ; [3;4] ; [5;6] ]
 
   //Assert.True ((actual = expected))
->>>>>>> fix tests
 
 [<Test>]
 let ``try finally works no exception``() =
