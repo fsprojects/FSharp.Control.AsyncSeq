@@ -1,3 +1,6 @@
+### 2.0.19-alpha01 - 22.12.2017
+* Target .NET Standard
+
 ### 2.0.18 - 14.12.2017
 * AsyncSeq.mergeAll min-max fairness
 

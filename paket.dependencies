@@ -1,10 +1,23 @@
-source https://nuget.org/api/v2
+source https://api.nuget.org/v3/index.json
+redirects: on
+storage: none
 
-nuget Nuget.CommandLine
-nuget FSharp.Formatting
-nuget NUnit ~> 2
-nuget NUnit.Runners ~> 2
-nuget FAKE
-nuget SourceLink.Fake
+nuget FSharp.Core
 
-github fsharp/FAKE modules/Octokit/Octokit.fsx
+group Build
+    source https://api.nuget.org/v3/index.json
+
+    nuget FAKE
+    nuget FSharp.Formatting
+    nuget Nuget.CommandLine
+    github fsharp/FAKE modules/Octokit/Octokit.fsx
+
+group Test
+    source https://api.nuget.org/v3/index.json
+    storage: none
+
+    nuget FSharp.Core
+    nuget Microsoft.NET.Test.Sdk
+    nuget NUnit
+    nuget NUnit.Runners
+    nuget NUnit3TestAdapter

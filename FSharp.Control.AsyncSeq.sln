@@ -1,16 +1,12 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.24720.0
-MinimumVisualStudioVersion = 10.0.40219.1
+# Visual Studio 15
+VisualStudioVersion = 15.0.27004.2006
+MinimumVisualStudioVersion = 15.0.26124.0
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".paket", ".paket", "{63297B98-5CED-492C-A5B7-A5B4F73CF142}"
 	ProjectSection(SolutionItems) = preProject
 		paket.dependencies = paket.dependencies
 		paket.lock = paket.lock
 	EndProjectSection
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{A6A6AF7D-D6E3-442D-9B1E-58CC91879BE1}"
-EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FSharp.Control.AsyncSeq", "src\FSharp.Control.AsyncSeq\FSharp.Control.AsyncSeq.fsproj", "{2D4F3D0E-0E18-48D7-9C27-98864039393D}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "project", "project", "{BF60BC93-E09B-4E5F-9D85-95A519479D54}"
 	ProjectSection(SolutionItems) = preProject
@@ -20,11 +16,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "project", "project", "{BF60
 		RELEASE_NOTES.md = RELEASE_NOTES.md
 	EndProjectSection
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tools", "tools", "{83F16175-43B1-4C90-A1EE-8E351C33435D}"
-	ProjectSection(SolutionItems) = preProject
-		docs\tools\generate.fsx = docs\tools\generate.fsx
-		docs\tools\templates\template.cshtml = docs\tools\templates\template.cshtml
-	EndProjectSection
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{A6A6AF7D-D6E3-442D-9B1E-58CC91879BE1}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "content", "content", "{8E6D5255-776D-4B61-85F9-73C37AA1FB9A}"
 	ProjectSection(SolutionItems) = preProject
@@ -32,44 +24,69 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "content", "content", "{8E6D
 		docs\content\terminology.md = docs\content\terminology.md
 	EndProjectSection
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{ED8079DD-2B06-4030-9F0F-DC548F98E1C4}"
-EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FSharp.Control.AsyncSeq.Tests", "tests\FSharp.Control.AsyncSeq.Tests\FSharp.Control.AsyncSeq.Tests.fsproj", "{ADBD32DB-B7AC-4E81-9507-28F329AF23E7}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "library", "library", "{B4BB88FA-DB8C-4651-9869-A8FEA79F044E}"
 	ProjectSection(SolutionItems) = preProject
 		docs\content\library\AsyncSeq.fsx = docs\content\library\AsyncSeq.fsx
 		docs\content\library\AsyncSeqExamples.fsx = docs\content\library\AsyncSeqExamples.fsx
 	EndProjectSection
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FSharp.Control.AsyncSeq.Profile7", "src\FSharp.Control.AsyncSeq.Profile7\FSharp.Control.AsyncSeq.Profile7.fsproj", "{114DCF3C-D7CC-4E53-AFF0-AFBFC0C8B966}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tools", "tools", "{83F16175-43B1-4C90-A1EE-8E351C33435D}"
+	ProjectSection(SolutionItems) = preProject
+		docs\tools\generate.fsx = docs\tools\generate.fsx
+		docs\tools\templates\template.cshtml = docs\tools\templates\template.cshtml
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{86625A13-D7E2-4EAD-B13A-4F37BD89DE2A}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FSharp.Control.AsyncSeq", "src\FSharp.Control.AsyncSeq\FSharp.Control.AsyncSeq.fsproj", "{DBDF64C3-BE92-4272-8737-5001C469D9AA}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{561B2DD4-BBFB-4E0D-BF73-C10A3E42507C}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FSharp.Control.AsyncSeq.Tests", "tests\FSharp.Control.AsyncSeq.Tests\FSharp.Control.AsyncSeq.Tests.fsproj", "{F2404B35-0DAD-483D-9406-7C763CDDC029}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
 		Release|Any CPU = Release|Any CPU
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{2D4F3D0E-0E18-48D7-9C27-98864039393D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{2D4F3D0E-0E18-48D7-9C27-98864039393D}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{2D4F3D0E-0E18-48D7-9C27-98864039393D}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{2D4F3D0E-0E18-48D7-9C27-98864039393D}.Release|Any CPU.Build.0 = Release|Any CPU
-		{ADBD32DB-B7AC-4E81-9507-28F329AF23E7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{ADBD32DB-B7AC-4E81-9507-28F329AF23E7}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{ADBD32DB-B7AC-4E81-9507-28F329AF23E7}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{ADBD32DB-B7AC-4E81-9507-28F329AF23E7}.Release|Any CPU.Build.0 = Release|Any CPU
-		{114DCF3C-D7CC-4E53-AFF0-AFBFC0C8B966}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{114DCF3C-D7CC-4E53-AFF0-AFBFC0C8B966}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{114DCF3C-D7CC-4E53-AFF0-AFBFC0C8B966}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{114DCF3C-D7CC-4E53-AFF0-AFBFC0C8B966}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DBDF64C3-BE92-4272-8737-5001C469D9AA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DBDF64C3-BE92-4272-8737-5001C469D9AA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DBDF64C3-BE92-4272-8737-5001C469D9AA}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{DBDF64C3-BE92-4272-8737-5001C469D9AA}.Debug|x64.Build.0 = Debug|Any CPU
+		{DBDF64C3-BE92-4272-8737-5001C469D9AA}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{DBDF64C3-BE92-4272-8737-5001C469D9AA}.Debug|x86.Build.0 = Debug|Any CPU
+		{DBDF64C3-BE92-4272-8737-5001C469D9AA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DBDF64C3-BE92-4272-8737-5001C469D9AA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DBDF64C3-BE92-4272-8737-5001C469D9AA}.Release|x64.ActiveCfg = Release|Any CPU
+		{DBDF64C3-BE92-4272-8737-5001C469D9AA}.Release|x64.Build.0 = Release|Any CPU
+		{DBDF64C3-BE92-4272-8737-5001C469D9AA}.Release|x86.ActiveCfg = Release|Any CPU
+		{DBDF64C3-BE92-4272-8737-5001C469D9AA}.Release|x86.Build.0 = Release|Any CPU
+		{F2404B35-0DAD-483D-9406-7C763CDDC029}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F2404B35-0DAD-483D-9406-7C763CDDC029}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F2404B35-0DAD-483D-9406-7C763CDDC029}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{F2404B35-0DAD-483D-9406-7C763CDDC029}.Debug|x64.Build.0 = Debug|Any CPU
+		{F2404B35-0DAD-483D-9406-7C763CDDC029}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{F2404B35-0DAD-483D-9406-7C763CDDC029}.Debug|x86.Build.0 = Debug|Any CPU
+		{F2404B35-0DAD-483D-9406-7C763CDDC029}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F2404B35-0DAD-483D-9406-7C763CDDC029}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F2404B35-0DAD-483D-9406-7C763CDDC029}.Release|x64.ActiveCfg = Release|Any CPU
+		{F2404B35-0DAD-483D-9406-7C763CDDC029}.Release|x64.Build.0 = Release|Any CPU
+		{F2404B35-0DAD-483D-9406-7C763CDDC029}.Release|x86.ActiveCfg = Release|Any CPU
+		{F2404B35-0DAD-483D-9406-7C763CDDC029}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
-		{83F16175-43B1-4C90-A1EE-8E351C33435D} = {A6A6AF7D-D6E3-442D-9B1E-58CC91879BE1}
-		{8E6D5255-776D-4B61-85F9-73C37AA1FB9A} = {A6A6AF7D-D6E3-442D-9B1E-58CC91879BE1}
-		{ADBD32DB-B7AC-4E81-9507-28F329AF23E7} = {ED8079DD-2B06-4030-9F0F-DC548F98E1C4}
-		{B4BB88FA-DB8C-4651-9869-A8FEA79F044E} = {8E6D5255-776D-4B61-85F9-73C37AA1FB9A}
+		{DBDF64C3-BE92-4272-8737-5001C469D9AA} = {86625A13-D7E2-4EAD-B13A-4F37BD89DE2A}
+		{F2404B35-0DAD-483D-9406-7C763CDDC029} = {561B2DD4-BBFB-4E0D-BF73-C10A3E42507C}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {C565CD17-B9B2-4A58-8F33-07C65FE2D9C3}
 	EndGlobalSection
 EndGlobal
