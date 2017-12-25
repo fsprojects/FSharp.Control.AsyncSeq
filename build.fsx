@@ -77,12 +77,13 @@ Target "RunTests" (fun _ ->
 // Build a NuGet package
 
 Target "NuGet" (fun _ ->
-    Paket.Pack (fun p ->
-        { p with
-            OutputPath = buildDir
-            Version = release.NugetVersion
-            ReleaseNotes = (toLines release.Notes) })
-    (*
+
+    //Paket.Pack (fun p ->
+    //    { p with
+    //        OutputPath = buildDir
+    //        Version = release.NugetVersion
+    //        ReleaseNotes = (toLines release.Notes) })
+    
     DotNetCli.Pack (fun p ->
         { p with
             Project = project
@@ -93,7 +94,6 @@ Target "NuGet" (fun _ ->
                 //"/p:ReleaseNotes=" + (toLines release.Notes)
               ]
         })
-    *)
 )
 
 Target "PublishNuget" (fun _ ->
