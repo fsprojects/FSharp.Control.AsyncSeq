@@ -174,6 +174,11 @@ module AsyncSeq =
     val iterAsync : action:('T -> Async<unit>) -> source:AsyncSeq<'T> -> Async<unit>
 
     /// Iterates over the input sequence and calls the specified asynchronous function for
+    /// every value, passing along the index of that element.
+    /// The input sequence will be asked for the next element after the processing of an element completes.
+    val iteriAsync : action:(int -> 'T -> Async<unit>) -> source:AsyncSeq<'T> -> Async<unit>
+
+    /// Iterates over the input sequence and calls the specified asynchronous function for
     /// every value. Each action computation is started but not awaited before consuming
     /// the next item from the sequence, thereby iterating in parallel.
     val iterAsyncParallel : action:('T -> Async<unit>) -> source:AsyncSeq<'T> -> Async<unit>
