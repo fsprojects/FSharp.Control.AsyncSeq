@@ -1,4 +1,5 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;net452</TargetFrameworks>
     <Authors>Tomas Petricek;Don Syme;Lev Gorodinski</Authors>
@@ -18,5 +19,7 @@
     <Compile Include="AsyncSeq.fsi" />
     <Compile Include="AsyncSeq.fs" />
     <None Include="paket.references" />
+    <None Include="paket.template" />
   </ItemGroup>
+  <Import Project="..\..\.paket\Paket.Restore.targets" />
 </Project>
