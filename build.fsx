@@ -60,9 +60,9 @@ Target "Restore" (fun _ ->
 // Build library & test project
 
 Target "Build" (fun _ ->
-    DotNetCli.Build (fun p ->
-        { p with Project = solutionFile })
-)
+    !! solutionFile
+    |> MSBuild null "Rebuild" [("Configuration", "Release")]
+    |> ignore)
 
 // --------------------------------------------------------------------------------------
 // Run the unit tests using test runner
