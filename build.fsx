@@ -52,6 +52,10 @@ Target "CleanDocs" (fun _ ->
     CleanDirs ["docs/output"]
 )
 
+Target "Restore" (fun _ ->
+    DotNetCli.Restore id
+)
+
 // --------------------------------------------------------------------------------------
 // Build library & test project
 
@@ -236,6 +240,7 @@ Target "BuildPackage" DoNothing
 Target "All" DoNothing
 
 "Clean"
+  ==> "Restore"
   ==> "Build"
   ==> "RunTests"
   =?> ("GenerateReferenceDocs",isLocalBuild && not isMono)
