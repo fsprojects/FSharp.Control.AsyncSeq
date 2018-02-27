@@ -52,13 +52,17 @@ Target "CleanDocs" (fun _ ->
     CleanDirs ["docs/output"]
 )
 
+Target "Restore" (fun _ ->
+    DotNetCli.Restore id
+)
+
 // --------------------------------------------------------------------------------------
 // Build library & test project
 
 Target "Build" (fun _ ->
-    DotNetCli.Build (fun p ->
-        { p with Project = solutionFile })
-)
+    !! solutionFile
+    |> MSBuild null "Rebuild" [("Configuration", "Release")]
+    |> ignore)
 
 // --------------------------------------------------------------------------------------
 // Run the unit tests using test runner
@@ -77,23 +81,11 @@ Target "RunTests" (fun _ ->
 // Build a NuGet package
 
 Target "NuGet" (fun _ ->
-
-    //Paket.Pack (fun p ->
-    //    { p with
-    //        OutputPath = buildDir
-    //        Version = release.NugetVersion
-    //        ReleaseNotes = (toLines release.Notes) })
-    
-    DotNetCli.Pack (fun p ->
+    Paket.Pack (fun p ->
         { p with
-            Project = project
             OutputPath = buildDir
-            AdditionalArgs =
-              [ "--no-build"
-                sprintf "/p:Version=%s" release.NugetVersion
-                //"/p:ReleaseNotes=" + (toLines release.Notes)
-              ]
-        })
+            Version = release.NugetVersion
+            ReleaseNotes = (toLines release.Notes) })
 )
 
 Target "PublishNuget" (fun _ ->
@@ -248,6 +240,7 @@ Target "BuildPackage" DoNothing
 Target "All" DoNothing
 
 "Clean"
+  ==> "Restore"
   ==> "Build"
   ==> "RunTests"
   =?> ("GenerateReferenceDocs",isLocalBuild && not isMono)

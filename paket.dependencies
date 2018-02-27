@@ -1,8 +1,16 @@
 source https://api.nuget.org/v3/index.json
+framework: netstandard2.0
 redirects: on
 storage: none
 
-nuget FSharp.Core
+nuget FSharp.Core >= 4.3.2 lowest_matching: true
+
+group Legacy
+  source https://api.nuget.org/v3/index.json
+  framework: net452
+  storage: none
+
+  nuget FSharp.Core >= 3.1.2 lowest_matching: true
 
 group Build
     source https://api.nuget.org/v3/index.json
