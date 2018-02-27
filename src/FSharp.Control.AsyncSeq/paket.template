@@ -25,9 +25,9 @@ dependencies
   framework: netstandard2.0
 	FSharp.Core >= LOCKEDVERSION-Legacy
 files
-    ../../bin/Release/net452/FSharp.Control.AsyncSeq.dll ==> lib/net452
-    ../../bin/Release/net452/FSharp.Control.AsyncSeq.pdb ==> lib/net452
-    ../../bin/Release/net452/FSharp.Control.AsyncSeq.xml ==> lib/net452
-    ../../bin/Release/netstandard2.0/FSharp.Control.AsyncSeq.dll ==> lib/netstandard2.0
-    ../../bin/Release/netstandard2.0/FSharp.Control.AsyncSeq.pdb ==> lib/netstandard2.0
-    ../../bin/Release/netstandard2.0/FSharp.Control.AsyncSeq.xml ==> lib/netstandard2.0
+    bin/Release/net452/FSharp.Control.AsyncSeq.dll ==> lib/net452
+    bin/Release/net452/FSharp.Control.AsyncSeq.pdb ==> lib/net452
+    bin/Release/net452/FSharp.Control.AsyncSeq.xml ==> lib/net452
+    bin/Release/netstandard2.0/FSharp.Control.AsyncSeq.dll ==> lib/netstandard2.0
+    bin/Release/netstandard2.0/FSharp.Control.AsyncSeq.pdb ==> lib/netstandard2.0
+    bin/Release/netstandard2.0/FSharp.Control.AsyncSeq.xml ==> lib/netstandard2.0
