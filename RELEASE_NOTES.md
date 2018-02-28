@@ -1,3 +1,7 @@
+### 2.0.21-alpha02 - 28.12.2017
+* Fix packaging issues
+* Reference FSharp.Core 4.3 for nestandard builds
+
 ### 2.0.21-alpha01 - 28.12.2017
 * Fix packaging issues
 * Reference FSharp.Core 4.3 for nestandard builds
