@@ -1,3 +1,6 @@
+### 2.0.21-alpha03 - 28.2.2018
+* Fix multi-targetting
+
 ### 2.0.19-alpha01 - 22.12.2017
 * Target .NET Standard
 
