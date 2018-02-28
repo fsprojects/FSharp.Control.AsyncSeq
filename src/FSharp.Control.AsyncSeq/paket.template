@@ -20,14 +20,14 @@ summary
 description
     Asynchronous sequences for F#
 dependencies
-  framework: net452
+  framework: net45
     FSharp.Core >= LOCKEDVERSION-Legacy
   framework: netstandard2.0
 	FSharp.Core >= LOCKEDVERSION
 files
-    bin/Release/net452/FSharp.Control.AsyncSeq.dll ==> lib/net452
-    bin/Release/net452/FSharp.Control.AsyncSeq.pdb ==> lib/net452
-    bin/Release/net452/FSharp.Control.AsyncSeq.xml ==> lib/net452
+    bin/Release/net45/FSharp.Control.AsyncSeq.dll ==> lib/net45
+    bin/Release/net45/FSharp.Control.AsyncSeq.pdb ==> lib/net45
+    bin/Release/net45/FSharp.Control.AsyncSeq.xml ==> lib/net45
     bin/Release/netstandard2.0/FSharp.Control.AsyncSeq.dll ==> lib/netstandard2.0
     bin/Release/netstandard2.0/FSharp.Control.AsyncSeq.pdb ==> lib/netstandard2.0
     bin/Release/netstandard2.0/FSharp.Control.AsyncSeq.xml ==> lib/netstandard2.0

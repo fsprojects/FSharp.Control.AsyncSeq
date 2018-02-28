@@ -518,7 +518,7 @@ GITHUB
       Octokit (>= 0.20)
 GROUP Legacy
 STORAGE: NONE
-RESTRICTION: == net452
+RESTRICTION: == net45
 NUGET
   remote: https://api.nuget.org/v3/index.json
     FSharp.Core (3.1.2)
