@@ -1,3 +1,10 @@
+### 2.0.21-alpha01 - 28.12.2017
+* Fix packaging issues
+* Reference FSharp.Core 4.3 for nestandard builds
+
+### 2.0.20 - 16.12.2017
+* Target .NET Standard
+
 ### 2.0.19-alpha01 - 22.12.2017
 * Target .NET Standard
 

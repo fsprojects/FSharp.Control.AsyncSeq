@@ -91,7 +91,7 @@ Target "NuGet" (fun _ ->
 Target "PublishNuget" (fun _ ->
     Paket.Push(fun p ->
         { p with
-            WorkingDir = "temp" })
+            WorkingDir = buildDir })
 )
 
 // --------------------------------------------------------------------------------------
@@ -246,7 +246,7 @@ Target "All" DoNothing
   =?> ("GenerateReferenceDocs",isLocalBuild && not isMono)
   =?> ("GenerateDocs",isLocalBuild && not isMono)
   ==> "All"
-  //=?> ("ReleaseDocs",isLocalBuild && not isMono)
+  =?> ("ReleaseDocs",isLocalBuild && not isMono)
 
 "All" 
   ==> "NuGet"
@@ -263,8 +263,8 @@ Target "All" DoNothing
 "GenerateHelp"
   ==> "KeepRunning"
     
-//"ReleaseDocs"
-//  ==> "Release"
+"ReleaseDocs"
+  ==> "Release"
 
 "BuildPackage"
   ==> "PublishNuget"
