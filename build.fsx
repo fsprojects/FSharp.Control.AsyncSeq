@@ -246,7 +246,7 @@ Target "All" DoNothing
   =?> ("GenerateReferenceDocs",isLocalBuild && not isMono)
   =?> ("GenerateDocs",isLocalBuild && not isMono)
   ==> "All"
-  //=?> ("ReleaseDocs",isLocalBuild && not isMono)
+  =?> ("ReleaseDocs",isLocalBuild && not isMono)
 
 "All" 
   ==> "NuGet"
@@ -263,8 +263,8 @@ Target "All" DoNothing
 "GenerateHelp"
   ==> "KeepRunning"
     
-//"ReleaseDocs"
-//  ==> "Release"
+"ReleaseDocs"
+  ==> "Release"
 
 "BuildPackage"
   ==> "PublishNuget"
