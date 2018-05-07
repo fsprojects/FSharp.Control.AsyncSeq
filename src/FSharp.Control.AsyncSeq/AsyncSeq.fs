@@ -1659,14 +1659,12 @@ module AsyncSeq =
       
 
   
-  type private Group<'k, 'a> = { key : 'k ; src : AsyncSeqSrc<'a> }
-    
   let groupByAsync (p:'a -> Async<'k>) (s:AsyncSeq<'a>) : AsyncSeq<'k * AsyncSeq<'a>> = asyncSeq {
-    let groups = Collections.Generic.Dictionary<'k, Group<'k, 'a>>()
+    let groups = Collections.Generic.Dictionary<'k, AsyncSeqSrc< 'a>>()
     let close group =
-      AsyncSeqSrcImpl.close group.src
+      AsyncSeqSrcImpl.close group
     let closeGroups () =
-      groups.Values |> Seq.iter close
+      groups.Values |> Seq.iter close    
     use enum = s.GetEnumerator()
     let rec go () = asyncSeq {
       try            
@@ -1677,13 +1675,13 @@ module AsyncSeq =
           let! key = p a
           let mutable group = Unchecked.defaultof<_>
           if groups.TryGetValue(key, &group) then
-            AsyncSeqSrcImpl.put a group.src
+            AsyncSeqSrcImpl.put a group
             yield! go ()
           else
             let src = AsyncSeqSrcImpl.create ()
             let subSeq = src |> AsyncSeqSrcImpl.toAsyncSeq
             AsyncSeqSrcImpl.put a src
-            let group = { key = key ; src = src }
+            let group = src
             groups.Add(key, group)
             yield key,subSeq
             yield! go ()
