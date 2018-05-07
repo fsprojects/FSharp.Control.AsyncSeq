@@ -1664,10 +1664,9 @@ module AsyncSeq =
   let groupByAsync (p:'a -> Async<'k>) (s:AsyncSeq<'a>) : AsyncSeq<'k * AsyncSeq<'a>> = asyncSeq {
     let groups = Collections.Generic.Dictionary<'k, Group<'k, 'a>>()
     let close group =
-      groups.Remove(group.key) |> ignore
       AsyncSeqSrcImpl.close group.src
     let closeGroups () =
-      groups.Values |> Seq.toArray |> Array.iter close
+      groups.Values |> Seq.iter close
     use enum = s.GetEnumerator()
     let rec go () = asyncSeq {
       try            
