@@ -6,7 +6,6 @@ namespace FSharp.Control
 
 open System
 open System.Diagnostics
-open System.IO
 open System.Collections.Generic
 open System.Threading
 open System.Threading.Tasks
@@ -1660,7 +1659,7 @@ module AsyncSeq =
 
   
   let groupByAsync (p:'a -> Async<'k>) (s:AsyncSeq<'a>) : AsyncSeq<'k * AsyncSeq<'a>> = asyncSeq {
-    let groups = Collections.Generic.Dictionary<'k, AsyncSeqSrc< 'a>>()
+    let groups = Dictionary<'k, AsyncSeqSrc< 'a>>()
     let close group =
       AsyncSeqSrcImpl.close group
     let closeGroups () =
