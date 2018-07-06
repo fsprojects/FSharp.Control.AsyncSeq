@@ -1286,6 +1286,8 @@ module AsyncSeq =
                   let! moven = ie.MoveNext()
                   b := moven
               else b := None }
+  
+  let truncate count source = take count source
 
   let skip count (source : AsyncSeq<'T>) : AsyncSeq<_> = asyncSeq {
       if (count < 0) then invalidArg "count" "must be non-negative"
