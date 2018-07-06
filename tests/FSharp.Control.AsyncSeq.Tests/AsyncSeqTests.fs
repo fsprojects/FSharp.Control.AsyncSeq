@@ -133,14 +133,13 @@ let ``AsyncSeq.never should equal itself`` () =
 
 [<Test>]
 let ``AsyncSeq.toArray``() =  
-  let ls = [1;2;3]
   let s = asyncSeq {
     yield 1
     yield 2
     yield 3
   }
-  let a = s |> AsyncSeq.toList 
-  Assert.True(([1;2;3] = a))
+  let a = s |> AsyncSeq.toArray
+  Assert.True(([|1;2;3|] = a))
 
 
 [<Test>]
