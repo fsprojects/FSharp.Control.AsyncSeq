@@ -15,7 +15,7 @@ group Legacy
 group Build
     source https://api.nuget.org/v3/index.json
 
-    nuget FAKE
+    nuget FAKE ~> 4
     nuget FSharp.Formatting
     nuget Nuget.CommandLine
     github fsharp/FAKE modules/Octokit/Octokit.fsx
