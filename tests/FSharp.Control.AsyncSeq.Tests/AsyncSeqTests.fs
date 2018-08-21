@@ -1378,6 +1378,20 @@ let ``AsyncSeq.unfoldAsync should be iterable in finite resources``() =
 
 
 
+[<Test>]
+let ``AsyncSeq.mapi should work`` () =
+  for i in 0..100 do
+    let ls = List.init i (fun x -> x + 100)
+    let expected =
+      ls
+      |> List.mapi (fun i x -> sprintf "%i_%i" i x)
+    let actual = 
+      ls 
+      |> AsyncSeq.ofSeq 
+      |> AsyncSeq.mapi (fun i x -> sprintf "%i_%i" i x)
+      |> AsyncSeq.toList
+    Assert.AreEqual(expected, actual)
+
 
 [<Test>]
 let ``AsyncSeq.take should work``() =  
