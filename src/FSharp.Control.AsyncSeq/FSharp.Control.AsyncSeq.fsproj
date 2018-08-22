@@ -12,11 +12,7 @@
     <PackageTags>F#;async;fsharp;streaming</PackageTags>
     <IncludeSymbols>true</IncludeSymbols>
     <RepositoryUrl>https://github.com/fsprojects/FSharp.Control.AsyncSeq</RepositoryUrl>
-    <AssemblyName>FSharp.Control.AsyncSeq</AssemblyName>
-  </PropertyGroup>
-  <PropertyGroup>
-    <OutputPath>bin\$(Configuration)\</OutputPath>
-    <DocumentationFile>bin\$(Configuration)\$(Framework)\FSharp.Control.AsyncSeq.xml</DocumentationFile>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" Condition="Exists('AssemblyInfo.fs')" />
