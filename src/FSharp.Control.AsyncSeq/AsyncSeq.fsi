@@ -397,7 +397,11 @@ module AsyncSeq =
     val skipWhile : predicate:('T -> bool) -> source:AsyncSeq<'T> -> AsyncSeq<'T>
 
     /// Returns the first N elements of an asynchronous sequence
+    /// does not cast an exception if count is larger than the sequence length.
     val take : count:int -> source:AsyncSeq<'T> -> AsyncSeq<'T>
+
+    /// Alias for take
+    val truncate : count:int -> source:AsyncSeq<'T> -> AsyncSeq<'T>
 
     /// Skips the first N elements of an asynchronous sequence and
     /// then returns the rest of the sequence unmodified.

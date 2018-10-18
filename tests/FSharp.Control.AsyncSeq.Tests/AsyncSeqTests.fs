@@ -1402,6 +1402,16 @@ let ``AsyncSeq.take should work``() =
   ()
 
 [<Test>]
+let ``AsyncSeq.truncate should work like take``() =  
+  let s = asyncSeq {
+    yield ["a",1] |> Map.ofList
+  }
+  let expected = s |> AsyncSeq.take 1
+  let actual =  s |> AsyncSeq.truncate 1
+  Assert.AreEqual(expected, actual)
+
+
+[<Test>]
 let ``AsyncSeq.mapAsyncParallel should maintain order`` () =
   for i in 0..100 do
     let ls = List.init i id
