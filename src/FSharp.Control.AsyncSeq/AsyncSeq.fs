@@ -1057,7 +1057,7 @@ module AsyncSeq =
             | Observable.Error err -> err.Throw()
             | Observable.Completed -> failwith "unexpected"
       }
-    
+
   let cache (source : AsyncSeq<'T>) = 
     let cache = ResizeArray<_>()
     let fin = TaskCompletionSource<unit>()
@@ -1080,13 +1080,13 @@ module AsyncSeq =
               rep.SetException ex
           if not fin.Task.IsCompleted then
             let a = cache.[i]
-            rep.SetResult (Some a)              
+            rep.SetResult (Some a)
             return! loop ()
           else
             rep.SetResult None }
         return! loop () })
     asyncSeq {
-      if fin.Task.IsCompleted then yield! ofSeq cache else        
+      if fin.Task.IsCompleted then yield! ofSeq cache else
       let rec loop i = asyncSeq {
         let! next = Async.chooseTasks (fin.Task) (mbp.PostAndAsyncReplyTask (fun rep -> (i,rep))) 
         match next with
