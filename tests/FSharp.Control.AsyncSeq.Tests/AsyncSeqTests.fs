@@ -268,6 +268,32 @@ let ``AsyncSeq.cache should work``() =
     shouldEqual expected.Length !effects (Some "iterating cached sequence resulted in multiple iterations of source")
 
 [<Test>]
+let ``AsyncSeq.cache does not slow down late consumers``() =
+    let src =
+        AsyncSeq.initInfiniteAsync (fun _ -> Async.Sleep 1000)
+        |> AsyncSeq.cache
+    let consume initialDelay amount =
+        async {
+            do! Async.Sleep initialDelay
+            let timing = System.Diagnostics.Stopwatch.StartNew()
+            let! _ =
+                src
+                |> AsyncSeq.truncate amount
+                |> AsyncSeq.length
+            return timing.Elapsed.TotalSeconds
+        }
+    let times =
+        Async.Parallel [
+            // The first to start will take 10s to consume 10 items
+            consume 0 10
+            // The second should take no time to consume 5 items, starting 5s later, as the first five items have already been cached.
+            consume 5000 5
+        ]
+        |> Async.RunSynchronously
+    Assert.LessOrEqual(abs(times.[0] - 10.0), 2.0f, "Sanity check: lead consumer should take 10s")
+    Assert.LessOrEqual(times.[1], 2.0, "Test purpose: follower should only read cached items")
+
+[<Test>]
 let ``AsyncSeq.unfoldAsync``() =  
   let gen s =
     if s < 3 then (s,s + 1) |> Some
