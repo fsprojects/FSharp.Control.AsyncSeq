@@ -25,6 +25,7 @@ let info =
 #load "../../packages/build/FSharp.Formatting/FSharp.Formatting.fsx"
 #r "../../packages/build/FAKE/tools/NuGet.Core.dll"
 #r "../../packages/build/FAKE/tools/FakeLib.dll"
+#r "../../packages/build/FAKE/tools/FSharp.Core.dll"
 open Fake
 open System.IO
 open Fake.FileHelper
@@ -40,7 +41,11 @@ let root = "file://" + (__SOURCE_DIRECTORY__ @@ "../output")
 #endif
 
 // Paths with template/source/output locations
-let bin        = __SOURCE_DIRECTORY__ @@ "../../bin"
+#if RELEASE
+let bin        = __SOURCE_DIRECTORY__ @@ "../../src/FSharp.Control.AsyncSeq/bin/Release/net45"
+#else
+let bin        = __SOURCE_DIRECTORY__ @@ "../../src/FSharp.Control.AsyncSeq/bin/Debug/net45"
+#endif
 let content    = __SOURCE_DIRECTORY__ @@ "../content"
 let output     = __SOURCE_DIRECTORY__ @@ "../output"
 let files      = __SOURCE_DIRECTORY__ @@ "../files"
