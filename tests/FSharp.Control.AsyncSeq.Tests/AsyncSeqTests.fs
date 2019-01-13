@@ -1637,3 +1637,37 @@ let ``AsyncSeq.combineLatest should be never when either argument is never``() =
   let actual2 = AsyncSeq.combineLatestWith (fun _ _ -> 0) (AsyncSeq.singleton 1) (AsyncSeq.never)
   Assert.AreEqual(expected, actual1, timeout=100, exnEq=AreCancellationExns)
   Assert.AreEqual(expected, actual2, timeout=100, exnEq=AreCancellationExns)
+
+[<Test>]
+let ``Async.ofSeqAsync should work``() =
+  let asyncSequential (s:seq<Async<'t>>) : Async<seq<'t>> = 
+    Seq.foldBack
+      (fun asyncHead asyncQueue ->
+        async.Bind(asyncHead,
+                   fun head ->
+                    async.Bind(asyncQueue,
+                                fun queue -> async.Return(seq{ yield head; yield! queue}))))
+      s
+      (async.Return Seq.empty)
+
+  for n in 0..10 do
+    let s = Seq.init n (id >> async.Return)
+    let actual = AsyncSeq.ofSeqAsync s
+    let expected = asyncSequential s |> Async.RunSynchronously |> AsyncSeq.ofSeq
+    Assert.True(EQ expected actual)
+
+[<Test>]
+let ``Async.concat should work``() =
+  for n in 0..10 do
+    for m in 0..10 do
+      let actual =
+        Seq.init m (fun _ -> Seq.init n (id >> async.Return) |> AsyncSeq.ofSeqAsync)
+        |> AsyncSeq.ofSeq
+        |> AsyncSeq.concat
+
+      let expected =
+        Seq.init m (fun _ -> Seq.init n id)
+        |> AsyncSeq.ofSeq
+        |> AsyncSeq.concatSeq
+
+      Assert.True(EQ expected actual)
