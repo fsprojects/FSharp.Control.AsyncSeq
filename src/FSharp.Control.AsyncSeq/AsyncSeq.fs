@@ -1314,8 +1314,8 @@ module AsyncSeq =
       return ra.ToArray() }
 
   let toListAsync (source:AsyncSeq<'T>) : Async<'T list> = toArrayAsync source |> Async.map Array.toList
-  let toList (source:AsyncSeq<'T>) = toListAsync source |> Async.RunSynchronously
-  let toArray (source:AsyncSeq<'T>) = toArrayAsync source |> Async.RunSynchronously
+  let toListSynchronously (source:AsyncSeq<'T>) = toListAsync source |> Async.RunSynchronously
+  let toArraySynchronously (source:AsyncSeq<'T>) = toArrayAsync source |> Async.RunSynchronously
 
   let concatSeq (source:AsyncSeq<#seq<'T>>) : AsyncSeq<'T> = asyncSeq {
       use ie = source.GetEnumerator() 
