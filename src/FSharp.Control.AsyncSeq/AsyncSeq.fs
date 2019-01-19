@@ -1064,10 +1064,17 @@ module AsyncSeq =
             | Observable.Error err -> err.Throw()
             | Observable.Completed -> failwith "unexpected"
       }
-    
+
   let cache (source : AsyncSeq<'T>) = 
+    let cacheLock = obj()
     let cache = ResizeArray<_>()
     let fin = TaskCompletionSource<unit>()
+    let tryGetCachedItem i =
+        lock cacheLock (fun() ->
+            if cache.Count > i then
+                Some cache.[i]
+            else
+                None)
     // NB: no need to dispose since we're not using timeouts
     // NB: this MBP might have some unprocessed messages in internal queue until collected
     let mbp = 
@@ -1079,31 +1086,37 @@ module AsyncSeq =
             try
               let! move = ie.MoveNext()
               match move with
-              | Some v -> 
-                cache.Add v
+              | Some v ->
+                lock cacheLock (fun() -> cache.Add v)
               | None -> 
                 fin.SetResult ()
             with ex ->
               rep.SetException ex
           if not fin.Task.IsCompleted then
             let a = cache.[i]
-            rep.SetResult (Some a)              
+            rep.SetResult (Some a)
             return! loop ()
           else
             rep.SetResult None }
         return! loop () })
     asyncSeq {
-      if fin.Task.IsCompleted then yield! ofSeq cache else        
+      if fin.Task.IsCompleted then yield! ofSeq cache else
       let rec loop i = asyncSeq {
-        let! next = Async.chooseTasks (fin.Task) (mbp.PostAndAsyncReplyTask (fun rep -> (i,rep))) 
-        match next with
-        | Choice2Of2 (Some a,_) ->
-          yield a
-          yield! loop (i + 1)
-        | Choice2Of2 (None,_) -> ()
-        | Choice1Of2 _ ->
-          if i = 0 then yield! ofSeq cache
-          else yield! ofSeq (cache |> Seq.skip i) }
+        let cachedItem = tryGetCachedItem i
+        match cachedItem with
+        | Some a ->
+            yield a
+            yield! loop (i + 1)
+        | None ->
+            let! next = Async.chooseTasks (fin.Task) (mbp.PostAndAsyncReplyTask (fun rep -> (i,rep)))
+            match next with
+            | Choice2Of2 (Some a,_) ->
+              yield a
+              yield! loop (i + 1)
+            | Choice2Of2 (None,_) -> ()
+            | Choice1Of2 _ ->
+              if i = 0 then yield! ofSeq cache
+              else yield! ofSeq (cache |> Seq.skip i) }
       yield! loop 0 }
 
   // --------------------------------------------------------------------------
