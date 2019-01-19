@@ -788,6 +788,13 @@ module AsyncSeq =
           | Some v -> yield v 
           | _ -> () }
 
+  let ofSeqAsync (source:seq<Async<'T>>) : AsyncSeq<'T> =
+      asyncSeq {
+          for asyncElement in source do
+              let! v = asyncElement
+              yield v
+      }
+
   let filterAsync f (source : AsyncSeq<'T>) = asyncSeq {
     for v in source do
       let! b = f v
@@ -1326,6 +1333,13 @@ module AsyncSeq =
               yield x
           let! moven = ie.MoveNext()
           b := moven }
+
+  let concat (source:AsyncSeq<AsyncSeq<'T>>) : AsyncSeq<'T> =
+      asyncSeq {
+          for innerSeq in source do
+              for e in innerSeq do
+                  yield e
+      }        
 
   let interleaveChoice (source1: AsyncSeq<'T1>) (source2: AsyncSeq<'T2>) = asyncSeq {
       use ie1 = (source1 |> map Choice1Of2).GetEnumerator() 

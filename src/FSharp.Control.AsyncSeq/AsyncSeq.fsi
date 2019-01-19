@@ -261,6 +261,10 @@ module AsyncSeq =
     /// input synchronous sequence and returns them one-by-one.
     val ofSeq : source:seq<'T> -> AsyncSeq<'T>
 
+    /// Creates an asynchronous sequence that lazily takes element from an
+    /// input synchronous sequence of asynchronous computation and returns them one-by-one.
+    val ofSeqAsync : seq<Async<'T>> -> AsyncSeq<'T>
+
     /// Converts observable to an asynchronous sequence. Values that are produced
     /// by the observable while the asynchronous sequence is blocked are stored to 
     /// an unbounded buffer and are returned as next elements of the async sequence.
@@ -419,8 +423,11 @@ module AsyncSeq =
     /// Synchronously iterates the AsyncSeq and collects the output into an array.
     val toArraySynchronously : source:AsyncSeq<'T> -> 'T []
 
-    /// Flattens an AsyncSeq of sequences.
+    /// Flattens an AsyncSeq of synchronous sequences.
     val concatSeq : source:AsyncSeq<#seq<'T>> -> AsyncSeq<'T>
+
+    /// Flattens an AsyncSeq of asynchronous sequences.
+    val concat : AsyncSeq<AsyncSeq<'T>> -> AsyncSeq<'T>
 
     /// Interleaves two async sequences of the same type into a resulting sequence. The provided
     /// sequences are consumed in lock-step.
