@@ -146,11 +146,11 @@ for (inp,exp) in [ (inp0,exp0) ; (inp1,exp1) ] do
     toSeq inp
     |> AsyncSeq.bufferByTime (timeMs - 5)
     |> AsyncSeq.map List.ofArray
-    |> AsyncSeq.toList
+    |> AsyncSeq.toListSynchronously
   
   printfn "actual=%A expected=%A" actual exp
 
-  //let ls = toSeq inp |> AsyncSeq.toList
+  //let ls = toSeq inp |> AsyncSeq.toListSynchronously
   //let actualLs = actual |> List.concat
 
   

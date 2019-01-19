@@ -414,10 +414,10 @@ module AsyncSeq =
     val toListAsync : source:AsyncSeq<'T> -> Async<'T list>
 
     /// Synchronously iterates the AsyncSeq and collects the output into a list.
-    val toList : source:AsyncSeq<'T> -> 'T list
+    val toListSynchronously : source:AsyncSeq<'T> -> 'T list
 
     /// Synchronously iterates the AsyncSeq and collects the output into an array.
-    val toArray : source:AsyncSeq<'T> -> 'T []
+    val toArraySynchronously : source:AsyncSeq<'T> -> 'T []
 
     /// Flattens an AsyncSeq of sequences.
     val concatSeq : source:AsyncSeq<#seq<'T>> -> AsyncSeq<'T>
