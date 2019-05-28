@@ -1,3 +1,8 @@
+### 2.0.22 - 28.05.2019
+* Rename toList and toArray to toListSynchronously and toArraySynchronously
+* Add ofSeqAsync and concat
+* Improve parallelism of AsyncSeq.cache
+
 ### 2.0.21 - 28.12.2017
 * Fix packaging issues
 * Reference FSharp.Core 4.3 for nestandard builds
