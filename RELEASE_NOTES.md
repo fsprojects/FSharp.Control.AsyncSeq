@@ -1,4 +1,4 @@
-### 2.0.22 - 28.05.2019
+### 2.0.22 - 29.09.2019
 * Rename toList and toArray to toListSynchronously and toArraySynchronously
 * Add ofSeqAsync and concat
 * Improve parallelism of AsyncSeq.cache
