@@ -1697,3 +1697,11 @@ let ``Async.concat should work``() =
         |> AsyncSeq.concatSeq
 
       Assert.True(EQ expected actual)
+
+#if (NETSTANDARD2_1 || NETCOREAPP3_0)
+[<Test>]
+let ``AsyncSeq.ofAsyncEnum should roundtrip successfully``() = 
+  let data = [ 1 .. 10 ] |> AsyncSeq.ofSeq
+  let actual = data |> AsyncSeq.toAsyncEnum |> AsyncSeq.ofAsyncEnum
+  Assert.True(EQ data actual)
+#endif
