@@ -90,11 +90,6 @@ module AsyncSeq =
         /// also the AsyncSeq.collect function.
         member For : source:AsyncSeq<'T> * action:('T -> AsyncSeq<'TResult>) -> AsyncSeq<'TResult>
 
-        /// Implements "return" for the asyncSeq computation builder.
-        // Commented because there does not seem to be a way to specify the correct parameter type to the compiler.
-        // What is needed is one parameter of type unit, but the below is interpreted as zero parameters.
-        //member Return : unit -> AsyncSeq<'T>
-
         /// Implements "try-finally" for the asyncSeq computation builder.
         member TryFinally : body:AsyncSeq<'T> * compensation:(unit -> unit) -> AsyncSeq<'T>
 
