@@ -14,6 +14,7 @@ open NUnit.Framework
 open FSharp.Control
 open System
 open System.Threading
+open System.Threading.Tasks
 
 type AsyncOps = AsyncOps with
   static member unit : Async<unit> = async { return () }
@@ -1704,4 +1705,108 @@ let ``AsyncSeq.ofAsyncEnum should roundtrip successfully``() =
   let data = [ 1 .. 10 ] |> AsyncSeq.ofSeq
   let actual = data |> AsyncSeq.toAsyncEnum |> AsyncSeq.ofAsyncEnum
   Assert.True(EQ data actual)
+
+[<Test>]
+let ``AsyncSeq.toAsyncEnum raises exception``() : unit = 
+  async {
+    let exceptionMessage = "Raised inside AsyncSeq"
+    let exceptionSequence = asyncSeq { yield failwith exceptionMessage; yield 1 } |> AsyncSeq.toAsyncEnum
+    let mutable exceptionRaised = false
+    try
+      let enumerator = exceptionSequence.GetAsyncEnumerator()
+      let! item = enumerator.MoveNextAsync().AsTask() |> Async.AwaitTask
+      enumerator.Current |> ignore
+    with
+    | ex -> 
+      printfn "Exception message"
+      if exceptionMessage <> ex.Message 
+      then Assert.Fail("Message") 
+      else exceptionRaised <- true
+    Assert.IsTrue(exceptionRaised)
+  } 
+  |> Async.RunSynchronously
+
+let ``AsyncSeq.ofAsyncEnum raises exception``() : unit = 
+  async {
+    let exceptionMessage = "Raised inside AsyncSeq"
+    let exceptionSequence = asyncSeq { return failwith exceptionMessage; yield 1 } |> AsyncSeq.toAsyncEnum |> AsyncSeq.ofAsyncEnum
+    let mutable exceptionRaised = false
+    try
+      let enumerator = exceptionSequence.GetEnumerator()
+      let! __ = enumerator.MoveNext()
+      return Assert.Fail()
+    with
+    | ex -> 
+      if exceptionMessage <> ex.Message 
+      then Assert.Fail() 
+      else exceptionRaised <- true
+    Assert.IsTrue(exceptionRaised)
+  } 
+  |> Async.RunSynchronously
+
+[<Test>]
+let ``AsyncSeq.ofAsyncEnum can be cancelled``() : unit = 
+  use cts = new CancellationTokenSource()
+  let mutable cancelledInvoked = false
+  let mutable results = ResizeArray<_>()
+
+  let sourceWorkflow = 
+    asyncSeq {
+      use! __ = Async.OnCancel(fun x -> cancelledInvoked <- true)
+      yield 1
+      yield 2
+    } |> AsyncSeq.toAsyncEnum |> AsyncSeq.ofAsyncEnum
+
+  let innerAsync = 
+    async {
+      let enumerator = sourceWorkflow.GetEnumerator()
+      let! resultOpt = enumerator.MoveNext()
+      results.Add(resultOpt)
+      cts.Cancel()
+      try
+        let! __ = enumerator.MoveNext()
+        Assert.Fail("Task should have been cancelled")
+      with
+      | :? TaskCanceledException -> ()
+      | _ -> return Assert.Fail()
+    }
+
+  try
+    Async.RunSynchronously(innerAsync, cancellationToken = cts.Token)
+    Assert.Fail()
+  with
+  | :? OperationCanceledException -> 
+    Assert.IsTrue(cancelledInvoked)
+    Assert.IsTrue([ Some 1 ] = (results |> Seq.toList))
+  | _ -> Assert.Fail()
+
+[<Test>]
+let ``AsyncSeq.toAsyncEnum can be cancelled``() : unit = 
+  async {
+    use cts = new CancellationTokenSource()
+    let mutable cancelledInvoked = false
+    
+    let sourceWorkflow = 
+      asyncSeq {
+        use! __ = Async.OnCancel(fun x -> cancelledInvoked <- true)
+        yield 1
+        yield 2
+      }
+      |> AsyncSeq.toAsyncEnum
+
+    let enumerator = sourceWorkflow.GetAsyncEnumerator(cts.Token)
+    let! result1 = enumerator.MoveNextAsync().AsTask() |> Async.AwaitTask
+    Assert.IsTrue(result1)
+    Assert.IsTrue(enumerator.Current = 1)
+    cts.Cancel()
+    try
+      let! _ = enumerator.MoveNextAsync().AsTask() |> Async.AwaitTask
+      Assert.Fail()
+    with
+    | :? Tasks.TaskCanceledException -> return ()
+    | _ -> Assert.Fail()
+    Assert.IsTrue(cancelledInvoked)
+  }
+  |> Async.RunSynchronously
+
 #endif
