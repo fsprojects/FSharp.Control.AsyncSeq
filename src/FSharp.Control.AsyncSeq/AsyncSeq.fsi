@@ -494,6 +494,16 @@ module AsyncSeq =
     /// completion of sub-sequences depends on completion of other sub-sequences.
     val groupBy<'T, 'Key when 'Key : equality> : projection:('T -> 'Key) -> source:AsyncSeq<'T> -> AsyncSeq<'Key * AsyncSeq<'T>>
 
+    #if (NETSTANDARD2_1 || NETCOREAPP3_0)
+
+    /// Creates an asynchronous computation that asynchronously yields results from the provided .NET IAsyncEnumerable.
+    val ofAsyncEnum<'T> : source: Collections.Generic.IAsyncEnumerable<'T> -> AsyncSeq<'T>
+
+    /// Creates an .NET IAsyncEnumerable from the provided AsyncSeq computation.
+    val toAsyncEnum<'T> : source: AsyncSeq<'T> -> Collections.Generic.IAsyncEnumerable<'T>
+    
+    #endif
+
 /// An automatically-opened module that contains the `asyncSeq` builder and an extension method 
 [<AutoOpen>]
 module AsyncSeqExtensions = 
