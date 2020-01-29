@@ -1,3 +1,6 @@
+### 2.0.23 - 29.01.2019
+* Adding .NET IAsyncEnumerable conversion functions (ofAsyncEnum and toAsyncEnum) (https://github.com/fsprojects/FSharp.Control.AsyncSeq/pull/96)
+
 ### 2.0.22 - 29.09.2019
 * Rename toList and toArray to toListSynchronously and toArraySynchronously
 * Add ofSeqAsync and concat
