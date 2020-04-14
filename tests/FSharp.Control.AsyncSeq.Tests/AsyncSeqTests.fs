@@ -22,7 +22,7 @@ type AsyncOps = AsyncOps with
   static member timeoutMs (timeoutMs:int) (a:Async<'a>) = async {
     let! a = Async.StartChild(a, timeoutMs)
     return! a }
-      
+
 module AsyncSeq =
   [<GeneralizableValue>]
   let never<'a> : AsyncSeq<'a> = asyncSeq {
@@ -34,7 +34,7 @@ let DEFAULT_TIMEOUT_MS = 2000
 
 let randomDelayMs (minMs:int) (maxMs:int) (s:AsyncSeq<'a>) =
   let rand = new Random(int DateTime.Now.Ticks)
-  let randSleep = async { do! Async.Sleep(rand.Next(minMs, maxMs)) }    
+  let randSleep = async { do! Async.Sleep(rand.Next(minMs, maxMs)) }
   AsyncSeq.zipWith (fun _ a -> a) (AsyncSeq.replicateInfiniteAsync randSleep) s
 
 let randomDelayDefault (s:AsyncSeq<'a>) =
@@ -59,9 +59,9 @@ let AreCancellationExns (e1:exn) (e2:exn) =
   IsCancellationExn e1 && IsCancellationExn e2
 
 /// Determines equality of two async sequences by convering them to lists, ignoring side-effects.
-let EQ (a:AsyncSeq<'a>) (b:AsyncSeq<'a>) = 
-  let exp = a |> AsyncSeq.toListSynchronously 
-  let act = b |> AsyncSeq.toListSynchronously 
+let EQ (a:AsyncSeq<'a>) (b:AsyncSeq<'a>) =
+  let exp = a |> AsyncSeq.toListSynchronously
+  let act = b |> AsyncSeq.toListSynchronously
   if (exp = act) then true
   else
     printfn "expected=%A" exp
@@ -73,16 +73,16 @@ let runTimeout (timeoutMs:int) (a:Async<'a>) : 'a =
 
 let runTest a = runTimeout 5000 a
 
-type Assert with  
+type Assert with
 
   /// Determines equality of two async sequences by convering them to lists, ignoring side-effects.
   static member AreEqual (expected:AsyncSeq<'a>, actual:AsyncSeq<'a>) =
     Assert.AreEqual (expected, actual, DEFAULT_TIMEOUT_MS, exnEq=(fun _ _ -> true), message=null)
-  
+
   /// Determines equality of two async sequences by convering them to lists, ignoring side-effects.
   static member AreEqual (expected:AsyncSeq<'a>, actual:AsyncSeq<'a>, message:string) =
     Assert.AreEqual (expected, actual, DEFAULT_TIMEOUT_MS, exnEq=(fun _ _ -> true), message=message)
-    
+
   /// Determines equality of two async sequences by convering them to lists, ignoring side-effects.
   static member AreEqual (expected:AsyncSeq<'a>, actual:AsyncSeq<'a>, exnEq) =
     Assert.AreEqual (expected, actual, timeout=DEFAULT_TIMEOUT_MS, exnEq=exnEq, message=null)
@@ -94,16 +94,16 @@ type Assert with
   /// Determines equality of two async sequences by convering them to lists, ignoring side-effects.
   static member AreEqual (expected:AsyncSeq<'a>, actual:AsyncSeq<'a>, timeout, exnEq) =
     Assert.AreEqual (expected, actual, timeout=timeout, exnEq=exnEq, message=null)
-  
+
   /// Determines equality of two async sequences by convering them to lists, ignoring side-effects.
   /// Exceptions are caught and compared for equality.
   /// Timeouts ensure liveness.
   static member AreEqual (expected:AsyncSeq<'a>, actual:AsyncSeq<'a>, timeout, exnEq:exn -> exn -> bool, message:string) =
     let expected = expected |> AsyncSeq.toListAsync |> AsyncOps.timeoutMs timeout |> Async.Catch
     let expected = Async.RunSynchronously (expected)
-    let actual = actual |> AsyncSeq.toListAsync |> AsyncOps.timeoutMs timeout |> Async.Catch 
+    let actual = actual |> AsyncSeq.toListAsync |> AsyncOps.timeoutMs timeout |> Async.Catch
     let actual = Async.RunSynchronously (actual)
-    let message = 
+    let message =
       if message = null then sprintf "expected=%A actual=%A" expected actual
       else sprintf "message=%s expected=%A actual=%A" message expected actual
     match expected,actual with
@@ -126,14 +126,14 @@ type Assert with
     | _ ->
       Assert.Fail(message)
 
-    
+
 
 [<Test>]
 let ``AsyncSeq.never should equal itself`` () =
   Assert.AreEqual(AsyncSeq.never<int>, AsyncSeq.never<int>, timeout=100, exnEq=AreCancellationExns)
 
 [<Test>]
-let ``AsyncSeq.toArraySynchronously``() =  
+let ``AsyncSeq.toArraySynchronously``() =
   let s = asyncSeq {
     yield 1
     yield 2
@@ -144,26 +144,26 @@ let ``AsyncSeq.toArraySynchronously``() =
 
 
 [<Test>]
-let ``AsyncSeq.toListSynchronously``() =  
+let ``AsyncSeq.toListSynchronously``() =
   let s = asyncSeq {
     yield 1
     yield 2
     yield 3
   }
-  let a = s |> AsyncSeq.toListSynchronously 
+  let a = s |> AsyncSeq.toListSynchronously
   Assert.True(([1;2;3] = a))
 
 
 [<Test>]
-let ``AsyncSeq.concatSeq works``() =  
+let ``AsyncSeq.concatSeq works``() =
   let ls = [ [1;2] ; [3;4] ]
-  let actual = AsyncSeq.ofSeq ls |> AsyncSeq.concatSeq    
+  let actual = AsyncSeq.ofSeq ls |> AsyncSeq.concatSeq
   let expected = ls |> List.concat |> AsyncSeq.ofSeq
   Assert.AreEqual(expected, actual)
 
 [<Test>]
-let ``AsyncSeq.sum works``() =  
-  for i in 0 .. 10 do 
+let ``AsyncSeq.sum works``() =
+  for i in 0 .. 10 do
       let ls = [ 1 .. i ]
       let actual = AsyncSeq.ofSeq ls |> AsyncSeq.sum |> Async.RunSynchronously
       let expected = ls |> List.sum
@@ -171,16 +171,16 @@ let ``AsyncSeq.sum works``() =
 
 
 [<Test>]
-let ``AsyncSeq.length works``() =  
-  for i in 0 .. 10 do 
+let ``AsyncSeq.length works``() =
+  for i in 0 .. 10 do
       let ls = [ 1 .. i ]
       let actual = AsyncSeq.ofSeq ls |> AsyncSeq.length |> Async.RunSynchronously |> int32
       let expected = ls |> List.length
       Assert.True((expected = actual))
 
 [<Test>]
-let ``AsyncSeq.contains works``() =  
-  for i in 0 .. 10 do 
+let ``AsyncSeq.contains works``() =
+  for i in 0 .. 10 do
       let ls = [ 1 .. i ]
       for j in [0;i;i+1] do
           let actual = AsyncSeq.ofSeq ls |> AsyncSeq.contains j |> Async.RunSynchronously
@@ -188,8 +188,8 @@ let ``AsyncSeq.contains works``() =
           Assert.True((expected = actual))
 
 [<Test>]
-let ``AsyncSeq.tryPick works``() =  
-  for i in 0 .. 10 do 
+let ``AsyncSeq.tryPick works``() =
+  for i in 0 .. 10 do
       let ls = [ 1 .. i ]
       for j in [0;i;i+1] do
           let actual = AsyncSeq.ofSeq ls |> AsyncSeq.tryPick (fun x -> if x = j then Some (string (x+1)) else None) |> Async.RunSynchronously
@@ -197,8 +197,8 @@ let ``AsyncSeq.tryPick works``() =
           Assert.True((expected = actual))
 
 [<Test>]
-let ``AsyncSeq.pick works``() =  
-  for i in 0 .. 10 do 
+let ``AsyncSeq.pick works``() =
+  for i in 0 .. 10 do
       let ls = [ 1 .. i ]
       for j in [0;i;i+1] do
           let chooser x = if x = j then Some (string (x+1)) else None
@@ -207,8 +207,8 @@ let ``AsyncSeq.pick works``() =
           Assert.AreEqual(actual, expected)
 
 [<Test>]
-let ``AsyncSeq.tryFind works``() =  
-  for i in 0 .. 10 do 
+let ``AsyncSeq.tryFind works``() =
+  for i in 0 .. 10 do
       let ls = [ 1 .. i ]
       for j in [0;i;i+1] do
           let actual = AsyncSeq.ofSeq ls |> AsyncSeq.tryFind (fun x -> x = j) |> Async.RunSynchronously
@@ -216,8 +216,8 @@ let ``AsyncSeq.tryFind works``() =
           Assert.True((expected = actual))
 
 [<Test>]
-let ``AsyncSeq.exists works``() =  
-  for i in 0 .. 10 do 
+let ``AsyncSeq.exists works``() =
+  for i in 0 .. 10 do
       let ls = [ 1 .. i ]
       for j in [0;i;i+1] do
           let actual = AsyncSeq.ofSeq ls |> AsyncSeq.exists (fun x -> x = j) |> Async.RunSynchronously
@@ -225,16 +225,16 @@ let ``AsyncSeq.exists works``() =
           Assert.True((expected = actual))
 
 [<Test>]
-let ``AsyncSeq.forall works``() =  
-  for i in 0 .. 10 do 
+let ``AsyncSeq.forall works``() =
+  for i in 0 .. 10 do
       let ls = [ 1 .. i ]
       for j in [0;i;i+1] do
           let actual = AsyncSeq.ofSeq ls |> AsyncSeq.forall (fun x -> x = j) |> Async.RunSynchronously
           let expected = ls |> Seq.forall (fun x -> x = j)
           Assert.True((expected = actual))
 //[<Test>]
-//let ``AsyncSeq.cache works``() =  
-//  for n in 0 .. 10 do 
+//let ``AsyncSeq.cache works``() =
+//  for n in 0 .. 10 do
 //          let ls = [ for i in 1 .. n do for j in 1 .. i do yield i ]
 //          let actual = ls |> AsyncSeq.ofSeq |> AsyncSeq.cache
 //          let expected = ls |> AsyncSeq.ofSeq
@@ -249,17 +249,17 @@ let shouldEqual expected actual msg =
     | None -> Assert.Fail ()
 
 [<Test>]
-let ``AsyncSeq.cache should work``() = 
-  for N in [0;1;2;3;100] do 
+let ``AsyncSeq.cache should work``() =
+  for N in [0;1;2;3;100] do
     let expected = List.init N id
     let effects = ref 0
     let s = asyncSeq {
-      for item in expected do      
+      for item in expected do
         yield item
         do! Async.Sleep 1
         incr effects }
     let cached = s |> AsyncSeq.cache
-    let actual1,actual2 = 
+    let actual1,actual2 =
       (cached, cached)
       ||> AsyncSeq.zipParallel
       |> AsyncSeq.toListSynchronously
@@ -295,7 +295,7 @@ let ``AsyncSeq.cache does not slow down late consumers``() =
     Assert.LessOrEqual(times.[1], 2.0, "Test purpose: follower should only read cached items")
 
 [<Test>]
-let ``AsyncSeq.unfoldAsync``() =  
+let ``AsyncSeq.unfoldAsync``() =
   let gen s =
     if s < 3 then (s,s + 1) |> Some
     else None
@@ -304,7 +304,7 @@ let ``AsyncSeq.unfoldAsync``() =
   Assert.True(EQ expected actual)
 
 [<Test>]
-let ``AsyncSeq.unfold``() =  
+let ``AsyncSeq.unfold``() =
   let n = 3
   let chooser x = if x % 2 = 0 then Some x else None
   let gen s =
@@ -315,7 +315,7 @@ let ``AsyncSeq.unfold``() =
   Assert.True(EQ expected actual)
 
 [<Test>]
-let ``AsyncSeq.unfold choose``() =  
+let ``AsyncSeq.unfold choose``() =
   let gen s =
     if s < 3 then (s,s + 1) |> Some
     else None
@@ -325,92 +325,92 @@ let ``AsyncSeq.unfold choose``() =
 
 
 [<Test>]
-let ``AsyncSeq.interleaveChoice``() =  
+let ``AsyncSeq.interleaveChoice``() =
   let s1 = AsyncSeq.ofSeq ["a";"b";"c"]
   let s2 = AsyncSeq.ofSeq [1;2;3]
-  let merged = AsyncSeq.interleaveChoice s1 s2 |> AsyncSeq.toListSynchronously 
+  let merged = AsyncSeq.interleaveChoice s1 s2 |> AsyncSeq.toListSynchronously
   Assert.True([Choice1Of2 "a" ; Choice2Of2 1 ; Choice1Of2 "b" ; Choice2Of2 2 ; Choice1Of2 "c" ; Choice2Of2 3] = merged)
 
 [<Test>]
-let ``AsyncSeq.interleaveChoice second smaller``() =  
+let ``AsyncSeq.interleaveChoice second smaller``() =
   let s1 = AsyncSeq.ofSeq ["a";"b";"c"]
   let s2 = AsyncSeq.ofSeq [1]
-  let merged = AsyncSeq.interleaveChoice s1 s2 |> AsyncSeq.toListSynchronously 
+  let merged = AsyncSeq.interleaveChoice s1 s2 |> AsyncSeq.toListSynchronously
   Assert.True([Choice1Of2 "a" ; Choice2Of2 1 ; Choice1Of2 "b" ; Choice1Of2 "c" ] = merged)
 
 [<Test>]
-let ``AsyncSeq.interleaveChoice second empty``() =  
+let ``AsyncSeq.interleaveChoice second empty``() =
   let s1 = AsyncSeq.ofSeq ["a";"b";"c"]
   let s2 = AsyncSeq.ofSeq []
-  let merged = AsyncSeq.interleaveChoice s1 s2 |> AsyncSeq.toListSynchronously 
+  let merged = AsyncSeq.interleaveChoice s1 s2 |> AsyncSeq.toListSynchronously
   Assert.True([Choice1Of2 "a" ; Choice1Of2 "b" ; Choice1Of2 "c" ] = merged)
 
 [<Test>]
-let ``AsyncSeq.interleaveChoice both empty``() =  
+let ``AsyncSeq.interleaveChoice both empty``() =
   let s1 = AsyncSeq.ofSeq<int> []
   let s2 = AsyncSeq.ofSeq<int> []
-  let merged = AsyncSeq.interleaveChoice s1 s2 |> AsyncSeq.toListSynchronously 
+  let merged = AsyncSeq.interleaveChoice s1 s2 |> AsyncSeq.toListSynchronously
   Assert.True([ ] = merged)
 
 [<Test>]
-let ``AsyncSeq.interleaveChoice first smaller``() =  
+let ``AsyncSeq.interleaveChoice first smaller``() =
   let s1 = AsyncSeq.ofSeq ["a"]
   let s2 = AsyncSeq.ofSeq [1;2;3]
-  let merged = AsyncSeq.interleaveChoice s1 s2 |> AsyncSeq.toListSynchronously 
+  let merged = AsyncSeq.interleaveChoice s1 s2 |> AsyncSeq.toListSynchronously
   Assert.True([Choice1Of2 "a" ; Choice2Of2 1 ; Choice2Of2 2 ; Choice2Of2 3] = merged)
 
 
 
 [<Test>]
-let ``AsyncSeq.interleaveChoice first empty``() =  
+let ``AsyncSeq.interleaveChoice first empty``() =
   let s1 = AsyncSeq.ofSeq []
   let s2 = AsyncSeq.ofSeq [1;2;3]
-  let merged = AsyncSeq.interleaveChoice s1 s2 |> AsyncSeq.toListSynchronously 
+  let merged = AsyncSeq.interleaveChoice s1 s2 |> AsyncSeq.toListSynchronously
   Assert.True([Choice2Of2 1 ; Choice2Of2 2 ; Choice2Of2 3] = merged)
 
 
 [<Test>]
-let ``AsyncSeq.interleave``() =  
+let ``AsyncSeq.interleave``() =
   let s1 = AsyncSeq.ofSeq ["a";"b";"c"]
   let s2 = AsyncSeq.ofSeq ["1";"2";"3"]
-  let merged = AsyncSeq.interleave s1 s2 |> AsyncSeq.toListSynchronously 
+  let merged = AsyncSeq.interleave s1 s2 |> AsyncSeq.toListSynchronously
   Assert.True(["a" ; "1" ; "b" ; "2" ; "c" ; "3"] = merged)
 
 [<Test>]
-let ``AsyncSeq.interleave second smaller``() =  
+let ``AsyncSeq.interleave second smaller``() =
   let s1 = AsyncSeq.ofSeq ["a";"b";"c"]
   let s2 = AsyncSeq.ofSeq ["1"]
-  let merged = AsyncSeq.interleave s1 s2 |> AsyncSeq.toListSynchronously 
+  let merged = AsyncSeq.interleave s1 s2 |> AsyncSeq.toListSynchronously
   Assert.True(["a" ; "1" ; "b" ; "c" ] = merged)
 
 [<Test>]
-let ``AsyncSeq.interleave second empty``() =  
+let ``AsyncSeq.interleave second empty``() =
   let s1 = AsyncSeq.ofSeq ["a";"b";"c"]
   let s2 = AsyncSeq.ofSeq []
-  let merged = AsyncSeq.interleave s1 s2 |> AsyncSeq.toListSynchronously 
+  let merged = AsyncSeq.interleave s1 s2 |> AsyncSeq.toListSynchronously
   Assert.True(["a" ; "b" ; "c" ] = merged)
 
 [<Test>]
-let ``AsyncSeq.interleave both empty``() =  
+let ``AsyncSeq.interleave both empty``() =
   let s1 = AsyncSeq.ofSeq<int> []
   let s2 = AsyncSeq.ofSeq<int> []
-  let merged = AsyncSeq.interleave s1 s2 |> AsyncSeq.toListSynchronously 
+  let merged = AsyncSeq.interleave s1 s2 |> AsyncSeq.toListSynchronously
   Assert.True([ ] = merged)
 
 [<Test>]
-let ``AsyncSeq.interleave first smaller``() =  
+let ``AsyncSeq.interleave first smaller``() =
   let s1 = AsyncSeq.ofSeq ["a"]
   let s2 = AsyncSeq.ofSeq ["1";"2";"3"]
-  let merged = AsyncSeq.interleave s1 s2 |> AsyncSeq.toListSynchronously 
+  let merged = AsyncSeq.interleave s1 s2 |> AsyncSeq.toListSynchronously
   Assert.True(["a" ; "1" ; "2" ; "3"] = merged)
 
 
 
 [<Test>]
-let ``AsyncSeq.interleave first empty``() =  
+let ``AsyncSeq.interleave first empty``() =
   let s1 = AsyncSeq.ofSeq []
   let s2 = AsyncSeq.ofSeq [1;2;3]
-  let merged = AsyncSeq.interleave s1 s2 |> AsyncSeq.toListSynchronously 
+  let merged = AsyncSeq.interleave s1 s2 |> AsyncSeq.toListSynchronously
   Assert.True([1 ; 2 ; 3] = merged)
 
 
@@ -423,7 +423,7 @@ let ``AsyncSeq.bufferByCount``() =
     yield 4
     yield 5
   }
-  let s' = s |> AsyncSeq.bufferByCount 2 |> AsyncSeq.toListSynchronously 
+  let s' = s |> AsyncSeq.bufferByCount 2 |> AsyncSeq.toListSynchronously
   Assert.True(([[|1;2|];[|3;4|];[|5|]] = s'))
 
 [<Test>]
@@ -433,18 +433,18 @@ let ``AsyncSeq.bufferByCount various sizes``() =
         for i in 1 .. sz do
            yield i
       }
-      let s' = s |> AsyncSeq.bufferByCount 1 |> AsyncSeq.toListSynchronously 
+      let s' = s |> AsyncSeq.bufferByCount 1 |> AsyncSeq.toListSynchronously
       Assert.True(([for i in 1 .. sz -> [|i|]] = s'))
 
 [<Test>]
 let ``AsyncSeq.bufferByCount empty``() =
   let s = AsyncSeq.empty<int>
-  let s' = s |> AsyncSeq.bufferByCount 2 |> AsyncSeq.toListSynchronously 
+  let s' = s |> AsyncSeq.bufferByCount 2 |> AsyncSeq.toListSynchronously
   Assert.True(([] = s'))
 
 
 [<Test>]
-let ``AsyncSeq.bufferByTimeAndCount``() =      
+let ``AsyncSeq.bufferByTimeAndCount``() =
   let s = asyncSeq {
     yield 1
     yield 2
@@ -463,11 +463,11 @@ let ``AsyncSeq.bufferByCountAndTime various sizes``() =
         for i in 1 .. sz do
            yield i
       }
-      let s' = s |> AsyncSeq.bufferByCountAndTime 1 1 |> AsyncSeq.toListSynchronously 
+      let s' = s |> AsyncSeq.bufferByCountAndTime 1 1 |> AsyncSeq.toListSynchronously
       Assert.True(([for i in 1 .. sz -> [|i|]] = s'))
 
 [<Test>]
-let ``AsyncSeq.bufferByTimeAndCount empty``() =      
+let ``AsyncSeq.bufferByTimeAndCount empty``() =
   let s = AsyncSeq.empty<int>
   let actual = AsyncSeq.bufferByCountAndTime 2 10 s |> AsyncSeq.toListSynchronously
   Assert.True((actual = []))
@@ -477,7 +477,7 @@ let ``AsyncSeq.bufferByTimeAndCount empty``() =
 //
 //  let Y = Choice1Of2
 //  let S = Choice2Of2
-//  
+//
 //  let timeMs = 500
 //
 //  let inp0 = [ ]
@@ -493,16 +493,16 @@ let ``AsyncSeq.bufferByTimeAndCount empty``() =
 //    for x in xs do
 //      match x with
 //      | Choice1Of2 v -> yield v
-//      | Choice2Of2 s -> do! Async.Sleep s }    
+//      | Choice2Of2 s -> do! Async.Sleep s }
 //
 //  for (inp,exp) in [ (inp0,exp0) ; (inp1,exp1) ] do
 //
-//    let actual = 
+//    let actual =
 //      toSeq inp
 //      |> AsyncSeq.bufferByTime (timeMs - 5)
 //      |> AsyncSeq.map List.ofArray
 //      |> AsyncSeq.toListSynchronously
-//  
+//
 //    //let ls = toSeq inp |> AsyncSeq.toListSynchronously
 //    //let actualLs = actual |> List.concat
 //
@@ -528,13 +528,13 @@ let ``AsyncSeq.bufferByTimeAndCount empty``() =
 //    | [] -> [List.rev batch]
 //    | _ when List.length batch = size -> (List.rev batch)::go [] ls
 //    | hd::tl -> go (hd::batch) tl
-//  go [] ls 
+//  go [] ls
 //
 //[<Test>]
 //let ``AsyncSeq.bufferByTime2`` () =
 //
 //  let Y = Choice1Of2
-//  let S = Choice2Of2  
+//  let S = Choice2Of2
 //  let sleepMs = 100
 //
 //  let toSeq (xs:Choice<int, int> list) = asyncSeq {
@@ -545,14 +545,14 @@ let ``AsyncSeq.bufferByTimeAndCount empty``() =
 //
 //  for (size,batchSize) in [ (0,0) ; (10,2) ; (100,2) ] do
 //
-//    let expected = 
+//    let expected =
 //      List.init size id
 //      |> batch batchSize
-//   
-//    let actual = 
+//
+//    let actual =
 //      expected
 //      |> List.map (List.map Y)
-//      |> intercalate [S sleepMs] 
+//      |> intercalate [S sleepMs]
 //      |> toSeq
 //      |> AsyncSeq.bufferByTime sleepMs
 //      |> AsyncSeq.map List.ofArray
@@ -601,7 +601,7 @@ let ``AsyncSeq.bufferByTime should not block`` () =
   watch.Stop()
   cts.Cancel(false)
   Assert.Less (watch.ElapsedMilliseconds, 1000L)
-  
+
 //  let s = asyncSeq {
 //    yield 1
 //    yield 2
@@ -613,12 +613,12 @@ let ``AsyncSeq.bufferByTime should not block`` () =
 //    yield 6
 //  }
 
-  //let actual = 
+  //let actual =
   //  s
   //  |> AsyncSeq.bufferByTime 100
   //  |> AsyncSeq.map (List.ofArray)
   //  |> AsyncSeq.toListSynchronously
-  
+
   //let expected = [ [1;2] ; [3;4] ; [5;6] ]
 
   //Assert.True ((actual = expected))
@@ -627,11 +627,11 @@ let ``AsyncSeq.bufferByTime should not block`` () =
 let ``try finally works no exception``() =
   let x = ref 0
   let s = asyncSeq {
-    try yield 1 
+    try yield 1
     finally x := x.Value + 3
   }
   Assert.True(x.Value = 0)
-  let s1 = s |> AsyncSeq.toListSynchronously 
+  let s1 = s |> AsyncSeq.toListSynchronously
   Assert.True(x.Value = 3)
   let s2 = s |> AsyncSeq.toListSynchronously
   Assert.True(x.Value = 6)
@@ -640,7 +640,7 @@ let ``try finally works no exception``() =
 let ``try finally works exception``() =
   let x = ref 0
   let s = asyncSeq {
-    try 
+    try
       try yield 1
           failwith "fffail"
       finally x := x.Value + 1
@@ -685,9 +685,9 @@ let ``try with works no exception``() =
   Assert.True(x.Value = 0)
 
 [<Test>]
-let ``AsyncSeq.zip``() =  
-  for la in [ []; [1]; [1;2;3;4;5] ] do 
-     for lb in [ []; [1]; [1;2;3;4;5] ] do 
+let ``AsyncSeq.zip``() =
+  for la in [ []; [1]; [1;2;3;4;5] ] do
+     for lb in [ []; [1]; [1;2;3;4;5] ] do
           let a = la |> AsyncSeq.ofSeq
           let b = lb |> AsyncSeq.ofSeq
           let actual = AsyncSeq.zip a b
@@ -696,9 +696,9 @@ let ``AsyncSeq.zip``() =
 
 
 [<Test>]
-let ``AsyncSeq.zipWithAsync``() =  
-  for la in [ []; [1]; [1;2;3;4;5] ] do 
-     for lb in [ []; [1]; [1;2;3;4;5] ] do 
+let ``AsyncSeq.zipWithAsync``() =
+  for la in [ []; [1]; [1;2;3;4;5] ] do
+     for lb in [ []; [1]; [1;2;3;4;5] ] do
           let a = la |> AsyncSeq.ofSeq
           let b = lb |> AsyncSeq.ofSeq
           let actual = AsyncSeq.zipWithAsync (fun a b -> a + b |> async.Return) a b
@@ -706,9 +706,9 @@ let ``AsyncSeq.zipWithAsync``() =
           Assert.True(EQ expected actual)
 
 [<Test>]
-let ``AsyncSeq.zipWithAsyncParallel``() =  
-  for la in [ []; [1]; [1;2;3;4;5] ] do 
-     for lb in [ []; [1]; [1;2;3;4;5] ] do 
+let ``AsyncSeq.zipWithAsyncParallel``() =
+  for la in [ []; [1]; [1;2;3;4;5] ] do
+     for lb in [ []; [1]; [1;2;3;4;5] ] do
           let a = la |> AsyncSeq.ofSeq
           let b = lb |> AsyncSeq.ofSeq
           let actual = AsyncSeq.zipWithAsyncParallel (fun a b -> a + b |> async.Return) a b
@@ -716,9 +716,9 @@ let ``AsyncSeq.zipWithAsyncParallel``() =
           Assert.True(EQ expected actual)
 
 [<Test>]
-let ``AsyncSeq.append works``() =  
-  for la in [ []; [1]; [1;2;3;4;5] ] do 
-     for lb in [ []; [1]; [1;2;3;4;5] ] do 
+let ``AsyncSeq.append works``() =
+  for la in [ []; [1]; [1;2;3;4;5] ] do
+     for lb in [ []; [1]; [1;2;3;4;5] ] do
           let a = la |> AsyncSeq.ofSeq
           let b = lb |> AsyncSeq.ofSeq
           let actual = AsyncSeq.append a b
@@ -727,8 +727,8 @@ let ``AsyncSeq.append works``() =
 
 
 [<Test>]
-let ``AsyncSeq.skipWhileAsync``() =  
-  for ls in [ []; [1]; [3]; [1;2;3;4;5] ] do 
+let ``AsyncSeq.skipWhileAsync``() =
+  for ls in [ []; [1]; [3]; [1;2;3;4;5] ] do
       let p i = i <= 2
       let actual = ls |> AsyncSeq.ofSeq |> AsyncSeq.skipWhileAsync (p >> async.Return)
       let expected = ls |> Seq.skipWhile p |> AsyncSeq.ofSeq
@@ -736,25 +736,25 @@ let ``AsyncSeq.skipWhileAsync``() =
 
 
 [<Test>]
-let ``AsyncSeq.takeWhileAsync``() =  
-  for ls in [ []; [1]; [1;2;3;4;5] ] do 
+let ``AsyncSeq.takeWhileAsync``() =
+  for ls in [ []; [1]; [1;2;3;4;5] ] do
       let p i = i < 4
       let actual = ls |> AsyncSeq.ofSeq |> AsyncSeq.takeWhileAsync (p >> async.Return)
       let expected = ls |> Seq.takeWhile p |> AsyncSeq.ofSeq
       Assert.True(EQ expected actual)
 
 [<Test>]
-let ``AsyncSeq.takeWhileInclusive``() =  
-  for ls in [ []; [1]; [4]; [4;5]; [1;2;3;4;5] ] do 
+let ``AsyncSeq.takeWhileInclusive``() =
+  for ls in [ []; [1]; [4]; [4;5]; [1;2;3;4;5] ] do
       let p i = i < 4
       let pInclusive i = i <= 4
-      let actual = ls |> AsyncSeq.ofSeq |> AsyncSeq.takeWhileInclusive p 
-      let expected = ls |> Seq.filter(pInclusive) |> AsyncSeq.ofSeq 
+      let actual = ls |> AsyncSeq.ofSeq |> AsyncSeq.takeWhileInclusive p
+      let expected = ls |> Seq.filter(pInclusive) |> AsyncSeq.ofSeq
       Assert.True(EQ expected actual)
 
-      
+
 [<Test>]
-let ``AsyncSeq.take 3 of 5``() =  
+let ``AsyncSeq.take 3 of 5``() =
   let ls = [1;2;3;4;5]
   let c = 3
   let actual = ls |> AsyncSeq.ofSeq |> AsyncSeq.take c
@@ -762,7 +762,7 @@ let ``AsyncSeq.take 3 of 5``() =
   Assert.True(EQ expected actual)
 
 [<Test>]
-let ``AsyncSeq.take 0 of 5``() =  
+let ``AsyncSeq.take 0 of 5``() =
   let ls = [1;2;3;4;5]
   let c = 0
   let actual = ls |> AsyncSeq.ofSeq |> AsyncSeq.take c
@@ -771,7 +771,7 @@ let ``AsyncSeq.take 0 of 5``() =
 
 
 [<Test>]
-let ``AsyncSeq.take 5 of 5``() =  
+let ``AsyncSeq.take 5 of 5``() =
   let ls = [1;2;3;4;5]
   let c = 5
   let actual = ls |> AsyncSeq.ofSeq |> AsyncSeq.take c
@@ -825,7 +825,7 @@ let ``AsyncSeq.threadStateAsync``() =
 
 [<Test>]
 let ``AsyncSeq.scanAsync``() =
-  for ls in [ []; [1]; [3]; [1;2;3;4;5] ] do 
+  for ls in [ []; [1]; [3]; [1;2;3;4;5] ] do
       let f i a = i + a
       let z = 0
       let actual = ls |> AsyncSeq.ofSeq |> AsyncSeq.scanAsync (fun i a -> f i a |> async.Return) z
@@ -834,7 +834,7 @@ let ``AsyncSeq.scanAsync``() =
 
 [<Test>]
 let ``AsyncSeq.scan``() =
-  for ls in [ []; [1]; [3]; [1;2;3;4;5] ] do 
+  for ls in [ []; [1]; [3]; [1;2;3;4;5] ] do
       let f i a = i + a
       let z = 0
       let actual = ls |> AsyncSeq.ofSeq |> AsyncSeq.scan (fun i a -> f i a) z
@@ -844,7 +844,7 @@ let ``AsyncSeq.scan``() =
 
 [<Test>]
 let ``AsyncSeq.foldAsync``() =
-  for ls in [ []; [1]; [3]; [1;2;3;4;5] ] do 
+  for ls in [ []; [1]; [3]; [1;2;3;4;5] ] do
       let f i a = i + a
       let z = 0
       let actual = ls |> AsyncSeq.ofSeq |> AsyncSeq.foldAsync (fun i a -> f i a |> async.Return) z |> Async.RunSynchronously
@@ -854,7 +854,7 @@ let ``AsyncSeq.foldAsync``() =
 
 [<Test>]
 let ``AsyncSeq.filterAsync``() =
-  for ls in [ []; [1]; [4]; [1;2;3;4;5] ] do 
+  for ls in [ []; [1]; [4]; [1;2;3;4;5] ] do
       let p i = i > 3
       let actual = ls |> AsyncSeq.ofSeq |> AsyncSeq.filterAsync (p >> async.Return)
       let expected = ls |> Seq.filter p |> AsyncSeq.ofSeq
@@ -862,7 +862,7 @@ let ``AsyncSeq.filterAsync``() =
 
 [<Test>]
 let ``AsyncSeq.filter``() =
-  for ls in [ []; [1]; [4]; [1;2;3;4;5] ] do 
+  for ls in [ []; [1]; [4]; [1;2;3;4;5] ] do
       let p i = i > 3
       let actual = ls |> AsyncSeq.ofSeq |> AsyncSeq.filter p
       let expected = ls |> Seq.filter p |> AsyncSeq.ofSeq
@@ -886,7 +886,7 @@ let ``AsyncSeq.mergeChoice``() =
 
 
 [<Test>]
-let ``AsyncSeq.merge should be fair``() =  
+let ``AsyncSeq.merge should be fair``() =
   let s1 = asyncSeq {
     do! Async.Sleep 10
     yield 1
@@ -899,7 +899,7 @@ let ``AsyncSeq.merge should be fair``() =
   Assert.True(EQ expected actual)
 
 [<Test>]
-let ``AsyncSeq.merge should be fair 2``() =  
+let ``AsyncSeq.merge should be fair 2``() =
   let s1 = asyncSeq {
     yield 1
   }
@@ -930,7 +930,7 @@ let ``AsyncSeq.replicateInfinite``() =
 [<Test>]
 let ``AsyncSeq.init``() =
   for c in [0; 1; 100] do
-      let actual = AsyncSeq.init (int64 c) string 
+      let actual = AsyncSeq.init (int64 c) string
       let expected = List.init c string |> AsyncSeq.ofSeq
       Assert.True(EQ expected actual)
 
@@ -991,10 +991,10 @@ let ``AsyncSeq.traverseChoiceAsync``() =
   let r = AsyncSeq.traverseChoiceAsync f s |> Async.RunSynchronously
   match r with
   | Choice1Of2 _ -> Assert.Fail()
-  | Choice2Of2 e -> 
+  | Choice2Of2 e ->
     Assert.AreEqual("oh no", e)
     Assert.True(([1;2] = (seen |> List.ofSeq)))
-  
+
 
 [<Test>]
 let ``AsyncSeq.toBlockingSeq does not hung forever and rethrows exception``() =
@@ -1003,15 +1003,15 @@ let ``AsyncSeq.toBlockingSeq does not hung forever and rethrows exception``() =
       failwith "error"
   }
   Assert.Throws<Exception>(fun _ -> s |> AsyncSeq.toBlockingSeq |> Seq.toList |> ignore) |> ignore
-  try 
-      let _ = s |> AsyncSeq.toBlockingSeq |> Seq.toList 
+  try
+      let _ = s |> AsyncSeq.toBlockingSeq |> Seq.toList
       ()
-  with e -> 
-      Assert.AreEqual(e.Message, "error") 
+  with e ->
+      Assert.AreEqual(e.Message, "error")
 
 
 [<Test>]
-let ``AsyncSeq.distinctUntilChangedWithAsync``() =  
+let ``AsyncSeq.distinctUntilChangedWithAsync``() =
   let ls = [1;1;2;2;3;4;5;1]
   let s = ls |> AsyncSeq.ofSeq
   let c a b =
@@ -1023,7 +1023,7 @@ let ``AsyncSeq.distinctUntilChangedWithAsync``() =
 
 
 [<Test>]
-let ``AsyncSeq.takeUntil should complete immediately with completed signal``() =  
+let ``AsyncSeq.takeUntil should complete immediately with completed signal``() =
   let s = asyncSeq {
     do! Async.Sleep 10
     yield 1
@@ -1042,18 +1042,18 @@ let ``AsyncSeq.takeUntil should take entire sequence with never signal``() =
 [<Test>]
 let ``AsyncSeq.singleton works``() =
   let expected = [1] |> AsyncSeq.ofSeq
-  let actual = AsyncSeq.singleton 1 
+  let actual = AsyncSeq.singleton 1
   Assert.True(EQ expected actual)
 
 
 [<Test>]
 let ``AsyncSeq.skipUntil should not skip with completed signal``() =
   let expected = [1;2;3;4] |> AsyncSeq.ofSeq
-  let actual = 
+  let actual =
       asyncSeq {
           do! Async.Sleep 100
-          yield! expected 
-      } 
+          yield! expected
+      }
       |> AsyncSeq.skipUntilSignal AsyncOps.unit
 
   Assert.True(EQ expected actual)
@@ -1076,41 +1076,41 @@ let ``AsyncSeq.toBlockingSeq should work length 0``() =
 
 [<Test>]
 let ``AsyncSeq.toBlockingSeq should work length 2 with sleep``() =
-  let s = asyncSeq { yield 1 
+  let s = asyncSeq { yield 1
                      do! Async.Sleep 10
                      yield 2  } |> AsyncSeq.toBlockingSeq  |> Seq.toList
   Assert.True((s = [1; 2]))
 
 [<Test>]
 let ``AsyncSeq.toBlockingSeq should work length 1 with fail``() =
-  let s = 
-      asyncSeq { yield 1 
-                 failwith "fail"  } 
-      |> AsyncSeq.toBlockingSeq  
-      |> Seq.truncate 1 
+  let s =
+      asyncSeq { yield 1
+                 failwith "fail"  }
+      |> AsyncSeq.toBlockingSeq
+      |> Seq.truncate 1
       |> Seq.toList
   Assert.True((s = [1]))
 
 [<Test>]
 let ``AsyncSeq.toBlockingSeq should work length 0 with fail``() =
-  let s = 
-      asyncSeq { failwith "fail"  } 
-      |> AsyncSeq.toBlockingSeq  
-      |> Seq.truncate 0 
+  let s =
+      asyncSeq { failwith "fail"  }
+      |> AsyncSeq.toBlockingSeq
+      |> Seq.truncate 0
       |> Seq.toList
   Assert.True((s = []))
 
 [<Test>]
 let ``AsyncSeq.toBlockingSeq should be cancellable``() =
-  let cancelCount = ref 0 
-  let aseq = 
-      asyncSeq { 
+  let cancelCount = ref 0
+  let aseq =
+      asyncSeq {
           use! a = Async.OnCancel(fun x -> incr cancelCount)
-          while true do 
-              yield 1 
+          while true do
+              yield 1
               do! Async.Sleep 10
     }
-    
+
   let asSeq = aseq |> AsyncSeq.toBlockingSeq
   let enum = asSeq.GetEnumerator()
   Assert.AreEqual(cancelCount.Value, 0)
@@ -1122,105 +1122,105 @@ let ``AsyncSeq.toBlockingSeq should be cancellable``() =
   Assert.AreEqual(cancelCount.Value, 1)
 
 [<Test>]
-let ``AsyncSeq.while should allow do at end``() =  
+let ``AsyncSeq.while should allow do at end``() =
   let s1 = asyncSeq {
-    while false do 
+    while false do
         yield 1
         do! Async.Sleep 10
   }
   Assert.True(true)
 
-let observe vs err = 
+let observe vs err =
     let discarded = ref false
-    { new IObservable<'U> with 
-            member x.Subscribe(observer) = 
-                for v in vs do 
+    { new IObservable<'U> with
+            member x.Subscribe(observer) =
+                for v in vs do
                    observer.OnNext v
-                if err then 
+                if err then
                    observer.OnError (Failure "fail")
                 observer.OnCompleted()
                 { new IDisposable with member __.Dispose() = discarded := true }  },
     (fun _ -> discarded.Value)
-    
+
 [<Test>]
-let ``AsyncSeq.ofObservableBuffered should work (empty)``() =  
+let ``AsyncSeq.ofObservableBuffered should work (empty)``() =
   let src, discarded = observe [] false
   Assert.True(src |> AsyncSeq.ofObservableBuffered |> AsyncSeq.toListSynchronously = [])
   Assert.True(discarded())
 
 [<Test>]
-let ``AsyncSeq.ofObservableBuffered should work (singleton)``() =  
+let ``AsyncSeq.ofObservableBuffered should work (singleton)``() =
   let src, discarded = observe [1] false
   Assert.True(src |> AsyncSeq.ofObservableBuffered |> AsyncSeq.toListSynchronously = [1])
   Assert.True(discarded())
 
 [<Test>]
-let ``AsyncSeq.ofObservableBuffered should work (ten)``() =  
+let ``AsyncSeq.ofObservableBuffered should work (ten)``() =
   let src, discarded = observe [1..10] false
   Assert.True(src |> AsyncSeq.ofObservableBuffered |> AsyncSeq.toListSynchronously = [1..10])
   Assert.True(discarded())
 
 [<Test>]
-let ``AsyncSeq.ofObservableBuffered should work (empty, fail)``() =  
+let ``AsyncSeq.ofObservableBuffered should work (empty, fail)``() =
   let src, discarded = observe [] true
   Assert.True(try (src |> AsyncSeq.ofObservableBuffered |> AsyncSeq.toListSynchronously |> ignore); false with _ -> true)
   Assert.True(discarded())
 
 [<Test>]
-let ``AsyncSeq.ofObservableBuffered should work (one, fail)``() =  
+let ``AsyncSeq.ofObservableBuffered should work (one, fail)``() =
   let src, discarded = observe [1] true
   Assert.True(try (src |> AsyncSeq.ofObservableBuffered |> AsyncSeq.toListSynchronously |> ignore); false with _ -> true)
   Assert.True(discarded())
 
 [<Test>]
-let ``AsyncSeq.ofObservableBuffered should work (one, take)``() =  
+let ``AsyncSeq.ofObservableBuffered should work (one, take)``() =
   let src, discarded = observe [1] true
   Assert.True(src |> AsyncSeq.ofObservableBuffered |> AsyncSeq.take 1 |> AsyncSeq.toListSynchronously = [1])
   Assert.True(discarded())
 
 [<Test>]
-let ``AsyncSeq.getIterator should work``() =  
+let ``AsyncSeq.getIterator should work``() =
   let s1 = [1..2] |> AsyncSeq.ofSeq
   use i = s1.GetEnumerator()
-  match i.MoveNext() |> Async.RunSynchronously with 
+  match i.MoveNext() |> Async.RunSynchronously with
   | None -> Assert.Fail("expected Some")
-  | Some v -> 
+  | Some v ->
     Assert.AreEqual(v,1)
-    match i.MoveNext() |> Async.RunSynchronously with 
+    match i.MoveNext() |> Async.RunSynchronously with
     | None -> Assert.Fail("expected Some")
-    | Some v -> 
+    | Some v ->
         Assert.AreEqual(v,2)
-        match i.MoveNext() |> Async.RunSynchronously with 
+        match i.MoveNext() |> Async.RunSynchronously with
         | None -> ()
         | Some _ -> Assert.Fail("expected None")
 
 
-  
+
 [<Test>]
 let ``asyncSeq.For should delay``() =
-  let (s:seq<int>) = 
-     { new System.Collections.Generic.IEnumerable<int> with 
-           member x.GetEnumerator() = failwith "fail" 
-       interface System.Collections.IEnumerable with 
+  let (s:seq<int>) =
+     { new System.Collections.Generic.IEnumerable<int> with
+           member x.GetEnumerator() = failwith "fail"
+       interface System.Collections.IEnumerable with
            member x.GetEnumerator() = failwith "fail"  }
   Assert.DoesNotThrow(fun _ -> asyncSeq.For(s, (fun v -> AsyncSeq.empty)) |> ignore)
 
 [<Test>]
 let ``Async.mergeAll should work``() =
-    for n in 0 .. 10 do 
-        let expected = 
+    for n in 0 .. 10 do
+        let expected =
             [ for i in 1 .. n do
                     for j in 0 .. i do
-                      yield i 
-                 ] 
+                      yield i
+                 ]
             |> List.sort
-        let actual = 
-            [ for i in 1 .. n -> 
-                asyncSeq { 
-                    for j in 0 .. i do 
-                      do! Async.Sleep 1; 
-                      yield i 
-                } ] 
+        let actual =
+            [ for i in 1 .. n ->
+                asyncSeq {
+                    for j in 0 .. i do
+                      do! Async.Sleep 1;
+                      yield i
+                } ]
             |> AsyncSeq.mergeAll
             |> AsyncSeq.toListSynchronously
             |> List.sort
@@ -1229,10 +1229,10 @@ let ``Async.mergeAll should work``() =
 
 [<Test>]
 let ``Async.mergeAll should perform well``() =
-    let mergeTest n = 
-        [ for i in 1 .. n -> 
-            asyncSeq{ do! Async.Sleep 1000; 
-                      yield i } ] 
+    let mergeTest n =
+        [ for i in 1 .. n ->
+            asyncSeq{ do! Async.Sleep 1000;
+                      yield i } ]
         |> AsyncSeq.mergeAll
         |> AsyncSeq.toListSynchronously
 
@@ -1257,12 +1257,12 @@ let ``Async.mergeAll should be fair``() =
 
 [<Test>]
 let ``AsyncSeq.mergeAll should fail with AggregateException if a task fails``() =
-    for n in 0 .. 10 do 
-      Assert.Throws<AggregateException>(fun _ -> 
-          [ for i in 0 .. n -> 
-                    asyncSeq { yield 1 
-                               if (i % 4) = 0 then 
-                                    failwith "fail"  
+    for n in 0 .. 10 do
+      Assert.Throws<AggregateException>(fun _ ->
+          [ for i in 0 .. n ->
+                    asyncSeq { yield 1
+                               if (i % 4) = 0 then
+                                    failwith "fail"
                                yield 2 } ]
           |> AsyncSeq.mergeAll
           |> AsyncSeq.toListSynchronously
@@ -1270,13 +1270,13 @@ let ``AsyncSeq.mergeAll should fail with AggregateException if a task fails``() 
 
 [<Test>]
 let ``AsyncSeq.merge should fail with AggregateException if a task fails``() =
-      for i in 0 .. 1 do 
-        Assert.Throws<AggregateException>(fun _ -> 
-          (asyncSeq { yield 1 
-                      if i % 2 = 0 then failwith "fail"  
-                      yield 2 }, 
-           asyncSeq { yield 1 
-                      if i % 2 = 1 then failwith "fail"  
+      for i in 0 .. 1 do
+        Assert.Throws<AggregateException>(fun _ ->
+          (asyncSeq { yield 1
+                      if i % 2 = 0 then failwith "fail"
+                      yield 2 },
+           asyncSeq { yield 1
+                      if i % 2 = 1 then failwith "fail"
                       yield 2 })
           ||> AsyncSeq.merge
           |> AsyncSeq.toListSynchronously
@@ -1285,13 +1285,13 @@ let ``AsyncSeq.merge should fail with AggregateException if a task fails``() =
 
 [<Test>]
 let ``AsyncSeq.mergeChoice should fail with AggregateException if a task fails``() =
-      for i in 0 .. 1 do 
-        Assert.Throws<AggregateException>(fun _ -> 
-          (asyncSeq { yield 1 
-                      if i % 2 = 0 then failwith "fail"  
-                      yield 2 }, 
-           asyncSeq { yield 1 
-                      if i % 2 = 1 then failwith "fail"  
+      for i in 0 .. 1 do
+        Assert.Throws<AggregateException>(fun _ ->
+          (asyncSeq { yield 1
+                      if i % 2 = 0 then failwith "fail"
+                      yield 2 },
+           asyncSeq { yield 1
+                      if i % 2 = 1 then failwith "fail"
                       yield 2 })
           ||> AsyncSeq.mergeChoice
           |> AsyncSeq.toListSynchronously
@@ -1299,20 +1299,20 @@ let ``AsyncSeq.mergeChoice should fail with AggregateException if a task fails``
 
 [<Test>]
 let ``AsyncSeq.interleave should fail with Exception if a task fails``() =
-      for i in 0 .. 1 do 
-        Assert.Throws<Exception>(fun _ -> 
-          (asyncSeq { yield 1 
-                      if i % 2 = 0 then failwith "fail"  
-                      yield 2 }, 
-           asyncSeq { yield 1 
-                      if i % 2 = 1 then failwith "fail"  
+      for i in 0 .. 1 do
+        Assert.Throws<Exception>(fun _ ->
+          (asyncSeq { yield 1
+                      if i % 2 = 0 then failwith "fail"
+                      yield 2 },
+           asyncSeq { yield 1
+                      if i % 2 = 1 then failwith "fail"
                       yield 2 })
           ||> AsyncSeq.interleave
           |> AsyncSeq.toListSynchronously
           |> ignore) |> ignore
 
 
-let perfTest1 n = 
+let perfTest1 n =
     let empty = async { return () }
     Seq.init n id
     |> AsyncSeq.ofSeq
@@ -1321,17 +1321,17 @@ let perfTest1 n =
 
 // n                            NEW        1.15.0
 //perfTest1 1000 -             0.001        0.004
-//perfTest1 2000 - 
-//perfTest1 3000 - 
-//perfTest1 4000 - 
-//perfTest1 5000 - 
+//perfTest1 2000 -
+//perfTest1 3000 -
+//perfTest1 4000 -
+//perfTest1 5000 -
 //perfTest1 6000 -             0.006        0.020
 //perfTest1 10000 -            0.012
 //perfTest1 100000 -           0.129        0.260
 //perfTest1 1000000 -          0.708        2.345
 
 
-let perfTest2 n = 
+let perfTest2 n =
     Seq.init n id
     |> AsyncSeq.ofSeq
     |> AsyncSeq.toArraySynchronously
@@ -1340,8 +1340,8 @@ let perfTest2 n =
 //perfTest2 1000            0.038
 //perfTest2 2000            0.001
 //perfTest2 3000            0.004
-//perfTest2 4000         
-//perfTest2 5000         
+//perfTest2 4000
+//perfTest2 5000
 //perfTest2 10000           0.007
 //perfTest2 100000          0.076
 //perfTest2 1000000         0.663
@@ -1350,10 +1350,10 @@ let perfTest2 n =
 // This was the original ofSeq implementation.  It is now faster than before this perf testing
 // took place, but is still slower than the bespoke ofSeq implementation (which effectively "knows"
 // that a single yield happens for each iteration of the loop).
-let perfTest3 n = 
-    let ofSeq2 (source : seq<'T>) = asyncSeq {  
-        for el in source do   
-          yield el }  
+let perfTest3 n =
+    let ofSeq2 (source : seq<'T>) = asyncSeq {
+        for el in source do
+          yield el }
 
     Seq.init n id
     |> ofSeq2
@@ -1362,28 +1362,28 @@ let perfTest3 n =
 
 // n                        NEW         1.15.0
 //perfTest3 1000            0.003
-//perfTest3 2000            
-//perfTest3 3000            
-//perfTest3 4000         
+//perfTest3 2000
+//perfTest3 3000
+//perfTest3 4000
 //perfTest3 5000           0.009
 //perfTest3 10000           0.015
 //perfTest3 100000          0.155
 //perfTest3 1000000         1.500      3.480
 
-let perfTest4 n = 
+let perfTest4 n =
     Seq.init n id
-    |> AsyncSeq.ofSeq 
+    |> AsyncSeq.ofSeq
     |> AsyncSeq.map id
     |> AsyncSeq.filter (fun x -> x % 2 = 0)
     |> AsyncSeq.toArraySynchronously
 
 // n                        NEW         1.15.0
-//perfTest4 1000                 
-//perfTest4 2000            
-//perfTest4 3000            
-//perfTest4 4000         
-//perfTest4 5000          
-//perfTest4 10000         
+//perfTest4 1000
+//perfTest4 2000
+//perfTest4 3000
+//perfTest4 4000
+//perfTest4 5000
+//perfTest4 10000
 //perfTest4 100000          0.362       0.442
 //perfTest4 1000000         3.533       4.656
 
@@ -1411,16 +1411,16 @@ let ``AsyncSeq.mapi should work`` () =
     let expected =
       ls
       |> List.mapi (fun i x -> sprintf "%i_%i" i x)
-    let actual = 
-      ls 
-      |> AsyncSeq.ofSeq 
+    let actual =
+      ls
+      |> AsyncSeq.ofSeq
       |> AsyncSeq.mapi (fun i x -> sprintf "%i_%i" i x)
       |> AsyncSeq.toListSynchronously
     Assert.AreEqual(expected, actual)
 
 
 [<Test>]
-let ``AsyncSeq.take should work``() =  
+let ``AsyncSeq.take should work``() =
   let s = asyncSeq {
     yield ["a",1] |> Map.ofList
   }
@@ -1429,7 +1429,7 @@ let ``AsyncSeq.take should work``() =
   ()
 
 [<Test>]
-let ``AsyncSeq.truncate should work like take``() =  
+let ``AsyncSeq.truncate should work like take``() =
   let s = asyncSeq {
     yield ["a",1] |> Map.ofList
   }
@@ -1442,35 +1442,35 @@ let ``AsyncSeq.truncate should work like take``() =
 let ``AsyncSeq.mapAsyncParallel should maintain order`` () =
   for i in 0..100 do
     let ls = List.init i id
-    let expected = 
-      ls 
+    let expected =
+      ls
       |> AsyncSeq.ofSeq
       |> AsyncSeq.mapAsync (async.Return)
-    let actual = 
-      ls 
-      |> AsyncSeq.ofSeq 
+    let actual =
+      ls
+      |> AsyncSeq.ofSeq
       |> AsyncSeq.mapAsyncParallel (async.Return)
     Assert.AreEqual(expected, actual)
 
 [<Test>]
 let ``AsyncSeq.mapAsyncParallel should propagate exception`` () =
-  
+
   for N in [100] do
-    
+
     let fail = N / 2
 
-    let res = 
+    let res =
       Seq.init N id
       |> AsyncSeq.ofSeq
       |> FSharp.Control.AsyncSeq.mapAsyncParallel (fun i -> async {
-        if i = fail then 
+        if i = fail then
           return failwith  "error"
         return i })
       |> FSharp.Control.AsyncSeq.mapAsyncParallel (ignore >> async.Return)
       |> AsyncSeq.iter ignore
       |> Async.Catch
       |> runTest
-  
+
     match res with
     | Choice2Of2 _ -> ()
     | Choice1Of2 _ -> Assert.Fail ("error expected")
@@ -1483,7 +1483,7 @@ let ``AsyncSeq.mapParallelAsync should be parallel`` () =
   let s = AsyncSeq.init (int64 parallelism) int
   let expected =
     s |> AsyncSeq.map id
-  let actual = 
+  let actual =
     s
     |> AsyncSeq.mapAsyncParallel (fun i -> async { barrier.SignalAndWait () ; return i }) // can deadlock
   Assert.AreEqual(expected, actual, timeout=200)
@@ -1491,34 +1491,34 @@ let ``AsyncSeq.mapParallelAsync should be parallel`` () =
 
 [<Test>]
 let ``AsyncSeq.iterAsyncParallel should propagate exception`` () =
-  
+
   for N in [100] do
-    
+
     let fail = N / 2
 
-    let res = 
+    let res =
       Seq.init N id
       |> AsyncSeq.ofSeq
       |> FSharp.Control.AsyncSeq.mapAsyncParallel (fun i -> async {
-        if i = fail then 
+        if i = fail then
           return failwith  "error"
         return i })
 //      |> AsyncSeq.iterAsyncParallel (fun i -> async {
-//        if i = fail then 
+//        if i = fail then
 //          return failwith "error"
 //        else () })
       //|> AsyncSeq.iter ignore
       |> AsyncSeq.iterAsyncParallel (async.Return >> Async.Ignore)
       |> Async.Catch
       |> runTest
-  
+
     match res with
     | Choice2Of2 _ -> ()
     | Choice1Of2 _ -> Assert.Fail ("error expected")
 
 [<Test>]
 let ``AsyncSeq.iterAsyncParallelThrottled should propagate handler exception`` () =
-  
+
   let res =
     AsyncSeq.init 100L id
     |> AsyncSeq.iterAsyncParallelThrottled 10 (fun i -> async { if i = 50L then return failwith "oh no" else return () })
@@ -1527,11 +1527,11 @@ let ``AsyncSeq.iterAsyncParallelThrottled should propagate handler exception`` (
 
   match res with
   | Choice2Of2 _ -> ()
-  | Choice1Of2 _ -> Assert.Fail ("error expected") 
+  | Choice1Of2 _ -> Assert.Fail ("error expected")
 
 [<Test>]
 let ``AsyncSeq.iterAsyncParallelThrottled should propagate sequence exception`` () =
-  
+
   let res =
     asyncSeq {
       yield 1
@@ -1545,12 +1545,12 @@ let ``AsyncSeq.iterAsyncParallelThrottled should propagate sequence exception`` 
 
   match res with
   | Choice2Of2 _ -> ()
-  | Choice1Of2 _ -> Assert.Fail ("error expected")    
+  | Choice1Of2 _ -> Assert.Fail ("error expected")
 
 
 [<Test>]
 let ``AsyncSeq.iterAsyncParallelThrottled should throttle`` () =
-  
+
   let count = ref 0
   let parallelism = 10
 
@@ -1570,23 +1570,23 @@ let ``AsyncSeq.iterAsyncParallelThrottled should throttle`` () =
 //[<Test>]
 //let ``AsyncSeq.mapParallelAsyncBounded should maintain order`` () =
 //  let ls = List.init 500 id
-//  let expected = 
-//    ls 
+//  let expected =
+//    ls
 //    |> AsyncSeq.ofSeq
 //    |> AsyncSeq.mapAsync (async.Return)
-//  let actual = 
-//    ls 
-//    |> AsyncSeq.ofSeq 
+//  let actual =
+//    ls
+//    |> AsyncSeq.ofSeq
 //    |> AsyncSeq.mapAsyncParallelBounded 10 (async.Return)
 //  Assert.AreEqual(expected, actual, timeout=200)
 
 
 
 [<Test>]
-let ``AsyncSeqSrc.should work`` () =  
+let ``AsyncSeqSrc.should work`` () =
   for n in 0..100 do
     let items = List.init n id
-    let src = AsyncSeqSrc.create ()  
+    let src = AsyncSeqSrc.create ()
     let actual = src |> AsyncSeqSrc.toAsyncSeq
     for item in items do
       src |> AsyncSeqSrc.put item
@@ -1595,21 +1595,21 @@ let ``AsyncSeqSrc.should work`` () =
     Assert.AreEqual (expected, actual)
 
 [<Test>]
-let ``AsyncSeqSrc.put should yield when tapped after put`` () =  
+let ``AsyncSeqSrc.put should yield when tapped after put`` () =
   let item = 1
-  let src = AsyncSeqSrc.create ()    
-  src |> AsyncSeqSrc.put item  
+  let src = AsyncSeqSrc.create ()
+  src |> AsyncSeqSrc.put item
   let actual = src |> AsyncSeqSrc.toAsyncSeq
-  src |> AsyncSeqSrc.close  
+  src |> AsyncSeqSrc.close
   let expected = AsyncSeq.empty
   Assert.AreEqual (expected, actual)
 
 [<Test>]
-let ``AsyncSeqSrc.fail should throw`` () =  
+let ``AsyncSeqSrc.fail should throw`` () =
   let item = 1
-  let src = AsyncSeqSrc.create ()    
+  let src = AsyncSeqSrc.create ()
   let actual = src |> AsyncSeqSrc.toAsyncSeq
-  src |> AsyncSeqSrc.error (exn("test"))  
+  src |> AsyncSeqSrc.error (exn("test"))
   let expected = asyncSeq { raise (exn("test")) }
   Assert.AreEqual (expected, actual)
 
@@ -1620,37 +1620,37 @@ let ``AsyncSeq.groupBy should work``() =
     for j in 1..3 do
       let ls = List.init i id
       let p x = x % j
-      let expected = 
-        ls 
-        |> Seq.groupBy p 
-        |> Seq.map (snd >> Seq.toList) 
-        |> Seq.toList 
+      let expected =
+        ls
+        |> Seq.groupBy p
+        |> Seq.map (snd >> Seq.toList)
+        |> Seq.toList
         |> AsyncSeq.ofSeq
-      let actual = 
-        ls 
-        |> AsyncSeq.ofSeq 
-        |> AsyncSeq.groupBy p 
+      let actual =
+        ls
+        |> AsyncSeq.ofSeq
+        |> AsyncSeq.groupBy p
         |> AsyncSeq.mapAsyncParallel (snd >> AsyncSeq.toListAsync)
       Assert.AreEqual(expected, actual)
 
 [<Test>]
 let ``AsyncSeq.groupBy should propagate exception and terminate all groups``() =
   let expected = asyncSeq { raise (exn("test")) }
-  let actual = 
-    asyncSeq { raise (exn("test")) } 
-    |> AsyncSeq.groupBy (fun i -> i % 3) 
+  let actual =
+    asyncSeq { raise (exn("test")) }
+    |> AsyncSeq.groupBy (fun i -> i % 3)
     |> AsyncSeq.mapAsyncParallel (snd >> AsyncSeq.toListAsync)
   Assert.AreEqual(expected, actual)
 
 [<Test>]
-let ``AsyncSeq.combineLatest should behave like merge after initial``() =  
+let ``AsyncSeq.combineLatest should behave like merge after initial``() =
   for n in 0..10 do
     for m in 0..10 do
       let ls1 = List.init n id
-      let ls2 = List.init m id 
+      let ls2 = List.init m id
       // expect each element to increase combined sum by 1
       // expected count is sum of source counts minus 1 for first result
-      let expectedCount = 
+      let expectedCount =
         if n = 0 || m = 0 then 0
         else (n + m - 1)
       let expected = List.init expectedCount id |> AsyncSeq.ofSeq
@@ -1667,7 +1667,7 @@ let ``AsyncSeq.combineLatest should be never when either argument is never``() =
 
 [<Test>]
 let ``Async.ofSeqAsync should work``() =
-  let asyncSequential (s:seq<Async<'t>>) : Async<seq<'t>> = 
+  let asyncSequential (s:seq<Async<'t>>) : Async<seq<'t>> =
     Seq.foldBack
       (fun asyncHead asyncQueue ->
         async.Bind(asyncHead,
@@ -1701,13 +1701,13 @@ let ``Async.concat should work``() =
 
 #if (NETSTANDARD2_1 || NETCOREAPP3_0)
 [<Test>]
-let ``AsyncSeq.ofAsyncEnum should roundtrip successfully``() = 
+let ``AsyncSeq.ofAsyncEnum should roundtrip successfully``() =
   let data = [ 1 .. 10 ] |> AsyncSeq.ofSeq
   let actual = data |> AsyncSeq.toAsyncEnum |> AsyncSeq.ofAsyncEnum
   Assert.True(EQ data actual)
 
 [<Test>]
-let ``AsyncSeq.toAsyncEnum raises exception``() : unit = 
+let ``AsyncSeq.toAsyncEnum raises exception``() : unit =
   async {
     let exceptionMessage = "Raised inside AsyncSeq"
     let exceptionSequence = asyncSeq { yield failwith exceptionMessage; yield 1 } |> AsyncSeq.toAsyncEnum
@@ -1717,16 +1717,16 @@ let ``AsyncSeq.toAsyncEnum raises exception``() : unit =
       let! item = enumerator.MoveNextAsync().AsTask() |> Async.AwaitTask
       enumerator.Current |> ignore
     with
-    | ex -> 
+    | ex ->
       printfn "Exception message"
-      if exceptionMessage <> ex.Message 
-      then Assert.Fail("Message") 
+      if exceptionMessage <> ex.Message
+      then Assert.Fail("Message")
       else exceptionRaised <- true
     Assert.IsTrue(exceptionRaised)
-  } 
+  }
   |> Async.RunSynchronously
 
-let ``AsyncSeq.ofAsyncEnum raises exception``() : unit = 
+let ``AsyncSeq.ofAsyncEnum raises exception``() : unit =
   async {
     let exceptionMessage = "Raised inside AsyncSeq"
     let exceptionSequence = asyncSeq { return failwith exceptionMessage; yield 1 } |> AsyncSeq.toAsyncEnum |> AsyncSeq.ofAsyncEnum
@@ -1736,28 +1736,28 @@ let ``AsyncSeq.ofAsyncEnum raises exception``() : unit =
       let! __ = enumerator.MoveNext()
       return Assert.Fail()
     with
-    | ex -> 
-      if exceptionMessage <> ex.Message 
-      then Assert.Fail() 
+    | ex ->
+      if exceptionMessage <> ex.Message
+      then Assert.Fail()
       else exceptionRaised <- true
     Assert.IsTrue(exceptionRaised)
-  } 
+  }
   |> Async.RunSynchronously
 
 [<Test>]
-let ``AsyncSeq.ofAsyncEnum can be cancelled``() : unit = 
+let ``AsyncSeq.ofAsyncEnum can be cancelled``() : unit =
   use cts = new CancellationTokenSource()
   let mutable cancelledInvoked = false
   let mutable results = ResizeArray<_>()
 
-  let sourceWorkflow = 
+  let sourceWorkflow =
     asyncSeq {
       use! __ = Async.OnCancel(fun x -> cancelledInvoked <- true)
       yield 1
       yield 2
     } |> AsyncSeq.toAsyncEnum |> AsyncSeq.ofAsyncEnum
 
-  let innerAsync = 
+  let innerAsync =
     async {
       let enumerator = sourceWorkflow.GetEnumerator()
       let! resultOpt = enumerator.MoveNext()
@@ -1775,18 +1775,18 @@ let ``AsyncSeq.ofAsyncEnum can be cancelled``() : unit =
     Async.RunSynchronously(innerAsync, cancellationToken = cts.Token)
     Assert.Fail()
   with
-  | :? OperationCanceledException -> 
+  | :? OperationCanceledException ->
     Assert.IsTrue(cancelledInvoked)
     Assert.IsTrue([ Some 1 ] = (results |> Seq.toList))
   | _ -> Assert.Fail()
 
 [<Test>]
-let ``AsyncSeq.toAsyncEnum can be cancelled``() : unit = 
+let ``AsyncSeq.toAsyncEnum can be cancelled``() : unit =
   async {
     use cts = new CancellationTokenSource()
     let mutable cancelledInvoked = false
-    
-    let sourceWorkflow = 
+
+    let sourceWorkflow =
       asyncSeq {
         use! __ = Async.OnCancel(fun x -> cancelledInvoked <- true)
         yield 1
