@@ -1,6 +1,6 @@
 environment:
-  CLI_VERSION: 2.0.0
-image: Visual Studio 2017
+  CLI_VERSION: 3.0.100
+image: Visual Studio 2019
 init:
   - git config --global core.autocrlf input
 build_script:
