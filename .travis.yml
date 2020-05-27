@@ -7,8 +7,8 @@ matrix:
       sudo: false
       mono: latest
       dotnet: 3.0.100
-    - os: osx # OSX 10.12
-      osx_image: xcode9.1
+    - os: osx 
+      osx_image: xcode9.3 # OSX 10.13 https://docs.travis-ci.com/user/reference/osx/#using-macos
       dotnet: 3.0.100
       mono: latest
       sudo: false
