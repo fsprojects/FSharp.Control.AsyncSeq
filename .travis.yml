@@ -6,7 +6,7 @@ matrix:
       dist: trusty
       sudo: false
       mono: latest
-      dotnet: 3.0
+      dotnet: 3.0.100
     - os: osx # OSX 10.12
       osx_image: xcode9.1
       dotnet: 3.0.100
