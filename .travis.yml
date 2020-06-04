@@ -2,13 +2,13 @@ language: csharp
 
 matrix:
   include:
-    - os: linux # Ubuntu 14.04
-      dist: trusty
+    - os: linux 
+      dist: xenial # Ubuntu 16.04 https://docs.travis-ci.com/user/reference/linux/
       sudo: false
       mono: latest
       dotnet: 3.0.100
-    - os: osx # OSX 10.12
-      osx_image: xcode9.1
+    - os: osx 
+      osx_image: xcode9.3 # OSX 10.13 https://docs.travis-ci.com/user/reference/osx/#using-macos
       dotnet: 3.0.100
       mono: latest
       sudo: false
