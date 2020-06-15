@@ -1,4 +1,4 @@
-// ----------------------------------------------------------------------------
+﻿// ----------------------------------------------------------------------------
 // F# async extensions (AsyncSeq.fs)
 // (c) Tomas Petricek, 2011, Available under Apache 2.0 license.
 // ----------------------------------------------------------------------------
@@ -25,11 +25,13 @@ type IAsyncEnumerable<'T> =
 
 type AsyncSeq<'T> = IAsyncEnumerable<'T>
 
+#if !FABLE_COMPILER
 type AsyncSeqSrc<'a> = private { tail : AsyncSeqSrcNode<'a> ref }
 
 and private AsyncSeqSrcNode<'a> =
   val tcs : TaskCompletionSource<('a * AsyncSeqSrcNode<'a>) option>
   new (tcs) = { tcs = tcs }
+#endif
 
 [<AutoOpen>]
 module internal Utils =
@@ -47,9 +49,16 @@ module internal Utils =
         { new IDisposable with member __.Dispose () = () }
 
     // ----------------------------------------------------------------------------
+    
+    #if FABLE_COMPILER
+    type ExceptionDispatchInfo private (err: exn) =
+        member _.SourceException = err
+        member _.Throw () = raise err
+        static member Capture (err: exn) = ExceptionDispatchInfo(err)
+        static member Throw (err: exn) = raise err
+    #endif
 
     module Observable =
-
         /// Union type that represents different messages that can be sent to the
         /// IObserver interface. The IObserver type is equivalent to a type that has
         /// just OnNext method that gets 'ObservableUpdate' as an argument.
@@ -75,6 +84,7 @@ module internal Utils =
 
       static member bind (f:'a -> Async<'b>) (a:Async<'a>) : Async<'b> = async.Bind(a, f)
 
+      #if !FABLE_COMPILER
       static member awaitTaskUnitCancellationAsError (t:Task) : Async<unit> =
         Async.FromContinuations <| fun (ok,err,_) ->
           t.ContinueWith (fun (t:Task) ->
@@ -90,18 +100,24 @@ module internal Utils =
             elif t.IsCanceled then err (OperationCanceledException("Task wrapped with Async has been cancelled."))
             elif t.IsCompleted then ok t.Result
             else failwith "invalid Task state!") |> ignore
+      #endif
 
       /// Starts the specified operation using a new CancellationToken and returns
       /// IDisposable object that cancels the computation. This method can be used
       /// when implementing the Subscribe method of IObservable interface.
       static member StartDisposable(op:Async<unit>) =
           let ct = new System.Threading.CancellationTokenSource()
+          #if !FABLE_COMPILER
           Async.Start(op, ct.Token)
+          #else
+          Async.StartImmediate(op, ct.Token)
+          #endif
           { new IDisposable with
               member x.Dispose() = ct.Cancel() }
 
       static member map f a = async.Bind(a, f >> async.Return)
 
+    #if !FABLE_COMPILER
       static member internal chooseTasks (a:Task<'T>) (b:Task<'U>) : Async<Choice<'T * Task<'U>, 'U * Task<'T>>> =
         async {
             let ta, tb = a :> Task, b :> Task
@@ -150,7 +166,7 @@ module internal Utils =
             ivar.SetException t.Exception
           ivar.Task)
         |> join
-
+    #endif
 
 // via: https://github.com/fsharp/fsharp/blob/master/src/fsharp/FSharp.Core/seq.fs
 module AsyncGenerator =
@@ -193,10 +209,18 @@ module AsyncGenerator =
       member x.Disposer =
         g.Disposer
 
+    
     static member Bind (g:AsyncGenerator<'a>, cont:unit -> AsyncGenerator<'a>) : AsyncGenerator<'a> =
+      #if !FABLE_COMPILER
       match g with
       | :? GenerateCont<'a> as g -> GenerateCont<_>.Bind (g.Generator, (fun () -> GenerateCont<_>.Bind (g.Cont(), cont)))
       | _ -> (new GenerateCont<'a>(g, cont) :> AsyncGenerator<'a>)
+      #else
+      let g' = g :?> GenerateCont<'a>
+      if unbox<AsyncGenerator<_> option>(g'.Generator).IsSome then
+        GenerateCont<_>.Bind (g'.Generator, (fun () -> GenerateCont<_>.Bind (g'.Cont(), cont)))
+      else (new GenerateCont<'a>(g, cont) :> AsyncGenerator<'a>)
+      #endif
 
   /// Right-associating binder.
   let bindG (g:AsyncGenerator<'a>) (cont:unit -> AsyncGenerator<'a>) : AsyncGenerator<'a> =
@@ -239,14 +263,28 @@ module AsyncGenerator =
       member __.Disposer = Some ((fun () -> (enum :> IDisposable).Dispose()))
 
   let enumeratorFromGenerator (g:AsyncGenerator<'a>) : IAsyncEnumerator<'a> =
+    #if !FABLE_COMPILER
     match g with
     | :? AsyncEnumeratorGenerator<'a> as g -> g.Enumerator
     | _ -> (new AsyncGeneratorEnumerator<_>(g) :> _)
+    #else
+    let g' = g :?> AsyncEnumeratorGenerator<'a>
+    match unbox<IAsyncEnumerator<_> option>(g'.Enumerator) with
+    | Some asyncEnumerator -> asyncEnumerator
+    | None -> (new AsyncGeneratorEnumerator<_>(g) :> _)
+    #endif
 
   let generatorFromEnumerator (e:IAsyncEnumerator<'a>) : AsyncGenerator<'a> =
+    #if !FABLE_COMPILER
     match e with
     | :? AsyncGeneratorEnumerator<'a> as e -> e.Generator
     | _ -> (new AsyncEnumeratorGenerator<_>(e) :> _)
+    #else
+    let e' = e :?> AsyncGeneratorEnumerator<'a>
+    match unbox<AsyncGenerator<_> option>(e'.Generator) with
+    | Some asyncGenerator -> asyncGenerator
+    | None -> (new AsyncEnumeratorGenerator<_>(e) :> _)
+    #endif
 
   let delay (f:unit -> AsyncSeq<'T>) : AsyncSeq<'T> =
     { new IAsyncEnumerable<'T> with
@@ -345,9 +383,11 @@ module AsyncSeqOp =
 
 /// Module with helper functions for working with asynchronous sequences
 module AsyncSeq =
-
+  #if FABLE_COMPILER
+  let inline dispose (d:System.IDisposable) = try d.Dispose() with _ -> ()
+  #else
   let private dispose (d:System.IDisposable) = match d with null -> () | _ -> d.Dispose()
-
+  #endif
 
   [<GeneralizableValue>]
   let empty<'T> : AsyncSeq<'T> =
@@ -683,9 +723,17 @@ module AsyncSeq =
       }
 
   let iterAsync (f: 'T -> Async<unit>) (source: AsyncSeq<'T>)  =
+    #if !FABLE_COMPILER
     match source with
     | :? AsyncSeqOp<'T> as source -> source.IterAsync f
     | _ -> iteriAsync (fun i x -> f x) source
+    #else
+    let source' = source :?> AsyncSeqOp<'T>
+    match (unbox<{| __proto__ : {| IterAsync: (('T -> Async<unit>) -> Async<unit>) option |} option |}>(source')).__proto__ with
+    | Some proto when proto.IterAsync.IsSome ->
+        source'.IterAsync f
+    | _ -> iteriAsync (fun _ x -> f x) source
+    #endif
 
   let iteri (f: int -> 'T -> unit) (inp: AsyncSeq<'T>)  = iteriAsync (fun i x -> async.Return (f i x)) inp
 
@@ -708,12 +756,6 @@ module AsyncSeq =
 
     member x.For (seq:AsyncSeq<'T>, action:'T -> AsyncSeq<'TResult>) =
       collect action seq
-
-
-  // Add asynchronous for loop to the 'async' computation builder
-  type Microsoft.FSharp.Control.AsyncBuilder with
-    member internal x.For (seq:AsyncSeq<'T>, action:'T -> Async<unit>) =
-      seq |> iterAsync action
 
   let unfoldAsync (f:'State -> Async<('T * 'State) option>) (s:'State) : AsyncSeq<'T> =
     new UnfoldAsyncEnumerator<_, _>(f, s) :> _
@@ -750,6 +792,7 @@ module AsyncSeq =
   // Additional combinators (implemented as async/asyncSeq computations)
 
   let mapAsync f (source : AsyncSeq<'T>) : AsyncSeq<'TResult> =
+    #if !FABLE_COMPILER
     match source with
     | :? AsyncSeqOp<'T> as source -> source.MapAsync f
     | _ ->
@@ -757,6 +800,17 @@ module AsyncSeq =
         for itm in source do
         let! v = f itm
         yield v }
+    #else
+    let source' = source :?> AsyncSeqOp<'T>
+    match (unbox<{| __proto__ : {| MapAsync: (('T -> Async<_>) -> AsyncSeq<_>) option |} option |}>(source')).__proto__ with
+    | Some proto when proto.MapAsync.IsSome ->
+        proto.MapAsync.Value f
+    | _ ->
+      asyncSeq {
+        for itm in source do
+        let! v = f itm
+        yield v }
+    #endif
 
   let mapiAsync f (source : AsyncSeq<'T>) : AsyncSeq<'TResult> = asyncSeq {
     let i = ref 0L
@@ -765,6 +819,7 @@ module AsyncSeq =
       i := i.Value + 1L
       yield v }
 
+  #if !FABLE_COMPILER
   let mapAsyncParallel (f:'a -> Async<'b>) (s:AsyncSeq<'a>) : AsyncSeq<'b> = asyncSeq {
     use mb = MailboxProcessor.Start (fun _ -> async.Return())
     let! err =
@@ -777,8 +832,10 @@ module AsyncSeq =
     yield!
       replicateUntilNoneAsync (Task.chooseTask (err |> Task.taskFault) (async.Delay mb.Receive))
       |> mapAsync id }
+  #endif
 
   let chooseAsync f (source:AsyncSeq<'T>) =
+    #if !FABLE_COMPILER
     match source with
     | :? AsyncSeqOp<'T> as source -> source.ChooseAsync f
     | _ ->
@@ -788,6 +845,19 @@ module AsyncSeq =
           match v with
           | Some v -> yield v
           | _ -> () }
+    #else
+    let source' = source :?> AsyncSeqOp<'T>
+    match (unbox<{| __proto__ : {| ChooseAsync: (('T -> Async<_ option>) -> AsyncSeq<_>) option |} option |}>(source')).__proto__ with
+    | Some proto when proto.ChooseAsync.IsSome ->
+      source'.ChooseAsync f
+    | _ ->
+      asyncSeq {
+        for itm in source do
+          let! v = f itm
+          match v with
+          | Some v -> yield v
+          | _ -> () }
+    #endif
 
   let ofSeqAsync (source:seq<Async<'T>>) : AsyncSeq<'T> =
       asyncSeq {
@@ -912,9 +982,17 @@ module AsyncSeq =
     source |> exists (f >> not) |> Async.map not
 
   let foldAsync f (state:'State) (source : AsyncSeq<'T>) =
+    #if !FABLE_COMPILER
     match source with
     | :? AsyncSeqOp<'T> as source -> source.FoldAsync f state
     | _ -> source |> scanAsync f state |> lastOrDefault state
+    #else
+    let source' = source :?> AsyncSeqOp<'T>
+    match (unbox<{| __proto__ : {| FoldAsync: (('State -> 'T -> Async<'State>) -> 'State -> Async<'State>) option |} option |}>(source')).__proto__ with
+    | Some proto when proto.FoldAsync.IsSome ->
+        proto.FoldAsync.Value f state
+    | _ -> source |> scanAsync f state |> lastOrDefault state
+    #endif
 
   let fold f (state:'State) (source : AsyncSeq<'T>) =
     foldAsync (fun st v -> f st v |> async.Return) state source
@@ -969,6 +1047,7 @@ module AsyncSeq =
   let filter f (source : AsyncSeq<'T>) =
     filterAsync (f >> async.Return) source
 
+  #if !FABLE_COMPILER
   let iterAsyncParallel (f:'a -> Async<unit>) (s:AsyncSeq<'a>) : Async<unit> = async {
     use mb = MailboxProcessor.Start (ignore >> async.Return)
     let! err =
@@ -998,10 +1077,10 @@ module AsyncSeq =
     return!
       replicateUntilNoneAsync (Task.chooseTask (err |> Task.taskFault) (async.Delay mb.Receive))
       |> iterAsync id }
+  #endif
 
   // --------------------------------------------------------------------------
   // Converting from/to synchronous sequences or IObservables
-
 
   let ofObservableBuffered (source : System.IObservable<_>) =
     asyncSeq {
@@ -1033,13 +1112,13 @@ module AsyncSeq =
         member x.Subscribe(obs) =
               async {
                 try
-                  for v in aseq do
-                      obs.OnNext(v)
+                  do! iterAsync (fun v -> async { return obs.OnNext(v) }) aseq
                   obs.OnCompleted()
                 with e ->
                   obs.OnError(e) }
               |> Async.StartDisposable }
 
+  #if !FABLE_COMPILER
   let toBlockingSeq (source : AsyncSeq<'T>) =
       seq {
           // Write all elements to a blocking buffer
@@ -1119,6 +1198,7 @@ module AsyncSeq =
               if i = 0 then yield! ofSeq cache
               else yield! ofSeq (cache |> Seq.skip i) }
       yield! loop 0 }
+  #endif
 
   // --------------------------------------------------------------------------
 
@@ -1207,6 +1287,7 @@ module AsyncSeq =
   let takeWhile p (source : AsyncSeq<'T>) =
       takeWhileAsync (p >> async.Return) source
 
+  #if !FABLE_COMPILER
   let takeUntilSignal (signal:Async<unit>) (source:AsyncSeq<'T>) : AsyncSeq<'T> = asyncSeq {
       use ie = source.GetEnumerator()
       let! signalT = Async.StartChildAsTask signal
@@ -1221,6 +1302,7 @@ module AsyncSeq =
           b := move }
 
   let takeUntil signal source = takeUntilSignal signal source
+  #endif
 
   let takeWhileInclusive (f : 'a -> bool) (s : AsyncSeq<'a>) : AsyncSeq<'a> =
       { new IAsyncEnumerable<'a> with
@@ -1262,6 +1344,7 @@ module AsyncSeq =
           let! moven = ie.MoveNext()
           b := moven }
 
+  #if !FABLE_COMPILER
   let skipUntilSignal (signal:Async<unit>) (source:AsyncSeq<'T>) : AsyncSeq<'T> = asyncSeq {
       use ie = source.GetEnumerator()
       let! signalT = Async.StartChildAsTask signal
@@ -1288,6 +1371,7 @@ module AsyncSeq =
       | Choice2Of2 (Some _,_) -> failwith "unreachable" }
 
   let skipUntil signal source = skipUntilSignal signal source
+  #endif
 
   let skipWhile p (source : AsyncSeq<'T>) =
       skipWhileAsync (p >> async.Return) source
@@ -1335,8 +1419,10 @@ module AsyncSeq =
       return ra.ToArray() }
 
   let toListAsync (source:AsyncSeq<'T>) : Async<'T list> = toArrayAsync source |> Async.map Array.toList
+  #if !FABLE_COMPILER
   let toListSynchronously (source:AsyncSeq<'T>) = toListAsync source |> Async.RunSynchronously
   let toArraySynchronously (source:AsyncSeq<'T>) = toArrayAsync source |> Async.RunSynchronously
+  #endif
 
   let concatSeq (source:AsyncSeq<#seq<'T>>) : AsyncSeq<'T> = asyncSeq {
       use ie = source.GetEnumerator()
@@ -1391,6 +1477,7 @@ module AsyncSeq =
       if (buffer.Count > 0) then
           yield buffer.ToArray() }
 
+  #if !FABLE_COMPILER
   let bufferByCountAndTime (bufferSize:int) (timeoutMs:int) (source:AsyncSeq<'T>) : AsyncSeq<'T[]> =
     if (bufferSize < 1) then invalidArg "bufferSize" "must be positive"
     if (timeoutMs < 1) then invalidArg "timeoutMs" "must be positive"
@@ -1587,6 +1674,7 @@ module AsyncSeq =
 
   let combineLatest (source1:AsyncSeq<'a>) (source2:AsyncSeq<'b>) : AsyncSeq<'a * 'b> =
     combineLatestWith (fun a b -> a,b) source1 source2
+  #endif
 
   let distinctUntilChangedWithAsync (f:'T -> 'T -> Async<bool>) (source:AsyncSeq<'T>) : AsyncSeq<'T> = asyncSeq {
       use ie = source.GetEnumerator()
@@ -1699,8 +1787,7 @@ module AsyncSeq =
   let ofIQueryable (query : IQueryable<'a>) =
      query :?> Collections.Generic.IAsyncEnumerable<'a> |> ofAsyncEnum
 
-  #endif
-
+  #if !FABLE_COMPILER
   module AsyncSeqSrcImpl =
 
     let private createNode () =
@@ -1731,7 +1818,6 @@ module AsyncSeq =
 
     let toAsyncSeq (s:AsyncSeqSrc<'a>) : AsyncSeq<'a> =
       toAsyncSeqImpl s.tail.Value
-
 
 
   let groupByAsync (p:'a -> Async<'k>) (s:AsyncSeq<'a>) : AsyncSeq<'k * AsyncSeq<'a>> = asyncSeq {
@@ -1767,7 +1853,8 @@ module AsyncSeq =
 
   let groupBy (p:'a -> 'k) (s:AsyncSeq<'a>) : AsyncSeq<'k * AsyncSeq<'a>> =
     groupByAsync (p >> async.Return) s
-
+  #endif
+  #endif
 
 
 
@@ -1780,6 +1867,7 @@ module AsyncSeqExtensions =
     member x.For (seq:AsyncSeq<'T>, action:'T -> Async<unit>) =
       seq |> AsyncSeq.iterAsync action
 
+#if !FABLE_COMPILER
 module AsyncSeqSrc =
 
   let create () = AsyncSeq.AsyncSeqSrcImpl.create ()
@@ -1789,9 +1877,9 @@ module AsyncSeqSrc =
   let error e s = AsyncSeq.AsyncSeqSrcImpl.error e s
 
 module Seq =
-
   let ofAsyncSeq (source : AsyncSeq<'T>) =
     AsyncSeq.toBlockingSeq source
+#endif
 
 [<assembly:System.Runtime.CompilerServices.InternalsVisibleTo("FSharp.Control.AsyncSeq.Tests")>]
 do ()

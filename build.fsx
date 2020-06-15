@@ -111,6 +111,7 @@ Target "RunTests" (fun _ ->
     try
         DotNetCli.Test(fun p ->
             { p with
+                Framework = "netcoreapp3.1"
                 Project = "tests/FSharp.Control.AsyncSeq.Tests"
                 TimeOut = TimeSpan.FromMinutes 20. })
     finally
