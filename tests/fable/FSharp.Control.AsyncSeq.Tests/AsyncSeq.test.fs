@@ -8,7 +8,6 @@ open FSharp.Control
 open System
 
 type AsyncOps = AsyncOps with
-    static member unit : Async<unit> = async { return () }
     static member never = async { do! Async.Sleep(-1) }
     static member timeoutMs (timeoutMs: int) (a: Async<'a>) =
         async {
@@ -26,18 +25,6 @@ module AsyncSeq =
         }
 
 let [<Literal>] DEFAULT_TIMEOUT_MS = 2000
-
-let randomDelayMs (minMs:int) (maxMs:int) (s:AsyncSeq<'a>) =
-    let rand = new Random(int DateTime.Now.Ticks)
-    let randSleep = async { do! Async.Sleep(rand.Next(minMs, maxMs)) }
-
-    AsyncSeq.zipWith (fun _ a -> a) (AsyncSeq.replicateInfiniteAsync randSleep) s
-
-let randomDelayDefault (s:AsyncSeq<'a>) =
-    randomDelayMs 0 50 s
-
-let randomDelayMax m (s:AsyncSeq<'a>) =
-    randomDelayMs 0 m s
 
 let catch (f: unit -> 'b) : Choice<'b,exn> =
     try f() |> Choice1Of2
