@@ -199,3 +199,7 @@ artifacts/
 # jest/fable directories
 tests/fable/dist/
 tests/fable/node_modules/
+output/
+tmp/
+.fsdocs/
+build.fsx.lock
