@@ -199,4 +199,3 @@ artifacts/
 # jest/fable directories
 tests/fable/dist/
 tests/fable/node_modules/
-

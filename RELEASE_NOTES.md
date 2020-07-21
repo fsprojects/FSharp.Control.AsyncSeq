@@ -1,3 +1,7 @@
+### 3.0.1 
+
+* Move to only netstandard 2.1
+
 ### 2.0.24 - 27.05.2020
 * Adding ofIQueryable [#112](https://github.com/fsprojects/FSharp.Control.AsyncSeq/pull/112)
 
