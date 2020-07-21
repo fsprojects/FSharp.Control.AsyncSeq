@@ -129,8 +129,9 @@ Target.create "PublishNuget" (fun _ ->
     let source = "https://api.nuget.org/v3/index.json"
     let apikey =  Environment.environVar "NUGET_KEY"
     for artifact in !! (artifactsDir + "/*nupkg") do
-        let result = DotNet.exec id "nuget" (sprintf "push -s %s -k %s %s" source apikey artifact)
-        if not result.OK then failwith "failed to push packages"  
+        if not (artifact.Contains(".symbols")) then 
+           let result = DotNet.exec id "nuget" (sprintf "push -s %s -k %s %s" source apikey artifact)
+           if not result.OK then failwith "failed to push packages"  
 )
 Target.create "ReleaseDocs" (fun _ ->
     Git.Repository.clone "" projectRepo "temp/gh-pages"

@@ -1,3 +1,7 @@
+### 3.0.2
+
+* bump version due to bad push
+
 ### 3.0.1 
 
 * Move to only netstandard 2.1
