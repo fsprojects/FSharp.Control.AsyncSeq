@@ -60,15 +60,6 @@ Target.create "Clean" (fun _ ->
     Shell.cleanDirs ["bin"; "temp"]
 )
 
-// Helper active pattern for project types
-let (|Fsproj|Csproj|Vbproj|Shproj|) (projFileName:string) =
-    match projFileName with
-    | f when f.EndsWith("fsproj") -> Fsproj
-    | f when f.EndsWith("csproj") -> Csproj
-    | f when f.EndsWith("vbproj") -> Vbproj
-    | f when f.EndsWith("shproj") -> Shproj
-    | _                           -> failwith (sprintf "Project file %s not supported. Unknown project type." projFileName)
-
 // Generate assembly info files with the right version & up-to-date information
 Target.create "AssemblyInfo" (fun _ ->
     let info = [
@@ -86,9 +77,6 @@ Target.create "AssemblyInfo" (fun _ ->
     File.WriteAllText("version.props", sprintf """<Project>
       <PropertyGroup>
         <Version>%s</Version>
-        <PackageReleaseNotes>
-%s
-        </PackageReleaseNotes>
       </PropertyGroup>
     </Project>""" release.NugetVersion releaseNotes)
 )
@@ -130,9 +118,8 @@ Target.create "NuGet" (fun _ ->
 // Generate the documentation
 
 Target.create "GenerateDocs" (fun _ ->
-    ()
-    // Shell.cleanDir ".fsdocs"
-    // DotNet.exec id "fsdocs" "build --clean" |> ignore
+    Shell.cleanDir ".fsdocs"
+    DotNet.exec id "fsdocs" "build --clean" |> ignore
 )
 
 // --------------------------------------------------------------------------------------

@@ -533,6 +533,7 @@ module AsyncSeqExtensions =
       member For : seq:AsyncSeq<'T> * action:('T -> Async<unit>) -> Async<unit>
 
 #if !FABLE_COMPILER
+[<RequireQualifiedAccess>]
 module Seq =
     /// Converts asynchronous sequence to a synchronous blocking sequence.
     /// The elements of the asynchronous sequence are consumed lazily.
@@ -544,6 +545,7 @@ type AsyncSeqSrc<'T>
 
 #if !FABLE_COMPILER
 /// Operations on async sequence sources.
+[<RequireQualifiedAccess>]
 module AsyncSeqSrc =
 
   /// Creates a new async sequence source.

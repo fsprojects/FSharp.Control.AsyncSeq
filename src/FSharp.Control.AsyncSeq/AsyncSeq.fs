@@ -36,6 +36,7 @@ and private AsyncSeqSrcNode<'a> =
 [<AutoOpen>]
 module internal Utils =
 
+    [<RequireQualifiedAccess>]
     module Choice =
 
       /// Maps over the left result type.
@@ -58,6 +59,7 @@ module internal Utils =
         static member Throw (err: exn) = raise err
     #endif
 
+    [<RequireQualifiedAccess>]
     module Observable =
         /// Union type that represents different messages that can be sent to the
         /// IObserver interface. The IObserver type is equivalent to a type that has
@@ -140,6 +142,7 @@ module internal Utils =
         __.Post (f tcs)
         tcs.Task
 
+    [<RequireQualifiedAccess>]
     module Task =
 
       let inline join (t:Task<Task<'a>>) : Task<'a> =
@@ -1868,6 +1871,7 @@ module AsyncSeqExtensions =
       seq |> AsyncSeq.iterAsync action
 
 #if !FABLE_COMPILER
+[<RequireQualifiedAccess>]
 module AsyncSeqSrc =
 
   let create () = AsyncSeq.AsyncSeqSrcImpl.create ()

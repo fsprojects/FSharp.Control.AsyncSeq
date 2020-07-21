@@ -3,28 +3,29 @@ FSharp.Control.AsyncSeq
 
 FSharp.Control.AsyncSeq is a collection of asynchronous programming utilities for F#.
 
-<div class="row">
-  <div class="span1"></div>
-  <div class="span6">
-    <div class="well well-small" id="nuget">
-      The FSharp.Control.AsyncSeq library can be <a href="http://www.nuget.org/packages/FSharp.Control.AsyncSeq">installed from NuGet</a>:
-      <pre>PM> Install-Package FSharp.Control.AsyncSeq</pre>
-    </div>
-  </div>
-  <div class="span1"></div>
-</div>
+An AsyncSeq is a sequence in which individual elements are retrieved using an `Async` computation.
+The power of `AsyncSeq` lies in that many of these operations also have analogs based on `Async` 
+allowing composition of complex asynchronous workflows, including compositional cancellation.
 
-Samples & documentation
------------------------
+An `AsyncSeq<'a>` can be generated using computation expression syntax much like `seq<'a>`:
 
-[API Reference](reference/index.html) contains automatically generated documentation for all types, modules and functions in the library. 
-This includes additional brief samples on using most of the functions.
+    let oneThenTwo = asyncSeq {
+      yield 1
+      do! Async.Sleep 1000 // non-blocking sleep
+      yield 2
+    }
 
-[Terminology](terminology.html) a reference for some of the terminology around F# async.
- 
+Learning
+--------------------------
+
 [AsyncSeq](library/AsyncSeq.html) contains narrative and code samples explaining asynchronous sequences.
 
 [AsyncSeq Examples](library/AsyncSeqExamples.html) contains examples.
+
+[Terminology](terminology.html) a reference for some of the terminology around F# async.
+ 
+[API Reference](reference/index.html) contains automatically generated documentation for all types, modules and functions in the library. 
+This includes additional brief samples on using most of the functions.
 
 Contributing and copyright
 --------------------------

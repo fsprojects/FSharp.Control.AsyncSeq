@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.1</TargetFrameworks>
+    <TargetFramework>netstandard2.1</TargetFramework>
     <Authors>Tomas Petricek;Don Syme;Lev Gorodinski</Authors>
     <Summary>Asynchronous sequences for F#</Summary>
     <Description>Asynchronous sequences for F#</Description>
@@ -12,6 +12,7 @@
     <PackageTags>F#;async;fsharp;streaming</PackageTags>
     <IncludeSymbols>true</IncludeSymbols>
     <RepositoryUrl>https://github.com/fsprojects/FSharp.Control.AsyncSeq</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
   <ItemGroup>
