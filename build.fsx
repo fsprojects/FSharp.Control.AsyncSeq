@@ -78,7 +78,7 @@ Target.create "AssemblyInfo" (fun _ ->
       <PropertyGroup>
         <Version>%s</Version>
       </PropertyGroup>
-    </Project>""" release.NugetVersion releaseNotes)
+    </Project>""" release.NugetVersion)
 )
 
 // --------------------------------------------------------------------------------------
