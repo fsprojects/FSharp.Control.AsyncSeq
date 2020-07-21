@@ -1,3 +1,6 @@
+### 2.0.24 - 27.05.2020
+* Adding ofIQueryable [#112](https://github.com/fsprojects/FSharp.Control.AsyncSeq/pull/112)
+
 ### 2.0.23 - 29.01.2019
 * Adding .NET IAsyncEnumerable conversion functions (ofAsyncEnum and toAsyncEnum) [#96](https://github.com/fsprojects/FSharp.Control.AsyncSeq/pull/96)
 

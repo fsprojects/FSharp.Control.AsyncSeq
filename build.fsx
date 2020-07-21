@@ -1,4 +1,4 @@
-// --------------------------------------------------------------------------------------
+﻿// --------------------------------------------------------------------------------------
 // FAKE build script
 // --------------------------------------------------------------------------------------
 
@@ -78,10 +78,10 @@ Target "AssemblyInfo" (fun _ ->
           Attribute.FileVersion release.AssemblyVersion ]
 
     let getProjectDetails projectPath =
-        let projectName = System.IO.Path.GetFileNameWithoutExtension(projectPath)
+        let projectName = System.IO.Path.GetFileNameWithoutExtension(projectPath: string)
         ( projectPath,
           projectName,
-          System.IO.Path.GetDirectoryName(projectPath),
+          System.IO.Path.GetDirectoryName(projectPath: string),
           (getAssemblyInfoAttributes projectName)
         )
 
@@ -111,6 +111,7 @@ Target "RunTests" (fun _ ->
     try
         DotNetCli.Test(fun p ->
             { p with
+                Framework = "netcoreapp3.1"
                 Project = "tests/FSharp.Control.AsyncSeq.Tests"
                 TimeOut = TimeSpan.FromMinutes 20. })
     finally
