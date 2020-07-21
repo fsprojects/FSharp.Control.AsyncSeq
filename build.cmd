@@ -10,4 +10,4 @@ if errorlevel 1 (
   exit /b %errorlevel%
 )
 
-dotnet fake build.fsx %*
+dotnet fake build %*
