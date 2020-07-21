@@ -30,3 +30,13 @@ group Test
     nuget NUnit
     nuget NUnit.Runners
     nuget NUnit3TestAdapter
+
+group Test.Fable
+    source https://api.nuget.org/v3/index.json
+    storage: none
+
+    nuget Fable.Core
+    nuget Fable.FastCheck
+    nuget Fable.FastCheck.Jest
+    nuget Fable.Jester
+    nuget FSharp.Core
