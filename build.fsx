@@ -153,14 +153,13 @@ Target.create "Release" (fun _ ->
 
 Target.create "All" ignore
 
-// "Clean"
-//   ==> "Build"
-//   ==> "RunTests"
-//   ==> "All"
-//   ==> "NuGet"
-//   ==> "PublishNuget"
-//   ==> 
-"GenerateDocs"
+"Clean"
+  ==> "Build"
+  ==> "RunTests"
+  ==> "All"
+  ==> "NuGet"
+  ==> "PublishNuget"
+  ==> "GenerateDocs"
   ==> "ReleaseDocs"
   ==> "Release"
 
