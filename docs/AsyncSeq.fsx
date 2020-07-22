@@ -1,11 +1,25 @@
+(*** condition: prepare ***)
+#nowarn "211"
+#I "../src/FSharp.Control.AsyncSeq/bin/Release/netstandard2.1"
+#r "FSharp.Control.AsyncSeq.dll"
+(*** condition: fsx ***)
+#if FSX
+#r "nuget: FSharp.Control.AsyncSeq,{{package-version}}"
+#endif // FSX
+(*** condition: ipynb ***)
+#if IPYNB
+#r "nuget: FSharp.Control.AsyncSeq,{{package-version}}"
+#endif // IPYNB
+
+
 (**
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/fsprojects/FSharp.Control.AsyncSeq/gh-pages?filepath=AsyncSeq.ipynb)
 
 # F# Async: FSharp.Control.AsyncSeq
 
 An AsyncSeq is a sequence in which individual elements are retrieved using an `Async` computation.
-It is similar to `seq<'a>` in that subsequent elements are pulled on-demand. Structurally it is
-similar to `list<'a>` with the difference being that each head and tail node or empty node is wrapped
-in `Async`. `AsyncSeq` also bears similarity to `IObservable<'a>` with the former being based on an "asynchronous pull" and the
+It is similar to `seq<'a>` in that subsequent elements are pulled on-demand.
+`AsyncSeq` also bears similarity to `IObservable<'a>` with the former being based on an "asynchronous pull" and the
 latter based on a "synchronous push". Analogs for most operations defined for `Seq`, `List` and `IObservable` are also defined for 
 `AsyncSeq`. The power of `AsyncSeq` lies in that many of these operations also have analogs based on `Async` 
 allowing composition of complex asynchronous workflows.

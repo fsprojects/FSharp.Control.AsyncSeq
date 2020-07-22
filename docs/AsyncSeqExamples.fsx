@@ -1,4 +1,19 @@
+(*** condition: prepare ***)
+#nowarn "211"
+#I "../src/FSharp.Control.AsyncSeq/bin/Release/netstandard2.1"
+#r "FSharp.Control.AsyncSeq.dll"
+(*** condition: fsx ***)
+#if FSX
+#r "nuget: FSharp.Control.AsyncSeq,{{package-version}}"
+#endif // FSX
+(*** condition: ipynb ***)
+#if IPYNB
+#r "nuget: FSharp.Control.AsyncSeq,{{package-version}}"
+#endif // IPYNB
+
+
 (**
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/fsprojects/FSharp.Control.AsyncSeq/gh-pages?filepath=AsyncSeqExamples.ipynb)
 
 # F# AsyncSeq Examples
 
