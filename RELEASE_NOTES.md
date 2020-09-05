@@ -1,6 +1,6 @@
 ### 3.0.2
 
-* bump version due to bad push
+* Include .fsi files into Fable package path [#118](https://github.com/fsprojects/FSharp.Control.AsyncSeq/pull/118)
 
 ### 3.0.1 
 
