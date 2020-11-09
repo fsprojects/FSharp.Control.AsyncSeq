@@ -1748,6 +1748,7 @@ module AsyncSeq =
 
   #if (NETSTANDARD2_1 || NETCOREAPP3_0)
 
+  #if !FABLE_COMPILER
   let ofAsyncEnum (source: Collections.Generic.IAsyncEnumerable<_>) = asyncSeq {
       let! ct = Async.CancellationToken
       let e = source.GetAsyncEnumerator(ct)
@@ -1790,7 +1791,6 @@ module AsyncSeq =
   let ofIQueryable (query : IQueryable<'a>) =
      query :?> Collections.Generic.IAsyncEnumerable<'a> |> ofAsyncEnum
 
-  #if !FABLE_COMPILER
   module AsyncSeqSrcImpl =
 
     let private createNode () =
