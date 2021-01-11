@@ -443,7 +443,7 @@ module AsyncSeq =
     //     do! something
     //
     // because F# translates body as Bind(something, fun () -> Return())
-    member x.Return _ = empty
+    member x.Return () = empty
     member x.YieldFrom(s:AsyncSeq<'T>) =
       s
     member x.Zero () = empty

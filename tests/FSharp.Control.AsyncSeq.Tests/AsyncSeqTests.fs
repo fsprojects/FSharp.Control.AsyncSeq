@@ -1710,7 +1710,9 @@ let ``AsyncSeq.ofAsyncEnum should roundtrip successfully``() =
 let ``AsyncSeq.toAsyncEnum raises exception``() : unit =
   async {
     let exceptionMessage = "Raised inside AsyncSeq"
-    let exceptionSequence = asyncSeq { yield failwith exceptionMessage; yield 1 } |> AsyncSeq.toAsyncEnum
+    let exceptionSequence = 
+      asyncSeq { yield failwith exceptionMessage; yield 1 } 
+      |> AsyncSeq.toAsyncEnum
     let mutable exceptionRaised = false
     try
       let enumerator = exceptionSequence.GetAsyncEnumerator()
@@ -1729,7 +1731,10 @@ let ``AsyncSeq.toAsyncEnum raises exception``() : unit =
 let ``AsyncSeq.ofAsyncEnum raises exception``() : unit =
   async {
     let exceptionMessage = "Raised inside AsyncSeq"
-    let exceptionSequence = asyncSeq { return failwith exceptionMessage; yield 1 } |> AsyncSeq.toAsyncEnum |> AsyncSeq.ofAsyncEnum
+    let exceptionSequence = 
+      asyncSeq { yield failwith exceptionMessage; yield 1 } 
+      |> AsyncSeq.toAsyncEnum 
+      |> AsyncSeq.ofAsyncEnum
     let mutable exceptionRaised = false
     try
       let enumerator = exceptionSequence.GetEnumerator()
