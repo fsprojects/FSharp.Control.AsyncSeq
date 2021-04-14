@@ -1887,4 +1887,3 @@ module Seq =
 
 [<assembly:System.Runtime.CompilerServices.InternalsVisibleTo("FSharp.Control.AsyncSeq.Tests")>]
 do ()
-
