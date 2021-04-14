@@ -13,7 +13,7 @@
     "url": "https://github.com/fsprojects/FSharp.Control.AsyncSeq"
   },
   "scripts": {
-    "pretest": "fable-splitter -c FSharp.Control.AsyncSeq.Tests/splitter.config.js",
+    "pretest": "dotnet fable FSharp.Control.AsyncSeq.Tests/ --outDir dist/tests --typedArrays false",
     "test": "jest",
     "test-jest-watch": "yarn pretest && yarn jest --watchAll=false",
     "test-watch": "npx nodemon -e fs,fsproj,fsi --watch FSharp.Control.AsyncSeq.Tests --watch ../../src/FSharp.Control.AsyncSeq --exec yarn test"
@@ -21,6 +21,7 @@
   "dependencies": {},
   "devDependencies": {
     "@babel/core": "^7",
+    "@babel/preset-env": "^7.12.1",
     "@babel/plugin-transform-modules-commonjs": "^7",
     "@sinonjs/fake-timers": "^6",
     "@testing-library/jest-dom": "^5",

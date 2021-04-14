@@ -1746,6 +1746,7 @@ module AsyncSeq =
          return Choice1Of2 (asyncSeq { for v in res do yield v })
        }
 
+  #if !FABLE_COMPILER
   #if (NETSTANDARD2_1 || NETCOREAPP3_0)
   #if !FABLE_COMPILER
 
@@ -1887,4 +1888,3 @@ module Seq =
 
 [<assembly:System.Runtime.CompilerServices.InternalsVisibleTo("FSharp.Control.AsyncSeq.Tests")>]
 do ()
-
