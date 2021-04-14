@@ -1,4 +1,4 @@
-name: .NET Core
+name: Build and Publish Docs
 
 on:
   push:
