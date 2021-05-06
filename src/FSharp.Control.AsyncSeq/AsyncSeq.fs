@@ -12,7 +12,7 @@ open System.Threading.Tasks
 open System.Runtime.ExceptionServices
 open System.Linq
 
-#nowarn "40"
+#nowarn "40" "3218"
 
 // ----------------------------------------------------------------------------
 
