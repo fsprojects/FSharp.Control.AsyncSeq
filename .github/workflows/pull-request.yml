@@ -3,7 +3,7 @@ name: Build and Test Pull Request
 on:
   pull_request:
     branches: [ master ]
-    
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -12,7 +12,11 @@ jobs:
     - name: Setup .NET 
       uses: actions/setup-dotnet@v1
       with:
-        dotnet-version: 5.0.202
+        dotnet-version: '3.1.x'
+    - name: Setup .NET 
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: '5.0.202'
     - name: Install tools
       run: dotnet tool restore
     - name: Build Test and Docs using FAKE 
