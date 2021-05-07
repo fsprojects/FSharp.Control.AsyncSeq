@@ -1,14 +1,10 @@
 name: Build and Publish Docs
-
 on:
   push:
     branches: [ master ]
-
 jobs:
   build:
-
     runs-on: ubuntu-latest
-
     steps:
     - uses: actions/checkout@v2
     - name: Setup .NET 
@@ -17,15 +13,8 @@ jobs:
         dotnet-version: 5.0.202
     - name: Install tools
       run: dotnet tool restore
-
-
     - name: Build and Test and Docs using FAKE 
       run: dotnet fake build
-
-
-
-
-
     - name: Deploy
       uses: peaceiris/actions-gh-pages@v3
       with:
