@@ -126,8 +126,6 @@ type Assert with
     | _ ->
       Assert.Fail(message)
 
-
-
 [<Test>]
 let ``AsyncSeq.never should equal itself`` () =
   Assert.AreEqual(AsyncSeq.never<int>, AsyncSeq.never<int>, timeout=100, exnEq=AreCancellationExns)
@@ -1515,6 +1513,46 @@ let ``AsyncSeq.iterAsyncParallel should propagate exception`` () =
     match res with
     | Choice2Of2 _ -> ()
     | Choice1Of2 _ -> Assert.Fail ("error expected")
+
+[<Test>]
+let ``AsyncSeq.iterAsyncParallel should cancel and not block forever when run in parallel with another exception-throwing Async`` () =
+    
+    let handle x = async {
+           do! Async.Sleep 50           
+    }
+
+    let fakeAsync = async {    
+           do! Async.Sleep 500
+           return "fakeAsync"
+    }
+
+    let makeAsyncSeqBatch () =
+           let rec loop() = asyncSeq {            
+               let! batch =  fakeAsync |> Async.Catch
+               match batch with
+               | Choice1Of2 batch ->
+                 if (Seq.isEmpty batch) then
+                   do! Async.Sleep 500
+                   yield! loop()
+                 else
+                   yield batch
+                   yield! loop() 
+               | Choice2Of2 err ->
+                    printfn "Problem getting batch: %A" err
+           }
+       
+           loop()
+
+    let x = makeAsyncSeqBatch () |> AsyncSeq.concatSeq |> AsyncSeq.iterAsyncParallel handle
+    let exAsync = async {
+           do! Async.Sleep 2000
+           failwith "error"
+    }
+
+    let t = [x; exAsync] |> Async.Parallel |> Async.Ignore |> Async.StartAsTask
+
+    // should fail after 2 seconds
+    Assert.Throws<AggregateException>(fun _ -> t.Wait(4000) |> ignore) |> ignore
 
 [<Test>]
 let ``AsyncSeq.iterAsyncParallelThrottled should propagate handler exception`` () =

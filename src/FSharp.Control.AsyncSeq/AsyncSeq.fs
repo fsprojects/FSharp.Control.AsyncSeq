@@ -167,6 +167,8 @@ module internal Utils =
           let ivar = TaskCompletionSource<_>()
           if t.IsFaulted then
             ivar.SetException t.Exception
+          else if t.IsCanceled then
+            ivar.SetCanceled()
           ivar.Task)
         |> join
     #endif
@@ -1060,6 +1062,7 @@ module AsyncSeq =
         mb.Post (Some b) })
       |> Async.map (fun _ -> mb.Post None)
       |> Async.StartChildAsTask
+    
     return!
       replicateUntilNoneAsync (Task.chooseTask (err |> Task.taskFault) (async.Delay mb.Receive))
       |> iterAsync id }
