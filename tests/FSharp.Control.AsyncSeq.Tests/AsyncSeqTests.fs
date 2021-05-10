@@ -1,14 +1,10 @@
 ﻿#if INTERACTIVE
-#if COMPARE_TO_OLD
-#r @"../../packages/FSharp.Control.AsyncSeq/lib/net40/Fsharp.Control.AsyncSeq.dll"
-#else
-#r @"../../bin/FSharp.Control.AsyncSeq.dll"
-#endif
-#r @"../../packages/NUnit/lib/nunit.framework.dll"
+#load @"../../.paket/load/netcoreapp3.1/Test/NUnit.fsx"
 #time "on"
 #else
-module AsyncSeqTests
+
 #endif
+module AsyncSeqTests
 
 open NUnit.Framework
 open FSharp.Control
@@ -275,7 +271,7 @@ let ``AsyncSeq.cache does not slow down late consumers``() =
         |> AsyncSeq.cache
     let consume initialDelay amount =
         async {
-            do! Async.Sleep initialDelay
+            do! Async.Sleep (initialDelay:int)
             let timing = System.Diagnostics.Stopwatch.StartNew()
             let! _ =
                 src

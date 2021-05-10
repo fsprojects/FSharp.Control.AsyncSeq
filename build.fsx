@@ -39,8 +39,6 @@ let summary = "Asynchronous sequences for F#"
 
 let license = "Apache 2.0 License"
 
-let buildDir = "bin"
-
 // Git configuration (used for publishing documentation in gh-pages branch)
 // The profile where the project is posted
 let projectRepo = "https://github.com/fsprojects/FSharp.Control.AsyncSeq"
@@ -53,11 +51,20 @@ let artifactsDir = __SOURCE_DIRECTORY__ @@ "artifacts"
 // Read additional information from the release notes document
 let release = ReleaseNotes.load "RELEASE_NOTES.md"
 
+
+let versionPropsTemplate = $"\
+<Project>
+  <PropertyGroup>
+    <Version>%s{release.NugetVersion}</Version>
+  </PropertyGroup>
+</Project>"
+
 // --------------------------------------------------------------------------------------
 // Clean build results
 
 Target.create "Clean" (fun _ ->
-    Shell.cleanDirs ["bin"; "temp"]
+    DotNet.exec id "clean" "" |> ignore
+    Shell.cleanDirs ["artifacts"; "temp"]
 )
 
 // Generate assembly info files with the right version & up-to-date information
@@ -73,7 +80,6 @@ Target.create "AssemblyInfo" (fun _ ->
 
     AssemblyInfoFile.createFSharp "src/Common/AssemblyInfo.fs" info
     AssemblyInfoFile.createCSharp "src/Common/AssemblyInfo.cs" info
-    let releaseNotes = String.toLines release.Notes |> System.Net.WebUtility.HtmlEncode
     File.WriteAllText("version.props", sprintf """<Project>
       <PropertyGroup>
         <Version>%s</Version>
@@ -107,6 +113,8 @@ Target.create "RunTests" (fun _ ->
 // Build a NuGet package
 
 Target.create "NuGet" (fun _ ->
+    
+    File.WriteAllText("version.props",versionPropsTemplate)
     DotNet.pack (fun pack ->
         { pack with
             OutputPath = Some artifactsDir 
@@ -119,7 +127,7 @@ Target.create "NuGet" (fun _ ->
 
 Target.create "GenerateDocs" (fun _ ->
     Shell.cleanDir ".fsdocs"
-    DotNet.exec id "fsdocs" "build --clean" |> ignore
+    DotNet.exec id "fsdocs" "build --clean --properties Configuration=Release" |> ignore
 )
 
 // --------------------------------------------------------------------------------------
@@ -157,10 +165,14 @@ Target.create "All" ignore
 "Clean"
   ==> "Build"
   ==> "RunTests"
-  ==> "All"
   ==> "NuGet"
-  ==> "PublishNuget"
   ==> "GenerateDocs"
+  ==> "All"
+
+"NuGet" ==> "PublishNuget"
+"GenerateDocs" ==> "ReleaseDocs"
+
+"PublishNuget"
   ==> "ReleaseDocs"
   ==> "Release"
 

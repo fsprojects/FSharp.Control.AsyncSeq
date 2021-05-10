@@ -917,9 +917,10 @@ Jest.test("AsyncSeq.truncate should work like take", async {
 })
 
 Jest.describe("AsyncSeq.intervalMs", fun () ->
-    Jest.beforeAll <| fun () ->
+    fun () ->
         Jest.useFakeTimers()
         Jest.setSystemTime(0)
+    |> Jest.beforeAll
 
     Jest.test("AsyncSeq.intervalMs works", async {
         let interval = AsyncSeq.intervalMs 10
