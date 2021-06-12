@@ -1,0 +1,1319 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>AsyncSeqBuilder (FSharp.Control.AsyncSeq)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="author" content="Tomas Petricek;Don Syme;Lev Gorodinski">
+
+    <link rel="stylesheet" id="theme_link" href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/4.3.1/materia/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+
+    <script type="text/javascript" async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+
+    <link rel="shortcut icon" type="image/x-icon" href="img/favicon.ico">
+    <link type="text/css" rel="stylesheet" href="https://fsprojects.github.io/FSharp.Control.AsyncSeq/content/navbar-fixed-left.css" />
+    <link type="text/css" rel="stylesheet" href="https://fsprojects.github.io/FSharp.Control.AsyncSeq/content/fsdocs-default.css" />
+    <link type="text/css" rel="stylesheet" href="https://fsprojects.github.io/FSharp.Control.AsyncSeq/content/fsdocs-custom.css" />
+    <script type="text/javascript" src="https://fsprojects.github.io/FSharp.Control.AsyncSeq/content/fsdocs-tips.js"></script>
+    <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <!-- BEGIN SEARCH BOX: this adds support for the search box -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/JavaScript-autoComplete/1.0.4/auto-complete.css" />
+    <!-- END SEARCH BOX: this adds support for the search box -->
+    
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-md navbar-light bg-secondary fixed-left" id="fsdocs-nav">
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExampleDefault" aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarsExampleDefault">
+            <a href="https://fsprojects.github.io/FSharp.Control.AsyncSeq/"><img id="fsdocs-logo" src="https://fsprojects.github.io/FSharp.Control.AsyncSeq/img/logo.png" /></a>
+            <!-- BEGIN SEARCH BOX: this adds support for the search box -->
+            <div id="header">
+                <div class="searchbox" id="fsdocs-searchbox">
+                    <label for="search-by">
+                        <i class="fas fa-search"></i>
+                    </label>
+                    <input data-search-input="" id="search-by" type="search" placeholder="Search..." />
+                    <span data-search-clear="">
+                        <i class="fas fa-times"></i>
+                    </span>
+                </div>
+            </div>
+
+            <!-- END SEARCH BOX: this adds support for the search box -->
+            <ul class="navbar-nav">
+                <li class="nav-header">Links</li>
+                <li class="nav-item" id="fsdocs-license-link"><a class="nav-link" href="https://github.com/fsprojects/FSharp.Control.AsyncSeq/blob/master/LICENSE.md">License</a></li>
+                <li class="nav-item" id="fsdocs-release-notes-link"><a class="nav-link" href="https://github.com/fsprojects/FSharp.Control.AsyncSeq/blob/master/RELEASE_NOTES.md">Release Notes</a></li>
+                <li class="nav-item" id="fsdocs-repository-link"><a class="nav-link" href="https://github.com/fsprojects/FSharp.Control.AsyncSeq/">Source Repository</a></li>
+                <li class="nav-header">
+  Documentation
+</li>             
+<li class="nav-item">
+  <a class="nav-link" href="https://fsprojects.github.io/FSharp.Control.AsyncSeq/terminology.html">
+    Terminology
+
+  </a>
+</li>             
+<li class="nav-item">
+  <a class="nav-link" href="https://fsprojects.github.io/FSharp.Control.AsyncSeq/AsyncSeq.html">
+    F# Async: FSharp.Control.AsyncSeq
+
+  </a>
+</li>             
+<li class="nav-item">
+  <a class="nav-link" href="https://fsprojects.github.io/FSharp.Control.AsyncSeq/AsyncSeqExamples.html">
+    F# AsyncSeq Examples
+
+  </a>
+</li>
+                <li class="nav-header">
+  API Reference
+</li>             
+<li class="nav-item">
+  <a class="nav-link" href="https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/index.html">
+    All Namespaces
+  </a>
+</li>
+            </ul>
+        </div>
+    </nav>
+    <div class="container">
+        <div class="masthead">
+            <h3 class="muted"><a href="https://fsprojects.github.io/FSharp.Control.AsyncSeq/">FSharp.Control.AsyncSeq</a></h3>
+        </div>
+        <hr />
+        <div class="container" id="fsdocs-content">
+            <div>
+  <h2>
+    AsyncSeq.AsyncSeqBuilder Type
+  </h2>
+  <dl class="fsdocs-metadata">
+    <dt>
+      Namespace: 
+      <a href="https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control.html">
+        FSharp.Control
+      </a>
+    </dt>
+    <dt>
+      Assembly: FSharp.Control.AsyncSeq.dll
+    </dt>
+    <dt>
+      Parent Module: 
+      <a href="https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html">
+        AsyncSeq
+      </a>
+    </dt>
+    <dt>
+      Base Type: 
+      <code>obj</code>
+    </dt>
+  </dl>
+  <div class="fsdocs-xmldoc">
+    <div>
+      <p class="fsdocs-summary">
+        
+ Computation builder that allows creating of asynchronous
+ sequences using the 'asyncSeq { ... }' syntax
+
+      </p>
+    </div>
+  </div>
+  <div></div>
+  <div></div>
+  <div></div>
+  <div></div>
+  <div></div>
+  <div></div>
+  <div>
+    <h3>
+      Constructors
+    </h3>
+    <table class="table outer-list fsdocs-member-list">
+      <thead>
+        <tr>
+          <td class="fsdocs-member-list-header">
+            Constructor
+          </td>
+          <td class="fsdocs-member-list-header">
+            Description
+          </td>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="fsdocs-member-usage">
+            <div>
+              <code onmouseout="hideTip(event, '110', 110)" onmouseover="showTip(event, '110', 110)">
+                <p>
+                  <a id="( .ctor )">
+                    <a href="#( .ctor )">
+                      <code><span>AsyncSeqBuilder<span>()</span></span></code>
+                    </a>
+                  </a>
+                </p>
+              </code>
+              <div class="fsdocs-tip" id="110">
+                <div class="member-tooltip">
+                  Full Usage: 
+                  <code><span>AsyncSeqBuilder<span>()</span></span></code>
+                  <br/>
+                  <br/>
+                  <span>
+                    Returns: 
+                    <code><a href="https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq-asyncseqbuilder.html">AsyncSeqBuilder</a></code>
+                  </span>
+                  <br/>
+                </div>
+              </div>
+            </div>
+          </td>
+          <td class="fsdocs-member-xmldoc">
+            <div class="fsdocs-summary">
+              <div class="fsdocs-source-link" onclick="Clipboard_CopyTo('`cref:M:FSharp.Control.AsyncSeq.AsyncSeqBuilder.#ctor`')">
+                <img src="https://fsprojects.github.io/FSharp.Control.AsyncSeq/content/img/copy-md.png" class="normal"/>
+                <img src="https://fsprojects.github.io/FSharp.Control.AsyncSeq/content/img/copy-md-blue.png" class="hover"/>
+              </div>
+              <div class="fsdocs-source-link" onclick="Clipboard_CopyTo('<see cref=\'M:FSharp.Control.AsyncSeq.AsyncSeqBuilder.#ctor\'/>')">
+                <img src="https://fsprojects.github.io/FSharp.Control.AsyncSeq/content/img/copy.png" class="normal"/>
+                <img src="https://fsprojects.github.io/FSharp.Control.AsyncSeq/content/img/copy-blue.png" class="hover"/>
+              </div>
+              <a href="https://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L439-439" class="fsdocs-source-link">
+                <img src="https://fsprojects.github.io/FSharp.Control.AsyncSeq/content/img/github.png" class="normal"/>
+                <img src="https://fsprojects.github.io/FSharp.Control.AsyncSeq/content/img/github-blue.png" class="hover"/>
+              </a>
+              <p class="fsdocs-summary">
+                
+ Internal use only
+
+              </p>
+            </div>
+            <dl class="fsdocs-returns">
+              <dt>
+                <span class="fsdocs-return-name">
+                  Returns:
+                </span>
+                <code><a href="https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq-asyncseqbuilder.html">AsyncSeqBuilder</a></code>
+              </dt>
+              <dd class="fsdocs-return-docs"></dd>
+            </dl>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div>
+    <h3>
+      Instance members
+    </h3>
+    <table class="table outer-list fsdocs-member-list">
+      <thead>
+        <tr>
+          <td class="fsdocs-member-list-header">
+            Instance member
+          </td>
+          <td class="fsdocs-member-list-header">
+            Description
+          </td>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="fsdocs-member-usage">
+            <div>
+              <code onmouseout="hideTip(event, '111', 111)" onmouseover="showTip(event, '111', 111)">
+                <p>
+                  <a id="Bind">
+                    <a href="#Bind">
+                      <code><span>this.Bind<span><span>(<span>source,&#32;body</span>)</span></span></span></code>
+                    </a>
+                  </a>
+                </p>
+              </code>
+              <div class="fsdocs-tip" id="111">
+                <div class="member-tooltip">
+                  Full Usage: 
+                  <code><span>this.Bind<span><span>(<span>source,&#32;body</span>)</span></span></span></code>
+                  <br/>
+                  <br/>
+                  Parameters: 
+                  <ul>
+                    <span>
+                      <b>
+                        source
+                      </b>
+                      :
+                      <code><span><a href="https://fsharp.github.io/fsharp-core-docs/reference/fsharp-control-fsharpasync-1">Async</a>&lt;'T&gt;</span></code>
+                    </span>
+                    <br/>
+                    <span>
+                      <b>
+                        body
+                      </b>
+                      :
+                      <code><span>'T&#32;->&#32;<span><a href="https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq-1.html">AsyncSeq</a>&lt;'U&gt;</span></span></code>
+                    </span>
+                    <br/>
+                  </ul>
+                  <br/>
+                  <span>
+                    Returns: 
+                    <code><span><a href="https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq-1.html">AsyncSeq</a>&lt;'U&gt;</span></code>
+                  </span>
+                  <br/>
+                </div>
+              </div>
+            </div>
+          </td>
+          <td class="fsdocs-member-xmldoc">
+            <div class="fsdocs-summary">
+              <div class="fsdocs-source-link" onclick="Clipboard_CopyTo('```cref:M:FSharp.Control.AsyncSeq.AsyncSeqBuilder.Bind``2```')">
+                <img src="https://fsprojects.github.io/FSharp.Control.AsyncSeq/content/img/copy-md.png" class="normal"/>
+                <img src="https://fsprojects.github.io/FSharp.Control.AsyncSeq/content/img/copy-md-blue.png" class="hover"/>
+              </div>
+              <div class="fsdocs-source-link" onclick="Clipboard_CopyTo('<see cref=\'M:FSharp.Control.AsyncSeq.AsyncSeqBuilder.Bind``2\'/>')">
+                <img src="https://fsprojects.github.io/FSharp.Control.AsyncSeq/content/img/copy.png" class="normal"/>
+                <img src="https://fsprojects.github.io/FSharp.Control.AsyncSeq/content/img/copy-blue.png" class="hover"/>
+              </div>
+              <a href="https://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L452-452" class="fsdocs-source-link">
+                <img src="https://fsprojects.github.io/FSharp.Control.AsyncSeq/content/img/github.png" class="normal"/>
+                <img src="https://fsprojects.github.io/FSharp.Control.AsyncSeq/content/img/github-blue.png" class="hover"/>
+              </a>
+              <p class="fsdocs-summary">
+                
+ Implements binding for the asyncSeq computation builder.
+
+              </p>
+            </div>
+            <dl class="fsdocs-params">
+              <dt class="fsdocs-param">
+                <span class="fsdocs-param-name">
+                  source
+                </span>
+                :
+                <code><span><a href="https://fsharp.github.io/fsharp-core-docs/reference/fsharp-control-fsharpasync-1">Async</a>&lt;'T&gt;</span></code>
+              </dt>
+              <dd class="fsdocs-param-docs"></dd>
+              <dt class="fsdocs-param">
+                <span class="fsdocs-param-name">
+                  body
+                </span>
+                :
+                <code><span>'T&#32;->&#32;<span><a href="https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq-1.html">AsyncSeq</a>&lt;'U&gt;</span></span></code>
+              </dt>
+              <dd class="fsdocs-param-docs"></dd>
+            </dl>
+            <dl class="fsdocs-returns">
+              <dt>
+                <span class="fsdocs-return-name">
+                  Returns:
+                </span>
+                <code><span><a href="https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq-1.html">AsyncSeq</a>&lt;'U&gt;</span></code>
+              </dt>
+              <dd class="fsdocs-return-docs"></dd>
+            </dl>
+          </td>
+        </tr>
+        <tr>
+          <td class="fsdocs-member-usage">
+            <div>
+              <code onmouseout="hideTip(event, '112', 112)" onmouseover="showTip(event, '112', 112)">
+                <p>
+                  <a id="Combine">
+                    <a href="#Combine">
+                      <code><span>this.Combine<span><span>(<span>seq1,&#32;seq2</span>)</span></span></span></code>
+                    </a>
+                  </a>
+                </p>
+              </code>
+              <div class="fsdocs-tip" id="112">
+                <div class="member-tooltip">
+                  Full Usage: 
+                  <code><span>this.Combine<span><span>(<span>seq1,&#32;seq2</span>)</span></span></span></code>
+                  <br/>
+                  <br/>
+                  Parameters: 
+                  <ul>
+                    <span>
+                      <b>
+                        seq1
+                      </b>
+                      :
+                      <code><span><a href="https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq-1.html">AsyncSeq</a>&lt;'T&gt;</span></code>
+                    </span>
+                    <br/>
+                    <span>
+                      <b>
+                        seq2
+                      </b>
+                      :
+                      <code><span><a href="https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq-1.html">AsyncSeq</a>&lt;'T&gt;</span></code>
+                    </span>
+                    <br/>
+                  </ul>
+                  <br/>
+                  <span>
+                    Returns: 
+                    <code><span><a href="https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq-1.html">AsyncSeq</a>&lt;'T&gt;</span></code>
+                  </span>
+                  <br/>
+                </div>
+              </div>
+            </div>
+          </td>
+          <td class="fsdocs-member-xmldoc">
+            <div class="fsdocs-summary">
+              <div class="fsdocs-source-link" onclick="Clipboard_CopyTo('```cref:M:FSharp.Control.AsyncSeq.AsyncSeqBuilder.Combine``1```')">
+                <img src="https://fsprojects.github.io/FSharp.Control.AsyncSeq/content/img/copy-md.png" class="normal"/>
+                <img src="https://fsprojects.github.io/FSharp.Control.AsyncSeq/content/img/copy-md-blue.png" class="hover"/>
+              </div>
+              <div class="fsdocs-source-link" onclick="Clipboard_CopyTo('<see cref=\'M:FSharp.Control.AsyncSeq.AsyncSeqBuilder.Combine``1\'/>')">
+                <img src="https://fsprojects.github.io/FSharp.Control.AsyncSeq/content/img/copy.png" class="normal"/>
+                <img src="https://fsprojects.github.io/FSharp.Control.AsyncSeq/content/img/copy-blue.png" class="hover"/>
+              </div>
+              <a href="https://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L453-453" class="fsdocs-source-link">
+                <img src="https://fsprojects.github.io/FSharp.Control.AsyncSeq/content/img/github.png" class="normal"/>
+                <img src="https://fsprojects.github.io/FSharp.Control.AsyncSeq/content/img/github-blue.png" class="hover"/>
+              </a>
+              <p class="fsdocs-summary">
+                
+ Implements sequential composition for the asyncSeq computation builder.
+
+              </p>
+            </div>
+            <dl class="fsdocs-params">
+              <dt class="fsdocs-param">
+                <span class="fsdocs-param-name">
+                  seq1
+                </span>
+                :
+                <code><span><a href="https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq-1.html">AsyncSeq</a>&lt;'T&gt;</span></code>
+              </dt>
+              <dd class="fsdocs-param-docs"></dd>
+              <dt class="fsdocs-param">
+                <span class="fsdocs-param-name">
+                  seq2
+                </span>
+                :
+                <code><span><a href="https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq-1.html">AsyncSeq</a>&lt;'T&gt;</span></code>
+              </dt>
+              <dd class="fsdocs-param-docs"></dd>
+            </dl>
+            <dl class="fsdocs-returns">
+              <dt>
+                <span class="fsdocs-return-name">
+                  Returns:
+                </span>
+                <code><span><a href="https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq-1.html">AsyncSeq</a>&lt;'T&gt;</span></code>
+              </dt>
+              <dd class="fsdocs-return-docs"></dd>
+            </dl>
+          </td>
+        </tr>
+        <tr>
+          <td class="fsdocs-member-usage">
+            <div>
+              <code onmouseout="hideTip(event, '113', 113)" onmouseover="showTip(event, '113', 113)">
+                <p>
+                  <a id="Delay">
+                    <a href="#Delay">
+                      <code><span>this.Delay<span><span>(<span>f</span>)</span></span></span></code>
+                    </a>
+                  </a>
+                </p>
+              </code>
+              <div class="fsdocs-tip" id="113">
+                <div class="member-tooltip">
+                  Full Usage: 
+                  <code><span>this.Delay<span><span>(<span>f</span>)</span></span></span></code>
+                  <br/>
+                  <br/>
+                  Parameters: 
+                  <ul>
+                    <span>
+                      <b>
+                        f
+                      </b>
+                      :
+                      <code><span>unit&#32;->&#32;<span><a href="https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq-1.html">AsyncSeq</a>&lt;'T&gt;</span></span></code>
+                    </span>
+                    <br/>
+                  </ul>
+                  <br/>
+                  <span>
+                    Returns: 
+                    <code><span><a href="https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq-1.html">AsyncSeq</a>&lt;'T&gt;</span></code>
+                  </span>
+                  <br/>
+                </div>
+              </div>
+            </div>
+          </td>
+          <td class="fsdocs-member-xmldoc">
+            <div class="fsdocs-summary">
+              <div class="fsdocs-source-link" onclick="Clipboard_CopyTo('```cref:M:FSharp.Control.AsyncSeq.AsyncSeqBuilder.Delay``1```')">
+                <img src="https://fsprojects.github.io/FSharp.Control.AsyncSeq/content/img/copy-md.png" class="normal"/>
+                <img src="https://fsprojects.github.io/FSharp.Control.AsyncSeq/content/img/copy-md-blue.png" class="hover"/>
+              </div>
+              <div class="fsdocs-source-link" onclick="Clipboard_CopyTo('<see cref=\'M:FSharp.Control.AsyncSeq.AsyncSeqBuilder.Delay``1\'/>')">
+                <img src="https://fsprojects.github.io/FSharp.Control.AsyncSeq/content/img/copy.png" class="normal"/>
+                <img src="https://fsprojects.github.io/FSharp.Control.AsyncSeq/content/img/copy-blue.png" class="hover"/>
+              </div>
+              <a href="https://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L459-459" class="fsdocs-source-link">
+                <img src="https://fsprojects.github.io/FSharp.Control.AsyncSeq/content/img/github.png" class="normal"/>
+                <img src="https://fsprojects.github.io/FSharp.Control.AsyncSeq/content/img/github-blue.png" class="hover"/>
+              </a>
+              <p class="fsdocs-summary">
+                
+ Implements delay for the asyncSeq computation builder.
+
+              </p>
+            </div>
+            <dl class="fsdocs-params">
+              <dt class="fsdocs-param">
+                <span class="fsdocs-param-name">
+                  f
+                </span>
+                :
+                <code><span>unit&#32;->&#32;<span><a href="https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq-1.html">AsyncSeq</a>&lt;'T&gt;</span></span></code>
+              </dt>
+              <dd class="fsdocs-param-docs"></dd>
+            </dl>
+            <dl class="fsdocs-returns">
+              <dt>
+                <span class="fsdocs-return-name">
+                  Returns:
+                </span>
+                <code><span><a href="https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq-1.html">AsyncSeq</a>&lt;'T&gt;</span></code>
+              </dt>
+              <dd class="fsdocs-return-docs"></dd>
+            </dl>
+          </td>
+        </tr>
+        <tr>
+          <td class="fsdocs-member-usage">
+            <div>
+              <code onmouseout="hideTip(event, '114', 114)" onmouseover="showTip(event, '114', 114)">
+                <p>
+                  <a id="For">
+                    <a href="#For">
+                      <code><span>this.For<span><span>(<span>source,&#32;action</span>)</span></span></span></code>
+                    </a>
+                  </a>
+                </p>
+              </code>
+              <div class="fsdocs-tip" id="114">
+                <div class="member-tooltip">
+                  Full Usage: 
+                  <code><span>this.For<span><span>(<span>source,&#32;action</span>)</span></span></span></code>
+                  <br/>
+                  <br/>
+                  Parameters: 
+                  <ul>
+                    <span>
+                      <b>
+                        source
+                      </b>
+                      :
+                      <code><span><a href="https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq-1.html">AsyncSeq</a>&lt;'T&gt;</span></code>
+                    </span>
+                    <br/>
+                    <span>
+                      <b>
+                        action
+                      </b>
+                      :
+                      <code><span>'T&#32;->&#32;<span><a href="https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq-1.html">AsyncSeq</a>&lt;'TResult&gt;</span></span></code>
+                    </span>
+                    <br/>
+                  </ul>
+                  <br/>
+                  <span>
+                    Returns: 
+                    <code><span><a href="https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq-1.html">AsyncSeq</a>&lt;'TResult&gt;</span></code>
+                  </span>
+                  <br/>
+                </div>
+              </div>
+            </div>
+          </td>
+          <td class="fsdocs-member-xmldoc">
+            <div class="fsdocs-summary">
+              <div class="fsdocs-source-link" onclick="Clipboard_CopyTo('```cref:M:FSharp.Control.AsyncSeq.AsyncSeqBuilder.For``2```')">
+                <img src="https://fsprojects.github.io/FSharp.Control.AsyncSeq/content/img/copy-md.png" class="normal"/>
+                <img src="https://fsprojects.github.io/FSharp.Control.AsyncSeq/content/img/copy-md-blue.png" class="hover"/>
+              </div>
+              <div class="fsdocs-source-link" onclick="Clipboard_CopyTo('<see cref=\'M:FSharp.Control.AsyncSeq.AsyncSeqBuilder.For``2\'/>')">
+                <img src="https://fsprojects.github.io/FSharp.Control.AsyncSeq/content/img/copy.png" class="normal"/>
+                <img src="https://fsprojects.github.io/FSharp.Control.AsyncSeq/content/img/copy-blue.png" class="hover"/>
+              </div>
+              <a href="https://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L762-762" class="fsdocs-source-link">
+                <img src="https://fsprojects.github.io/FSharp.Control.AsyncSeq/content/img/github.png" class="normal"/>
+                <img src="https://fsprojects.github.io/FSharp.Control.AsyncSeq/content/img/github-blue.png" class="hover"/>
+              </a>
+              <p class="fsdocs-summary">
+                
+ Implements "for" loops for the asyncSeq computation builder.
+
+ Asynchronous for loop - for all elements from the input sequence,
+ generate all elements produced by the body (asynchronously). See
+ also the AsyncSeq.collect function.
+
+              </p>
+            </div>
+            <dl class="fsdocs-params">
+              <dt class="fsdocs-param">
+                <span class="fsdocs-param-name">
+                  source
+                </span>
+                :
+                <code><span><a href="https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq-1.html">AsyncSeq</a>&lt;'T&gt;</span></code>
+              </dt>
+              <dd class="fsdocs-param-docs"></dd>
+              <dt class="fsdocs-param">
+                <span class="fsdocs-param-name">
+                  action
+                </span>
+                :
+                <code><span>'T&#32;->&#32;<span><a href="https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq-1.html">AsyncSeq</a>&lt;'TResult&gt;</span></span></code>
+              </dt>
+              <dd class="fsdocs-param-docs"></dd>
+            </dl>
+            <dl class="fsdocs-returns">
+              <dt>
+                <span class="fsdocs-return-name">
+                  Returns:
+                </span>
+                <code><span><a href="https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq-1.html">AsyncSeq</a>&lt;'TResult&gt;</span></code>
+              </dt>
+              <dd class="fsdocs-return-docs"></dd>
+            </dl>
+          </td>
+        </tr>
+        <tr>
+          <td class="fsdocs-member-usage">
+            <div>
+              <code onmouseout="hideTip(event, '115', 115)" onmouseover="showTip(event, '115', 115)">
+                <p>
+                  <a id="For">
+                    <a href="#For">
+                      <code><span>this.For<span><span>(<span>source,&#32;action</span>)</span></span></span></code>
+                    </a>
+                  </a>
+                </p>
+              </code>
+              <div class="fsdocs-tip" id="115">
+                <div class="member-tooltip">
+                  Full Usage: 
+                  <code><span>this.For<span><span>(<span>source,&#32;action</span>)</span></span></span></code>
+                  <br/>
+                  <br/>
+                  Parameters: 
+                  <ul>
+                    <span>
+                      <b>
+                        source
+                      </b>
+                      :
+                      <code><span>seq&lt;'T&gt;</span></code>
+                    </span>
+                    <br/>
+                    <span>
+                      <b>
+                        action
+                      </b>
+                      :
+                      <code><span>'T&#32;->&#32;<span><a href="https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq-1.html">AsyncSeq</a>&lt;'TResult&gt;</span></span></code>
+                    </span>
+                    <br/>
+                  </ul>
+                  <br/>
+                  <span>
+                    Returns: 
+                    <code><span><a href="https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq-1.html">AsyncSeq</a>&lt;'TResult&gt;</span></code>
+                  </span>
+                  <br/>
+                </div>
+              </div>
+            </div>
+          </td>
+          <td class="fsdocs-member-xmldoc">
+            <div class="fsdocs-summary">
+              <div class="fsdocs-source-link" onclick="Clipboard_CopyTo('```cref:M:FSharp.Control.AsyncSeq.AsyncSeqBuilder.For``2```')">
+                <img src="https://fsprojects.github.io/FSharp.Control.AsyncSeq/content/img/copy-md.png" class="normal"/>
+                <img src="https://fsprojects.github.io/FSharp.Control.AsyncSeq/content/img/copy-md-blue.png" class="hover"/>
+              </div>
+              <div class="fsdocs-source-link" onclick="Clipboard_CopyTo('<see cref=\'M:FSharp.Control.AsyncSeq.AsyncSeqBuilder.For``2\'/>')">
+                <img src="https://fsprojects.github.io/FSharp.Control.AsyncSeq/content/img/copy.png" class="normal"/>
+                <img src="https://fsprojects.github.io/FSharp.Control.AsyncSeq/content/img/copy-blue.png" class="hover"/>
+              </div>
+              <a href="https://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L759-759" class="fsdocs-source-link">
+                <img src="https://fsprojects.github.io/FSharp.Control.AsyncSeq/content/img/github.png" class="normal"/>
+                <img src="https://fsprojects.github.io/FSharp.Control.AsyncSeq/content/img/github-blue.png" class="hover"/>
+              </a>
+              <p class="fsdocs-summary">
+                
+ For loop that iterates over a synchronous sequence (and generates
+ all elements generated by the asynchronous body)
+
+              </p>
+            </div>
+            <dl class="fsdocs-params">
+              <dt class="fsdocs-param">
+                <span class="fsdocs-param-name">
+                  source
+                </span>
+                :
+                <code><span>seq&lt;'T&gt;</span></code>
+              </dt>
+              <dd class="fsdocs-param-docs"></dd>
+              <dt class="fsdocs-param">
+                <span class="fsdocs-param-name">
+                  action
+                </span>
+                :
+                <code><span>'T&#32;->&#32;<span><a href="https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq-1.html">AsyncSeq</a>&lt;'TResult&gt;</span></span></code>
+              </dt>
+              <dd class="fsdocs-param-docs"></dd>
+            </dl>
+            <dl class="fsdocs-returns">
+              <dt>
+                <span class="fsdocs-return-name">
+                  Returns:
+                </span>
+                <code><span><a href="https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq-1.html">AsyncSeq</a>&lt;'TResult&gt;</span></code>
+              </dt>
+              <dd class="fsdocs-return-docs"></dd>
+            </dl>
+          </td>
+        </tr>
+        <tr>
+          <td class="fsdocs-member-usage">
+            <div>
+              <code onmouseout="hideTip(event, '116', 116)" onmouseover="showTip(event, '116', 116)">
+                <p>
+                  <a id="TryFinally">
+                    <a href="#TryFinally">
+                      <code><span>this.TryFinally<span><span>(<span>body,&#32;compensation</span>)</span></span></span></code>
+                    </a>
+                  </a>
+                </p>
+              </code>
+              <div class="fsdocs-tip" id="116">
+                <div class="member-tooltip">
+                  Full Usage: 
+                  <code><span>this.TryFinally<span><span>(<span>body,&#32;compensation</span>)</span></span></span></code>
+                  <br/>
+                  <br/>
+                  Parameters: 
+                  <ul>
+                    <span>
+                      <b>
+                        body
+                      </b>
+                      :
+                      <code><span><a href="https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq-1.html">AsyncSeq</a>&lt;'T&gt;</span></code>
+                    </span>
+                    <br/>
+                    <span>
+                      <b>
+                        compensation
+                      </b>
+                      :
+                      <code><span>unit&#32;->&#32;unit</span></code>
+                    </span>
+                    <br/>
+                  </ul>
+                  <br/>
+                  <span>
+                    Returns: 
+                    <code><span><a href="https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq-1.html">AsyncSeq</a>&lt;'T&gt;</span></code>
+                  </span>
+                  <br/>
+                </div>
+              </div>
+            </div>
+          </td>
+          <td class="fsdocs-member-xmldoc">
+            <div class="fsdocs-summary">
+              <div class="fsdocs-source-link" onclick="Clipboard_CopyTo('```cref:M:FSharp.Control.AsyncSeq.AsyncSeqBuilder.TryFinally``1```')">
+                <img src="https://fsprojects.github.io/FSharp.Control.AsyncSeq/content/img/copy-md.png" class="normal"/>
+                <img src="https://fsprojects.github.io/FSharp.Control.AsyncSeq/content/img/copy-md-blue.png" class="hover"/>
+              </div>
+              <div class="fsdocs-source-link" onclick="Clipboard_CopyTo('<see cref=\'M:FSharp.Control.AsyncSeq.AsyncSeqBuilder.TryFinally``1\'/>')">
+                <img src="https://fsprojects.github.io/FSharp.Control.AsyncSeq/content/img/copy.png" class="normal"/>
+                <img src="https://fsprojects.github.io/FSharp.Control.AsyncSeq/content/img/copy-blue.png" class="hover"/>
+              </div>
+              <a href="https://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L749-749" class="fsdocs-source-link">
+                <img src="https://fsprojects.github.io/FSharp.Control.AsyncSeq/content/img/github.png" class="normal"/>
+                <img src="https://fsprojects.github.io/FSharp.Control.AsyncSeq/content/img/github-blue.png" class="hover"/>
+              </a>
+              <p class="fsdocs-summary">
+                
+ Implements "try-finally" for the asyncSeq computation builder.
+
+              </p>
+            </div>
+            <dl class="fsdocs-params">
+              <dt class="fsdocs-param">
+                <span class="fsdocs-param-name">
+                  body
+                </span>
+                :
+                <code><span><a href="https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq-1.html">AsyncSeq</a>&lt;'T&gt;</span></code>
+              </dt>
+              <dd class="fsdocs-param-docs"></dd>
+              <dt class="fsdocs-param">
+                <span class="fsdocs-param-name">
+                  compensation
+                </span>
+                :
+                <code><span>unit&#32;->&#32;unit</span></code>
+              </dt>
+              <dd class="fsdocs-param-docs"></dd>
+            </dl>
+            <dl class="fsdocs-returns">
+              <dt>
+                <span class="fsdocs-return-name">
+                  Returns:
+                </span>
+                <code><span><a href="https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq-1.html">AsyncSeq</a>&lt;'T&gt;</span></code>
+              </dt>
+              <dd class="fsdocs-return-docs"></dd>
+            </dl>
+          </td>
+        </tr>
+        <tr>
+          <td class="fsdocs-member-usage">
+            <div>
+              <code onmouseout="hideTip(event, '117', 117)" onmouseover="showTip(event, '117', 117)">
+                <p>
+                  <a id="TryWith">
+                    <a href="#TryWith">
+                      <code><span>this.TryWith<span><span>(<span>body,&#32;handler</span>)</span></span></span></code>
+                    </a>
+                  </a>
+                </p>
+              </code>
+              <div class="fsdocs-tip" id="117">
+                <div class="member-tooltip">
+                  Full Usage: 
+                  <code><span>this.TryWith<span><span>(<span>body,&#32;handler</span>)</span></span></span></code>
+                  <br/>
+                  <br/>
+                  Parameters: 
+                  <ul>
+                    <span>
+                      <b>
+                        body
+                      </b>
+                      :
+                      <code><span><a href="https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq-1.html">AsyncSeq</a>&lt;'T&gt;</span></code>
+                    </span>
+                    <br/>
+                    <span>
+                      <b>
+                        handler
+                      </b>
+                      :
+                      <code><span>exn&#32;->&#32;<span><a href="https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq-1.html">AsyncSeq</a>&lt;'T&gt;</span></span></code>
+                    </span>
+                    <br/>
+                  </ul>
+                  <br/>
+                  <span>
+                    Returns: 
+                    <code><span><a href="https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq-1.html">AsyncSeq</a>&lt;'T&gt;</span></code>
+                  </span>
+                  <br/>
+                </div>
+              </div>
+            </div>
+          </td>
+          <td class="fsdocs-member-xmldoc">
+            <div class="fsdocs-summary">
+              <div class="fsdocs-source-link" onclick="Clipboard_CopyTo('```cref:M:FSharp.Control.AsyncSeq.AsyncSeqBuilder.TryWith``1```')">
+                <img src="https://fsprojects.github.io/FSharp.Control.AsyncSeq/content/img/copy-md.png" class="normal"/>
+                <img src="https://fsprojects.github.io/FSharp.Control.AsyncSeq/content/img/copy-md-blue.png" class="hover"/>
+              </div>
+              <div class="fsdocs-source-link" onclick="Clipboard_CopyTo('<see cref=\'M:FSharp.Control.AsyncSeq.AsyncSeqBuilder.TryWith``1\'/>')">
+                <img src="https://fsprojects.github.io/FSharp.Control.AsyncSeq/content/img/copy.png" class="normal"/>
+                <img src="https://fsprojects.github.io/FSharp.Control.AsyncSeq/content/img/copy-blue.png" class="hover"/>
+              </div>
+              <a href="https://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L752-752" class="fsdocs-source-link">
+                <img src="https://fsprojects.github.io/FSharp.Control.AsyncSeq/content/img/github.png" class="normal"/>
+                <img src="https://fsprojects.github.io/FSharp.Control.AsyncSeq/content/img/github-blue.png" class="hover"/>
+              </a>
+              <p class="fsdocs-summary">
+                
+ Implements "try-with" for the asyncSeq computation builder.
+
+              </p>
+            </div>
+            <dl class="fsdocs-params">
+              <dt class="fsdocs-param">
+                <span class="fsdocs-param-name">
+                  body
+                </span>
+                :
+                <code><span><a href="https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq-1.html">AsyncSeq</a>&lt;'T&gt;</span></code>
+              </dt>
+              <dd class="fsdocs-param-docs"></dd>
+              <dt class="fsdocs-param">
+                <span class="fsdocs-param-name">
+                  handler
+                </span>
+                :
+                <code><span>exn&#32;->&#32;<span><a href="https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq-1.html">AsyncSeq</a>&lt;'T&gt;</span></span></code>
+              </dt>
+              <dd class="fsdocs-param-docs"></dd>
+            </dl>
+            <dl class="fsdocs-returns">
+              <dt>
+                <span class="fsdocs-return-name">
+                  Returns:
+                </span>
+                <code><span><a href="https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq-1.html">AsyncSeq</a>&lt;'T&gt;</span></code>
+              </dt>
+              <dd class="fsdocs-return-docs"></dd>
+            </dl>
+          </td>
+        </tr>
+        <tr>
+          <td class="fsdocs-member-usage">
+            <div>
+              <code onmouseout="hideTip(event, '118', 118)" onmouseover="showTip(event, '118', 118)">
+                <p>
+                  <a id="Using">
+                    <a href="#Using">
+                      <code><span>this.Using<span><span>(<span>resource,&#32;binder</span>)</span></span></span></code>
+                    </a>
+                  </a>
+                </p>
+              </code>
+              <div class="fsdocs-tip" id="118">
+                <div class="member-tooltip">
+                  Full Usage: 
+                  <code><span>this.Using<span><span>(<span>resource,&#32;binder</span>)</span></span></span></code>
+                  <br/>
+                  <br/>
+                  Parameters: 
+                  <ul>
+                    <span>
+                      <b>
+                        resource
+                      </b>
+                      :
+                      <code>'T</code>
+                    </span>
+                    <br/>
+                    <span>
+                      <b>
+                        binder
+                      </b>
+                      :
+                      <code><span>'T&#32;->&#32;<span><a href="https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq-1.html">AsyncSeq</a>&lt;'U&gt;</span></span></code>
+                    </span>
+                    <br/>
+                  </ul>
+                  <br/>
+                  <span>
+                    Returns: 
+                    <code><span><a href="https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq-1.html">AsyncSeq</a>&lt;'U&gt;</span></code>
+                  </span>
+                  <br/>
+                </div>
+              </div>
+            </div>
+          </td>
+          <td class="fsdocs-member-xmldoc">
+            <div class="fsdocs-summary">
+              <div class="fsdocs-source-link" onclick="Clipboard_CopyTo('```cref:M:FSharp.Control.AsyncSeq.AsyncSeqBuilder.Using``2```')">
+                <img src="https://fsprojects.github.io/FSharp.Control.AsyncSeq/content/img/copy-md.png" class="normal"/>
+                <img src="https://fsprojects.github.io/FSharp.Control.AsyncSeq/content/img/copy-md-blue.png" class="hover"/>
+              </div>
+              <div class="fsdocs-source-link" onclick="Clipboard_CopyTo('<see cref=\'M:FSharp.Control.AsyncSeq.AsyncSeqBuilder.Using``2\'/>')">
+                <img src="https://fsprojects.github.io/FSharp.Control.AsyncSeq/content/img/copy.png" class="normal"/>
+                <img src="https://fsprojects.github.io/FSharp.Control.AsyncSeq/content/img/copy-blue.png" class="hover"/>
+              </div>
+              <a href="https://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L755-755" class="fsdocs-source-link">
+                <img src="https://fsprojects.github.io/FSharp.Control.AsyncSeq/content/img/github.png" class="normal"/>
+                <img src="https://fsprojects.github.io/FSharp.Control.AsyncSeq/content/img/github-blue.png" class="hover"/>
+              </a>
+              <p class="fsdocs-summary">
+                
+ Implements "use" for the asyncSeq computation builder.
+
+              </p>
+            </div>
+            <dl class="fsdocs-params">
+              <dt class="fsdocs-param">
+                <span class="fsdocs-param-name">
+                  resource
+                </span>
+                :
+                <code>'T</code>
+              </dt>
+              <dd class="fsdocs-param-docs"></dd>
+              <dt class="fsdocs-param">
+                <span class="fsdocs-param-name">
+                  binder
+                </span>
+                :
+                <code><span>'T&#32;->&#32;<span><a href="https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq-1.html">AsyncSeq</a>&lt;'U&gt;</span></span></code>
+              </dt>
+              <dd class="fsdocs-param-docs"></dd>
+            </dl>
+            <dl class="fsdocs-returns">
+              <dt>
+                <span class="fsdocs-return-name">
+                  Returns:
+                </span>
+                <code><span><a href="https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq-1.html">AsyncSeq</a>&lt;'U&gt;</span></code>
+              </dt>
+              <dd class="fsdocs-return-docs"></dd>
+            </dl>
+          </td>
+        </tr>
+        <tr>
+          <td class="fsdocs-member-usage">
+            <div>
+              <code onmouseout="hideTip(event, '119', 119)" onmouseover="showTip(event, '119', 119)">
+                <p>
+                  <a id="While">
+                    <a href="#While">
+                      <code><span>this.While<span><span>(<span>guard,&#32;body</span>)</span></span></span></code>
+                    </a>
+                  </a>
+                </p>
+              </code>
+              <div class="fsdocs-tip" id="119">
+                <div class="member-tooltip">
+                  Full Usage: 
+                  <code><span>this.While<span><span>(<span>guard,&#32;body</span>)</span></span></span></code>
+                  <br/>
+                  <br/>
+                  Parameters: 
+                  <ul>
+                    <span>
+                      <b>
+                        guard
+                      </b>
+                      :
+                      <code><span>unit&#32;->&#32;bool</span></code>
+                    </span>
+                    <br/>
+                    <span>
+                      <b>
+                        body
+                      </b>
+                      :
+                      <code><span><a href="https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq-1.html">AsyncSeq</a>&lt;'T&gt;</span></code>
+                    </span>
+                    <br/>
+                  </ul>
+                  <br/>
+                  <span>
+                    Returns: 
+                    <code><span><a href="https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq-1.html">AsyncSeq</a>&lt;'T&gt;</span></code>
+                  </span>
+                  <br/>
+                </div>
+              </div>
+            </div>
+          </td>
+          <td class="fsdocs-member-xmldoc">
+            <div class="fsdocs-summary">
+              <div class="fsdocs-source-link" onclick="Clipboard_CopyTo('```cref:M:FSharp.Control.AsyncSeq.AsyncSeqBuilder.While``1```')">
+                <img src="https://fsprojects.github.io/FSharp.Control.AsyncSeq/content/img/copy-md.png" class="normal"/>
+                <img src="https://fsprojects.github.io/FSharp.Control.AsyncSeq/content/img/copy-md-blue.png" class="hover"/>
+              </div>
+              <div class="fsdocs-source-link" onclick="Clipboard_CopyTo('<see cref=\'M:FSharp.Control.AsyncSeq.AsyncSeqBuilder.While``1\'/>')">
+                <img src="https://fsprojects.github.io/FSharp.Control.AsyncSeq/content/img/copy.png" class="normal"/>
+                <img src="https://fsprojects.github.io/FSharp.Control.AsyncSeq/content/img/copy-blue.png" class="hover"/>
+              </div>
+              <a href="https://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L455-455" class="fsdocs-source-link">
+                <img src="https://fsprojects.github.io/FSharp.Control.AsyncSeq/content/img/github.png" class="normal"/>
+                <img src="https://fsprojects.github.io/FSharp.Control.AsyncSeq/content/img/github-blue.png" class="hover"/>
+              </a>
+              <p class="fsdocs-summary">
+                
+ Implements "while" for the asyncSeq computation builder.
+
+              </p>
+            </div>
+            <dl class="fsdocs-params">
+              <dt class="fsdocs-param">
+                <span class="fsdocs-param-name">
+                  guard
+                </span>
+                :
+                <code><span>unit&#32;->&#32;bool</span></code>
+              </dt>
+              <dd class="fsdocs-param-docs"></dd>
+              <dt class="fsdocs-param">
+                <span class="fsdocs-param-name">
+                  body
+                </span>
+                :
+                <code><span><a href="https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq-1.html">AsyncSeq</a>&lt;'T&gt;</span></code>
+              </dt>
+              <dd class="fsdocs-param-docs"></dd>
+            </dl>
+            <dl class="fsdocs-returns">
+              <dt>
+                <span class="fsdocs-return-name">
+                  Returns:
+                </span>
+                <code><span><a href="https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq-1.html">AsyncSeq</a>&lt;'T&gt;</span></code>
+              </dt>
+              <dd class="fsdocs-return-docs"></dd>
+            </dl>
+          </td>
+        </tr>
+        <tr>
+          <td class="fsdocs-member-usage">
+            <div>
+              <code onmouseout="hideTip(event, '120', 120)" onmouseover="showTip(event, '120', 120)">
+                <p>
+                  <a id="Yield">
+                    <a href="#Yield">
+                      <code><span>this.Yield<span><span>(<span>value</span>)</span></span></span></code>
+                    </a>
+                  </a>
+                </p>
+              </code>
+              <div class="fsdocs-tip" id="120">
+                <div class="member-tooltip">
+                  Full Usage: 
+                  <code><span>this.Yield<span><span>(<span>value</span>)</span></span></span></code>
+                  <br/>
+                  <br/>
+                  Parameters: 
+                  <ul>
+                    <span>
+                      <b>
+                        value
+                      </b>
+                      :
+                      <code>'T</code>
+                    </span>
+                    <br/>
+                  </ul>
+                  <br/>
+                  <span>
+                    Returns: 
+                    <code><span><a href="https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq-1.html">AsyncSeq</a>&lt;'T&gt;</span></code>
+                  </span>
+                  <br/>
+                </div>
+              </div>
+            </div>
+          </td>
+          <td class="fsdocs-member-xmldoc">
+            <div class="fsdocs-summary">
+              <div class="fsdocs-source-link" onclick="Clipboard_CopyTo('```cref:M:FSharp.Control.AsyncSeq.AsyncSeqBuilder.Yield``1```')">
+                <img src="https://fsprojects.github.io/FSharp.Control.AsyncSeq/content/img/copy-md.png" class="normal"/>
+                <img src="https://fsprojects.github.io/FSharp.Control.AsyncSeq/content/img/copy-md-blue.png" class="hover"/>
+              </div>
+              <div class="fsdocs-source-link" onclick="Clipboard_CopyTo('<see cref=\'M:FSharp.Control.AsyncSeq.AsyncSeqBuilder.Yield``1\'/>')">
+                <img src="https://fsprojects.github.io/FSharp.Control.AsyncSeq/content/img/copy.png" class="normal"/>
+                <img src="https://fsprojects.github.io/FSharp.Control.AsyncSeq/content/img/copy-blue.png" class="hover"/>
+              </div>
+              <a href="https://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L440-440" class="fsdocs-source-link">
+                <img src="https://fsprojects.github.io/FSharp.Control.AsyncSeq/content/img/github.png" class="normal"/>
+                <img src="https://fsprojects.github.io/FSharp.Control.AsyncSeq/content/img/github-blue.png" class="hover"/>
+              </a>
+              <p class="fsdocs-summary">
+                
+ Implements "yield" for the asyncSeq computation builder.
+
+              </p>
+            </div>
+            <dl class="fsdocs-params">
+              <dt class="fsdocs-param">
+                <span class="fsdocs-param-name">
+                  value
+                </span>
+                :
+                <code>'T</code>
+              </dt>
+              <dd class="fsdocs-param-docs"></dd>
+            </dl>
+            <dl class="fsdocs-returns">
+              <dt>
+                <span class="fsdocs-return-name">
+                  Returns:
+                </span>
+                <code><span><a href="https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq-1.html">AsyncSeq</a>&lt;'T&gt;</span></code>
+              </dt>
+              <dd class="fsdocs-return-docs"></dd>
+            </dl>
+          </td>
+        </tr>
+        <tr>
+          <td class="fsdocs-member-usage">
+            <div>
+              <code onmouseout="hideTip(event, '121', 121)" onmouseover="showTip(event, '121', 121)">
+                <p>
+                  <a id="YieldFrom">
+                    <a href="#YieldFrom">
+                      <code><span>this.YieldFrom<span><span>(<span>source</span>)</span></span></span></code>
+                    </a>
+                  </a>
+                </p>
+              </code>
+              <div class="fsdocs-tip" id="121">
+                <div class="member-tooltip">
+                  Full Usage: 
+                  <code><span>this.YieldFrom<span><span>(<span>source</span>)</span></span></span></code>
+                  <br/>
+                  <br/>
+                  Parameters: 
+                  <ul>
+                    <span>
+                      <b>
+                        source
+                      </b>
+                      :
+                      <code><span><a href="https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq-1.html">AsyncSeq</a>&lt;'T&gt;</span></code>
+                    </span>
+                    <br/>
+                  </ul>
+                  <br/>
+                  <span>
+                    Returns: 
+                    <code><span><a href="https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq-1.html">AsyncSeq</a>&lt;'T&gt;</span></code>
+                  </span>
+                  <br/>
+                </div>
+              </div>
+            </div>
+          </td>
+          <td class="fsdocs-member-xmldoc">
+            <div class="fsdocs-summary">
+              <div class="fsdocs-source-link" onclick="Clipboard_CopyTo('```cref:M:FSharp.Control.AsyncSeq.AsyncSeqBuilder.YieldFrom``1```')">
+                <img src="https://fsprojects.github.io/FSharp.Control.AsyncSeq/content/img/copy-md.png" class="normal"/>
+                <img src="https://fsprojects.github.io/FSharp.Control.AsyncSeq/content/img/copy-md-blue.png" class="hover"/>
+              </div>
+              <div class="fsdocs-source-link" onclick="Clipboard_CopyTo('<see cref=\'M:FSharp.Control.AsyncSeq.AsyncSeqBuilder.YieldFrom``1\'/>')">
+                <img src="https://fsprojects.github.io/FSharp.Control.AsyncSeq/content/img/copy.png" class="normal"/>
+                <img src="https://fsprojects.github.io/FSharp.Control.AsyncSeq/content/img/copy-blue.png" class="hover"/>
+              </div>
+              <a href="https://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L449-449" class="fsdocs-source-link">
+                <img src="https://fsprojects.github.io/FSharp.Control.AsyncSeq/content/img/github.png" class="normal"/>
+                <img src="https://fsprojects.github.io/FSharp.Control.AsyncSeq/content/img/github-blue.png" class="hover"/>
+              </a>
+              <p class="fsdocs-summary">
+                
+ Implements "yield!" for the asyncSeq computation builder.
+
+              </p>
+            </div>
+            <dl class="fsdocs-params">
+              <dt class="fsdocs-param">
+                <span class="fsdocs-param-name">
+                  source
+                </span>
+                :
+                <code><span><a href="https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq-1.html">AsyncSeq</a>&lt;'T&gt;</span></code>
+              </dt>
+              <dd class="fsdocs-param-docs"></dd>
+            </dl>
+            <dl class="fsdocs-returns">
+              <dt>
+                <span class="fsdocs-return-name">
+                  Returns:
+                </span>
+                <code><span><a href="https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq-1.html">AsyncSeq</a>&lt;'T&gt;</span></code>
+              </dt>
+              <dd class="fsdocs-return-docs"></dd>
+            </dl>
+          </td>
+        </tr>
+        <tr>
+          <td class="fsdocs-member-usage">
+            <div>
+              <code onmouseout="hideTip(event, '122', 122)" onmouseover="showTip(event, '122', 122)">
+                <p>
+                  <a id="Zero">
+                    <a href="#Zero">
+                      <code><span>this.Zero<span>()</span></span></code>
+                    </a>
+                  </a>
+                </p>
+              </code>
+              <div class="fsdocs-tip" id="122">
+                <div class="member-tooltip">
+                  Full Usage: 
+                  <code><span>this.Zero<span>()</span></span></code>
+                  <br/>
+                  <br/>
+                  <span>
+                    Returns: 
+                    <code><span><a href="https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq-1.html">AsyncSeq</a>&lt;'T&gt;</span></code>
+                  </span>
+                  <br/>
+                </div>
+              </div>
+            </div>
+          </td>
+          <td class="fsdocs-member-xmldoc">
+            <div class="fsdocs-summary">
+              <div class="fsdocs-source-link" onclick="Clipboard_CopyTo('```cref:M:FSharp.Control.AsyncSeq.AsyncSeqBuilder.Zero``1```')">
+                <img src="https://fsprojects.github.io/FSharp.Control.AsyncSeq/content/img/copy-md.png" class="normal"/>
+                <img src="https://fsprojects.github.io/FSharp.Control.AsyncSeq/content/img/copy-md-blue.png" class="hover"/>
+              </div>
+              <div class="fsdocs-source-link" onclick="Clipboard_CopyTo('<see cref=\'M:FSharp.Control.AsyncSeq.AsyncSeqBuilder.Zero``1\'/>')">
+                <img src="https://fsprojects.github.io/FSharp.Control.AsyncSeq/content/img/copy.png" class="normal"/>
+                <img src="https://fsprojects.github.io/FSharp.Control.AsyncSeq/content/img/copy-blue.png" class="hover"/>
+              </div>
+              <a href="https://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/src/FSharp.Control.AsyncSeq/AsyncSeq.fs#L451-451" class="fsdocs-source-link">
+                <img src="https://fsprojects.github.io/FSharp.Control.AsyncSeq/content/img/github.png" class="normal"/>
+                <img src="https://fsprojects.github.io/FSharp.Control.AsyncSeq/content/img/github-blue.png" class="hover"/>
+              </a>
+              <p class="fsdocs-summary">
+                
+ Implements empty for the asyncSeq computation builder.
+
+              </p>
+            </div>
+            <dl class="fsdocs-returns">
+              <dt>
+                <span class="fsdocs-return-name">
+                  Returns:
+                </span>
+                <code><span><a href="https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq-1.html">AsyncSeq</a>&lt;'T&gt;</span></code>
+              </dt>
+              <dd class="fsdocs-return-docs"></dd>
+            </dl>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div></div>
+</div>
+            
+        </div>
+
+        <!-- BEGIN SEARCH BOX: this adds support for the search box -->
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/JavaScript-autoComplete/1.0.4/auto-complete.css" />
+        <script type="text/javascript">var fsdocs_search_baseurl = 'https://fsprojects.github.io/FSharp.Control.AsyncSeq/';</script>
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/lunr.js/2.3.8/lunr.min.js"></script>
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/JavaScript-autoComplete/1.0.4/auto-complete.min.js"></script>
+        <script type="text/javascript" src="https://fsprojects.github.io/FSharp.Control.AsyncSeq/content/fsdocs-search.js"></script>
+        <!-- END SEARCH BOX: this adds support for the search box -->
+    </div>
+</body>
+
+</html>
+
