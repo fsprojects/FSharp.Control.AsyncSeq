@@ -198,6 +198,7 @@ xunit*.html
 
 # exclude artifacts folder
 artifacts/
+bin/
 
 # jest/fable directories
 tests/fable/dist/
