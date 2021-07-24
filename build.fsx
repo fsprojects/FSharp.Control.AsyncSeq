@@ -24,10 +24,6 @@ open Fake.Tools
 open System
 open System.IO
 
-// --------------------------------------------------------------------------------------
-// START TODO: Provide project-specific details below
-// --------------------------------------------------------------------------------------
-
 // The name of the project
 // (used by attributes in AssemblyInfo, name of a NuGet package and directory in 'src')
 let project = "src/FSharp.Control.AsyncSeq"
@@ -45,8 +41,8 @@ let projectRepo = "https://github.com/fsprojects/FSharp.Control.AsyncSeq"
 
 let configuration = DotNet.BuildConfiguration.fromEnvironVarOrDefault "configuration" DotNet.BuildConfiguration.Release
 
-// Folder to deposit deploy artifacts
-let artifactsDir = __SOURCE_DIRECTORY__ @@ "artifacts"
+// Folder to deposit deploy bin
+let binDir = __SOURCE_DIRECTORY__ @@ "bin"
 
 // Read additional information from the release notes document
 let release = ReleaseNotes.load "RELEASE_NOTES.md"
@@ -64,7 +60,7 @@ let versionPropsTemplate = $"\
 
 Target.create "Clean" (fun _ ->
     DotNet.exec id "clean" "" |> ignore
-    Shell.cleanDirs ["artifacts"; "temp"]
+    Shell.cleanDirs ["bin"; "temp"]
 )
 
 // Generate assembly info files with the right version & up-to-date information
@@ -117,7 +113,7 @@ Target.create "Pack" (fun _ ->
     File.WriteAllText("version.props",versionPropsTemplate)
     DotNet.pack (fun pack ->
         { pack with
-            OutputPath = Some artifactsDir
+            OutputPath = Some binDir
             Configuration = configuration
         }) solutionFile
 )
@@ -138,7 +134,7 @@ Target.create "All" ignore
 "Clean"
   ==> "Build"
   ==> "Test"
-  ==> "NuGet"
+  ==> "Pack"
   ==> "All"
 
 "Clean"
