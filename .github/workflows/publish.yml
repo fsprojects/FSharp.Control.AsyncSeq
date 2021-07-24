@@ -25,7 +25,7 @@ jobs:
     - name: Examine bin
       run: ls -r bin
     - name: Publish NuGets (if this version not published before)
-      run: dotnet nuget push bin\FSharp.Control.AsyncSeq.*.nupkg -s https://api.nuget.org/v3/index.json -k ${{ secrets.NUGET_ORG_TOKEN_2021 }} --skip-duplicate
+      run: dotnet nuget push bin/FSharp.Control.AsyncSeq.*.nupkg -s https://api.nuget.org/v3/index.json -k ${{ secrets.NUGET_ORG_TOKEN_2021 }} --skip-duplicate
 
 # NUGET_ORG_TOKEN_2021 is listed in "Repository secrets" in https://github.com/fsprojects/FSharp.Control.AsyncSeq/settings/secrets/actions
 # note, the nuget org token expires around 24 July 2022
