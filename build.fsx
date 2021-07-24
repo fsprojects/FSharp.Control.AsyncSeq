@@ -24,22 +24,16 @@ open Fake.Tools
 open System
 open System.IO
 
-// --------------------------------------------------------------------------------------
-// START TODO: Provide project-specific details below
-// --------------------------------------------------------------------------------------
-
 // The name of the project
 // (used by attributes in AssemblyInfo, name of a NuGet package and directory in 'src')
 let project = "src/FSharp.Control.AsyncSeq"
 
-// File system information 
+// File system information
 let solutionFile = "FSharp.Control.AsyncSeq.sln"
 
 let summary = "Asynchronous sequences for F#"
 
 let license = "Apache 2.0 License"
-
-let buildDir = "bin"
 
 // Git configuration (used for publishing documentation in gh-pages branch)
 // The profile where the project is posted
@@ -47,16 +41,25 @@ let projectRepo = "https://github.com/fsprojects/FSharp.Control.AsyncSeq"
 
 let configuration = DotNet.BuildConfiguration.fromEnvironVarOrDefault "configuration" DotNet.BuildConfiguration.Release
 
-// Folder to deposit deploy artifacts
-let artifactsDir = __SOURCE_DIRECTORY__ @@ "artifacts"
+// Folder to deposit deploy bin
+let binDir = __SOURCE_DIRECTORY__ @@ "bin"
 
 // Read additional information from the release notes document
 let release = ReleaseNotes.load "RELEASE_NOTES.md"
+
+
+let versionPropsTemplate = $"\
+<Project>
+  <PropertyGroup>
+    <Version>%s{release.NugetVersion}</Version>
+  </PropertyGroup>
+</Project>"
 
 // --------------------------------------------------------------------------------------
 // Clean build results
 
 Target.create "Clean" (fun _ ->
+    DotNet.exec id "clean" "" |> ignore
     Shell.cleanDirs ["bin"; "temp"]
 )
 
@@ -73,7 +76,6 @@ Target.create "AssemblyInfo" (fun _ ->
 
     AssemblyInfoFile.createFSharp "src/Common/AssemblyInfo.fs" info
     AssemblyInfoFile.createCSharp "src/Common/AssemblyInfo.cs" info
-    let releaseNotes = String.toLines release.Notes |> System.Net.WebUtility.HtmlEncode
     File.WriteAllText("version.props", sprintf """<Project>
       <PropertyGroup>
         <Version>%s</Version>
@@ -91,7 +93,7 @@ Target.create "Build" (fun _ ->
 // --------------------------------------------------------------------------------------
 // Run the unit tests using test runner
 
-Target.create "RunTests" (fun _ ->
+Target.create "Test" (fun _ ->
     solutionFile
     |> DotNet.test (fun opts ->
         { opts with
@@ -106,11 +108,13 @@ Target.create "RunTests" (fun _ ->
 // --------------------------------------------------------------------------------------
 // Build a NuGet package
 
-Target.create "NuGet" (fun _ ->
+Target.create "Pack" (fun _ ->
+
+    File.WriteAllText("version.props",versionPropsTemplate)
     DotNet.pack (fun pack ->
         { pack with
-            OutputPath = Some artifactsDir 
-            Configuration = configuration 
+            OutputPath = Some binDir
+            Configuration = configuration
         }) solutionFile
 )
 
@@ -119,34 +123,7 @@ Target.create "NuGet" (fun _ ->
 
 Target.create "GenerateDocs" (fun _ ->
     Shell.cleanDir ".fsdocs"
-    DotNet.exec id "fsdocs" "build --clean" |> ignore
-)
-
-// --------------------------------------------------------------------------------------
-// Release 
-
-Target.create "PublishNuget" (fun _ ->
-    let source = "https://api.nuget.org/v3/index.json"
-    let apikey =  Environment.environVar "NUGET_KEY"
-    for artifact in !! (artifactsDir + "/*nupkg") do
-        if not (artifact.Contains(".symbols")) then 
-           let result = DotNet.exec id "nuget" (sprintf "push -s %s -k %s %s" source apikey artifact)
-           if not result.OK then failwith "failed to push packages"  
-)
-Target.create "ReleaseDocs" (fun _ ->
-    Git.Repository.clone "" projectRepo "temp/gh-pages"
-    Git.Branches.checkoutBranch "temp/gh-pages" "gh-pages"
-    Shell.copyRecursive "output" "temp/gh-pages" true |> printfn "%A"
-    Git.CommandHelper.runSimpleGitCommand "temp/gh-pages" "add ." |> printfn "%s"
-    let cmd = sprintf """commit -a -m "Update generated documentation for version %s""" release.NugetVersion
-    Git.CommandHelper.runSimpleGitCommand "temp/gh-pages" cmd |> printfn "%s"
-    Git.Branches.push "temp/gh-pages"
-)
-
-Target.create "Release" (fun _ ->
-    Git.Branches.tag "" release.NugetVersion
-    Git.Branches.pushTag "" projectRepo release.NugetVersion
-    
+    DotNet.exec id "fsdocs" "build --clean --properties Configuration=Release --eval" |> ignore
 )
 
 // --------------------------------------------------------------------------------------
@@ -156,12 +133,13 @@ Target.create "All" ignore
 
 "Clean"
   ==> "Build"
-  ==> "RunTests"
+  ==> "Test"
+  ==> "Pack"
   ==> "All"
-  ==> "NuGet"
-  ==> "PublishNuget"
+
+"Clean"
+  ==> "Build"
   ==> "GenerateDocs"
-  ==> "ReleaseDocs"
-  ==> "Release"
+  ==> "All"
 
 Target.runOrDefault "All"

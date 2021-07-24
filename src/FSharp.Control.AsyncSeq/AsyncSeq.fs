@@ -12,7 +12,7 @@ open System.Threading.Tasks
 open System.Runtime.ExceptionServices
 open System.Linq
 
-#nowarn "40"
+#nowarn "40" "3218"
 
 // ----------------------------------------------------------------------------
 
@@ -167,6 +167,8 @@ module internal Utils =
           let ivar = TaskCompletionSource<_>()
           if t.IsFaulted then
             ivar.SetException t.Exception
+          else if t.IsCanceled then
+            ivar.SetCanceled()
           ivar.Task)
         |> join
     #endif
@@ -443,7 +445,7 @@ module AsyncSeq =
     //     do! something
     //
     // because F# translates body as Bind(something, fun () -> Return())
-    member x.Return _ = empty
+    member x.Return () = empty
     member x.YieldFrom(s:AsyncSeq<'T>) =
       s
     member x.Zero () = empty
@@ -1060,6 +1062,7 @@ module AsyncSeq =
         mb.Post (Some b) })
       |> Async.map (fun _ -> mb.Post None)
       |> Async.StartChildAsTask
+    
     return!
       replicateUntilNoneAsync (Task.chooseTask (err |> Task.taskFault) (async.Delay mb.Receive))
       |> iterAsync id }

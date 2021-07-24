@@ -1,14 +1,14 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>netstandard2.1</TargetFramework>
+    <TargetFrameworks>netstandard2.1;netstandard2.0</TargetFrameworks>
     <Authors>Tomas Petricek;Don Syme;Lev Gorodinski</Authors>
     <Summary>Asynchronous sequences for F#</Summary>
     <Description>Asynchronous sequences for F#</Description>
     <Copyright>Copyright 2017</Copyright>
-    <PackageLicenseUrl>http://fsprojects.github.io/FSharp.Control.AsyncSeq/license.html</PackageLicenseUrl>
-    <PackageProjectUrl>http://fsprojects.github.io/FSharp.Control.AsyncSeq/</PackageProjectUrl>
-    <PackageIconUrl>http://fsprojects.github.io/FSharp.Control.AsyncSeq/img/logo.png</PackageIconUrl>
+    <PackageLicenseUrl>https://fsprojects.github.io/FSharp.Control.AsyncSeq/license.html</PackageLicenseUrl>
+    <PackageProjectUrl>https://fsprojects.github.io/FSharp.Control.AsyncSeq/</PackageProjectUrl>
+    <PackageIconUrl>https://fsprojects.github.io/FSharp.Control.AsyncSeq/img/logo.png</PackageIconUrl>
     <PackageTags>F#;async;fsharp;streaming</PackageTags>
     <IncludeSymbols>true</IncludeSymbols>
     <RepositoryUrl>https://github.com/fsprojects/FSharp.Control.AsyncSeq</RepositoryUrl>

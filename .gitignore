@@ -169,6 +169,9 @@ $RECYCLE.BIN/
 # NuGet Packages Directory
 packages/
 
+# Paket files
+.paket/load/
+
 # Generated documentation folder
 docs/output/
 
@@ -195,6 +198,7 @@ xunit*.html
 
 # exclude artifacts folder
 artifacts/
+bin/
 
 # jest/fable directories
 tests/fable/dist/

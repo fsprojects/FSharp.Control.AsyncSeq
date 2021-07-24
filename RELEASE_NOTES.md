@@ -1,8 +1,17 @@
+
+### 3.0.5
+* Update publishing
+
+### 3.0.4
+* Restore netstandard2.0 (and thereby .NET Framework 4.6.1+) compatibility
+* Update build env versions to current recommendations
+* Adjust to ensure all tests pass and eliminate warnings in vscode (ionide) and visual studio
+
 ### 3.0.2
 
 * Include .fsi files into Fable package path [#118](https://github.com/fsprojects/FSharp.Control.AsyncSeq/pull/118)
 
-### 3.0.1 
+### 3.0.1
 
 * Move to only netstandard 2.1
 
@@ -91,9 +100,9 @@
 * Rename toArray to toArrayAsync
 * Rename zipWithIndexAsync to mapiAsync
 * Rename interleave to interleaveChoice
-* Add interleave 
-* Add mergeChoice 
-* Fix performance of mergeAll 
+* Add interleave
+* Add mergeChoice
+* Fix performance of mergeAll
 * Add init, initInfinite
 * Add initAsync, initInfiniteAsync, replicateInfinite
 * Add RequireQualifiedAccess to AsyncSeq
@@ -105,12 +114,12 @@
 * Cancellable AsyncSeq.toBlockingSeq
 * Fix AsyncSeq.scanAsync to also return first state
 * Add a signature file
-* AsyncSeq got extracted as separate project and is now a dependency - https://github.com/fsprojects/FSharpx.Async/pull/24 
+* AsyncSeq got extracted as separate project and is now a dependency - https://github.com/fsprojects/FSharpx.Async/pull/24
 
 ### 1.13 - 27.03.2015
 * Renamed to FSharp.Control.AsyncSeq
 * Remove surface area
-* Hide Nil/Cons from representation of AsyncSeq 
+* Hide Nil/Cons from representation of AsyncSeq
 
 ### 1.12.1 - 27.03.2015
 * Added Async.bindChoice, Async.ParallelIgnore, AsyncSeq.zipWithAsync, AsyncSeq.zappAsync, AsyncSeq.threadStateAsync, AsyncSeq.merge, AsyncSeq.traverseOptionAsync, AsyncSeq.traverseChoiceAsync
