@@ -32,7 +32,7 @@ open System.IO
 // (used by attributes in AssemblyInfo, name of a NuGet package and directory in 'src')
 let project = "src/FSharp.Control.AsyncSeq"
 
-// File system information 
+// File system information
 let solutionFile = "FSharp.Control.AsyncSeq.sln"
 
 let summary = "Asynchronous sequences for F#"
@@ -97,7 +97,7 @@ Target.create "Build" (fun _ ->
 // --------------------------------------------------------------------------------------
 // Run the unit tests using test runner
 
-Target.create "RunTests" (fun _ ->
+Target.create "Test" (fun _ ->
     solutionFile
     |> DotNet.test (fun opts ->
         { opts with
@@ -112,13 +112,13 @@ Target.create "RunTests" (fun _ ->
 // --------------------------------------------------------------------------------------
 // Build a NuGet package
 
-Target.create "NuGet" (fun _ ->
-    
+Target.create "Pack" (fun _ ->
+
     File.WriteAllText("version.props",versionPropsTemplate)
     DotNet.pack (fun pack ->
         { pack with
-            OutputPath = Some artifactsDir 
-            Configuration = configuration 
+            OutputPath = Some artifactsDir
+            Configuration = configuration
         }) solutionFile
 )
 
@@ -127,34 +127,7 @@ Target.create "NuGet" (fun _ ->
 
 Target.create "GenerateDocs" (fun _ ->
     Shell.cleanDir ".fsdocs"
-    DotNet.exec id "fsdocs" "build --clean --properties Configuration=Release" |> ignore
-)
-
-// --------------------------------------------------------------------------------------
-// Release 
-
-Target.create "PublishNuget" (fun _ ->
-    let source = "https://api.nuget.org/v3/index.json"
-    let apikey =  Environment.environVar "NUGET_KEY"
-    for artifact in !! (artifactsDir + "/*nupkg") do
-        if not (artifact.Contains(".symbols")) then 
-           let result = DotNet.exec id "nuget" (sprintf "push -s %s -k %s %s" source apikey artifact)
-           if not result.OK then failwith "failed to push packages"  
-)
-Target.create "ReleaseDocs" (fun _ ->
-    Git.Repository.clone "" projectRepo "temp/gh-pages"
-    Git.Branches.checkoutBranch "temp/gh-pages" "gh-pages"
-    Shell.copyRecursive "output" "temp/gh-pages" true |> printfn "%A"
-    Git.CommandHelper.runSimpleGitCommand "temp/gh-pages" "add ." |> printfn "%s"
-    let cmd = sprintf """commit -a -m "Update generated documentation for version %s""" release.NugetVersion
-    Git.CommandHelper.runSimpleGitCommand "temp/gh-pages" cmd |> printfn "%s"
-    Git.Branches.push "temp/gh-pages"
-)
-
-Target.create "Release" (fun _ ->
-    Git.Branches.tag "" release.NugetVersion
-    Git.Branches.pushTag "" projectRepo release.NugetVersion
-    
+    DotNet.exec id "fsdocs" "build --clean --properties Configuration=Release --eval" |> ignore
 )
 
 // --------------------------------------------------------------------------------------
@@ -164,16 +137,13 @@ Target.create "All" ignore
 
 "Clean"
   ==> "Build"
-  ==> "RunTests"
+  ==> "Test"
   ==> "NuGet"
-  ==> "GenerateDocs"
   ==> "All"
 
-"NuGet" ==> "PublishNuget"
-"GenerateDocs" ==> "ReleaseDocs"
-
-"PublishNuget"
-  ==> "ReleaseDocs"
-  ==> "Release"
+"Clean"
+  ==> "Build"
+  ==> "GenerateDocs"
+  ==> "All"
 
 Target.runOrDefault "All"
