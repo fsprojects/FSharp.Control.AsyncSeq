@@ -12,7 +12,7 @@ open System.Threading.Tasks
 open System.Runtime.ExceptionServices
 open System.Linq
 
-#nowarn "40"
+#nowarn "40" "3218"
 
 // ----------------------------------------------------------------------------
 
@@ -167,6 +167,8 @@ module internal Utils =
           let ivar = TaskCompletionSource<_>()
           if t.IsFaulted then
             ivar.SetException t.Exception
+          else if t.IsCanceled then
+            ivar.SetCanceled()
           ivar.Task)
         |> join
     #endif
@@ -443,7 +445,7 @@ module AsyncSeq =
     //     do! something
     //
     // because F# translates body as Bind(something, fun () -> Return())
-    member x.Return _ = empty
+    member x.Return () = empty
     member x.YieldFrom(s:AsyncSeq<'T>) =
       s
     member x.Zero () = empty
@@ -1060,6 +1062,7 @@ module AsyncSeq =
         mb.Post (Some b) })
       |> Async.map (fun _ -> mb.Post None)
       |> Async.StartChildAsTask
+    
     return!
       replicateUntilNoneAsync (Task.chooseTask (err |> Task.taskFault) (async.Delay mb.Receive))
       |> iterAsync id }
@@ -1746,7 +1749,8 @@ module AsyncSeq =
          return Choice1Of2 (asyncSeq { for v in res do yield v })
        }
 
-  #if (NETSTANDARD2_1 || NETCOREAPP3_0)
+  #if (NETSTANDARD || NET)
+  #if !FABLE_COMPILER
 
   let ofAsyncEnum (source: Collections.Generic.IAsyncEnumerable<_>) = asyncSeq {
       let! ct = Async.CancellationToken
@@ -1790,7 +1794,6 @@ module AsyncSeq =
   let ofIQueryable (query : IQueryable<'a>) =
      query :?> Collections.Generic.IAsyncEnumerable<'a> |> ofAsyncEnum
 
-  #if !FABLE_COMPILER
   module AsyncSeqSrcImpl =
 
     let private createNode () =

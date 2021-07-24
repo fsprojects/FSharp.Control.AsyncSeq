@@ -90,9 +90,6 @@ module AsyncSeq =
         /// also the AsyncSeq.collect function.
         member For : source:AsyncSeq<'T> * action:('T -> AsyncSeq<'TResult>) -> AsyncSeq<'TResult>
 
-        /// Implements "return" for the asyncSeq computation builder.
-        member Return : 'unit -> AsyncSeq<'T>
-
         /// Implements "try-finally" for the asyncSeq computation builder.
         member TryFinally : body:AsyncSeq<'T> * compensation:(unit -> unit) -> AsyncSeq<'T>
 

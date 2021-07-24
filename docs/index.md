@@ -18,9 +18,9 @@ An `AsyncSeq<'a>` can be generated using computation expression syntax much like
 Learning
 --------------------------
 
-[AsyncSeq](library/AsyncSeq.html) contains narrative and code samples explaining asynchronous sequences.
+[AsyncSeq](AsyncSeq.html) contains narrative and code samples explaining asynchronous sequences.
 
-[AsyncSeq Examples](library/AsyncSeqExamples.html) contains examples.
+[AsyncSeq Examples](AsyncSeqExamples.html) contains examples.
 
 [Terminology](terminology.html) a reference for some of the terminology around F# async.
  

@@ -1,6 +1,11 @@
+### 3.0.4
+* Restore netstandard2.0 (and thereby .NET Framework 4.6.1+) compatibility
+* Update build env versions to current recommendations
+* Adjust to ensure all tests pass and eliminate warnings in vscode (ionide) and visual studio
+
 ### 3.0.2
 
-* bump version due to bad push
+* Include .fsi files into Fable package path [#118](https://github.com/fsprojects/FSharp.Control.AsyncSeq/pull/118)
 
 ### 3.0.1 
 

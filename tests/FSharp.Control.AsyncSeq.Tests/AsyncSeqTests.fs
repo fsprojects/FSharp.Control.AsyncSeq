@@ -1,14 +1,10 @@
 ﻿#if INTERACTIVE
-#if COMPARE_TO_OLD
-#r @"../../packages/FSharp.Control.AsyncSeq/lib/net40/Fsharp.Control.AsyncSeq.dll"
-#else
-#r @"../../bin/FSharp.Control.AsyncSeq.dll"
-#endif
-#r @"../../packages/NUnit/lib/nunit.framework.dll"
+#load @"../../.paket/load/netcoreapp3.1/Test/NUnit.fsx"
 #time "on"
 #else
-module AsyncSeqTests
+
 #endif
+module AsyncSeqTests
 
 open NUnit.Framework
 open FSharp.Control
@@ -125,8 +121,6 @@ type Assert with
       ()
     | _ ->
       Assert.Fail(message)
-
-
 
 [<Test>]
 let ``AsyncSeq.never should equal itself`` () =
@@ -275,7 +269,7 @@ let ``AsyncSeq.cache does not slow down late consumers``() =
         |> AsyncSeq.cache
     let consume initialDelay amount =
         async {
-            do! Async.Sleep initialDelay
+            do! Async.Sleep (initialDelay:int)
             let timing = System.Diagnostics.Stopwatch.StartNew()
             let! _ =
                 src
@@ -1517,6 +1511,46 @@ let ``AsyncSeq.iterAsyncParallel should propagate exception`` () =
     | Choice1Of2 _ -> Assert.Fail ("error expected")
 
 [<Test>]
+let ``AsyncSeq.iterAsyncParallel should cancel and not block forever when run in parallel with another exception-throwing Async`` () =
+    
+    let handle x = async {
+           do! Async.Sleep 50           
+    }
+
+    let fakeAsync = async {    
+           do! Async.Sleep 500
+           return "fakeAsync"
+    }
+
+    let makeAsyncSeqBatch () =
+           let rec loop() = asyncSeq {            
+               let! batch =  fakeAsync |> Async.Catch
+               match batch with
+               | Choice1Of2 batch ->
+                 if (Seq.isEmpty batch) then
+                   do! Async.Sleep 500
+                   yield! loop()
+                 else
+                   yield batch
+                   yield! loop() 
+               | Choice2Of2 err ->
+                    printfn "Problem getting batch: %A" err
+           }
+       
+           loop()
+
+    let x = makeAsyncSeqBatch () |> AsyncSeq.concatSeq |> AsyncSeq.iterAsyncParallel handle
+    let exAsync = async {
+           do! Async.Sleep 2000
+           failwith "error"
+    }
+
+    let t = [x; exAsync] |> Async.Parallel |> Async.Ignore |> Async.StartAsTask
+
+    // should fail after 2 seconds
+    Assert.Throws<AggregateException>(fun _ -> t.Wait(4000) |> ignore) |> ignore
+
+[<Test>]
 let ``AsyncSeq.iterAsyncParallelThrottled should propagate handler exception`` () =
 
   let res =
@@ -1710,7 +1744,9 @@ let ``AsyncSeq.ofAsyncEnum should roundtrip successfully``() =
 let ``AsyncSeq.toAsyncEnum raises exception``() : unit =
   async {
     let exceptionMessage = "Raised inside AsyncSeq"
-    let exceptionSequence = asyncSeq { yield failwith exceptionMessage; yield 1 } |> AsyncSeq.toAsyncEnum
+    let exceptionSequence = 
+      asyncSeq { yield failwith exceptionMessage; yield 1 } 
+      |> AsyncSeq.toAsyncEnum
     let mutable exceptionRaised = false
     try
       let enumerator = exceptionSequence.GetAsyncEnumerator()
@@ -1729,7 +1765,10 @@ let ``AsyncSeq.toAsyncEnum raises exception``() : unit =
 let ``AsyncSeq.ofAsyncEnum raises exception``() : unit =
   async {
     let exceptionMessage = "Raised inside AsyncSeq"
-    let exceptionSequence = asyncSeq { return failwith exceptionMessage; yield 1 } |> AsyncSeq.toAsyncEnum |> AsyncSeq.ofAsyncEnum
+    let exceptionSequence = 
+      asyncSeq { yield failwith exceptionMessage; yield 1 } 
+      |> AsyncSeq.toAsyncEnum 
+      |> AsyncSeq.ofAsyncEnum
     let mutable exceptionRaised = false
     try
       let enumerator = exceptionSequence.GetEnumerator()

@@ -169,6 +169,9 @@ $RECYCLE.BIN/
 # NuGet Packages Directory
 packages/
 
+# Paket files
+.paket/load/
+
 # Generated documentation folder
 docs/output/
 
