@@ -1512,18 +1512,18 @@ let ``AsyncSeq.iterAsyncParallel should propagate exception`` () =
 
 [<Test>]
 let ``AsyncSeq.iterAsyncParallel should cancel and not block forever when run in parallel with another exception-throwing Async`` () =
-    
+
     let handle x = async {
-           do! Async.Sleep 50           
+           do! Async.Sleep 50
     }
 
-    let fakeAsync = async {    
+    let fakeAsync = async {
            do! Async.Sleep 500
            return "fakeAsync"
     }
 
     let makeAsyncSeqBatch () =
-           let rec loop() = asyncSeq {            
+           let rec loop() = asyncSeq {
                let! batch =  fakeAsync |> Async.Catch
                match batch with
                | Choice1Of2 batch ->
@@ -1532,11 +1532,11 @@ let ``AsyncSeq.iterAsyncParallel should cancel and not block forever when run in
                    yield! loop()
                  else
                    yield batch
-                   yield! loop() 
+                   yield! loop()
                | Choice2Of2 err ->
                     printfn "Problem getting batch: %A" err
            }
-       
+
            loop()
 
     let x = makeAsyncSeqBatch () |> AsyncSeq.concatSeq |> AsyncSeq.iterAsyncParallel handle
@@ -1733,6 +1733,36 @@ let ``Async.concat should work``() =
 
       Assert.True(EQ expected actual)
 
+[<Test>]
+let ``AsyncSeq.sort should work for``() =
+  let input = [1; 3; 2; 5; 7; 4; 6] |> AsyncSeq.ofSeq
+  let expected = [1..7] |> AsyncSeq.ofSeq
+  let actual = input |> AsyncSeq.sort
+  Assert.AreEqual(expected, actual)
+
+[<Test>]
+let ``AsyncSeq.sortDescending should work``() =
+  let input = [1; 3; 2; Int32.MaxValue; 4; 6; Int32.MinValue; 5; 7; 0] |> AsyncSeq.ofSeq
+  let expected = seq { yield Int32.MaxValue; yield! seq{ 7..-1..0 }; yield Int32.MinValue } |> AsyncSeq.ofSeq
+  let actual = input |> AsyncSeq.sortDescending
+  Assert.AreEqual(expected, actual)
+
+[<Test>]
+let ``AsyncSeq.sortBy should work``() =
+  let fn x = Math.Abs(x-5)
+  let input = [1; 2; 4; 5; 7] |> AsyncSeq.ofSeq
+  let expected = [5; 4; 7; 2; 1] |> AsyncSeq.ofSeq
+  let actual = input |> AsyncSeq.sortBy fn
+  Assert.AreEqual(expected, actual)
+
+[<Test>]
+let ``AsyncSeq.sortByDescending should work``() =
+  let fn x = Math.Abs(x-5)
+  let input = [1; 2; 4; 5; 6; 7;] |> AsyncSeq.ofSeq
+  let expected = [1; 2; 7; 4; 6; 5;] |> AsyncSeq.ofSeq
+  let actual = input |> AsyncSeq.sortByDescending fn
+  Assert.AreEqual(expected, actual)
+
 #if (NETSTANDARD2_1 || NETCOREAPP3_0)
 [<Test>]
 let ``AsyncSeq.ofAsyncEnum should roundtrip successfully``() =
@@ -1744,8 +1774,8 @@ let ``AsyncSeq.ofAsyncEnum should roundtrip successfully``() =
 let ``AsyncSeq.toAsyncEnum raises exception``() : unit =
   async {
     let exceptionMessage = "Raised inside AsyncSeq"
-    let exceptionSequence = 
-      asyncSeq { yield failwith exceptionMessage; yield 1 } 
+    let exceptionSequence =
+      asyncSeq { yield failwith exceptionMessage; yield 1 }
       |> AsyncSeq.toAsyncEnum
     let mutable exceptionRaised = false
     try
@@ -1765,9 +1795,9 @@ let ``AsyncSeq.toAsyncEnum raises exception``() : unit =
 let ``AsyncSeq.ofAsyncEnum raises exception``() : unit =
   async {
     let exceptionMessage = "Raised inside AsyncSeq"
-    let exceptionSequence = 
-      asyncSeq { yield failwith exceptionMessage; yield 1 } 
-      |> AsyncSeq.toAsyncEnum 
+    let exceptionSequence =
+      asyncSeq { yield failwith exceptionMessage; yield 1 }
+      |> AsyncSeq.toAsyncEnum
       |> AsyncSeq.ofAsyncEnum
     let mutable exceptionRaised = false
     try

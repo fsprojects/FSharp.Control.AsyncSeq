@@ -50,7 +50,7 @@ module internal Utils =
         { new IDisposable with member __.Dispose () = () }
 
     // ----------------------------------------------------------------------------
-    
+
     #if FABLE_COMPILER
     type ExceptionDispatchInfo private (err: exn) =
         member _.SourceException = err
@@ -214,7 +214,7 @@ module AsyncGenerator =
       member x.Disposer =
         g.Disposer
 
-    
+
     static member Bind (g:AsyncGenerator<'a>, cont:unit -> AsyncGenerator<'a>) : AsyncGenerator<'a> =
       #if !FABLE_COMPILER
       match g with
@@ -1062,7 +1062,7 @@ module AsyncSeq =
         mb.Post (Some b) })
       |> Async.map (fun _ -> mb.Post None)
       |> Async.StartChildAsTask
-    
+
     return!
       replicateUntilNoneAsync (Task.chooseTask (err |> Task.taskFault) (async.Delay mb.Receive))
       |> iterAsync id }
@@ -1482,6 +1482,33 @@ module AsyncSeq =
           b := moven
       if (buffer.Count > 0) then
           yield buffer.ToArray() }
+
+  let private getEnumerator fn source =
+    toArrayAsync source |> Async.map (fun source' -> (fn source' :> seq<'T>).GetEnumerator())
+
+  let sort (source:AsyncSeq<'T>) : AsyncSeq<'T> when 'T : comparison =  asyncSeq {
+    use! ie = getEnumerator Seq.sort source
+    while ie.MoveNext() do
+      yield ie.Current
+  }
+
+  let sortBy (projection:'T -> 'Key) (source:AsyncSeq<'T>) : AsyncSeq<'T> when 'Key : comparison =  asyncSeq {
+    use! ie = getEnumerator (Seq.sortBy projection) source
+    while ie.MoveNext() do
+      yield ie.Current
+  }
+
+  let sortDescending (source:AsyncSeq<'T>) : AsyncSeq<'T> when 'T : comparison =  asyncSeq {
+    use! ie = getEnumerator Seq.sortDescending source
+    while ie.MoveNext() do
+      yield ie.Current
+  }
+
+  let sortByDescending (projection:'T -> 'Key) (source:AsyncSeq<'T>) : AsyncSeq<'T> when 'Key : comparison =  asyncSeq {
+    use! ie = getEnumerator (Seq.sortByDescending projection) source
+    while ie.MoveNext() do
+      yield ie.Current
+  }
 
   #if !FABLE_COMPILER
   let bufferByCountAndTime (bufferSize:int) (timeoutMs:int) (source:AsyncSeq<'T>) : AsyncSeq<'T[]> =
