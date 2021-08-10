@@ -1483,32 +1483,20 @@ module AsyncSeq =
       if (buffer.Count > 0) then
           yield buffer.ToArray() }
 
-  let private getEnumerator fn source =
-    toArrayAsync source |> Async.map (fun source' -> (fn source' :> seq<'T>).GetEnumerator())
+  let toSortedSeq fn source =
+    toArrayAsync source |> Async.map (fun source' -> (fn source' :> seq<'T>)) |> Async.RunSynchronously
 
-  let sort (source:AsyncSeq<'T>) : AsyncSeq<'T> when 'T : comparison =  asyncSeq {
-    use! ie = getEnumerator Seq.sort source
-    while ie.MoveNext() do
-      yield ie.Current
-  }
+  let sort (source:AsyncSeq<'T>) : seq<'T> when 'T : comparison =
+    toSortedSeq Seq.sort source
 
-  let sortBy (projection:'T -> 'Key) (source:AsyncSeq<'T>) : AsyncSeq<'T> when 'Key : comparison =  asyncSeq {
-    use! ie = getEnumerator (Seq.sortBy projection) source
-    while ie.MoveNext() do
-      yield ie.Current
-  }
+  let sortBy (projection:'T -> 'Key) (source:AsyncSeq<'T>) : seq<'T> when 'Key : comparison =
+    toSortedSeq (Seq.sortBy projection) source
 
-  let sortDescending (source:AsyncSeq<'T>) : AsyncSeq<'T> when 'T : comparison =  asyncSeq {
-    use! ie = getEnumerator Seq.sortDescending source
-    while ie.MoveNext() do
-      yield ie.Current
-  }
+  let sortDescending (source:AsyncSeq<'T>) : seq<'T> when 'T : comparison =
+    toSortedSeq Seq.sortDescending source
 
-  let sortByDescending (projection:'T -> 'Key) (source:AsyncSeq<'T>) : AsyncSeq<'T> when 'Key : comparison =  asyncSeq {
-    use! ie = getEnumerator (Seq.sortByDescending projection) source
-    while ie.MoveNext() do
-      yield ie.Current
-  }
+  let sortByDescending (projection:'T -> 'Key) (source:AsyncSeq<'T>) : seq<'T> when 'Key : comparison =
+    toSortedSeq (Seq.sortByDescending projection) source
 
   #if !FABLE_COMPILER
   let bufferByCountAndTime (bufferSize:int) (timeoutMs:int) (source:AsyncSeq<'T>) : AsyncSeq<'T[]> =
