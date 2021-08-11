@@ -437,25 +437,25 @@ module AsyncSeq =
     /// Flattens an AsyncSeq of asynchronous sequences.
     val concat : AsyncSeq<AsyncSeq<'T>> -> AsyncSeq<'T>
 
-    /// Yields an AsyncSeq ordered by keys.
+    /// Yields a sequence ordered by keys.
     /// This function returns a sequence that digests the whole initial sequence as soon as
     /// that sequence is iterated. As a result this function should not be used with
     /// large or infinite sequences.
     val sort : source:AsyncSeq<'T> -> seq<'T> when 'T : comparison
 
-    /// Applies a key-generating function to each element of an AsyncSeq and yield an AsyncSeq ordered by keys.
+    /// Applies a key-generating function to each element of an AsyncSeq and yield a sequence ordered by keys.
     /// This function returns a sequence that digests the whole initial sequence as soon as
     /// that sequence is iterated. As a result this function should not be used with
     /// large or infinite sequences.
     val sortBy : projection:('T -> 'Key) -> source:AsyncSeq<'T> -> seq<'T> when 'Key : comparison
 
-    /// Yields a AsyncSeq ordered descending by keys.
+    /// Yields a sequence ordered descending by keys.
     /// This function returns a sequence that digests the whole initial sequence as soon as
     /// that sequence is iterated. As a result this function should not be used with
     /// large or infinite sequences.
     val sortDescending : source:AsyncSeq<'T> -> seq<'T> when 'T : comparison
 
-    /// Applies a key-generating function to each element of an AsyncSeq and yield an AsyncSeq ordered descending by keys.
+    /// Applies a key-generating function to each element of an AsyncSeq and yield a sequence ordered descending by keys.
     /// This function returns a sequence that digests the whole initial sequence as soon as
     /// that sequence is iterated. As a result this function should not be used with
     /// large or infinite sequences.
