@@ -1736,14 +1736,14 @@ let ``Async.concat should work``() =
 [<Test>]
 let ``AsyncSeq.sort should work for``() =
   let input = [1; 3; 2; 5; 7; 4; 6] |> AsyncSeq.ofSeq
-  let expected = [1..7]
+  let expected = [|1..7|]
   let actual = input |> AsyncSeq.sort
   Assert.AreEqual(expected, actual)
 
 [<Test>]
 let ``AsyncSeq.sortDescending should work``() =
   let input = [1; 3; 2; Int32.MaxValue; 4; 6; Int32.MinValue; 5; 7; 0] |> AsyncSeq.ofSeq
-  let expected = seq { yield Int32.MaxValue; yield! seq{ 7..-1..0 }; yield Int32.MinValue }
+  let expected = seq { yield Int32.MaxValue; yield! seq{ 7..-1..0 }; yield Int32.MinValue } |> Array.ofSeq
   let actual = input |> AsyncSeq.sortDescending
   Assert.AreEqual(expected, actual)
 
@@ -1751,7 +1751,7 @@ let ``AsyncSeq.sortDescending should work``() =
 let ``AsyncSeq.sortBy should work``() =
   let fn x = Math.Abs(x-5)
   let input = [1; 2; 4; 5; 7] |> AsyncSeq.ofSeq
-  let expected = [5; 4; 7; 2; 1]
+  let expected = [|5; 4; 7; 2; 1|]
   let actual = input |> AsyncSeq.sortBy fn
   Assert.AreEqual(expected, actual)
 
@@ -1759,7 +1759,7 @@ let ``AsyncSeq.sortBy should work``() =
 let ``AsyncSeq.sortByDescending should work``() =
   let fn x = Math.Abs(x-5)
   let input = [1; 2; 4; 5; 6; 7;] |> AsyncSeq.ofSeq
-  let expected = [1; 2; 7; 4; 6; 5;]
+  let expected = [|1; 2; 7; 4; 6; 5;|]
   let actual = input |> AsyncSeq.sortByDescending fn
   Assert.AreEqual(expected, actual)
 

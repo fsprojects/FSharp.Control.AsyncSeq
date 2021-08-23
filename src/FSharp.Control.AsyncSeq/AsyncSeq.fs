@@ -1484,19 +1484,19 @@ module AsyncSeq =
           yield buffer.ToArray() }
 
   let toSortedSeq fn source =
-    toArrayAsync source |> Async.map (fun source' -> (fn source' :> seq<'T>)) |> Async.RunSynchronously
+    toArrayAsync source |> Async.map fn |> Async.RunSynchronously
 
-  let sort (source:AsyncSeq<'T>) : seq<'T> when 'T : comparison =
-    toSortedSeq Seq.sort source
+  let sort (source:AsyncSeq<'T>) : array<'T> when 'T : comparison =
+    toSortedSeq Array.sort source
 
-  let sortBy (projection:'T -> 'Key) (source:AsyncSeq<'T>) : seq<'T> when 'Key : comparison =
-    toSortedSeq (Seq.sortBy projection) source
+  let sortBy (projection:'T -> 'Key) (source:AsyncSeq<'T>) : array<'T> when 'Key : comparison =
+    toSortedSeq (Array.sortBy projection) source
 
-  let sortDescending (source:AsyncSeq<'T>) : seq<'T> when 'T : comparison =
-    toSortedSeq Seq.sortDescending source
+  let sortDescending (source:AsyncSeq<'T>) : array<'T> when 'T : comparison =
+    toSortedSeq Array.sortDescending source
 
-  let sortByDescending (projection:'T -> 'Key) (source:AsyncSeq<'T>) : seq<'T> when 'Key : comparison =
-    toSortedSeq (Seq.sortByDescending projection) source
+  let sortByDescending (projection:'T -> 'Key) (source:AsyncSeq<'T>) : array<'T> when 'Key : comparison =
+    toSortedSeq (Array.sortByDescending projection) source
 
   #if !FABLE_COMPILER
   let bufferByCountAndTime (bufferSize:int) (timeoutMs:int) (source:AsyncSeq<'T>) : AsyncSeq<'T[]> =

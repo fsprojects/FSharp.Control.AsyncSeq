@@ -441,25 +441,25 @@ module AsyncSeq =
     /// This function returns a sequence that digests the whole initial sequence as soon as
     /// that sequence is iterated. As a result this function should not be used with
     /// large or infinite sequences.
-    val sort : source:AsyncSeq<'T> -> seq<'T> when 'T : comparison
+    val sort : source:AsyncSeq<'T> -> array<'T> when 'T : comparison
 
-    /// Applies a key-generating function to each element of an AsyncSeq and yield a sequence ordered by keys.
-    /// This function returns a sequence that digests the whole initial sequence as soon as
+    /// Applies a key-generating function to each element of an AsyncSeq and yield an array ordered by keys.
+    /// This function returns an array that digests the whole initial sequence as soon as
     /// that sequence is iterated. As a result this function should not be used with
     /// large or infinite sequences.
-    val sortBy : projection:('T -> 'Key) -> source:AsyncSeq<'T> -> seq<'T> when 'Key : comparison
+    val sortBy : projection:('T -> 'Key) -> source:AsyncSeq<'T> -> array<'T> when 'Key : comparison
 
-    /// Yields a sequence ordered descending by keys.
-    /// This function returns a sequence that digests the whole initial sequence as soon as
+    /// Yields an array ordered descending by keys.
+    /// This function returns an array that digests the whole initial sequence as soon as
     /// that sequence is iterated. As a result this function should not be used with
     /// large or infinite sequences.
-    val sortDescending : source:AsyncSeq<'T> -> seq<'T> when 'T : comparison
+    val sortDescending : source:AsyncSeq<'T> -> array<'T> when 'T : comparison
 
-    /// Applies a key-generating function to each element of an AsyncSeq and yield a sequence ordered descending by keys.
-    /// This function returns a sequence that digests the whole initial sequence as soon as
+    /// Applies a key-generating function to each element of an AsyncSeq and yield an array ordered descending by keys.
+    /// This function returns an array that digests the whole initial sequence as soon as
     /// that sequence is iterated. As a result this function should not be used with
     /// large or infinite sequences.
-    val sortByDescending : projection:('T -> 'Key) -> source:AsyncSeq<'T> -> seq<'T> when 'Key : comparison
+    val sortByDescending : projection:('T -> 'Key) -> source:AsyncSeq<'T> -> array<'T> when 'Key : comparison
 
     /// Interleaves two async sequences of the same type into a resulting sequence. The provided
     /// sequences are consumed in lock-step.
