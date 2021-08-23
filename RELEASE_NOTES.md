@@ -1,4 +1,7 @@
 
+### 3.1.0
+* Sorting functions https://github.com/fsprojects/FSharp.Control.AsyncSeq/issues/126
+
 ### 3.0.5
 * Update publishing
 
