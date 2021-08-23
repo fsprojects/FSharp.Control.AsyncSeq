@@ -437,6 +437,30 @@ module AsyncSeq =
     /// Flattens an AsyncSeq of asynchronous sequences.
     val concat : AsyncSeq<AsyncSeq<'T>> -> AsyncSeq<'T>
 
+    /// Yields a sequence ordered by keys.
+    /// This function returns a sequence that digests the whole initial sequence as soon as
+    /// that sequence is iterated. As a result this function should not be used with
+    /// large or infinite sequences.
+    val sort : source:AsyncSeq<'T> -> array<'T> when 'T : comparison
+
+    /// Applies a key-generating function to each element of an AsyncSeq and yield an array ordered by keys.
+    /// This function returns an array that digests the whole initial sequence as soon as
+    /// that sequence is iterated. As a result this function should not be used with
+    /// large or infinite sequences.
+    val sortBy : projection:('T -> 'Key) -> source:AsyncSeq<'T> -> array<'T> when 'Key : comparison
+
+    /// Yields an array ordered descending by keys.
+    /// This function returns an array that digests the whole initial sequence as soon as
+    /// that sequence is iterated. As a result this function should not be used with
+    /// large or infinite sequences.
+    val sortDescending : source:AsyncSeq<'T> -> array<'T> when 'T : comparison
+
+    /// Applies a key-generating function to each element of an AsyncSeq and yield an array ordered descending by keys.
+    /// This function returns an array that digests the whole initial sequence as soon as
+    /// that sequence is iterated. As a result this function should not be used with
+    /// large or infinite sequences.
+    val sortByDescending : projection:('T -> 'Key) -> source:AsyncSeq<'T> -> array<'T> when 'Key : comparison
+
     /// Interleaves two async sequences of the same type into a resulting sequence. The provided
     /// sequences are consumed in lock-step.
     val interleave : source1:AsyncSeq<'T> -> source2:AsyncSeq<'T> -> AsyncSeq<'T>
@@ -452,7 +476,7 @@ module AsyncSeq =
     #if !FABLE_COMPILER
     /// Buffer items from the async sequence until a specified buffer size is reached or a specified amount of time is elapsed.
     val bufferByCountAndTime : bufferSize:int -> timeoutMs:int -> source:AsyncSeq<'T> -> AsyncSeq<'T []>
-    
+
     /// Buffers items from the async sequence by the specified time interval.
     /// If no items are received in an intervel and empty array is emitted.
     val bufferByTime : timeMs:int -> source:AsyncSeq<'T> -> AsyncSeq<'T[]>
@@ -490,7 +514,7 @@ module AsyncSeq =
     /// but in parallel, without waiting for a prior mapping operation to complete.
     /// Parallelism is bound by the ThreadPool.
     val mapAsyncParallel : mapping:('T -> Async<'U>) -> s:AsyncSeq<'T> -> AsyncSeq<'U>
-    
+
     /// Applies a key-generating function to each element and returns an async sequence containing unique keys
     /// and async sequences containing elements corresponding to the key.
     ///
@@ -504,7 +528,7 @@ module AsyncSeq =
     /// Note that the resulting async sequence has to be processed in parallel (e.g AsyncSeq.mapAsyncParallel) becaused
     /// completion of sub-sequences depends on completion of other sub-sequences.
     val groupBy<'T, 'Key when 'Key : equality> : projection:('T -> 'Key) -> source:AsyncSeq<'T> -> AsyncSeq<'Key * AsyncSeq<'T>>
-    
+
     #if (NETSTANDARD2_1 || NETCOREAPP3_0)
 
     /// Creates an asynchronous computation that asynchronously yields results from the provided .NET IAsyncEnumerable.
