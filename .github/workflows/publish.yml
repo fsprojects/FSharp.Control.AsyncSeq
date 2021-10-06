@@ -1,7 +1,7 @@
 name: Build and Publish
 on:
   push:
-    branches: [ master ]
+    branches: [ main ]
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -14,7 +14,9 @@ jobs:
     - name: Install tools
       run: dotnet tool restore
     - name: Build and Test and Docs using FAKE
-      run: dotnet fake build
+      run: dotnet test -c Release
+    - name: Pack
+      run: dotnet pack -c Release
     - name: Deploy
       uses: peaceiris/actions-gh-pages@v3
       with:
