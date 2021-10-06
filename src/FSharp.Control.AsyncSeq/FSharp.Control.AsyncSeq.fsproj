@@ -1,5 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFrameworks>netstandard2.1;netstandard2.0</TargetFrameworks>
     <Authors>Tomas Petricek;Don Syme;Lev Gorodinski</Authors>
@@ -12,22 +11,18 @@
     <PackageTags>F#;async;fsharp;streaming</PackageTags>
     <IncludeSymbols>true</IncludeSymbols>
     <RepositoryUrl>https://github.com/fsprojects/FSharp.Control.AsyncSeq</RepositoryUrl>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <RepositoryType>git</RepositoryType>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <EnableSourceLink>true</EnableSourceLink>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="AssemblyInfo.fs" Condition="Exists('AssemblyInfo.fs')" />
     <Compile Include="AsyncSeq.fsi" />
     <Compile Include="AsyncSeq.fs" />
-    <None Include="paket.references" />
-    <None Include="paket.template" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Update="FSharp.Core" Version="4.7.2" />
+    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="5.0" />
     <Content Include="*.fsproj; **\*.fs; **\*.fsi;" PackagePath="fable\" />
   </ItemGroup>
-  <PropertyGroup>
-    <NpmDependencies>
-    </NpmDependencies>
-  </PropertyGroup>
-  <Import Project="..\..\.paket\Paket.Restore.targets" />
 </Project>
