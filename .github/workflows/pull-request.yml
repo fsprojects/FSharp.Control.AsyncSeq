@@ -13,7 +13,13 @@ jobs:
       uses: actions/setup-dotnet@v1
       with:
         dotnet-version: '5.0.202'
+    - name: Setup Node.js environment
+      uses: actions/setup-node@v2.4.0
+      with:
+        node-version: 14.17.*        
     - name: Install tools
       run: dotnet tool restore
-    - name: Build Test and Docs using FAKE 
-      run: dotnet fake build
+    - name: Build and Test 
+      run: dotnet test -c Release
+    - name: Test Fable
+      run: cd tests/fable && npm i && npm test && cd ../..
