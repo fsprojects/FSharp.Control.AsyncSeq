@@ -10,7 +10,9 @@ open System.Collections.Generic
 open System.Threading
 open System.Threading.Tasks
 open System.Runtime.ExceptionServices
+#if !FABLE_COMPILER
 open System.Linq
+#endif
 
 #nowarn "40" "3218"
 
