@@ -244,7 +244,7 @@ module AsyncSeq =
 
     /// Iterates over the input sequence and calls the specified function for
     /// every value.
-    val iter : action:('T -> unit) -> source:AsyncSeq<'T> -> Async<unit>
+    val iterAsync : action:('T -> unit) -> source:AsyncSeq<'T> -> Async<unit>
 
     /// Asynchronously iterates over the input sequence and generates 'x' for
     /// every input element for which the specified function

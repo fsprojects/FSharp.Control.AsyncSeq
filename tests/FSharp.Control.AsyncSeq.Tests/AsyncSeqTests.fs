@@ -564,7 +564,7 @@ let ``AsyncSeq.bufferByCountAndTime should not block`` () =
     }
     |> AsyncSeq.bufferByCountAndTime 10 1000
     |> AsyncSeq.take 3
-    |> AsyncSeq.iter (ignore)
+    |> AsyncSeq.iterAsync (ignore)
 
   // should return immediately
   // while a blocking call would take > 3sec
@@ -585,7 +585,7 @@ let ``AsyncSeq.bufferByTime should not block`` () =
     }
     |> AsyncSeq.bufferByTime 1000
     |> AsyncSeq.take 3
-    |> AsyncSeq.iter (ignore)
+    |> AsyncSeq.iterAsync (ignore)
 
   // should return immediately
   // while a blocking call would take > 3sec
@@ -850,7 +850,7 @@ let ``AsyncSeq.foldAsync``() =
 let ``AsyncSeq.filterAsync``() =
   for ls in [ []; [1]; [4]; [1;2;3;4;5] ] do
       let p i = i > 3
-      let actual = ls |> AsyncSeq.ofSeq |> AsyncSeq.filterAsync (p >> async.Return)
+      let actual = ls |> AsyncSeq.ofSeq |> AsyncSeq.filterAsyncAsync (p >> async.Return)
       let expected = ls |> Seq.filter p |> AsyncSeq.ofSeq
       Assert.True(EQ expected actual)
 
@@ -858,7 +858,7 @@ let ``AsyncSeq.filterAsync``() =
 let ``AsyncSeq.filter``() =
   for ls in [ []; [1]; [4]; [1;2;3;4;5] ] do
       let p i = i > 3
-      let actual = ls |> AsyncSeq.ofSeq |> AsyncSeq.filter p
+      let actual = ls |> AsyncSeq.ofSeq |> AsyncSeq.filterAsync p
       let expected = ls |> Seq.filter p |> AsyncSeq.ofSeq
       Assert.True(EQ expected actual)
 
@@ -945,7 +945,7 @@ let ``AsyncSeq.collect works``() =
 
 [<Test>]
 let ``AsyncSeq.initInfinite scales``() =
-    AsyncSeq.initInfinite string  |> AsyncSeq.take 1000 |> AsyncSeq.iter ignore |> Async.RunSynchronously
+    AsyncSeq.initInfinite string  |> AsyncSeq.take 1000 |> AsyncSeq.iterAsync ignore |> Async.RunSynchronously
 
 [<Test>]
 let ``AsyncSeq.initAsync``() =
@@ -1368,7 +1368,7 @@ let perfTest4 n =
     Seq.init n id
     |> AsyncSeq.ofSeq
     |> AsyncSeq.map id
-    |> AsyncSeq.filter (fun x -> x % 2 = 0)
+    |> AsyncSeq.filterAsync (fun x -> x % 2 = 0)
     |> AsyncSeq.toArraySynchronously
 
 // n                        NEW         1.15.0
@@ -1393,7 +1393,7 @@ let ``AsyncSeq.unfoldAsync should be iterable in finite resources``() =
         }
 
     AsyncSeq.unfoldAsync generator 0
-    |> AsyncSeq.iter ignore
+    |> AsyncSeq.iterAsync ignore
     |> Async.RunSynchronously
 
 
@@ -1461,7 +1461,7 @@ let ``AsyncSeq.mapAsyncParallel should propagate exception`` () =
           return failwith  "error"
         return i })
       |> FSharp.Control.AsyncSeq.mapAsyncParallel (ignore >> async.Return)
-      |> AsyncSeq.iter ignore
+      |> AsyncSeq.iterAsync ignore
       |> Async.Catch
       |> runTest
 

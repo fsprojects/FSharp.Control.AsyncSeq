@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.1;netstandard2.0</TargetFrameworks>
+    <TargetFrameworks>netstandard2.1</TargetFrameworks>
     <Authors>Tomas Petricek;Don Syme;Lev Gorodinski</Authors>
     <Summary>Asynchronous sequences for F#</Summary>
     <Description>Asynchronous sequences for F#</Description>
@@ -21,7 +21,7 @@
     <Compile Include="AsyncSeq.fs" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Update="FSharp.Core" Version="4.7.2" />
+    <PackageReference Update="FSharp.Core" Version="6.0.0" />
     <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="5.0" />
     <Content Include="*.fsproj; **\*.fs; **\*.fsi;" PackagePath="fable\" />
   </ItemGroup>

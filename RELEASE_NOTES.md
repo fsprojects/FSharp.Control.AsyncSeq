@@ -1,3 +1,6 @@
+### 4.0.0
+* Revamp for F# 6 and Task support
+
 ### 3.2.0
 * [Update to Fable 3.0](https://github.com/fsprojects/FSharp.Control.AsyncSeq/pull/148)
 
