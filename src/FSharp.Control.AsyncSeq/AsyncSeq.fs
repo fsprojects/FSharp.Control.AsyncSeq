@@ -10,7 +10,9 @@ open System.Collections.Generic
 open System.Threading
 open System.Threading.Tasks
 open System.Runtime.ExceptionServices
+#if !FABLE_COMPILER
 open System.Linq
+#endif
 
 #nowarn "40" "3218"
 
@@ -1412,6 +1414,7 @@ module AsyncSeq =
       if (buffer.Count > 0) then
           yield buffer.ToArray() }
 
+  #if !FABLE_COMPILER
   let toSortedSeq fn source =
     toArrayAsync source |> Async.map fn |> Async.RunSynchronously
 
@@ -1426,6 +1429,7 @@ module AsyncSeq =
 
   let sortByDescending (projection:'T -> 'Key) (source:AsyncSeq<'T>) : array<'T> when 'Key : comparison =
     toSortedSeq (Array.sortByDescending projection) source
+  #endif
 
   #if !FABLE_COMPILER
   let bufferByCountAndTime (bufferSize:int) (timeoutMs:int) (source:AsyncSeq<'T>) : AsyncSeq<'T[]> =

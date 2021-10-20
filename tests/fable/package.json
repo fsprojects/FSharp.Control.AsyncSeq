@@ -18,7 +18,7 @@
   },
   "dependencies": {},
   "devDependencies": {
-    "@babel/preset-env": "^7.12.1",    
+    "@babel/preset-env": "^7.12.1",
     "@sinonjs/fake-timers": "^6",
     "@testing-library/jest-dom": "^5",
     "fast-check": "^1",
