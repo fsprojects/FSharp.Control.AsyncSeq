@@ -437,6 +437,7 @@ module AsyncSeq =
     /// Flattens an AsyncSeq of asynchronous sequences.
     val concat : AsyncSeq<AsyncSeq<'T>> -> AsyncSeq<'T>
 
+#if !FABLE_COMPILER
     /// Yields a sequence ordered by keys.
     /// This function returns a sequence that digests the whole initial sequence as soon as
     /// that sequence is iterated. As a result this function should not be used with
@@ -460,7 +461,8 @@ module AsyncSeq =
     /// that sequence is iterated. As a result this function should not be used with
     /// large or infinite sequences.
     val sortByDescending : projection:('T -> 'Key) -> source:AsyncSeq<'T> -> array<'T> when 'Key : comparison
-
+    #endif
+    
     /// Interleaves two async sequences of the same type into a resulting sequence. The provided
     /// sequences are consumed in lock-step.
     val interleave : source1:AsyncSeq<'T> -> source2:AsyncSeq<'T> -> AsyncSeq<'T>

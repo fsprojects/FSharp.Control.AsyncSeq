@@ -200,6 +200,11 @@ xunit*.html
 artifacts/
 bin/
 
+# fable
+*.fs.js
+fable_modules
+.fable
+
 # jest/fable directories
 tests/fable/dist/
 tests/fable/node_modules/
