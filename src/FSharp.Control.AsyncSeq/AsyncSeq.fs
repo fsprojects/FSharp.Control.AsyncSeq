@@ -1344,6 +1344,13 @@ module AsyncSeq =
           let! moven = ie.MoveNext()
           b := moven }
 
+  let head (source : AsyncSeq<'T>) = async {
+      match! tryFirst source with
+      | Some x -> return x
+      | None -> return invalidArg (nameof source) "The input sequence was empty." }
+
+  let tail (source: AsyncSeq<'T>) = skip 1 source
+
   let toArrayAsync (source : AsyncSeq<'T>) : Async<'T[]> = async {
       let ra = (new ResizeArray<_>())
       use ie = source.GetEnumerator()

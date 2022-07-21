@@ -417,6 +417,13 @@ module AsyncSeq =
     /// then returns the rest of the sequence unmodified.
     val skip : count:int -> source:AsyncSeq<'T> -> AsyncSeq<'T>
 
+    /// Returns the first element of the asynchronous sequence
+    val head : source:AsyncSeq<'T> -> Async<'T>
+
+    /// Returns an asynchronous sequence that skips 1 element of the underlying
+    /// sequence and then yields the remaining elements of the sequence.
+    val tail : source:AsyncSeq<'T> -> AsyncSeq<'T>
+
     /// Creates an async computation which iterates the AsyncSeq and collects the output into an array.
     val toArrayAsync : source:AsyncSeq<'T> -> Async<'T []>
 
