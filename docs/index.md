@@ -24,6 +24,8 @@ Learning
 
 [Terminology](terminology.html) a reference for some of the terminology around F# async.
  
+[Comparison with IObservable](ComparisonWithIObservable.html) contains discussion about the difference between async sequences and IObservables.
+
 [API Reference](reference/index.html) contains automatically generated documentation for all types, modules and functions in the library. 
 This includes additional brief samples on using most of the functions.
 
