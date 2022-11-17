@@ -67,7 +67,7 @@ type Tweet = {
   message : string
 }
 
-let getTweetBatch (offset:int) : Async<(Tweet[] * int) option> = 
+let getTweetBatch (offset: int) : Async<(Tweet[] * int) option> = 
   failwith "TODO: call Twitter API"
 
 let tweetBatches : AsyncSeq<Tweet[]> = 
@@ -81,7 +81,7 @@ whether a particular tweet is of interest and should be stored in the database. 
 type `Tweet -> Async<bool>`. We can flatten the `tweetBatches` sequence and then filter it as follows:
 *)
 
-let filterTweet (t:Tweet) : Async<bool> =
+let filterTweet (t: Tweet) : Async<bool> =
   failwith "TODO: call web service"
 
 let filteredTweets : AsyncSeq<Tweet> = 
@@ -97,7 +97,7 @@ Finally, the function which stores a tweet in the database can be modeled by typ
 We can store all filtered tweets as follows:
 *)
 
-let storeTweet (t:Tweet) : Async<unit> =
+let storeTweet (t: Tweet) : Async<unit> =
   failwith "TODO: call database"
 
 let storeFilteredTweets : Async<unit> =
