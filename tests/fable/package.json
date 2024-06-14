@@ -22,7 +22,7 @@
     "@sinonjs/fake-timers": "^6",
     "@testing-library/jest-dom": "^5",
     "fast-check": "^1",
-    "jest": "^26"
+    "jest": "^29"
   },
   "private": true,
   "jest": {
