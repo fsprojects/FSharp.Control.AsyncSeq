@@ -5,7 +5,7 @@
     <Summary>Asynchronous sequences for F#</Summary>
     <Description>Asynchronous sequences for F#</Description>
     <Copyright>Copyright 2017</Copyright>
-    <PackageLicenseUrl>https://fsprojects.github.io/FSharp.Control.AsyncSeq/license.html</PackageLicenseUrl>
+    <PackageLicenseUrl>https://github.com/fsprojects/FSharp.Control.AsyncSeq/blob/main/LICENSE.md</PackageLicenseUrl>
     <PackageProjectUrl>https://fsprojects.github.io/FSharp.Control.AsyncSeq/</PackageProjectUrl>
     <PackageIconUrl>https://fsprojects.github.io/FSharp.Control.AsyncSeq/img/logo.png</PackageIconUrl>
     <PackageTags>F#;async;fsharp;streaming</PackageTags>
