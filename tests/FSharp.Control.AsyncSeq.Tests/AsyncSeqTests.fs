@@ -407,6 +407,25 @@ let ``AsyncSeq.interleave first empty``() =
   let merged = AsyncSeq.interleave s1 s2 |> AsyncSeq.toListSynchronously
   Assert.True([1 ; 2 ; 3] = merged)
 
+[<Test>]
+let ``AsyncSeq.interleaveMany empty``() =
+  let merged = AsyncSeq.interleaveMany [] |> AsyncSeq.toListSynchronously
+  Assert.True(List.isEmpty merged)
+
+[<Test>]
+let ``AsyncSeq.interleaveMany 1``() =
+  let s1 = AsyncSeq.ofSeq ["a";"b";"c"]
+  let merged = AsyncSeq.interleaveMany [s1] |> AsyncSeq.toListSynchronously
+  Assert.True(["a" ; "b" ; "c" ] = merged)
+
+[<Test>]
+let ``AsyncSeq.interleaveMany 3``() =
+  let s1 = AsyncSeq.ofSeq ["a";"b"]
+  let s2 = AsyncSeq.ofSeq ["i";"j";"k";"l"]
+  let s3 = AsyncSeq.ofSeq ["x";"y";"z"]
+  let merged = AsyncSeq.interleaveMany [s1;s2;s3] |> AsyncSeq.toListSynchronously
+  Assert.True(["a"; "x"; "i"; "y"; "b"; "z"; "j"; "k"; "l"] = merged)
+
 
 [<Test>]
 let ``AsyncSeq.bufferByCount``() =

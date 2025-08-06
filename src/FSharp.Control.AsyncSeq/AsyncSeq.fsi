@@ -462,10 +462,14 @@ module AsyncSeq =
     /// large or infinite sequences.
     val sortByDescending : projection:('T -> 'Key) -> source:AsyncSeq<'T> -> array<'T> when 'Key : comparison
     #endif
-    
+
     /// Interleaves two async sequences of the same type into a resulting sequence. The provided
     /// sequences are consumed in lock-step.
     val interleave : source1:AsyncSeq<'T> -> source2:AsyncSeq<'T> -> AsyncSeq<'T>
+
+    /// Interleaves a sequence of async sequences into a resulting async sequence. The provided
+    /// sequences are consumed in lock-step.
+    val interleaveMany : source:#seq<AsyncSeq<'T>> -> AsyncSeq<'T>
 
     /// Interleaves two async sequences into a resulting sequence. The provided
     /// sequences are consumed in lock-step.
