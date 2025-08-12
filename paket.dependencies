@@ -1,6 +1,6 @@
 version 6.0.0-rc001
 source https://api.nuget.org/v3/index.json
-framework: net9.0, netstandard2.1, netstandard2.0
+framework: netstandard2.1, netstandard2.0
 redirects: on
 storage: none
 
