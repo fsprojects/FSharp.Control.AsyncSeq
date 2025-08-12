@@ -72,7 +72,7 @@ let rec IsCancellationExn (e:exn) =
 let AreCancellationExns (e1:exn) (e2:exn) =
   IsCancellationExn e1 && IsCancellationExn e2
 
-/// Determines equalit of two async sequences by convering them to lists, ignoring side-effects.
+/// Determines equality of two async sequences by convering them to lists, ignoring side-effects.
 let EQ (a:AsyncSeq<'a>) (b:AsyncSeq<'a>) =
   let exp = a |> AsyncSeq.toListSynchronously
   let act = b |> AsyncSeq.toListSynchronously
