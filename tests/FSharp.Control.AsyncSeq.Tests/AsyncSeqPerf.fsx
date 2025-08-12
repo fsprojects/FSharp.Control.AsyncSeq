@@ -1,5 +1,4 @@
-﻿#I "../../src/FSharp.Control.AsyncSeq/bin/Release/netstandard2.1"
-#r "FSharp.Control.AsyncSeq.dll"
+﻿#r @"../../bin/FSharp.Control.AsyncSeq.dll"
 #nowarn "40"
 #time "on"
 
@@ -108,7 +107,7 @@ let bindUnfold =
 
 
 
-let collect n =
+let collect n = 
   AsyncSeq.replicate n ()
   |> AsyncSeq.collect (fun () -> AsyncSeq.singleton ())
   |> AsyncSeq.iter ignore
@@ -123,7 +122,7 @@ let collect n =
 
 let Y = Choice1Of2
 let S = Choice2Of2
-
+  
 let timeMs = 500
 
 let inp0 = [ ]
@@ -139,18 +138,19 @@ let toSeq (xs:Choice<int, int> list) = asyncSeq {
   for x in xs do
     match x with
     | Choice1Of2 v -> yield v
-    | Choice2Of2 s -> do! Async.Sleep s }
+    | Choice2Of2 s -> do! Async.Sleep s }    
 
 for (inp,exp) in [ (inp0,exp0) ; (inp1,exp1) ] do
 
-  let actual =
+  let actual = 
     toSeq inp
     |> AsyncSeq.bufferByTime (timeMs - 5)
     |> AsyncSeq.map List.ofArray
     |> AsyncSeq.toListSynchronously
-
+  
   printfn "actual=%A expected=%A" actual exp
 
   //let ls = toSeq inp |> AsyncSeq.toListSynchronously
   //let actualLs = actual |> List.concat
 
+  

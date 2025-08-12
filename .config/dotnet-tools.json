@@ -6,22 +6,7 @@
       "version": "11.4.3",
       "commands": [
         "fsdocs"
-      ],
-      "rollForward": false
-    },
-    "paket": {
-      "version": "9.0.2",
-      "commands": [
-        "paket"
-      ],
-      "rollForward": false
-    },
-    "fake-cli": {
-      "version": "6.1.3",
-      "commands": [
-        "fake"
-      ],
-      "rollForward": false
+      ]
     },
     "fable": {
       "version": "3.4.2",
