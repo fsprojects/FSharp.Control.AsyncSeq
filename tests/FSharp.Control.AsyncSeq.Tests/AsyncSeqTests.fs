@@ -1,5 +1,5 @@
 ﻿#if INTERACTIVE
-#load @"../../.paket/load/net8.0/Test/NUnit.fsx"
+#load @"../../.paket/load/netcoreapp3.1/Test/NUnit.fsx"
 #time "on"
 #else
 
@@ -10,25 +10,7 @@ open NUnit.Framework
 open FSharp.Control
 open System
 open System.Threading
-
-type Assert with
-  static member True(x : bool) =
-    Assert.That(x)
-
-  static member True(x : bool, message : string) =
-    Assert.That(x, message)
-
-  static member AreEqual(x : 'a, y : 'a) : unit =
-    Assert.That((x = y))
-
-  static member LessOrEqual(x : 'a, y : 'a, message : string) =
-    Assert.That(x <= y, message)
-
-  static member Less(x : 'a, y : 'a, message : string) =
-    Assert.That(x < y, message)
-
-  static member Less(x : 'a, y : 'a) =
-    Assert.That(x < y)
+open System.Threading.Tasks
 
 type AsyncOps = AsyncOps with
   static member unit : Async<unit> = async { return () }
@@ -303,7 +285,7 @@ let ``AsyncSeq.cache does not slow down late consumers``() =
             consume 5000 5
         ]
         |> Async.RunSynchronously
-    Assert.LessOrEqual(abs(times.[0] - 10.0), 2.0, "Sanity check: lead consumer should take 10s")
+    Assert.LessOrEqual(abs(times.[0] - 10.0), 2.0f, "Sanity check: lead consumer should take 10s")
     Assert.LessOrEqual(times.[1], 2.0, "Test purpose: follower should only read cached items")
 
 [<Test>]
