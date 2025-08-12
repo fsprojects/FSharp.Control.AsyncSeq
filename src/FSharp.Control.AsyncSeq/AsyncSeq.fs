@@ -10,7 +10,9 @@ open System.Collections.Generic
 open System.Threading
 open System.Threading.Tasks
 open System.Runtime.ExceptionServices
+#if !FABLE_COMPILER
 open System.Linq
+#endif
 
 #nowarn "40" "3218"
 
@@ -109,11 +111,7 @@ module internal Utils =
       /// when implementing the Subscribe method of IObservable interface.
       static member StartDisposable(op:Async<unit>) =
           let ct = new System.Threading.CancellationTokenSource()
-          #if !FABLE_COMPILER
           Async.Start(op, ct.Token)
-          #else
-          Async.StartImmediate(op, ct.Token)
-          #endif
           { new IDisposable with
               member x.Dispose() = ct.Cancel() }
 
@@ -216,16 +214,9 @@ module AsyncGenerator =
 
 
     static member Bind (g:AsyncGenerator<'a>, cont:unit -> AsyncGenerator<'a>) : AsyncGenerator<'a> =
-      #if !FABLE_COMPILER
       match g with
       | :? GenerateCont<'a> as g -> GenerateCont<_>.Bind (g.Generator, (fun () -> GenerateCont<_>.Bind (g.Cont(), cont)))
       | _ -> (new GenerateCont<'a>(g, cont) :> AsyncGenerator<'a>)
-      #else
-      let g' = g :?> GenerateCont<'a>
-      if unbox<AsyncGenerator<_> option>(g'.Generator).IsSome then
-        GenerateCont<_>.Bind (g'.Generator, (fun () -> GenerateCont<_>.Bind (g'.Cont(), cont)))
-      else (new GenerateCont<'a>(g, cont) :> AsyncGenerator<'a>)
-      #endif
 
   /// Right-associating binder.
   let bindG (g:AsyncGenerator<'a>) (cont:unit -> AsyncGenerator<'a>) : AsyncGenerator<'a> =
@@ -268,28 +259,14 @@ module AsyncGenerator =
       member __.Disposer = Some ((fun () -> (enum :> IDisposable).Dispose()))
 
   let enumeratorFromGenerator (g:AsyncGenerator<'a>) : IAsyncEnumerator<'a> =
-    #if !FABLE_COMPILER
     match g with
     | :? AsyncEnumeratorGenerator<'a> as g -> g.Enumerator
     | _ -> (new AsyncGeneratorEnumerator<_>(g) :> _)
-    #else
-    let g' = g :?> AsyncEnumeratorGenerator<'a>
-    match unbox<IAsyncEnumerator<_> option>(g'.Enumerator) with
-    | Some asyncEnumerator -> asyncEnumerator
-    | None -> (new AsyncGeneratorEnumerator<_>(g) :> _)
-    #endif
 
   let generatorFromEnumerator (e:IAsyncEnumerator<'a>) : AsyncGenerator<'a> =
-    #if !FABLE_COMPILER
     match e with
     | :? AsyncGeneratorEnumerator<'a> as e -> e.Generator
     | _ -> (new AsyncEnumeratorGenerator<_>(e) :> _)
-    #else
-    let e' = e :?> AsyncGeneratorEnumerator<'a>
-    match unbox<AsyncGenerator<_> option>(e'.Generator) with
-    | Some asyncGenerator -> asyncGenerator
-    | None -> (new AsyncEnumeratorGenerator<_>(e) :> _)
-    #endif
 
   let delay (f:unit -> AsyncSeq<'T>) : AsyncSeq<'T> =
     { new IAsyncEnumerable<'T> with
@@ -388,11 +365,7 @@ module AsyncSeqOp =
 
 /// Module with helper functions for working with asynchronous sequences
 module AsyncSeq =
-  #if FABLE_COMPILER
   let inline dispose (d:System.IDisposable) = try d.Dispose() with _ -> ()
-  #else
-  let private dispose (d:System.IDisposable) = match d with null -> () | _ -> d.Dispose()
-  #endif
 
   [<GeneralizableValue>]
   let empty<'T> : AsyncSeq<'T> =
@@ -728,17 +701,9 @@ module AsyncSeq =
       }
 
   let iterAsync (f: 'T -> Async<unit>) (source: AsyncSeq<'T>)  =
-    #if !FABLE_COMPILER
     match source with
     | :? AsyncSeqOp<'T> as source -> source.IterAsync f
     | _ -> iteriAsync (fun i x -> f x) source
-    #else
-    let source' = source :?> AsyncSeqOp<'T>
-    match (unbox<{| __proto__ : {| IterAsync: (('T -> Async<unit>) -> Async<unit>) option |} option |}>(source')).__proto__ with
-    | Some proto when proto.IterAsync.IsSome ->
-        source'.IterAsync f
-    | _ -> iteriAsync (fun _ x -> f x) source
-    #endif
 
   let iteri (f: int -> 'T -> unit) (inp: AsyncSeq<'T>)  = iteriAsync (fun i x -> async.Return (f i x)) inp
 
@@ -797,7 +762,6 @@ module AsyncSeq =
   // Additional combinators (implemented as async/asyncSeq computations)
 
   let mapAsync f (source : AsyncSeq<'T>) : AsyncSeq<'TResult> =
-    #if !FABLE_COMPILER
     match source with
     | :? AsyncSeqOp<'T> as source -> source.MapAsync f
     | _ ->
@@ -805,17 +769,6 @@ module AsyncSeq =
         for itm in source do
         let! v = f itm
         yield v }
-    #else
-    let source' = source :?> AsyncSeqOp<'T>
-    match (unbox<{| __proto__ : {| MapAsync: (('T -> Async<_>) -> AsyncSeq<_>) option |} option |}>(source')).__proto__ with
-    | Some proto when proto.MapAsync.IsSome ->
-        proto.MapAsync.Value f
-    | _ ->
-      asyncSeq {
-        for itm in source do
-        let! v = f itm
-        yield v }
-    #endif
 
   let mapiAsync f (source : AsyncSeq<'T>) : AsyncSeq<'TResult> = asyncSeq {
     let i = ref 0L
@@ -840,7 +793,6 @@ module AsyncSeq =
   #endif
 
   let chooseAsync f (source:AsyncSeq<'T>) =
-    #if !FABLE_COMPILER
     match source with
     | :? AsyncSeqOp<'T> as source -> source.ChooseAsync f
     | _ ->
@@ -850,19 +802,6 @@ module AsyncSeq =
           match v with
           | Some v -> yield v
           | _ -> () }
-    #else
-    let source' = source :?> AsyncSeqOp<'T>
-    match (unbox<{| __proto__ : {| ChooseAsync: (('T -> Async<_ option>) -> AsyncSeq<_>) option |} option |}>(source')).__proto__ with
-    | Some proto when proto.ChooseAsync.IsSome ->
-      source'.ChooseAsync f
-    | _ ->
-      asyncSeq {
-        for itm in source do
-          let! v = f itm
-          match v with
-          | Some v -> yield v
-          | _ -> () }
-    #endif
 
   let ofSeqAsync (source:seq<Async<'T>>) : AsyncSeq<'T> =
       asyncSeq {
@@ -987,17 +926,9 @@ module AsyncSeq =
     source |> exists (f >> not) |> Async.map not
 
   let foldAsync f (state:'State) (source : AsyncSeq<'T>) =
-    #if !FABLE_COMPILER
     match source with
     | :? AsyncSeqOp<'T> as source -> source.FoldAsync f state
     | _ -> source |> scanAsync f state |> lastOrDefault state
-    #else
-    let source' = source :?> AsyncSeqOp<'T>
-    match (unbox<{| __proto__ : {| FoldAsync: (('State -> 'T -> Async<'State>) -> 'State -> Async<'State>) option |} option |}>(source')).__proto__ with
-    | Some proto when proto.FoldAsync.IsSome ->
-        proto.FoldAsync.Value f state
-    | _ -> source |> scanAsync f state |> lastOrDefault state
-    #endif
 
   let fold f (state:'State) (source : AsyncSeq<'T>) =
     foldAsync (fun st v -> f st v |> async.Return) state source
@@ -1483,6 +1414,7 @@ module AsyncSeq =
       if (buffer.Count > 0) then
           yield buffer.ToArray() }
 
+  #if !FABLE_COMPILER
   let toSortedSeq fn source =
     toArrayAsync source |> Async.map fn |> Async.RunSynchronously
 
@@ -1497,6 +1429,7 @@ module AsyncSeq =
 
   let sortByDescending (projection:'T -> 'Key) (source:AsyncSeq<'T>) : array<'T> when 'Key : comparison =
     toSortedSeq (Array.sortByDescending projection) source
+  #endif
 
   #if !FABLE_COMPILER
   let bufferByCountAndTime (bufferSize:int) (timeoutMs:int) (source:AsyncSeq<'T>) : AsyncSeq<'T[]> =

@@ -3,7 +3,7 @@
   "isRoot": true,
   "tools": {
     "fsharp.formatting.commandtool": {
-      "version": "11.4.1",
+      "version": "11.4.3",
       "commands": [
         "fsdocs"
       ],
@@ -22,6 +22,12 @@
         "fake"
       ],
       "rollForward": false
+    },
+    "fable": {
+      "version": "3.4.2",
+      "commands": [
+        "fable"
+      ]
     }
   }
 }

@@ -11,7 +11,6 @@
 #r "nuget: FSharp.Control.AsyncSeq,{{package-version}}"
 #endif // IPYNB
 
-
 (**
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/fsprojects/FSharp.Control.AsyncSeq/gh-pages?filepath=AsyncSeqExamples.ipynb)
 
@@ -23,30 +22,23 @@
 open System
 open FSharp.Control
 
-
 (**
 
 ## Group By
 
 `AsyncSeq.groupBy` partitions an input sequence into sub-sequences with respect to the specified `projection` function. This operation is the asynchronous analog to `Seq.groupBy`.
 
-
 ### Example Execution
 
 An example execution can be depicted visually as follows:
 
+```
 --------------------------------------------------
 | source  | a0 | a2 | a3 | a4 | a5 |             |
 | key     | k1 | k2 | k1 | k3 |    |             | 
 | result  | k1 * [a1,a3] | k2 * [a2] | k3 * [a4] |
 --------------------------------------------------
-
-
-
-a0
-k0
-
-
+```
 
 ### Use Case
 
@@ -68,7 +60,6 @@ let action (e:Event) : Async<unit> =
 
 stream 
 |> AsyncSeq.iterAsync action
-
 
 (**
 
@@ -104,7 +95,6 @@ let batchStream : AsyncSeq<Event[]> =
 let batchAction (es:Event[]) : Async<unit> =
   failwith "undefined"
 
-
 (**
 
 Ordering is still important. For example, the batch action could write events into a full-text search index. We would like the full-text search index to be sequentially consistent. As such, the events need to be applied in the order they were emitted. The following workflow has the desired properties:
@@ -119,7 +109,6 @@ batchStream
   >> AsyncSeq.iterAsync batchAction) // perform the batch operation
 |> AsyncSeq.iter ignore
 
-
 (**
 
 The above workflow:
@@ -130,14 +119,6 @@ The above workflow:
 4. Buffers elements of each sub-sequence by time and space.
 5. Processes the sub-sequences in parallel, but individual sub-sequences sequentially.
 
----
-
-*)
-
-
-
-(**
-
 ## Merge
 
 `AsyncSeq.merge` non-deterministically merges two async sequences into one. It is non-deterministic in the sense that the resulting sequence emits elements whenever *either* input sequence emits a value. Since it isn't always known which will emit a value first, if at all, the operation is non-deterministic. This operation is in contrast to `AsyncSeq.zip` which also takes two async sequences and returns a single async sequence, but as opposed to emitting an element when *either* input sequence produces a value, it emits an element when *both* sequences emit a value. This operation is also in contrast to `AsyncSeq.append` which concatenates two async sequences, emitting all element of one, followed by all elements of the another.
@@ -146,17 +127,18 @@ The above workflow:
 
 An example execution can be depicted visually as follows:
 
+```
 -----------------------------------------
 | source1 | t0 |    | t1 |    |    | t2 |
 | source2 |    | u0 |    |    | u1 |    |
 | result  | t0 | u0 | t1 |    | u1 | t2 |
 -----------------------------------------
+```
 
 ### Use Case
 
 Suppose you wish to perform an operation when either of two async sequences emits an element. One way to do this is two start consuming both async sequences in parallel. If we would like to perform only one operation at a time, we can use `AsyncSeq.merge` as follows:
-
-```
+*)
 
 /// Represents an stream emitting elements on a specified interval.
 let intervalMs (periodMs:int) = asyncSeq {
@@ -168,17 +150,9 @@ let intervalMs (periodMs:int) = asyncSeq {
 let either : AsyncSeq<DateTime> =
   AsyncSeq.merge (intervalMs 20) (intervalMs 30)
 
-The sequence `either` emits an element every 20ms and every 30ms.
-
-```
-
----
-
-*)
-
-
-
 (**
+
+The sequence `either` emits an element every 20ms and every 30ms.
 
 ## Combine Latest
 
@@ -202,7 +176,6 @@ c0 = f a0 b0
 c1 = f a0 b1
 c2 = f a1 b1
 c3 = f a2 b1
-
 ```
 
 ### Use Case
@@ -257,15 +230,6 @@ let changesOrInterval : AsyncSeq<Value> =
 
 We can now consume this async sequence and use it to trigger downstream operations, such as updating the configuration of a running program, in flight.
 
----
-
-*)
-
-
-
-
-
-(**
 
 ## Distinct Until Changed
 
@@ -275,10 +239,12 @@ We can now consume this async sequence and use it to trigger downstream operatio
 
 An example execution can be visualized as follows:
 
+```
 -----------------------------------
 | source  | a | a | b | b | b | a |
 | result  | a |   | b |   |   | a |
 -----------------------------------
+```
 
 ### Use Case
 
@@ -329,13 +295,6 @@ let result : Async<string> =
 
 (**
 
----
-
-*)
-
-
-(**
-
 ## Zip
 
 
@@ -374,13 +333,6 @@ let eventsAtLeastOneSec =
 
 The resulting async sequence `eventsAtLeastOneSec` will emit an element at-most every second. Note that the input sequence of timeouts is infinite - this is to allow the other sequence to have any length since `AsyncSeq.zipWith` will terminate when either input sequence terminates.
 
-*) 
-
-
-
-
-(**
-
 ## Buffer by Time and Count
 
 `AsyncSeq.bufferByTimeAndCount` consumes the input sequence until a specified number of elements are consumed or a timeout expires at which point the resulting sequence emits the buffered of elements, unless no elements have been buffered. It is similar to `AsyncSeq.bufferByCount` but allows a buffer to be emitted base on a timeout in addition to buffer size. Both are useful for batching inputs before performing an operation. `AsyncSeq.bufferByTimeAndCount` allows an async workflow to proceed even if there are no inputs received during a certain time period.
@@ -397,9 +349,6 @@ An example execution can be visually depicted as follows:
 ```
 The last event `a4` is emitted after a timeout.
 
-
-
-
 ### Use Case
 
 Suppose we're writing a service which consumes a stream of events and indexes them into full-text search index. We can index each event one by one, however we get a performance improvement if we buffer events into small batches. We can buffer into fixed size batches using `AsyncSeq.bufferByCount`. However, the source event stream may stop emitting events half way through a batch which would leave those events in the buffer until more events arrive. `AsyncSeq.bufferByTimeAndCount` allows the async workflow to make progress by imposing a bound on how long a non-empty but incomplete buffer can wait more additional items.
@@ -414,10 +363,4 @@ let bufferTimeout = 1000
 
 let bufferedEvents : AsyncSeq<Event[]> =
   events |> AsyncSeq.bufferByCountAndTime bufferSize bufferTimeout   
-
-
-
-
-
-
 

@@ -1,6 +1,3 @@
-[![Build status](https://ci.appveyor.com/api/projects/status/22wknie0x5c2jfuo/branch/master?svg=true)](https://ci.appveyor.com/project/SteffenForkmann/fsharp-control-asyncseq/branch/master)
-[![Build status](https://travis-ci.org/fsprojects/FSharp.Control.AsyncSeq.svg?branch=master)](https://travis-ci.org/fsprojects/FSharp.Control.AsyncSeq)
-
 # FSharp.Control.AsyncSeq [![NuGet Status](http://img.shields.io/nuget/v/FSharp.Control.AsyncSeq.svg?style=flat)](https://www.nuget.org/packages/FSharp.Control.AsyncSeq/)
 
 **FSharp.Control.AsyncSeq** is a collection of asynchronous programming utilities for F#. 

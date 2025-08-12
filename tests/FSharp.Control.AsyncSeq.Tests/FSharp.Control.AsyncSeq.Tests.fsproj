@@ -1,15 +1,17 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFrameworks>net8.0</TargetFrameworks>
     <IsPackable>false</IsPackable>
   </PropertyGroup>
   <ItemGroup>
-    <None Include="paket.references" />
     <Compile Include="AsyncSeqTests.fs" />
     <None Include="AsyncSeqPerf.fsx" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\FSharp.Control.AsyncSeq\FSharp.Control.AsyncSeq.fsproj" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.11.0" />
+    <PackageReference Include="NUnit" Version="3.9.0" />
+    <PackageReference Include="NUnit3TestAdapter" Version="3.9.0" />
   </ItemGroup>
-  <Import Project="..\..\.paket\Paket.Restore.targets" />
 </Project>
