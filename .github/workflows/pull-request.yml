@@ -22,4 +22,4 @@ jobs:
     - name: Build and Test
       run: dotnet test -c Release
     - name: Test Fable
-      run: cd tests/fable && npm i && npm test && cd ../..
+      run: (cd tests/fable && npm i && npm test)
