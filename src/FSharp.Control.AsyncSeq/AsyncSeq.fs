@@ -12,6 +12,7 @@ open System.Threading.Tasks
 open System.Runtime.ExceptionServices
 #if !FABLE_COMPILER
 open System.Linq
+open System.Threading.Channels
 #endif
 
 #nowarn "40" "3218"
@@ -373,6 +374,17 @@ module AsyncSeq =
               member x.GetEnumerator() =
                   { new IAsyncEnumerator<'T> with
                         member x.MoveNext() = async { return None }
+                        member x.Dispose() = () } }
+
+  let emptyAsync<'T> (action : Async<unit>) : AsyncSeq<'T> =
+        { new IAsyncEnumerable<'T> with
+              member x.GetEnumerator() =
+                  { new IAsyncEnumerator<'T> with
+                        member x.MoveNext() =
+                            async {
+                                do! action
+                                return None
+                            }
                         member x.Dispose() = () } }
 
   let singleton (v:'T) : AsyncSeq<'T> =
@@ -1810,6 +1822,75 @@ module AsyncSeq =
   #endif
   #endif
 
+
+  #if !FABLE_COMPILER
+  open System.Threading.Channels
+
+  let toChannel (writer : ChannelWriter<'a>) (xs :  AsyncSeq<'a>) : Async<unit> =
+    async {
+      try
+        do!
+          xs
+          |> iterAsync
+            (fun x ->
+              async {
+                if not (writer.TryWrite(x)) then
+                  let! ct = Async.CancellationToken
+
+                  do!
+                    writer.WriteAsync(x, ct).AsTask()
+                    |> Async.AwaitTask
+              })
+
+        writer.Complete()
+      with exn ->
+        writer.Complete(error = exn)
+    }
+
+  let fromChannel (reader : ChannelReader<'a>) : AsyncSeq<'a> =
+    asyncSeq {
+      let mutable keepGoing = true
+
+      while keepGoing do
+        let mutable item = Unchecked.defaultof<'a>
+
+        if reader.TryRead(&item) then
+          yield item
+        else
+          let! ct = Async.CancellationToken
+
+          let! hasMoreData =
+            reader.WaitToReadAsync(ct).AsTask()
+            |> Async.AwaitTask
+
+          if not hasMoreData then
+            keepGoing <- false
+    }
+
+  let prefetch (numberToPrefetch : int) (xs : AsyncSeq<'a>) : AsyncSeq<'a> =
+    if numberToPrefetch = 0 then
+      xs
+    else
+      if numberToPrefetch < 1 then
+        invalidArg (nameof numberToPrefetch) "must be at least zero"
+      asyncSeq {
+        let opts = BoundedChannelOptions(numberToPrefetch)
+        opts.SingleWriter <- true
+        opts.SingleReader <- true
+
+        let channel = Channel.CreateBounded(opts)
+
+        let! fillChannelTask =
+          toChannel channel.Writer xs
+          |> Async.StartChild
+
+        yield!
+          append
+            (fromChannel channel.Reader)
+            (emptyAsync fillChannelTask)
+      }
+
+  #endif
 
 
 [<AutoOpen>]
