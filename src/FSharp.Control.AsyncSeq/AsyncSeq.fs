@@ -38,14 +38,6 @@ and private AsyncSeqSrcNode<'a> =
 [<AutoOpen>]
 module internal Utils =
 
-    [<RequireQualifiedAccess>]
-    module Choice =
-
-      /// Maps over the left result type.
-      let mapl (f:'T -> 'U) = function
-        | Choice1Of2 a -> f a |> Choice1Of2
-        | Choice2Of2 e -> Choice2Of2 e
-
     module Disposable =
 
       let empty : IDisposable =
@@ -295,10 +287,6 @@ type AsyncSeqOp<'T> () =
   abstract member FoldAsync : ('S -> 'T -> Async<'S>) -> 'S -> Async<'S>
   abstract member MapAsync : ('T -> Async<'U>) -> AsyncSeq<'U>
   abstract member IterAsync : ('T -> Async<unit>) -> Async<unit>
-  default x.MapAsync (f:'T -> Async<'U>) : AsyncSeq<'U> =
-    x.ChooseAsync (f >> Async.map Some)
-  default x.IterAsync (f:'T -> Async<unit>) : Async<unit> =
-    x.FoldAsync (fun () t -> f t) ()
 
 [<AutoOpen>]
 module AsyncSeqOp =
