@@ -2224,3 +2224,78 @@ let ``AsyncSeq.chooseAsync with async transformation should work`` () =
     Assert.AreEqual([6; 12], result)
   } |> Async.RunSynchronously
 
+// Advanced Coverage Improvement Tests - targeting specific uncovered functionality
+
+[<Test>]
+let ``AsyncSeqOp.FoldAsync with unfoldAsync should work`` () =
+  async {
+    // Create an AsyncSeq using unfoldAsync to trigger UnfoldAsyncEnumerator.FoldAsync path
+    let generator state = async {
+      if state < 5 then
+        return Some (state * 2, state + 1)
+      else
+        return None
+    }
+    let source = AsyncSeq.unfoldAsync generator 0
+    
+    // This should hit the uncovered FoldAsync method in UnfoldAsyncEnumerator
+    let folder acc x = async { return acc + x }
+    let! result = AsyncSeq.foldAsync folder 0 source
+    
+    // Expected: sum of [0, 2, 4, 6, 8] = 20
+    Assert.AreEqual(20, result)
+  } |> Async.RunSynchronously
+
+[<Test>]
+let ``AsyncSeqOp.FoldAsync with empty sequence should return init`` () =
+  async {
+    let generator _ = async { return None }
+    let source = AsyncSeq.unfoldAsync generator 0
+    let folder acc x = async { return acc + x }
+    let! result = AsyncSeq.foldAsync folder 42 source
+    Assert.AreEqual(42, result)
+  } |> Async.RunSynchronously
+
+[<Test>]
+let ``AsyncSeqOp.FoldAsync with exception in generator should propagate`` () =
+  async {
+    let generator state = async {
+      if state = 0 then
+        return Some (1, 1)
+      else
+        return failwith "generator error"
+    }
+    let source = AsyncSeq.unfoldAsync generator 0
+    
+    try
+      let folder acc x = async { return acc + x }
+      let! _ = AsyncSeq.foldAsync folder 0 source
+      Assert.Fail("Expected exception to be thrown")
+    with
+    | ex when ex.Message = "generator error" -> 
+      () // Expected
+  } |> Async.RunSynchronously
+
+[<Test>]
+let ``AsyncSeqOp.FoldAsync with exception in folder should propagate`` () =
+  async {
+    let generator state = async {
+      if state < 2 then
+        return Some (state, state + 1)
+      else
+        return None
+    }
+    let source = AsyncSeq.unfoldAsync generator 0
+    
+    try
+      let folder acc x = async {
+        if x = 1 then failwith "folder error"
+        return acc + x
+      }
+      let! _ = AsyncSeq.foldAsync folder 0 source
+      Assert.Fail("Expected exception to be thrown")
+    with
+    | ex when ex.Message = "folder error" -> 
+      () // Expected
+  } |> Async.RunSynchronously
+
