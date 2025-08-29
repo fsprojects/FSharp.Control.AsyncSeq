@@ -1253,7 +1253,7 @@ let ``Async.mergeAll should perform well``() =
 [<Test>]
 let ``Async.mergeAll should be fair``() =
   let s1 = asyncSeq {
-    do! Async.Sleep 30
+    do! Async.Sleep 300
     yield 1
   }
   let s2 = asyncSeq {
