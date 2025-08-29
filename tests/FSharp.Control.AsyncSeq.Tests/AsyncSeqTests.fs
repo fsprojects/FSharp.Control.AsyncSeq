@@ -1,5 +1,5 @@
 ﻿#if INTERACTIVE
-#load @"../../.paket/load/netcoreapp3.1/Test/NUnit.fsx"
+#r "nuget: NUnit, 3.9.0"
 #time "on"
 #else
 
@@ -10,7 +10,6 @@ open NUnit.Framework
 open FSharp.Control
 open System
 open System.Threading
-open System.Threading.Tasks
 
 type AsyncOps = AsyncOps with
   static member unit : Async<unit> = async { return () }
