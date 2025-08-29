@@ -374,7 +374,42 @@ module AsyncSeq =
                         member x.Dispose() = () } }
 
   let append (inp1: AsyncSeq<'T>) (inp2: AsyncSeq<'T>) : AsyncSeq<'T> =
-    AsyncGenerator.append inp1 inp2
+    // Optimized append implementation that doesn't create generator chains
+    // This fixes the memory leak issue in Issue #35
+    { new IAsyncEnumerable<'T> with
+        member x.GetEnumerator() =
+            let mutable currentEnumerator : IAsyncEnumerator<'T> option = None
+            let mutable useSecond = false
+            { new IAsyncEnumerator<'T> with
+                member x.MoveNext() = async {
+                    match currentEnumerator with
+                    | None ->
+                        // Start with the first sequence
+                        let enum1 = inp1.GetEnumerator()
+                        currentEnumerator <- Some enum1
+                        return! x.MoveNext()
+                    | Some enum when not useSecond ->
+                        // Try to get next element from first sequence
+                        let! result = enum.MoveNext()
+                        match result with
+                        | Some v -> return Some v
+                        | None ->
+                            // First sequence is exhausted, switch to second
+                            dispose enum
+                            let enum2 = inp2.GetEnumerator()
+                            currentEnumerator <- Some enum2
+                            useSecond <- true
+                            return! x.MoveNext()
+                    | Some enum ->
+                        // Get elements from second sequence
+                        return! enum.MoveNext()
+                }
+                member x.Dispose() =
+                    match currentEnumerator with
+                    | Some enum -> dispose enum
+                    | None -> ()
+            }
+    }
 
   let inline delay (f: unit -> AsyncSeq<'T>) : AsyncSeq<'T> =
     AsyncGenerator.delay f
