@@ -1819,6 +1819,69 @@ let ``async.For with exception in AsyncSeq should propagate``() =
   }
   |> Async.RunSynchronously
 
+// ----------------------------------------------------------------------------
+// Tests for previously uncovered modules to improve coverage
+
+[<Test>]
+let ``AsyncSeqExtensions - async.For with AsyncSeq`` () =
+  let mutable result = []
+  let computation = async {
+    for item in asyncSeq { yield 1; yield 2; yield 3 } do
+      result <- item :: result
+  }
+  computation |> Async.RunSynchronously
+  Assert.AreEqual([3; 2; 1], result)
+
+[<Test>]
+let ``AsyncSeqExtensions - async.For with empty AsyncSeq`` () =
+  let mutable result = []
+  let computation = async {
+    for item in AsyncSeq.empty do
+      result <- item :: result
+  }
+  computation |> Async.RunSynchronously
+  Assert.AreEqual([], result)
+
+[<Test>]
+let ``AsyncSeqExtensions - async.For with exception in AsyncSeq`` () =
+  let mutable exceptionCaught = false
+  let computation = async {
+    try
+      for item in asyncSeq { yield 1; failwith "test error"; yield 2 } do
+        ()
+    with
+    | ex when ex.Message = "test error" -> 
+        exceptionCaught <- true
+  }
+  computation |> Async.RunSynchronously
+  Assert.IsTrue(exceptionCaught)
+
+[<Test>]
+let ``Seq.ofAsyncSeq should work`` () =
+  let asyncSeqData = asyncSeq {
+    yield 1
+    yield 2
+    yield 3
+  }
+  let seqResult = Seq.ofAsyncSeq asyncSeqData |> Seq.toList
+  Assert.AreEqual([1; 2; 3], seqResult)
+
+[<Test>]
+let ``Seq.ofAsyncSeq with empty AsyncSeq`` () =
+  let seqResult = Seq.ofAsyncSeq AsyncSeq.empty |> Seq.toList
+  Assert.AreEqual([], seqResult)
+
+[<Test>]
+let ``Seq.ofAsyncSeq with exception`` () =
+  let asyncSeqWithError = asyncSeq {
+    yield 1
+    failwith "test error"
+    yield 2
+  }
+  Assert.Throws<System.Exception>(fun () -> 
+    Seq.ofAsyncSeq asyncSeqWithError |> Seq.toList |> ignore
+  ) |> ignore
+
 #if (NETSTANDARD2_1 || NETCOREAPP3_0)
 [<Test>]
 let ``AsyncSeq.ofAsyncEnum should roundtrip successfully``() =
