@@ -291,6 +291,27 @@ type AsyncSeqOp<'T> () =
 [<AutoOpen>]
 module AsyncSeqOp =
 
+  // Optimized enumerator for unfoldAsync with reduced allocations
+  [<Sealed>]
+  type OptimizedUnfoldEnumerator<'S, 'T> (f:'S -> Async<('T * 'S) option>, init:'S) =
+    let mutable currentState = init
+    let mutable disposed = false
+    
+    interface IAsyncEnumerator<'T> with
+      member __.MoveNext () : Async<'T option> = 
+        if disposed then async.Return None
+        else async {
+          let! result = f currentState
+          match result with
+          | None -> 
+            return None
+          | Some (value, nextState) ->
+            currentState <- nextState
+            return Some value
+        }
+      member __.Dispose () = 
+        disposed <- true
+
   type UnfoldAsyncEnumerator<'S, 'T> (f:'S -> Async<('T * 'S) option>, init:'S) =
     inherit AsyncSeqOp<'T> ()
     override x.IterAsync g = async {
@@ -337,17 +358,7 @@ module AsyncSeqOp =
       new UnfoldAsyncEnumerator<'S, 'U> (h, init) :> _
     interface IAsyncEnumerable<'T> with
       member __.GetEnumerator () =
-        let s = ref init
-        { new IAsyncEnumerator<'T> with
-            member __.MoveNext () : Async<'T option> = async {
-              let! next = f !s
-              match next with
-              | None ->
-                return None
-              | Some (a,s') ->
-                s := s'
-                return Some a }
-            member __.Dispose () = () }
+        new OptimizedUnfoldEnumerator<'S, 'T>(f, init) :> IAsyncEnumerator<'T>
 
 
 
@@ -784,14 +795,32 @@ module AsyncSeq =
   // --------------------------------------------------------------------------
   // Additional combinators (implemented as async/asyncSeq computations)
 
+  // Optimized mapAsync enumerator that avoids computation builder overhead
+  type private OptimizedMapAsyncEnumerator<'T, 'TResult>(source: IAsyncEnumerator<'T>, f: 'T -> Async<'TResult>) =
+    let mutable disposed = false
+    
+    interface IAsyncEnumerator<'TResult> with
+      member _.MoveNext() = async {
+        let! moveResult = source.MoveNext()
+        match moveResult with
+        | None -> return None
+        | Some value ->
+            let! mapped = f value
+            return Some mapped
+      }
+      
+      member _.Dispose() =
+        if not disposed then
+          disposed <- true
+          source.Dispose()
+
   let mapAsync f (source : AsyncSeq<'T>) : AsyncSeq<'TResult> =
     match source with
     | :? AsyncSeqOp<'T> as source -> source.MapAsync f
     | _ ->
-      asyncSeq {
-        for itm in source do
-        let! v = f itm
-        yield v }
+      { new IAsyncEnumerable<'TResult> with
+          member _.GetEnumerator() = 
+            new OptimizedMapAsyncEnumerator<'T, 'TResult>(source.GetEnumerator(), f) :> IAsyncEnumerator<'TResult> }
 
   let mapiAsync f (source : AsyncSeq<'T>) : AsyncSeq<'TResult> = asyncSeq {
     let i = ref 0L
