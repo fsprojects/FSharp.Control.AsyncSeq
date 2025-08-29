@@ -1243,12 +1243,12 @@ let ``Async.mergeAll should work``() =
 let ``Async.mergeAll should perform well``() =
     let mergeTest n =
         [ for i in 1 .. n ->
-            asyncSeq{ do! Async.Sleep 1;
+            asyncSeq{ do! Async.Sleep 500;
                       yield i } ]
         |> AsyncSeq.mergeAll
         |> AsyncSeq.toListSynchronously
 
-    Assert.DoesNotThrow(fun _ -> mergeTest 100 |> ignore)
+    Assert.DoesNotThrow(fun _ -> mergeTest 500 |> ignore)
 
 [<Test>]
 let ``Async.mergeAll should be fair``() =
