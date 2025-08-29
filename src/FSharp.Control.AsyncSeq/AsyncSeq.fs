@@ -1384,6 +1384,11 @@ module AsyncSeq =
   let interleave (source1:AsyncSeq<'T>) (source2:AsyncSeq<'T>) : AsyncSeq<'T> =
     interleaveChoice source1 source2 |> map (function Choice1Of2 x -> x | Choice2Of2 x -> x)
 
+  let interleaveMany (xs : #seq<AsyncSeq<'T>>) : AsyncSeq<'T> =
+    let mutable result = empty
+    for x in xs do
+      result <- interleave result x
+    result
 
   let bufferByCount (bufferSize:int) (source:AsyncSeq<'T>) : AsyncSeq<'T[]> =
     if (bufferSize < 1) then invalidArg "bufferSize" "must be positive"
