@@ -1882,6 +1882,86 @@ let ``Seq.ofAsyncSeq with exception`` () =
     Seq.ofAsyncSeq asyncSeqWithError |> Seq.toList |> ignore
   ) |> ignore
 
+[<Test>]
+let ``AsyncSeq.intervalMs should generate sequence with timestamps``() = 
+  let result = 
+    AsyncSeq.intervalMs 50
+    |> AsyncSeq.take 3
+    |> AsyncSeq.toListAsync
+    |> AsyncOps.timeoutMs 1000
+    |> Async.RunSynchronously
+  
+  Assert.AreEqual(3, result.Length)
+  // Verify timestamps are increasing
+  Assert.IsTrue(result.[1] > result.[0])
+  Assert.IsTrue(result.[2] > result.[1])
+
+[<Test>]
+let ``AsyncSeq.intervalMs with zero period should work``() = 
+  let result = 
+    AsyncSeq.intervalMs 0
+    |> AsyncSeq.take 2
+    |> AsyncSeq.toListAsync
+    |> AsyncOps.timeoutMs 500
+    |> Async.RunSynchronously
+  
+  Assert.AreEqual(2, result.Length)
+
+[<Test>]
+let ``AsyncSeq.take with negative count should throw ArgumentException``() = 
+  Assert.Throws<System.ArgumentException>(fun () ->
+    AsyncSeq.ofSeq [1;2;3]
+    |> AsyncSeq.take -1
+    |> AsyncSeq.toListAsync
+    |> Async.RunSynchronously
+    |> ignore
+  ) |> ignore
+
+[<Test>]
+let ``AsyncSeq.skip with negative count should throw ArgumentException``() = 
+  Assert.Throws<System.ArgumentException>(fun () ->
+    AsyncSeq.ofSeq [1;2;3]
+    |> AsyncSeq.skip -1
+    |> AsyncSeq.toListAsync
+    |> Async.RunSynchronously
+    |> ignore
+  ) |> ignore
+
+[<Test>]
+let ``AsyncSeq.take zero should return empty sequence``() = 
+  let expected = []
+  let actual = 
+    AsyncSeq.ofSeq [1;2;3]
+    |> AsyncSeq.take 0
+    |> AsyncSeq.toListAsync
+    |> Async.RunSynchronously
+  
+  Assert.AreEqual(expected, actual)
+
+[<Test>]  
+let ``AsyncSeq.skip zero should return original sequence``() = 
+  let expected = [1;2;3]
+  let actual = 
+    AsyncSeq.ofSeq [1;2;3]
+    |> AsyncSeq.skip 0
+    |> AsyncSeq.toListAsync
+    |> Async.RunSynchronously
+  
+  Assert.AreEqual(expected, actual)
+
+[<Test>]
+let ``AsyncSeq.replicateInfinite with exception should propagate exception``() =
+  let exceptionMsg = "test exception"
+  let expected = System.ArgumentException(exceptionMsg)
+  
+  Assert.Throws<System.ArgumentException>(fun () ->
+    AsyncSeq.replicateInfinite (raise expected)
+    |> AsyncSeq.take 2
+    |> AsyncSeq.toListAsync
+    |> Async.RunSynchronously
+    |> ignore
+  ) |> ignore
+
 #if (NETSTANDARD2_1 || NETCOREAPP3_0)
 [<Test>]
 let ``AsyncSeq.ofAsyncEnum should roundtrip successfully``() =
@@ -2102,3 +2182,115 @@ let ``AsyncSeq.mapAsyncParallel with exception should propagate``() =
   Assert.Throws<System.Exception>(fun () ->
     exceptionSeq |> AsyncSeq.toListSynchronously |> ignore
   ) |> ignore
+
+// ----------------------------------------------------------------------------
+// Additional Coverage Tests targeting uncovered edge cases and branches
+
+[<Test>]
+let ``AsyncSeq.bufferByCount with size 1 should work`` () =
+  let source = asyncSeq { yield 1; yield 2; yield 3 }
+  let result = AsyncSeq.bufferByCount 1 source |> AsyncSeq.toListSynchronously
+  Assert.AreEqual([[|1|]; [|2|]; [|3|]], result)
+
+[<Test>]
+let ``AsyncSeq.bufferByCount with empty sequence should return empty`` () =
+  let result = AsyncSeq.bufferByCount 2 AsyncSeq.empty |> AsyncSeq.toListSynchronously
+  Assert.AreEqual([], result)
+
+[<Test>]
+let ``AsyncSeq.bufferByCount with size larger than sequence should return partial`` () =
+  let source = asyncSeq { yield 1; yield 2 }
+  let result = AsyncSeq.bufferByCount 5 source |> AsyncSeq.toListSynchronously
+  Assert.AreEqual([[|1; 2|]], result)
+
+[<Test>]
+let ``AsyncSeq.pairwise with empty sequence should return empty`` () =
+  let result = AsyncSeq.pairwise AsyncSeq.empty |> AsyncSeq.toListSynchronously
+  Assert.AreEqual([], result)
+
+[<Test>]
+let ``AsyncSeq.pairwise with single element should return empty`` () =
+  let source = asyncSeq { yield 42 }
+  let result = AsyncSeq.pairwise source |> AsyncSeq.toListSynchronously
+  Assert.AreEqual([], result)
+
+[<Test>]
+let ``AsyncSeq.pairwise with three elements should produce two pairs`` () =
+  let source = asyncSeq { yield 1; yield 2; yield 3 }
+  let result = AsyncSeq.pairwise source |> AsyncSeq.toListSynchronously
+  Assert.AreEqual([(1, 2); (2, 3)], result)
+
+[<Test>]
+let ``AsyncSeq.distinctUntilChangedWith should work with custom equality`` () =
+  let source = asyncSeq { yield "a"; yield "A"; yield "B"; yield "b"; yield "c" }
+  let customEq (x: string) (y: string) = x.ToLower() = y.ToLower()
+  let result = AsyncSeq.distinctUntilChangedWith customEq source |> AsyncSeq.toListSynchronously
+  Assert.AreEqual(["a"; "B"; "c"], result)
+
+[<Test>]
+let ``AsyncSeq.distinctUntilChangedWith with all same elements should return single`` () =
+  let source = asyncSeq { yield 1; yield 1; yield 1 }
+  let result = AsyncSeq.distinctUntilChangedWith (=) source |> AsyncSeq.toListSynchronously
+  Assert.AreEqual([1], result)
+
+[<Test>]
+let ``AsyncSeq.append with both sequences having exceptions should propagate first`` () =
+  async {
+    let seq1 = asyncSeq { yield 1; failwith "error1" }
+    let seq2 = asyncSeq { yield 2; failwith "error2" }
+    let combined = AsyncSeq.append seq1 seq2
+    
+    try
+      let! _ = AsyncSeq.toListAsync combined
+      Assert.Fail("Expected exception to be thrown")
+    with
+    | ex when ex.Message = "error1" -> 
+      () // Expected - first sequence's error should be thrown
+    | ex -> 
+      Assert.Fail($"Unexpected exception: {ex.Message}")
+  } |> Async.RunSynchronously
+
+[<Test>]
+let ``AsyncSeq.concat with nested exceptions should propagate properly`` () =
+  async {
+    let nested = asyncSeq {
+      yield asyncSeq { yield 1; yield 2 }
+      yield asyncSeq { failwith "nested error" }
+      yield asyncSeq { yield 3 }
+    }
+    let flattened = AsyncSeq.concat nested
+    
+    try
+      let! result = AsyncSeq.toListAsync flattened
+      Assert.Fail("Expected exception to be thrown")
+    with
+    | ex when ex.Message = "nested error" -> 
+      () // Expected
+    | ex -> 
+      Assert.Fail($"Unexpected exception: {ex.Message}")
+  } |> Async.RunSynchronously
+
+[<Test>]
+let ``AsyncSeq.choose with all None should return empty`` () =
+  let source = asyncSeq { yield 1; yield 2; yield 3 }
+  let result = AsyncSeq.choose (fun _ -> None) source |> AsyncSeq.toListSynchronously
+  Assert.AreEqual([], result)
+
+[<Test>]
+let ``AsyncSeq.choose with mixed Some and None should filter correctly`` () =
+  let source = asyncSeq { yield 1; yield 2; yield 3; yield 4 }
+  let chooser x = if x % 2 = 0 then Some (x * 2) else None
+  let result = AsyncSeq.choose chooser source |> AsyncSeq.toListSynchronously
+  Assert.AreEqual([4; 8], result)
+
+[<Test>]
+let ``AsyncSeq.chooseAsync with async transformation should work`` () =
+  async {
+    let source = asyncSeq { yield 1; yield 2; yield 3; yield 4 }
+    let chooserAsync x = async {
+      if x % 2 = 0 then return Some (x * 3) else return None
+    }
+    let! result = AsyncSeq.chooseAsync chooserAsync source |> AsyncSeq.toListAsync
+    Assert.AreEqual([6; 12], result)
+  } |> Async.RunSynchronously
+
