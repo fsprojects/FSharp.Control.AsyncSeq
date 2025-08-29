@@ -9,17 +9,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-    - name: Setup .NET 
-      uses: actions/setup-dotnet@v1
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4.3.1
       with:
-        dotnet-version: '5.0.202'
+        dotnet-version: '8.0.x'
     - name: Setup Node.js environment
       uses: actions/setup-node@v2.4.0
       with:
-        node-version: 14.17.*        
+        node-version: 14.17.*
     - name: Install tools
       run: dotnet tool restore
-    - name: Build and Test 
+    - name: Build and Test
       run: dotnet test -c Release
     - name: Test Fable
-      run: cd tests/fable && npm i && npm test && cd ../..
+      run: (cd tests/fable && npm i && npm test)
