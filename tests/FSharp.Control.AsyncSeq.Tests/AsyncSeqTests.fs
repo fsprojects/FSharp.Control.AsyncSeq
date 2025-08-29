@@ -1941,3 +1941,73 @@ let ``AsyncSeq.toAsyncEnum can be cancelled``() : unit =
   |> Async.RunSynchronously
 
 #endif
+
+// Additional coverage improvement tests - parameter validation and edge cases
+[<Test>]
+let ``AsyncSeq.bufferByCount with zero size should throw ArgumentException``() =
+  let s = asyncSeq { yield 1; yield 2; yield 3 }
+  Assert.Throws<System.ArgumentException>(fun () ->
+    s |> AsyncSeq.bufferByCount 0 |> AsyncSeq.toListSynchronously |> ignore
+  ) |> ignore
+
+[<Test>]
+let ``AsyncSeq.bufferByCount with negative size should throw ArgumentException``() =
+  let s = asyncSeq { yield 1; yield 2; yield 3 }
+  Assert.Throws<System.ArgumentException>(fun () ->
+    s |> AsyncSeq.bufferByCount -1 |> AsyncSeq.toListSynchronously |> ignore
+  ) |> ignore
+
+[<Test>]
+let ``AsyncSeq.replicate with negative count should throw ArgumentException``() =
+  Assert.Throws<System.ArgumentException>(fun () ->
+    AsyncSeq.replicate -1 42 |> AsyncSeq.toListSynchronously |> ignore
+  ) |> ignore
+
+[<Test>]
+let ``AsyncSeq.init with very large count should work``() =
+  let result = AsyncSeq.init 3L (fun i -> int i * 2) |> AsyncSeq.toListSynchronously
+  Assert.AreEqual([0; 2; 4], result)
+
+[<Test>]
+let ``AsyncSeq.bufferByCountAndTime with zero count should throw ArgumentException``() =
+  let s = asyncSeq { yield 1; yield 2; yield 3 }
+  Assert.Throws<System.ArgumentException>(fun () ->
+    s |> AsyncSeq.bufferByCountAndTime 0 100 |> AsyncSeq.toListSynchronously |> ignore
+  ) |> ignore
+
+[<Test>]
+let ``AsyncSeq.bufferByTime with negative time should throw ArgumentException``() =
+  let s = asyncSeq { yield 1; yield 2; yield 3 }
+  Assert.Throws<System.ArgumentException>(fun () ->
+    s |> AsyncSeq.bufferByTime -1 |> AsyncSeq.toListSynchronously |> ignore
+  ) |> ignore
+
+[<Test>]
+let ``AsyncSeq.pairwise with single element should return empty``() =
+  let s = asyncSeq { yield 42 }
+  let s' = s |> AsyncSeq.pairwise |> AsyncSeq.toListSynchronously
+  Assert.True(([] = s'))
+
+[<Test>]
+let ``AsyncSeq.pairwise with empty sequence should return empty``() =
+  let s = AsyncSeq.empty<int>
+  let s' = s |> AsyncSeq.pairwise |> AsyncSeq.toListSynchronously
+  Assert.True(([] = s'))
+
+[<Test>]
+let ``AsyncSeq.replicateInfiniteAsync with exception should propagate on enumeration``() =
+  let exceptionSeq = AsyncSeq.replicateInfiniteAsync (async { failwith "test exception" })
+  Assert.Throws<System.Exception>(fun () ->
+    exceptionSeq |> AsyncSeq.take 1 |> AsyncSeq.toListSynchronously |> ignore
+  ) |> ignore
+
+[<Test>]
+let ``AsyncSeq.mapAsyncParallel with exception should propagate``() =
+  let s = asyncSeq { yield 1; yield 2; yield 3 }
+  let exceptionSeq = s |> AsyncSeq.mapAsyncParallel (fun x -> async { 
+    if x = 2 then return failwith "test exception" 
+    else return x * 2 
+  })
+  Assert.Throws<System.Exception>(fun () ->
+    exceptionSeq |> AsyncSeq.toListSynchronously |> ignore
+  ) |> ignore
