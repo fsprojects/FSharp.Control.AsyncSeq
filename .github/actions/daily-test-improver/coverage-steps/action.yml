@@ -24,7 +24,7 @@ runs:
     - name: Run tests with coverage
       shell: bash
       run: |
-        dotnet test --no-build --collect:"XPlat Code Coverage" --results-directory ./coverage --settings coverlet.runsettings --logger "console;verbosity=detailed" || dotnet test --no-build --collect:"XPlat Code Coverage" --results-directory ./coverage --logger "console;verbosity=detailed"
+        dotnet test --collect:"XPlat Code Coverage" --results-directory ./coverage --logger "console;verbosity=detailed"
         
     - name: Install ReportGenerator
       shell: bash
@@ -33,7 +33,7 @@ runs:
     - name: Generate coverage report
       shell: bash
       run: |
-        reportgenerator -reports:"coverage/**/coverage.cobertura.xml" -targetdir:"coverage/report" -reporttypes:Html -reporttypes:Badges -reporttypes:Cobertura -reporttypes:JsonSummary
+        reportgenerator -reports:"coverage/**/coverage.cobertura.xml" -targetdir:"coverage/report" -reporttypes:"Html;Badges;Cobertura;JsonSummary"
         
     - name: Display coverage summary
       shell: bash
