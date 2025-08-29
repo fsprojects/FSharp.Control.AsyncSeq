@@ -1762,6 +1762,63 @@ let ``AsyncSeq.sortByDescending should work``() =
   let actual = input |> AsyncSeq.sortByDescending fn
   Assert.AreEqual(expected, actual)
 
+[<Test>]
+let ``async.For with AsyncSeq should work``() =
+  async {
+    let mutable results = []
+    let source = asyncSeq { 
+      yield 1
+      yield 2
+      yield 3
+    }
+    
+    do! async {
+      for item in source do
+        results <- item :: results
+    }
+    
+    Assert.AreEqual([3; 2; 1], results)
+  }
+  |> Async.RunSynchronously
+
+[<Test>]
+let ``async.For with empty AsyncSeq should work``() =
+  async {
+    let mutable count = 0
+    let source = AsyncSeq.empty
+    
+    do! async {
+      for item in source do
+        count <- count + 1
+    }
+    
+    Assert.AreEqual(0, count)
+  }
+  |> Async.RunSynchronously
+
+[<Test>]
+let ``async.For with exception in AsyncSeq should propagate``() =
+  async {
+    let source = asyncSeq {
+      yield 1
+      failwith "test exception"
+      yield 2
+    }
+    
+    try
+      do! async {
+        for item in source do
+          ()
+      }
+      Assert.Fail("Expected exception to be thrown")
+    with
+    | ex when ex.Message = "test exception" -> 
+      () // Expected
+    | ex -> 
+      Assert.Fail($"Unexpected exception: {ex.Message}")
+  }
+  |> Async.RunSynchronously
+
 // ----------------------------------------------------------------------------
 // Tests for previously uncovered modules to improve coverage
 
@@ -1940,4 +1997,39 @@ let ``AsyncSeq.toAsyncEnum can be cancelled``() : unit =
   }
   |> Async.RunSynchronously
 
+[<Test>]
+let ``Seq.ofAsyncSeq should work``() =
+  let source = asyncSeq {
+    yield 1
+    yield 2
+    yield 3
+  }
+  
+  let result = Seq.ofAsyncSeq source |> Seq.toList
+  Assert.AreEqual([1; 2; 3], result)
+
+[<Test>]
+let ``Seq.ofAsyncSeq with empty AsyncSeq should work``() =
+  let source = AsyncSeq.empty
+  let result = Seq.ofAsyncSeq source |> Seq.toList
+  Assert.AreEqual([], result)
+
+[<Test>]
+let ``Seq.ofAsyncSeq with exception should propagate``() =
+  let source = asyncSeq {
+    yield 1
+    failwith "test exception"
+    yield 2
+  }
+  
+  try
+    let _ = Seq.ofAsyncSeq source |> Seq.toList
+    Assert.Fail("Expected exception to be thrown")
+  with
+  | ex when ex.Message = "test exception" -> 
+    () // Expected
+  | ex -> 
+    Assert.Fail($"Unexpected exception: {ex.Message}")
+
 #endif
+
