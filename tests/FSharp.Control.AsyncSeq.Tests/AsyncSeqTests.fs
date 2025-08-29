@@ -2113,3 +2113,132 @@ let ``Seq.ofAsyncSeq with exception should propagate``() =
 
 #endif
 
+[<Test>]
+let ``AsyncSeq.fold with empty sequence should return seed``() =
+  let result = AsyncSeq.empty 
+               |> AsyncSeq.fold (+) 10 
+               |> Async.RunSynchronously
+  Assert.AreEqual(10, result)
+
+[<Test>]
+let ``AsyncSeq.ofSeq should work with large sequence``() =
+  let largeSeq = seq { 1 .. 1000 }
+  let asyncSeq = AsyncSeq.ofSeq largeSeq
+  let result = asyncSeq |> AsyncSeq.toListAsync |> Async.RunSynchronously
+  Assert.AreEqual(1000, result.Length)
+  Assert.AreEqual(1, result.[0])
+  Assert.AreEqual(1000, result.[999])
+
+[<Test>]
+let ``AsyncSeq.mapAsync should preserve order with async transformations``() =
+  let data = [1; 2; 3; 4; 5] |> AsyncSeq.ofSeq
+  let asyncTransform x = async {
+    do! Async.Sleep(50 - x * 10) // Shorter sleep for larger numbers
+    return x * 2
+  }
+  
+  let result = data 
+               |> AsyncSeq.mapAsync asyncTransform
+               |> AsyncSeq.toListAsync 
+               |> Async.RunSynchronously
+  Assert.AreEqual([2; 4; 6; 8; 10], result)
+
+[<Test>]
+let ``AsyncSeq.mapAsync should propagate exceptions``() =
+  let data = [1; 2; 3] |> AsyncSeq.ofSeq  
+  let asyncTransform x = async {
+    if x = 2 then failwith "test error"
+    return x * 2
+  }
+  
+  try
+    data 
+    |> AsyncSeq.mapAsync asyncTransform
+    |> AsyncSeq.toListAsync 
+    |> Async.RunSynchronously
+    |> ignore
+    Assert.Fail("Expected exception to be thrown")
+  with
+  | ex when ex.Message = "test error" -> () // Expected
+  | ex -> Assert.Fail($"Unexpected exception: {ex.Message}")
+
+[<Test>]
+let ``AsyncSeq.chooseAsync should filter and transform``() =
+  let data = [1; 2; 3; 4; 5] |> AsyncSeq.ofSeq
+  let asyncChoose x = async {
+    if x % 2 = 0 then return Some (x * 10)
+    else return None
+  }
+  
+  let result = data 
+               |> AsyncSeq.chooseAsync asyncChoose
+               |> AsyncSeq.toListAsync 
+               |> Async.RunSynchronously
+  Assert.AreEqual([20; 40], result)
+
+[<Test>]
+let ``AsyncSeq.filterAsync should work with async predicates``() =
+  let data = [1; 2; 3; 4; 5] |> AsyncSeq.ofSeq
+  let asyncPredicate x = async {
+    do! Async.Sleep(1)
+    return x % 2 = 1
+  }
+  
+  let result = data 
+               |> AsyncSeq.filterAsync asyncPredicate
+               |> AsyncSeq.toListAsync 
+               |> Async.RunSynchronously
+  Assert.AreEqual([1; 3; 5], result)
+
+[<Test>]
+let ``AsyncSeq.scan should work with accumulator``() =
+  let data = [1; 2; 3; 4] |> AsyncSeq.ofSeq
+  let result = data 
+               |> AsyncSeq.scan (+) 0
+               |> AsyncSeq.toListAsync 
+               |> Async.RunSynchronously
+  Assert.AreEqual([0; 1; 3; 6; 10], result)
+
+[<Test>]
+let ``AsyncSeq.scanAsync should work with async accumulator``() =
+  let data = [1; 2; 3] |> AsyncSeq.ofSeq
+  let asyncFolder acc x = async {
+    do! Async.Sleep(1)
+    return acc + x
+  }
+  let result = data 
+               |> AsyncSeq.scanAsync asyncFolder 0
+               |> AsyncSeq.toListAsync 
+               |> Async.RunSynchronously
+  Assert.AreEqual([0; 1; 3; 6], result)
+
+[<Test>]
+let ``AsyncSeq.threadStateAsync should maintain state correctly``() =
+  let data = [1; 2; 3; 4] |> AsyncSeq.ofSeq
+  let statefulFolder state x = async {
+    let newState = state + 1
+    let output = x * newState
+    return (output, newState)
+  }
+  
+  let result = data 
+               |> AsyncSeq.threadStateAsync statefulFolder 0
+               |> AsyncSeq.toListAsync 
+               |> Async.RunSynchronously
+  Assert.AreEqual([1; 4; 9; 16], result)
+
+[<Test>]
+let ``AsyncSeq.lastOrDefault should return default for empty sequence``() =
+  let result = AsyncSeq.empty 
+               |> AsyncSeq.lastOrDefault 999
+               |> Async.RunSynchronously
+  Assert.AreEqual(999, result)
+
+[<Test>]
+let ``AsyncSeq.lastOrDefault should return last element``() =
+  let data = [1; 2; 3; 4; 5] |> AsyncSeq.ofSeq
+  let result = data 
+               |> AsyncSeq.lastOrDefault 999
+               |> Async.RunSynchronously
+  Assert.AreEqual(5, result)
+
