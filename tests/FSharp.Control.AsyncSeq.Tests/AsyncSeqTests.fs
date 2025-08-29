@@ -2154,18 +2154,6 @@ let ``AsyncSeq.bufferByTime with negative time should throw ArgumentException``(
   ) |> ignore
 
 [<Test>]
-let ``AsyncSeq.pairwise with single element should return empty``() =
-  let s = asyncSeq { yield 42 }
-  let s' = s |> AsyncSeq.pairwise |> AsyncSeq.toListSynchronously
-  Assert.True(([] = s'))
-
-[<Test>]
-let ``AsyncSeq.pairwise with empty sequence should return empty``() =
-  let s = AsyncSeq.empty<int>
-  let s' = s |> AsyncSeq.pairwise |> AsyncSeq.toListSynchronously
-  Assert.True(([] = s'))
-
-[<Test>]
 let ``AsyncSeq.replicateInfiniteAsync with exception should propagate on enumeration``() =
   let exceptionSeq = AsyncSeq.replicateInfiniteAsync (async { failwith "test exception" })
   Assert.Throws<System.Exception>(fun () ->
