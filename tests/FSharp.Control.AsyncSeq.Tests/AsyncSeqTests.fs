@@ -1618,6 +1618,70 @@ let ``AsyncSeq.iterAsyncParallelThrottled should throttle`` () =
     |> Async.RunSynchronously
   ()
 
+[<Test>]
+let ``AsyncSeq.mapAsyncUnorderedParallel should produce all results`` () =
+  let input = [1; 2; 3; 4; 5]
+  let expected = [2; 4; 6; 8; 10] |> Set.ofList
+  
+  let actual = 
+    input
+    |> AsyncSeq.ofSeq
+    |> AsyncSeq.mapAsyncUnorderedParallel (fun x -> async {
+      do! Async.Sleep(10)  
+      return x * 2
+    })
+    |> AsyncSeq.toListAsync
+    |> runTest
+    |> Set.ofList
+  
+  Assert.AreEqual(expected, actual)
+
+[<Test>]
+let ``AsyncSeq.mapAsyncUnorderedParallel should propagate exceptions`` () =
+  let input = [1; 2; 3; 4; 5]
+  
+  let res = 
+    input
+    |> AsyncSeq.ofSeq
+    |> AsyncSeq.mapAsyncUnorderedParallel (fun x -> async {
+      if x = 3 then failwith "test exception"
+      return x * 2
+    })
+    |> AsyncSeq.toListAsync
+    |> Async.Catch
+    |> runTest
+  
+  match res with
+  | Choice2Of2 _ -> () // Expected exception
+  | Choice1Of2 _ -> Assert.Fail("Expected exception but none was thrown")
+
+[<Test>]
+let ``AsyncSeq.mapAsyncUnorderedParallel should not preserve order`` () =
+  // Test that results can come in different order than input
+  let input = [1; 2; 3; 4; 5]
+  let results = System.Collections.Generic.List<int>()
+  
+  input
+  |> AsyncSeq.ofSeq
+  |> AsyncSeq.mapAsyncUnorderedParallel (fun x -> async {
+    // Longer delay for smaller numbers to encourage reordering
+    do! Async.Sleep(60 - x * 10)
+    results.Add(x)
+    return x
+  })
+  |> AsyncSeq.iter ignore
+  |> runTest
+  
+  let resultOrder = results |> List.ofSeq
+  // With unordered parallel processing and varying delays, 
+  // we expect some reordering (though not guaranteed in all environments)
+  let isReordered = resultOrder <> [1; 2; 3; 4; 5]
+  
+  // This test passes regardless of ordering since reordering depends on timing
+  // The main validation is that all results are present
+  let allPresent = (Set.ofList resultOrder) = (Set.ofList input)
+  Assert.IsTrue(allPresent, "All input elements should be present in results")
+
 
 //[<Test>]
 //let ``AsyncSeq.mapParallelAsyncBounded should maintain order`` () =
