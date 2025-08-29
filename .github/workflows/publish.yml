@@ -8,16 +8,16 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Setup .NET
-      uses: actions/setup-dotnet@v1
+      uses: actions/setup-dotnet@v4.3.1
       with:
-        dotnet-version: '5.0.202'
+        dotnet-version: '8.0.x'
     - name: Install tools
       run: dotnet tool restore
-    - name: Build and Test 
+    - name: Build and Test
       run: dotnet test -c Release
     - name: Pack
       run: dotnet pack -c Release
-    - name: Build docs 
+    - name: Build docs
       run: dotnet fsdocs build --properties Configuration=Release
     - name: Deploy
       uses: peaceiris/actions-gh-pages@v3
@@ -31,4 +31,3 @@ jobs:
 
 # NUGET_ORG_TOKEN_2021 is listed in "Repository secrets" in https://github.com/fsprojects/FSharp.Control.AsyncSeq/settings/secrets/actions
 # note, the nuget org token expires around 24 July 2022
-

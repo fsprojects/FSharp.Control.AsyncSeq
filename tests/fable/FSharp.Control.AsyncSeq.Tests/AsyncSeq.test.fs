@@ -41,9 +41,6 @@ let inline IsCancellationExn (e:exn) =
 let AreCancellationExns (e1:exn) (e2:exn) =
     IsCancellationExn e1 && IsCancellationExn e2
 
-let runTimeout (timeoutMs:int) (a:Async<'a>) : 'a =
-    Async.RunSynchronously (a, timeoutMs)
-
 expect.extend("toEqualAsyncSeq", fun (actual: AsyncSeq<obj>) (expected: AsyncSeq<obj>) (timeout: int) (exnEq: exn -> exn -> bool) ->
     async {
         let! expected = expected |> AsyncSeq.toListAsync |> AsyncOps.timeoutMs timeout |> Async.Catch
@@ -56,7 +53,7 @@ expect.extend("toEqualAsyncSeq", fun (actual: AsyncSeq<obj>) (expected: AsyncSeq
             | _ -> false
             |> fun b -> { pass = b; message = fun () -> sprintf "expected = %A actual = %A" expected actual }
     } |> Async.StartAsPromise)
-    
+
 expect.extend("toEqualLooseChoice", fun (actual: Choice<obj,exn>) (expected: Choice<obj,exn>) ->
     match expected,actual with
     | Choice1Of2 exp, Choice1Of2 act -> exp = act
@@ -98,11 +95,11 @@ type Jest with
 Jest.test("AsyncSeq.never should equal itself", async {
     let! n1 = AsyncSeq.never<int> |> AsyncSeq.toListAsync |> Async.Catch
     let! n2 = AsyncSeq.never<int> |> AsyncSeq.toListAsync |> Async.Catch
-    
+
     Jest.expect(n1).toEqualLooseChoice(n2)
 })
 
-Jest.describe("AsyncSeq.concat", fun () -> 
+Jest.describe("AsyncSeq.concat", fun () ->
     Jest.test("AsyncSeq.concatSeq works", async {
         let ls = [ [1;2] ; [3;4] ]
         let actual = AsyncSeq.ofSeq ls |> AsyncSeq.concatSeq
@@ -119,7 +116,7 @@ Jest.describe("AsyncSeq.concat", fun () ->
                     |> AsyncSeq.ofSeq
                     |> AsyncSeq.concat
                     |> AsyncSeq.toArrayAsync
-        
+
                 let! expected =
                     Seq.init m (fun _ -> Seq.init n id)
                     |> AsyncSeq.ofSeq
@@ -147,7 +144,7 @@ Jest.test("AsyncSeq.length works", async {
 
         Jest.expect(actual64 |> int).toEqual(expected)
 })
-    
+
 Jest.test("AsyncSeq.contains works", async {
     for i in 0 .. 10 do
         let ls = [ 1 .. i ]
@@ -166,7 +163,7 @@ Jest.describe("AsyncSeq.pick", fun () ->
                 let chooser x = if x = j then Some (string (x+1)) else None
                 let! actual = AsyncSeq.ofSeq ls |> AsyncSeq.pick chooser |> Async.Catch
                 let expected = (fun () -> ls |> Seq.pick chooser) |> catch
-    
+
                 do Jest.expect(actual).toEqualLooseChoice(expected)
     })
 
@@ -176,7 +173,7 @@ Jest.describe("AsyncSeq.pick", fun () ->
             for j in [0;i;i+1] do
                 let actual = AsyncSeq.ofSeq ls |> AsyncSeq.tryPick (fun x -> if x = j then Some (string (x+1)) else None)
                 let expected = ls |> Seq.tryPick (fun x -> if x = j then Some (string (x+1)) else None)
-    
+
                 do! Jest.expect(actual).toEqual(expected)
     })
 )
@@ -211,7 +208,7 @@ Jest.test("AsyncSeq.forall works", async {
             do! Jest.expect(actual).toEqual(expected)
 })
 
-Jest.describe("AsyncSeq.unfold", fun () -> 
+Jest.describe("AsyncSeq.unfold", fun () ->
     Jest.test("AsyncSeq.unfoldAsync", async {
         let gen s =
             if s < 3 then (s,s + 1) |> Some
@@ -221,7 +218,7 @@ Jest.describe("AsyncSeq.unfold", fun () ->
 
         do! Jest.expect(actual).toEqualAsyncSeq(expected)
     })
-    
+
     Jest.test("AsyncSeq.unfold", async {
         let gen s =
             if s < 3 then (s,s + 1) |> Some
@@ -259,7 +256,7 @@ Jest.describe("AsyncSeq.unfold", fun () ->
     })
 )
 
-Jest.describe("AsyncSeq.interleaveChoice", fun () -> 
+Jest.describe("AsyncSeq.interleaveChoice", fun () ->
     Jest.test("AsyncSeq.interleaveChoice", async {
         let s1 = AsyncSeq.ofSeq ["a";"b";"c"]
         let s2 = AsyncSeq.ofSeq [1;2;3]
@@ -321,7 +318,7 @@ Jest.describe("AsyncSeq.interleaveChoice", fun () ->
     })
 )
 
-Jest.describe("AsyncSeq.interleave", fun () -> 
+Jest.describe("AsyncSeq.interleave", fun () ->
     Jest.test("AsyncSeq.interleave", async {
         let s1 = AsyncSeq.ofSeq ["a";"b";"c"]
         let s2 = AsyncSeq.ofSeq ["1";"2";"3"]
@@ -402,12 +399,12 @@ Jest.describe("AsyncSeq.interleave", fun () ->
 
                     return! AsyncSeq.interleave s1 s2 |> AsyncSeq.toArrayAsync
                 }
-            
+
             do! Jest.expect(f |> Async.StartAsPromise).rejects.toThrow()
     })
 )
 
-Jest.describe("AsyncSeq.bufferBy", fun () -> 
+Jest.describe("AsyncSeq.bufferBy", fun () ->
     Jest.test("AsyncSeq.bufferByCount", async {
         let! actual =
             asyncSeq {
@@ -433,7 +430,7 @@ Jest.describe("AsyncSeq.bufferBy", fun () ->
                 }
                 |> AsyncSeq.bufferByCount 1 |> AsyncSeq.toArrayAsync
             let expected = [|for i in 1 .. sz -> [|i|]|]
-            
+
             Jest.expect(actual).toEqual(expected)
             Jest.expect(actual).toHaveLength(expected.Length)
     })
@@ -469,7 +466,7 @@ Jest.describe("AsyncSeq.try", fun () ->
 
         Jest.expect(x.Value).toBe(6)
     })
-    
+
     Jest.test("try finally works exception", async {
         let x = ref 0
         let s =
@@ -586,7 +583,7 @@ Jest.describe("AsyncSeq.skip", fun () ->
             let p i = i <= 2
             let! actual = ls |> AsyncSeq.ofSeq |> AsyncSeq.skipWhileAsync (p >> async.Return) |> AsyncSeq.toArrayAsync
             let! expected = ls |> Seq.skipWhile p |> AsyncSeq.ofSeq |> AsyncSeq.toArrayAsync
-    
+
             Jest.expect(actual).toEqual(expected)
     })
 
@@ -604,14 +601,14 @@ Jest.describe("AsyncSeq.take", fun () ->
             let p i = i < 4
             let! actual = ls |> AsyncSeq.ofSeq |> AsyncSeq.takeWhileAsync (p >> async.Return) |> AsyncSeq.toArrayAsync
             let! expected = ls |> Seq.takeWhile p |> AsyncSeq.ofSeq |> AsyncSeq.toArrayAsync
-    
+
             Jest.expect(actual).toEqual(expected)
     })
 
     Jest.test("AsyncSeq.take should work", async {
         let! sa = asyncSeq { yield ["a",1] |> Map.ofList } |> AsyncSeq.take 1 |> AsyncSeq.toArrayAsync
         let actual = sa |> (Array.tryHead >> Option.bind (Map.tryFind("a")))
-        
+
         Jest.expect(actual).toBeDefined()
         Jest.expect(actual.Value).toBe(1)
     })
@@ -622,7 +619,7 @@ Jest.describe("AsyncSeq.take", fun () ->
             let pInclusive i = i <= 4
             let! actual = ls |> AsyncSeq.ofSeq |> AsyncSeq.takeWhileInclusive p |> AsyncSeq.toArrayAsync
             let! expected = ls |> Seq.filter(pInclusive) |> AsyncSeq.ofSeq |> AsyncSeq.toArrayAsync
-    
+
             Jest.expect(actual).toEqual(expected)
     })
 
@@ -650,7 +647,7 @@ Jest.describe("AsyncSeq.scan", fun () ->
             let z = 0
             let! actual = ls |> AsyncSeq.ofSeq |> AsyncSeq.scanAsync (fun i a -> f i a |> async.Return) z |> AsyncSeq.toArrayAsync
             let! expected = ls |> List.scan f z |> AsyncSeq.ofSeq |> AsyncSeq.toArrayAsync
-    
+
             Jest.expect(actual).toEqual(expected)
     })
 
@@ -660,12 +657,12 @@ Jest.describe("AsyncSeq.scan", fun () ->
             let z = 0
             let! actual = ls |> AsyncSeq.ofSeq |> AsyncSeq.scan (fun i a -> f i a) z |> AsyncSeq.toArrayAsync
             let! expected = ls |> List.scan f z |> AsyncSeq.ofSeq |> AsyncSeq.toArrayAsync
-    
+
             Jest.expect(actual).toEqual(expected)
     })
 )
 
-Jest.describe("AsyncSeq.fold", fun () -> 
+Jest.describe("AsyncSeq.fold", fun () ->
     Jest.test("AsyncSeq.foldAsync", async {
         for ls in [ []; [1]; [3]; [1;2;3;4;5] ] do
             let f i a = i + a
@@ -675,7 +672,7 @@ Jest.describe("AsyncSeq.fold", fun () ->
 
             do! Jest.expect(actual).toBe(expected)
     })
-    
+
     Jest.test("AsyncSeq.fold", async {
         for ls in [ []; [1]; [3]; [1;2;3;4;5] ] do
             let f i a = i + a
@@ -687,7 +684,7 @@ Jest.describe("AsyncSeq.fold", fun () ->
     })
 )
 
-Jest.describe("AsyncSeq.filter", fun () -> 
+Jest.describe("AsyncSeq.filter", fun () ->
     Jest.test("AsyncSeq.filterAsync", async {
         for ls in [ []; [1]; [4]; [1;2;3;4;5] ] do
             let p i = i > 3
@@ -696,7 +693,7 @@ Jest.describe("AsyncSeq.filter", fun () ->
 
             Jest.expect(actual).toEqual(expected)
     })
-    
+
     Jest.test("AsyncSeq.filter", async {
         for ls in [ []; [1]; [4]; [1;2;3;4;5] ] do
             let p i = i > 3
@@ -707,7 +704,7 @@ Jest.describe("AsyncSeq.filter", fun () ->
     })
 )
 
-Jest.describe("AsyncSeq.replicate", fun () -> 
+Jest.describe("AsyncSeq.replicate", fun () ->
     Jest.test("AsyncSeq.replicate", async {
         let c = 10
         let x = "hello"
@@ -756,7 +753,7 @@ Jest.describe("AsyncSeq.replicate", fun () ->
     })
 )
 
-Jest.describe("AsyncSeq.init", fun () -> 
+Jest.describe("AsyncSeq.init", fun () ->
     Jest.test("AsyncSeq.init", async {
         for c in [0; 1; 100] do
             let! actual = AsyncSeq.init (int64 c) string |> AsyncSeq.toArrayAsync
@@ -764,7 +761,7 @@ Jest.describe("AsyncSeq.init", fun () ->
 
             Jest.expect(actual).toEqual(expected)
     })
-    
+
     Jest.test("AsyncSeq.initInfinite", async {
         for c in [0; 1; 100] do
             let! actual = AsyncSeq.initInfinite string |> AsyncSeq.take c |> AsyncSeq.toArrayAsync
@@ -786,7 +783,7 @@ Jest.describe("AsyncSeq.init", fun () ->
 
             Jest.expect(actual).toEqual(expected)
     })
-    
+
     Jest.test("AsyncSeq.initInfiniteAsync", async {
         for c in [0; 1; 100] do
             let! actual = AsyncSeq.initInfiniteAsync (string >> async.Return) |> AsyncSeq.take c |> AsyncSeq.toArrayAsync
@@ -804,7 +801,7 @@ Jest.test("AsyncSeq.collect works", async {
         Jest.expect(actual).toEqual(expected)
 })
 
-Jest.describe("AsyncSeq.traverse", fun () -> 
+Jest.describe("AsyncSeq.traverse", fun () ->
     Jest.test("AsyncSeq.traverseOptionAsync", async {
         let seen = ResizeArray<_>()
         let s = [1;2;3;4;5] |> AsyncSeq.ofSeq
@@ -870,12 +867,12 @@ Jest.test("AsyncSeq.getIterator should work", async {
     use i = s1.GetEnumerator()
 
     match! i.MoveNext() with
-    | None as v -> Jest.expect(v).toBeDefined() 
+    | None as v -> Jest.expect(v).toBeDefined()
     | Some v ->
         Jest.expect(v).toBe(1)
 
         match! i.MoveNext() with
-        | None as v -> Jest.expect(v).toBeDefined() 
+        | None as v -> Jest.expect(v).toBeDefined()
         | Some v ->
             Jest.expect(v).toBe(2)
             do! Jest.expect(i.MoveNext()).toBeUndefined()
@@ -934,7 +931,7 @@ Jest.describe("AsyncSeq.intervalMs", fun () ->
                 actual := (timestamp |> Array.map (fun d -> d.Ticks)) |> Array.append actual.Value
         }
         |> Async.StartImmediate
-        
+
         for i in [0 .. 10] do
             Jest.expect(actual.Value).toHaveLength(i)
 
