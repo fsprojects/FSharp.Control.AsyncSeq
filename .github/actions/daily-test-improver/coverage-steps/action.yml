@@ -1,0 +1,61 @@
+name: 'Daily Test Coverage Improver - Coverage Steps'
+description: 'Builds project, runs tests, and generates coverage reports'
+runs:
+  using: 'composite'
+  steps:
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+        
+    - name: Restore dependencies
+      shell: bash
+      run: dotnet restore
+      
+    - name: Build project
+      shell: bash
+      run: dotnet build --no-restore
+      
+    - name: Add coverlet collector
+      shell: bash
+      run: |
+        dotnet add tests/FSharp.Control.AsyncSeq.Tests/FSharp.Control.AsyncSeq.Tests.fsproj package coverlet.collector --version 6.0.0 --no-restore || true
+        
+    - name: Run tests with coverage
+      shell: bash
+      run: |
+        dotnet test --no-build --collect:"XPlat Code Coverage" --results-directory ./coverage --settings coverlet.runsettings --logger "console;verbosity=detailed" || dotnet test --no-build --collect:"XPlat Code Coverage" --results-directory ./coverage --logger "console;verbosity=detailed"
+        
+    - name: Install ReportGenerator
+      shell: bash
+      run: dotnet tool install -g dotnet-reportgenerator-globaltool || dotnet tool update -g dotnet-reportgenerator-globaltool
+      
+    - name: Generate coverage report
+      shell: bash
+      run: |
+        reportgenerator -reports:"coverage/**/coverage.cobertura.xml" -targetdir:"coverage/report" -reporttypes:Html -reporttypes:Badges -reporttypes:Cobertura -reporttypes:JsonSummary
+        
+    - name: Display coverage summary
+      shell: bash
+      run: |
+        echo "=== Coverage Summary ==="
+        if [ -f "coverage/report/Summary.json" ]; then
+          cat coverage/report/Summary.json | grep -E '"coverage":|"covered":|"uncovered":|"coverable":'
+        else
+          echo "Coverage summary not found"
+          find coverage -name "*.xml" -o -name "*.json" | head -5
+        fi
+        
+    - name: Upload coverage report
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage-report
+        path: coverage/report/
+        retention-days: 30
+        
+    - name: Upload raw coverage data  
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage-data
+        path: coverage/
+        retention-days: 7
