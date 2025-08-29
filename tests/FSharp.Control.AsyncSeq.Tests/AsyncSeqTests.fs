@@ -1882,6 +1882,86 @@ let ``Seq.ofAsyncSeq with exception`` () =
     Seq.ofAsyncSeq asyncSeqWithError |> Seq.toList |> ignore
   ) |> ignore
 
+[<Test>]
+let ``AsyncSeq.intervalMs should generate sequence with timestamps``() = 
+  let result = 
+    AsyncSeq.intervalMs 50
+    |> AsyncSeq.take 3
+    |> AsyncSeq.toListAsync
+    |> AsyncOps.timeoutMs 1000
+    |> Async.RunSynchronously
+  
+  Assert.AreEqual(3, result.Length)
+  // Verify timestamps are increasing
+  Assert.IsTrue(result.[1] > result.[0])
+  Assert.IsTrue(result.[2] > result.[1])
+
+[<Test>]
+let ``AsyncSeq.intervalMs with zero period should work``() = 
+  let result = 
+    AsyncSeq.intervalMs 0
+    |> AsyncSeq.take 2
+    |> AsyncSeq.toListAsync
+    |> AsyncOps.timeoutMs 500
+    |> Async.RunSynchronously
+  
+  Assert.AreEqual(2, result.Length)
+
+[<Test>]
+let ``AsyncSeq.take with negative count should throw ArgumentException``() = 
+  Assert.Throws<System.ArgumentException>(fun () ->
+    AsyncSeq.ofSeq [1;2;3]
+    |> AsyncSeq.take -1
+    |> AsyncSeq.toListAsync
+    |> Async.RunSynchronously
+    |> ignore
+  ) |> ignore
+
+[<Test>]
+let ``AsyncSeq.skip with negative count should throw ArgumentException``() = 
+  Assert.Throws<System.ArgumentException>(fun () ->
+    AsyncSeq.ofSeq [1;2;3]
+    |> AsyncSeq.skip -1
+    |> AsyncSeq.toListAsync
+    |> Async.RunSynchronously
+    |> ignore
+  ) |> ignore
+
+[<Test>]
+let ``AsyncSeq.take zero should return empty sequence``() = 
+  let expected = []
+  let actual = 
+    AsyncSeq.ofSeq [1;2;3]
+    |> AsyncSeq.take 0
+    |> AsyncSeq.toListAsync
+    |> Async.RunSynchronously
+  
+  Assert.AreEqual(expected, actual)
+
+[<Test>]  
+let ``AsyncSeq.skip zero should return original sequence``() = 
+  let expected = [1;2;3]
+  let actual = 
+    AsyncSeq.ofSeq [1;2;3]
+    |> AsyncSeq.skip 0
+    |> AsyncSeq.toListAsync
+    |> Async.RunSynchronously
+  
+  Assert.AreEqual(expected, actual)
+
+[<Test>]
+let ``AsyncSeq.replicateInfinite with exception should propagate exception``() =
+  let exceptionMsg = "test exception"
+  let expected = System.ArgumentException(exceptionMsg)
+  
+  Assert.Throws<System.ArgumentException>(fun () ->
+    AsyncSeq.replicateInfinite (raise expected)
+    |> AsyncSeq.take 2
+    |> AsyncSeq.toListAsync
+    |> Async.RunSynchronously
+    |> ignore
+  ) |> ignore
+
 #if (NETSTANDARD2_1 || NETCOREAPP3_0)
 [<Test>]
 let ``AsyncSeq.ofAsyncEnum should roundtrip successfully``() =
