@@ -842,6 +842,30 @@ module AsyncSeq =
     yield!
       replicateUntilNoneAsync (Task.chooseTask (err |> Task.taskFault) (async.Delay mb.Receive))
       |> mapAsync id }
+
+  let mapAsyncUnorderedParallel (f:'a -> Async<'b>) (s:AsyncSeq<'a>) : AsyncSeq<'b> = asyncSeq {
+    use mb = MailboxProcessor.Start (fun _ -> async.Return())
+    let! err =
+      s
+      |> iterAsync (fun a -> async {
+        let! b = Async.StartChild (async {
+          try
+            let! result = f a
+            return Choice1Of2 result
+          with ex ->
+            return Choice2Of2 ex
+        })
+        mb.Post (Some b) })
+      |> Async.map (fun _ -> mb.Post None)
+      |> Async.StartChildAsTask
+    yield!
+      replicateUntilNoneAsync (Task.chooseTask (err |> Task.taskFault) (async.Delay mb.Receive))
+      |> mapAsync (fun childAsync -> async {
+        let! result = childAsync
+        match result with
+        | Choice1Of2 value -> return value
+        | Choice2Of2 ex -> return raise ex })
+  }
   #endif
 
   let chooseAsync f (source:AsyncSeq<'T>) =
