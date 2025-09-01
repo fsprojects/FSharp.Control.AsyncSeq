@@ -1,3 +1,10 @@
+### 3.3.1
+* Quick summary of changes:
+  - Performance improvements: optimized `iterAsync` and `iteriAsync`; optimized `collect`, `mapAsync` and `unfoldAsync`; fixed append memory leak (Issue #35).
+  - Added `mapAsyncUnorderedParallel` for improved parallel performance.
+  - Set up BenchmarkDotNet for systematic benchmarking; performance benchmarks show measurable improvements (addresses Round 1 & 2 of #190).
+  - Build/CI updates: configuration and build-step updates.
+
 ### 3.2.1
 * Release latest
 

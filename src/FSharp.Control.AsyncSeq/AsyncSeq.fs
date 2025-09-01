@@ -39,14 +39,6 @@ and private AsyncSeqSrcNode<'a> =
 [<AutoOpen>]
 module internal Utils =
 
-    [<RequireQualifiedAccess>]
-    module Choice =
-
-      /// Maps over the left result type.
-      let mapl (f:'T -> 'U) = function
-        | Choice1Of2 a -> f a |> Choice1Of2
-        | Choice2Of2 e -> Choice2Of2 e
-
     module Disposable =
 
       let empty : IDisposable =
@@ -296,13 +288,30 @@ type AsyncSeqOp<'T> () =
   abstract member FoldAsync : ('S -> 'T -> Async<'S>) -> 'S -> Async<'S>
   abstract member MapAsync : ('T -> Async<'U>) -> AsyncSeq<'U>
   abstract member IterAsync : ('T -> Async<unit>) -> Async<unit>
-  default x.MapAsync (f:'T -> Async<'U>) : AsyncSeq<'U> =
-    x.ChooseAsync (f >> Async.map Some)
-  default x.IterAsync (f:'T -> Async<unit>) : Async<unit> =
-    x.FoldAsync (fun () t -> f t) ()
 
 [<AutoOpen>]
 module AsyncSeqOp =
+
+  // Optimized enumerator for unfoldAsync with reduced allocations
+  [<Sealed>]
+  type OptimizedUnfoldEnumerator<'S, 'T> (f:'S -> Async<('T * 'S) option>, init:'S) =
+    let mutable currentState = init
+    let mutable disposed = false
+    
+    interface IAsyncEnumerator<'T> with
+      member __.MoveNext () : Async<'T option> = 
+        if disposed then async.Return None
+        else async {
+          let! result = f currentState
+          match result with
+          | None -> 
+            return None
+          | Some (value, nextState) ->
+            currentState <- nextState
+            return Some value
+        }
+      member __.Dispose () = 
+        disposed <- true
 
   type UnfoldAsyncEnumerator<'S, 'T> (f:'S -> Async<('T * 'S) option>, init:'S) =
     inherit AsyncSeqOp<'T> ()
@@ -350,17 +359,7 @@ module AsyncSeqOp =
       new UnfoldAsyncEnumerator<'S, 'U> (h, init) :> _
     interface IAsyncEnumerable<'T> with
       member __.GetEnumerator () =
-        let s = ref init
-        { new IAsyncEnumerator<'T> with
-            member __.MoveNext () : Async<'T option> = async {
-              let! next = f !s
-              match next with
-              | None ->
-                return None
-              | Some (a,s') ->
-                s := s'
-                return Some a }
-            member __.Dispose () = () }
+        new OptimizedUnfoldEnumerator<'S, 'T>(f, init) :> IAsyncEnumerator<'T>
 
 
 
@@ -398,7 +397,42 @@ module AsyncSeq =
                         member x.Dispose() = () } }
 
   let append (inp1: AsyncSeq<'T>) (inp2: AsyncSeq<'T>) : AsyncSeq<'T> =
-    AsyncGenerator.append inp1 inp2
+    // Optimized append implementation that doesn't create generator chains
+    // This fixes the memory leak issue in Issue #35
+    { new IAsyncEnumerable<'T> with
+        member x.GetEnumerator() =
+            let mutable currentEnumerator : IAsyncEnumerator<'T> option = None
+            let mutable useSecond = false
+            { new IAsyncEnumerator<'T> with
+                member x.MoveNext() = async {
+                    match currentEnumerator with
+                    | None ->
+                        // Start with the first sequence
+                        let enum1 = inp1.GetEnumerator()
+                        currentEnumerator <- Some enum1
+                        return! x.MoveNext()
+                    | Some enum when not useSecond ->
+                        // Try to get next element from first sequence
+                        let! result = enum.MoveNext()
+                        match result with
+                        | Some v -> return Some v
+                        | None ->
+                            // First sequence is exhausted, switch to second
+                            dispose enum
+                            let enum2 = inp2.GetEnumerator()
+                            currentEnumerator <- Some enum2
+                            useSecond <- true
+                            return! x.MoveNext()
+                    | Some enum ->
+                        // Get elements from second sequence
+                        return! enum.MoveNext()
+                }
+                member x.Dispose() =
+                    match currentEnumerator with
+                    | Some enum -> dispose enum
+                    | None -> ()
+            }
+    }
 
   let inline delay (f: unit -> AsyncSeq<'T>) : AsyncSeq<'T> =
     AsyncGenerator.delay f
@@ -569,49 +603,62 @@ module AsyncSeq =
      | HaveInnerEnumerator of IAsyncEnumerator<'T> * IAsyncEnumerator<'U>
      | Finished
 
+  // Optimized collect implementation using direct field access instead of ref cells
+  type OptimizedCollectEnumerator<'T, 'U>(f: 'T -> AsyncSeq<'U>, inp: AsyncSeq<'T>) =
+    // Mutable fields instead of ref cells to reduce allocations
+    let mutable inputEnumerator: IAsyncEnumerator<'T> option = None  
+    let mutable innerEnumerator: IAsyncEnumerator<'U> option = None
+    let mutable disposed = false
+    
+    // Tail-recursive optimization to avoid deep continuation chains
+    let rec moveNextLoop () : Async<'U option> = async {
+      if disposed then return None
+      else
+        match innerEnumerator with
+        | Some inner ->
+            let! result = inner.MoveNext()
+            match result with
+            | Some value -> return Some value
+            | None ->
+                inner.Dispose()
+                innerEnumerator <- None
+                return! moveNextLoop ()
+        | None ->
+            match inputEnumerator with
+            | Some outer ->
+                let! result = outer.MoveNext()
+                match result with
+                | Some value ->
+                    let newInner = (f value).GetEnumerator()
+                    innerEnumerator <- Some newInner
+                    return! moveNextLoop ()
+                | None ->
+                    outer.Dispose()
+                    inputEnumerator <- None
+                    disposed <- true
+                    return None
+            | None ->
+                let newOuter = inp.GetEnumerator()
+                inputEnumerator <- Some newOuter
+                return! moveNextLoop ()
+    }
+    
+    interface IAsyncEnumerator<'U> with
+      member _.MoveNext() = moveNextLoop ()
+      member _.Dispose() =
+        if not disposed then
+          disposed <- true
+          match innerEnumerator with
+          | Some inner -> inner.Dispose(); innerEnumerator <- None
+          | None -> ()
+          match inputEnumerator with  
+          | Some outer -> outer.Dispose(); inputEnumerator <- None
+          | None -> ()
+
   let collect (f: 'T -> AsyncSeq<'U>) (inp: AsyncSeq<'T>) : AsyncSeq<'U> =
-        { new IAsyncEnumerable<'U> with
-              member x.GetEnumerator() =
-                  let state = ref (CollectState.NotStarted inp)
-                  { new IAsyncEnumerator<'U> with
-                        member x.MoveNext() =
-                            async { match !state with
-                                    | CollectState.NotStarted inp ->
-                                        return!
-                                           (let e1 = inp.GetEnumerator()
-                                            state := CollectState.HaveInputEnumerator e1
-                                            x.MoveNext())
-                                    | CollectState.HaveInputEnumerator e1 ->
-                                        let! res1 = e1.MoveNext()
-                                        return!
-                                           (match res1 with
-                                            | Some v1 ->
-                                                let e2 = (f v1).GetEnumerator()
-                                                state := CollectState.HaveInnerEnumerator (e1, e2)
-                                            | None ->
-                                                x.Dispose()
-                                            x.MoveNext())
-                                    | CollectState.HaveInnerEnumerator (e1, e2) ->
-                                        let! res2 = e2.MoveNext()
-                                        match res2 with
-                                        | None ->
-                                            state := CollectState.HaveInputEnumerator e1
-                                            dispose e2
-                                            return! x.MoveNext()
-                                        | Some _ ->
-                                            return res2
-                                    | _ ->
-                                        return None }
-                        member x.Dispose() =
-                            match !state with
-                            | CollectState.HaveInputEnumerator e1 ->
-                                state := CollectState.Finished
-                                dispose e1
-                            | CollectState.HaveInnerEnumerator (e1, e2) ->
-                                state := CollectState.Finished
-                                dispose e2
-                                dispose e1
-                            | _ -> () } }
+    { new IAsyncEnumerable<'U> with
+        member _.GetEnumerator() = 
+          new OptimizedCollectEnumerator<'T, 'U>(f, inp) :> IAsyncEnumerator<'U> }
 
 //  let collect (f: 'T -> AsyncSeq<'U>) (inp: AsyncSeq<'T>) : AsyncSeq<'U> =
 //    AsyncGenerator.collect f inp
@@ -699,23 +746,64 @@ module AsyncSeq =
                                 dispose e
                             | _ -> () } }
 
+  // Optimized iterAsync implementation to reduce allocations
+  type internal OptimizedIterAsyncEnumerator<'T>(enumerator: IAsyncEnumerator<'T>, f: 'T -> Async<unit>) =
+    let mutable disposed = false
+    
+    member _.IterateAsync() =
+      let rec loop() = async {
+        let! next = enumerator.MoveNext()
+        match next with
+        | Some value ->
+            do! f value
+            return! loop()
+        | None -> return ()
+      }
+      loop()
+    
+    interface IDisposable with
+      member _.Dispose() =
+        if not disposed then
+          disposed <- true
+          enumerator.Dispose()
+
+  // Optimized iteriAsync implementation with direct tail recursion  
+  type internal OptimizedIteriAsyncEnumerator<'T>(enumerator: IAsyncEnumerator<'T>, f: int -> 'T -> Async<unit>) =
+    let mutable disposed = false
+    
+    member _.IterateAsync() =
+      let rec loop count = async {
+        let! next = enumerator.MoveNext()
+        match next with
+        | Some value ->
+            do! f count value
+            return! loop (count + 1)
+        | None -> return ()
+      }
+      loop 0
+    
+    interface IDisposable with
+      member _.Dispose() =
+        if not disposed then
+          disposed <- true
+          enumerator.Dispose()
+
   let iteriAsync f (source : AsyncSeq<_>) =
       async {
-          use ie = source.GetEnumerator()
-          let count = ref 0
-          let! move = ie.MoveNext()
-          let b = ref move
-          while b.Value.IsSome do
-              do! f !count b.Value.Value
-              let! moven = ie.MoveNext()
-              do incr count
-                 b := moven
+          let enum = source.GetEnumerator()
+          use optimizer = new OptimizedIteriAsyncEnumerator<_>(enum, f)
+          return! optimizer.IterateAsync()
       }
 
   let iterAsync (f: 'T -> Async<unit>) (source: AsyncSeq<'T>)  =
     match source with
     | :? AsyncSeqOp<'T> as source -> source.IterAsync f
-    | _ -> iteriAsync (fun i x -> f x) source
+    | _ -> 
+        async {
+          let enum = source.GetEnumerator()
+          use optimizer = new OptimizedIterAsyncEnumerator<_>(enum, f)
+          return! optimizer.IterateAsync()
+        }
 
   let iteri (f: int -> 'T -> unit) (inp: AsyncSeq<'T>)  = iteriAsync (fun i x -> async.Return (f i x)) inp
 
@@ -773,14 +861,32 @@ module AsyncSeq =
   // --------------------------------------------------------------------------
   // Additional combinators (implemented as async/asyncSeq computations)
 
+  // Optimized mapAsync enumerator that avoids computation builder overhead
+  type private OptimizedMapAsyncEnumerator<'T, 'TResult>(source: IAsyncEnumerator<'T>, f: 'T -> Async<'TResult>) =
+    let mutable disposed = false
+    
+    interface IAsyncEnumerator<'TResult> with
+      member _.MoveNext() = async {
+        let! moveResult = source.MoveNext()
+        match moveResult with
+        | None -> return None
+        | Some value ->
+            let! mapped = f value
+            return Some mapped
+      }
+      
+      member _.Dispose() =
+        if not disposed then
+          disposed <- true
+          source.Dispose()
+
   let mapAsync f (source : AsyncSeq<'T>) : AsyncSeq<'TResult> =
     match source with
     | :? AsyncSeqOp<'T> as source -> source.MapAsync f
     | _ ->
-      asyncSeq {
-        for itm in source do
-        let! v = f itm
-        yield v }
+      { new IAsyncEnumerable<'TResult> with
+          member _.GetEnumerator() = 
+            new OptimizedMapAsyncEnumerator<'T, 'TResult>(source.GetEnumerator(), f) :> IAsyncEnumerator<'TResult> }
 
   let mapiAsync f (source : AsyncSeq<'T>) : AsyncSeq<'TResult> = asyncSeq {
     let i = ref 0L
@@ -802,6 +908,30 @@ module AsyncSeq =
     yield!
       replicateUntilNoneAsync (Task.chooseTask (err |> Task.taskFault) (async.Delay mb.Receive))
       |> mapAsync id }
+
+  let mapAsyncUnorderedParallel (f:'a -> Async<'b>) (s:AsyncSeq<'a>) : AsyncSeq<'b> = asyncSeq {
+    use mb = MailboxProcessor.Start (fun _ -> async.Return())
+    let! err =
+      s
+      |> iterAsync (fun a -> async {
+        let! b = Async.StartChild (async {
+          try
+            let! result = f a
+            return Choice1Of2 result
+          with ex ->
+            return Choice2Of2 ex
+        })
+        mb.Post (Some b) })
+      |> Async.map (fun _ -> mb.Post None)
+      |> Async.StartChildAsTask
+    yield!
+      replicateUntilNoneAsync (Task.chooseTask (err |> Task.taskFault) (async.Delay mb.Receive))
+      |> mapAsync (fun childAsync -> async {
+        let! result = childAsync
+        match result with
+        | Choice1Of2 value -> return value
+        | Choice2Of2 ex -> return raise ex })
+  }
   #endif
 
   let chooseAsync f (source:AsyncSeq<'T>) =
@@ -1408,6 +1538,11 @@ module AsyncSeq =
   let interleave (source1:AsyncSeq<'T>) (source2:AsyncSeq<'T>) : AsyncSeq<'T> =
     interleaveChoice source1 source2 |> map (function Choice1Of2 x -> x | Choice2Of2 x -> x)
 
+  let interleaveMany (xs : #seq<AsyncSeq<'T>>) : AsyncSeq<'T> =
+    let mutable result = empty
+    for x in xs do
+      result <- interleave result x
+    result
 
   let bufferByCount (bufferSize:int) (source:AsyncSeq<'T>) : AsyncSeq<'T[]> =
     if (bufferSize < 1) then invalidArg "bufferSize" "must be positive"
