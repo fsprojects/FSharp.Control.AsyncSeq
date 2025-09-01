@@ -2074,6 +2074,7 @@ let ``AsyncSeq.toAsyncEnum raises exception``() : unit =
   }
   |> Async.RunSynchronously
 
+[<Test>]
 let ``AsyncSeq.ofAsyncEnum raises exception``() : unit =
   async {
     let exceptionMessage = "Raised inside AsyncSeq"
