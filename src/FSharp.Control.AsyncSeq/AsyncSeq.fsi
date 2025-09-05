@@ -557,6 +557,25 @@ module AsyncSeq =
     #endif
     #endif
 
+    #if !FABLE_COMPILER
+
+    open System.Threading.Channels
+
+    /// Fills a channel writer with the values from an async seq.
+    /// The writer will be closed when the async seq completes or raises an error.
+    val toChannel<'T> : writer: ChannelWriter<'T> -> source: AsyncSeq<'T> -> Async<unit>
+
+    /// Creates an async seq from a channel reader.
+    /// The async seq will read values from the channel reader until it is closed.
+    /// If the reader raises an error than the sequence will raise it.
+    val fromChannel<'T> : reader: ChannelReader<'T> -> AsyncSeq<'T>
+
+    /// Transforms an async seq to a new one that fetches values ahead of time to improve throughput.
+    val prefetch<'T> : numberToPrefetch: int -> source: AsyncSeq<'T> -> AsyncSeq<'T>
+
+    #endif
+
+
 /// An automatically-opened module that contains the `asyncSeq` builder and an extension method
 [<AutoOpen>]
 module AsyncSeqExtensions =
