@@ -890,6 +890,23 @@ let ``AsyncSeq.filter``() =
       Assert.True(EQ expected actual)
 
 [<Test>]
+let ``AsyncSeq.chunkBySize``() =
+  let input = [ "a"; "b"; "c"; "d"; "e" ]
+  let actual =
+    input
+    |> AsyncSeq.ofSeq
+    |> AsyncSeq.chunkBySize 2
+    |> AsyncSeq.toListSynchronously
+    |> List.map List.ofSeq
+  let expected =
+    [
+      [ "a"; "b" ]
+      [ "c"; "d" ]
+      [ "e" ]
+    ]
+  Assert.AreEqual(expected, actual)
+
+[<Test>]
 let ``AsyncSeq.merge``() =
   let ls1 = [1;2;3;4;5]
   let ls2 = [6;7;8;9;10]
