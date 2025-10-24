@@ -582,6 +582,31 @@ let ``AsyncSeq.bufferByTimeAndCount empty``() =
 //    Assert.True ((actual = expected))
 
 [<Test>]
+let ``AsyncSeq.while do CE is possible`` () =
+  let mutable i = 0
+  let mutable foo = true
+  let something =
+    async {
+      i <- i + 1
+      foo <- i < 3
+      do! Async.Sleep 10
+    }
+  let actual =
+    asyncSeq {
+      yield "a"
+
+      while foo do
+        do! something
+
+      yield "b"
+      yield "c"
+    }
+    |> AsyncSeq.toListAsync
+    |> Async.RunSynchronously
+
+  Assert.AreEqual([ "a"; "b"; "c" ], actual)
+
+[<Test>]
 let ``AsyncSeq.bufferByCountAndTime should not block`` () =
   let op =
     asyncSeq {
