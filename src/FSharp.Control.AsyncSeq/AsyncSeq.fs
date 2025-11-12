@@ -1537,8 +1537,8 @@ module AsyncSeq =
       result <- interleave result x
     result
 
-  let bufferByCount (bufferSize:int) (source:AsyncSeq<'T>) : AsyncSeq<'T[]> =
-    if (bufferSize < 1) then invalidArg "bufferSize" "must be positive"
+  let chunkBySize (chunkSize:int) (source:AsyncSeq<'T>) : AsyncSeq<'T[]> =
+    if chunkSize < 1 then invalidArg (nameof chunkSize) "must be positive"
     asyncSeq {
       let buffer = new ResizeArray<_>()
       use ie = source.GetEnumerator()
@@ -1546,13 +1546,17 @@ module AsyncSeq =
       let b = ref move
       while b.Value.IsSome do
           buffer.Add b.Value.Value
-          if buffer.Count = bufferSize then
+          if buffer.Count = chunkSize then
               yield buffer.ToArray()
               buffer.Clear()
           let! moven = ie.MoveNext()
           b := moven
       if (buffer.Count > 0) then
           yield buffer.ToArray() }
+
+  [<Obsolete("Use AsyncSeq.chunkBySize instead")>]
+  let bufferByCount (bufferSize:int) (source:AsyncSeq<'T>) : AsyncSeq<'T[]> =
+    chunkBySize bufferSize source
 
   #if !FABLE_COMPILER
   let toSortedSeq fn source =
