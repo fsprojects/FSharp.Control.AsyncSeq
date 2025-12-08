@@ -436,7 +436,7 @@ let ``AsyncSeq.interleaveMany 3``() =
 
 
 [<Test>]
-let ``AsyncSeq.bufferByCount``() =
+let ``AsyncSeq.chunkBySize``() =
   let s = asyncSeq {
     yield 1
     yield 2
@@ -444,23 +444,23 @@ let ``AsyncSeq.bufferByCount``() =
     yield 4
     yield 5
   }
-  let s' = s |> AsyncSeq.bufferByCount 2 |> AsyncSeq.toListSynchronously
+  let s' = s |> AsyncSeq.chunkBySize 2 |> AsyncSeq.toListSynchronously
   Assert.True(([[|1;2|];[|3;4|];[|5|]] = s'))
 
 [<Test>]
-let ``AsyncSeq.bufferByCount various sizes``() =
+let ``AsyncSeq.chunkBySize various sizes``() =
   for sz in 0 .. 10 do
       let s = asyncSeq {
         for i in 1 .. sz do
            yield i
       }
-      let s' = s |> AsyncSeq.bufferByCount 1 |> AsyncSeq.toListSynchronously
+      let s' = s |> AsyncSeq.chunkBySize 1 |> AsyncSeq.toListSynchronously
       Assert.True(([for i in 1 .. sz -> [|i|]] = s'))
 
 [<Test>]
-let ``AsyncSeq.bufferByCount empty``() =
+let ``AsyncSeq.chunkBySize empty``() =
   let s = AsyncSeq.empty<int>
-  let s' = s |> AsyncSeq.bufferByCount 2 |> AsyncSeq.toListSynchronously
+  let s' = s |> AsyncSeq.chunkBySize 2 |> AsyncSeq.toListSynchronously
   Assert.True(([] = s'))
 
 
@@ -2429,20 +2429,20 @@ let ``AsyncSeq.toChannel and AsyncSeq.fromChannel capture exns``() =
 // Additional Coverage Tests targeting uncovered edge cases and branches
 
 [<Test>]
-let ``AsyncSeq.bufferByCount with size 1 should work`` () =
+let ``AsyncSeq.chunkBySize with size 1 should work`` () =
   let source = asyncSeq { yield 1; yield 2; yield 3 }
-  let result = AsyncSeq.bufferByCount 1 source |> AsyncSeq.toListSynchronously
+  let result = AsyncSeq.chunkBySize 1 source |> AsyncSeq.toListSynchronously
   Assert.AreEqual([[|1|]; [|2|]; [|3|]], result)
 
 [<Test>]
-let ``AsyncSeq.bufferByCount with empty sequence should return empty`` () =
-  let result = AsyncSeq.bufferByCount 2 AsyncSeq.empty |> AsyncSeq.toListSynchronously
+let ``AsyncSeq.chunkBySize with empty sequence should return empty`` () =
+  let result = AsyncSeq.chunkBySize 2 AsyncSeq.empty |> AsyncSeq.toListSynchronously
   Assert.AreEqual([], result)
 
 [<Test>]
-let ``AsyncSeq.bufferByCount with size larger than sequence should return partial`` () =
+let ``AsyncSeq.chunkBySize with size larger than sequence should return partial`` () =
   let source = asyncSeq { yield 1; yield 2 }
-  let result = AsyncSeq.bufferByCount 5 source |> AsyncSeq.toListSynchronously
+  let result = AsyncSeq.chunkBySize 5 source |> AsyncSeq.toListSynchronously
   Assert.AreEqual([[|1; 2|]], result)
 
 [<Test>]
