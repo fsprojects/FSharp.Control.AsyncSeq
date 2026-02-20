@@ -17,8 +17,10 @@ timeout-minutes: 60
 permissions: read-all
 
 network:
+  allowed:
   - defaults
   - dotnet
+
 
 safe-outputs:
   add-comment:

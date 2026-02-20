@@ -28,6 +28,7 @@ name: "Agentic Weekly Researcher (Ruby)"
 "on":
   schedule:
   - cron: "0 9 * * 1"
+    # Friendly format: daily (scattered)
   workflow_dispatch:
 
 permissions: {}
