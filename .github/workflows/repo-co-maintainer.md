@@ -1,6 +1,6 @@
 ---
 description: |
-  A friendly AI co-maintainer for FSharp.Control.AsyncSeq. Runs every 4 hours to:
+  A friendly AI co-maintainer for FSharp.Control.AsyncSeq. Runs daily to:
   - Comment helpfully on open issues to unblock contributors and onboard newcomers
   - Identify issues that can be fixed and create draft pull requests with the fixes
   - Study the codebase and propose improvements via PRs
@@ -9,14 +9,18 @@ description: |
   interoperability, and minimal dependencies.
 
 on:
-  schedule: every 4h
+  schedule: daily
   workflow_dispatch:
 
 timeout-minutes: 60
 
 permissions: read-all
 
-network: defaults
+network:
+  allowed:
+  - defaults
+  - dotnet
+
 
 safe-outputs:
   add-comment:
