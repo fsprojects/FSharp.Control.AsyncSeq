@@ -1,0 +1,25 @@
+{
+  "last_run": "2026-02-20T16:15:19Z",
+  "workflow_run_id": "22231625810",
+  "commented_issues": [
+    {"number": 168, "run": "22226329040", "action": "suggested PackageLicenseExpression fix"},
+    {"number": 173, "run": "22226329040", "action": "identified .fsi gating issue, linked PR #214"},
+    {"number": 205, "run": "22226329040", "action": "explained tryFirst order semantics"},
+    {"number": 165, "run": "22226329040", "action": "suggested seq change, offered to prepare PR"},
+    {"number": 156, "run": "22226329040", "action": "encouraged chunkBy PR, dsyme replied 'Yes please'"},
+    {"number": 160, "run": "22231625810", "action": "explained mapAsyncParallel order semantics"},
+    {"number": 165, "run": "22231625810", "action": "linked PR for mergeAll seq change"}
+  ],
+  "created_prs": [
+    {"number": 214, "run": "22226329040", "title": "Expose ofAsyncEnum/toAsyncEnum on netstandard2.0", "closes": 173, "status": "open"},
+    {"branch": "co-maintainer/mergeAll-accept-seq", "run": "22231625810", "title": "Allow AsyncSeq.mergeAll to accept seq instead of list", "closes": 165, "status": "created"}
+  ],
+  "skip_next_run": [168, 173, 205, 165, 156, 160],
+  "notes": [
+    "Issue #156 chunkBy: dsyme said 'Yes please' to a PR - this could be a future improvement to implement",
+    "Issue #159 (deprecate FSharp.Control.IAsyncEnumerable) is a major design decision - skip, leave to maintainers",
+    "Issue #174 (iterAsyncParallelThrottled) already has a helpful comment from njlr",
+    "Issue #123 (YieldFrom) already has a helpful comment from abelbraaksma",
+    "PR #217 (test-improver) is open - adds tests for untested API functions"
+  ]
+}
