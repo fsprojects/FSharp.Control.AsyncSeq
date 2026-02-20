@@ -549,7 +549,7 @@ module AsyncSeq =
     /// completion of sub-sequences depends on completion of other sub-sequences.
     val groupBy<'T, 'Key when 'Key : equality> : projection:('T -> 'Key) -> source:AsyncSeq<'T> -> AsyncSeq<'Key * AsyncSeq<'T>>
 
-    #if (NETSTANDARD2_1 || NETCOREAPP3_0)
+    #if (NETSTANDARD || NET)
 
     /// Creates an asynchronous computation that asynchronously yields results from the provided .NET IAsyncEnumerable.
     val ofAsyncEnum<'T> : source: Collections.Generic.IAsyncEnumerable<'T> -> AsyncSeq<'T>
