@@ -1,7 +1,6 @@
 ---
 on:
-  schedule:
-    - cron: "0 9 * * 1"     # Every week, 9AM UTC, Monday
+  schedule: daily
   workflow_dispatch:
 
 safe-outputs:

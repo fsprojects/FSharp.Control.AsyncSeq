@@ -21,7 +21,7 @@
 #
 # For more information: https://github.github.com/gh-aw/introduction/overview/
 #
-# A friendly AI co-maintainer for FSharp.Control.AsyncSeq. Runs every 4 hours to:
+# A friendly AI co-maintainer for FSharp.Control.AsyncSeq. Runs daily to:
 # - Comment helpfully on open issues to unblock contributors and onboard newcomers
 # - Identify issues that can be fixed and create draft pull requests with the fixes
 # - Study the codebase and propose improvements via PRs
@@ -29,13 +29,13 @@
 # Always polite, constructive, and mindful of the project's goals: stability,
 # interoperability, and minimal dependencies.
 #
-# gh-aw-metadata: {"schema_version":"v1","frontmatter_hash":"d22062d9e81f1e616649b6dd6337f1394c66f017ce1faada29a14a285325e035","compiler_version":"v0.47.2"}
+# gh-aw-metadata: {"schema_version":"v1","frontmatter_hash":"02aec3b8ff5629edcd82098e89ceea4b59ff658b95e8dcd0b9c8d3353b873452","compiler_version":"v0.47.2"}
 
 name: "Repo Co-Maintainer"
 "on":
   schedule:
-  - cron: "28 */4 * * *"
-    # Friendly format: every 4h (scattered)
+  - cron: "35 12 * * *"
+    # Friendly format: daily (scattered)
   workflow_dispatch:
 
 permissions: {}
@@ -55,7 +55,7 @@ jobs:
       comment_repo: ""
     steps:
       - name: Setup Scripts
-        uses: github/gh-aw/actions/setup@v0.47.2
+        uses: github/gh-aw/actions/setup@faf2523ba6ae8aa862dc5c98e06d72e54a342d1f # v0.47.2
         with:
           destination: /opt/gh-aw/actions
       - name: Validate context variables
@@ -264,7 +264,7 @@ jobs:
       secret_verification_result: ${{ steps.validate-secret.outputs.verification_result }}
     steps:
       - name: Setup Scripts
-        uses: github/gh-aw/actions/setup@v0.47.2
+        uses: github/gh-aw/actions/setup@faf2523ba6ae8aa862dc5c98e06d72e54a342d1f # v0.47.2
         with:
           destination: /opt/gh-aw/actions
       - name: Create gh-aw temp directory
@@ -336,7 +336,7 @@ jobs:
               actor: context.actor,
               event_name: context.eventName,
               staged: false,
-              allowed_domains: ["defaults"],
+              allowed_domains: ["defaults","dotnet"],
               firewall_enabled: true,
               awf_version: "v0.20.2",
               awmg_version: "v0.1.4",
@@ -775,7 +775,7 @@ jobs:
         timeout-minutes: 60
         run: |
           set -o pipefail
-          sudo -E awf --env-all --container-workdir "${GITHUB_WORKSPACE}" --allow-domains api.business.githubcopilot.com,api.enterprise.githubcopilot.com,api.github.com,api.githubcopilot.com,api.individual.githubcopilot.com,api.snapcraft.io,archive.ubuntu.com,azure.archive.ubuntu.com,crl.geotrust.com,crl.globalsign.com,crl.identrust.com,crl.sectigo.com,crl.thawte.com,crl.usertrust.com,crl.verisign.com,crl3.digicert.com,crl4.digicert.com,crls.ssl.com,github.com,host.docker.internal,json-schema.org,json.schemastore.org,keyserver.ubuntu.com,ocsp.digicert.com,ocsp.geotrust.com,ocsp.globalsign.com,ocsp.identrust.com,ocsp.sectigo.com,ocsp.ssl.com,ocsp.thawte.com,ocsp.usertrust.com,ocsp.verisign.com,packagecloud.io,packages.cloud.google.com,packages.microsoft.com,ppa.launchpad.net,raw.githubusercontent.com,registry.npmjs.org,s.symcb.com,s.symcd.com,security.ubuntu.com,telemetry.enterprise.githubcopilot.com,ts-crl.ws.symantec.com,ts-ocsp.ws.symantec.com --log-level info --proxy-logs-dir /tmp/gh-aw/sandbox/firewall/logs --enable-host-access --image-tag 0.20.2 --skip-pull --enable-api-proxy \
+          sudo -E awf --env-all --container-workdir "${GITHUB_WORKSPACE}" --allow-domains api.business.githubcopilot.com,api.enterprise.githubcopilot.com,api.github.com,api.githubcopilot.com,api.individual.githubcopilot.com,api.nuget.org,api.snapcraft.io,archive.ubuntu.com,azure.archive.ubuntu.com,azuresearch-usnc.nuget.org,azuresearch-ussc.nuget.org,builds.dotnet.microsoft.com,ci.dot.net,crl.geotrust.com,crl.globalsign.com,crl.identrust.com,crl.sectigo.com,crl.thawte.com,crl.usertrust.com,crl.verisign.com,crl3.digicert.com,crl4.digicert.com,crls.ssl.com,dc.services.visualstudio.com,dist.nuget.org,dot.net,dotnet.microsoft.com,dotnetcli.blob.core.windows.net,github.com,host.docker.internal,json-schema.org,json.schemastore.org,keyserver.ubuntu.com,nuget.org,nuget.pkg.github.com,nugetregistryv2prod.blob.core.windows.net,ocsp.digicert.com,ocsp.geotrust.com,ocsp.globalsign.com,ocsp.identrust.com,ocsp.sectigo.com,ocsp.ssl.com,ocsp.thawte.com,ocsp.usertrust.com,ocsp.verisign.com,oneocsp.microsoft.com,packagecloud.io,packages.cloud.google.com,packages.microsoft.com,pkgs.dev.azure.com,ppa.launchpad.net,raw.githubusercontent.com,registry.npmjs.org,s.symcb.com,s.symcd.com,security.ubuntu.com,telemetry.enterprise.githubcopilot.com,ts-crl.ws.symantec.com,ts-ocsp.ws.symantec.com,www.microsoft.com --log-level info --proxy-logs-dir /tmp/gh-aw/sandbox/firewall/logs --enable-host-access --image-tag 0.20.2 --skip-pull --enable-api-proxy \
             -- /bin/bash -c '/usr/local/bin/copilot --add-dir /tmp/gh-aw/ --log-level all --log-dir /tmp/gh-aw/sandbox/agent/logs/ --add-dir "${GITHUB_WORKSPACE}" --disable-builtin-mcps --allow-all-tools --add-dir /tmp/gh-aw/cache-memory/ --allow-all-paths --share /tmp/gh-aw/sandbox/agent/logs/conversation.md --prompt "$(cat /tmp/gh-aw/aw-prompts/prompt.txt)"${GH_AW_MODEL_AGENT_COPILOT:+ --model "$GH_AW_MODEL_AGENT_COPILOT"}' 2>&1 | tee -a /tmp/gh-aw/agent-stdio.log
         env:
           COPILOT_AGENT_RUNNER_TYPE: STANDALONE
@@ -854,7 +854,7 @@ jobs:
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
         env:
           GH_AW_SAFE_OUTPUTS: ${{ env.GH_AW_SAFE_OUTPUTS }}
-          GH_AW_ALLOWED_DOMAINS: "api.business.githubcopilot.com,api.enterprise.githubcopilot.com,api.github.com,api.githubcopilot.com,api.individual.githubcopilot.com,api.snapcraft.io,archive.ubuntu.com,azure.archive.ubuntu.com,crl.geotrust.com,crl.globalsign.com,crl.identrust.com,crl.sectigo.com,crl.thawte.com,crl.usertrust.com,crl.verisign.com,crl3.digicert.com,crl4.digicert.com,crls.ssl.com,github.com,host.docker.internal,json-schema.org,json.schemastore.org,keyserver.ubuntu.com,ocsp.digicert.com,ocsp.geotrust.com,ocsp.globalsign.com,ocsp.identrust.com,ocsp.sectigo.com,ocsp.ssl.com,ocsp.thawte.com,ocsp.usertrust.com,ocsp.verisign.com,packagecloud.io,packages.cloud.google.com,packages.microsoft.com,ppa.launchpad.net,raw.githubusercontent.com,registry.npmjs.org,s.symcb.com,s.symcd.com,security.ubuntu.com,telemetry.enterprise.githubcopilot.com,ts-crl.ws.symantec.com,ts-ocsp.ws.symantec.com"
+          GH_AW_ALLOWED_DOMAINS: "api.business.githubcopilot.com,api.enterprise.githubcopilot.com,api.github.com,api.githubcopilot.com,api.individual.githubcopilot.com,api.nuget.org,api.snapcraft.io,archive.ubuntu.com,azure.archive.ubuntu.com,azuresearch-usnc.nuget.org,azuresearch-ussc.nuget.org,builds.dotnet.microsoft.com,ci.dot.net,crl.geotrust.com,crl.globalsign.com,crl.identrust.com,crl.sectigo.com,crl.thawte.com,crl.usertrust.com,crl.verisign.com,crl3.digicert.com,crl4.digicert.com,crls.ssl.com,dc.services.visualstudio.com,dist.nuget.org,dot.net,dotnet.microsoft.com,dotnetcli.blob.core.windows.net,github.com,host.docker.internal,json-schema.org,json.schemastore.org,keyserver.ubuntu.com,nuget.org,nuget.pkg.github.com,nugetregistryv2prod.blob.core.windows.net,ocsp.digicert.com,ocsp.geotrust.com,ocsp.globalsign.com,ocsp.identrust.com,ocsp.sectigo.com,ocsp.ssl.com,ocsp.thawte.com,ocsp.usertrust.com,ocsp.verisign.com,oneocsp.microsoft.com,packagecloud.io,packages.cloud.google.com,packages.microsoft.com,pkgs.dev.azure.com,ppa.launchpad.net,raw.githubusercontent.com,registry.npmjs.org,s.symcb.com,s.symcd.com,security.ubuntu.com,telemetry.enterprise.githubcopilot.com,ts-crl.ws.symantec.com,ts-ocsp.ws.symantec.com,www.microsoft.com"
           GITHUB_SERVER_URL: ${{ github.server_url }}
           GITHUB_API_URL: ${{ github.api_url }}
         with:
@@ -955,7 +955,7 @@ jobs:
       total_count: ${{ steps.missing_tool.outputs.total_count }}
     steps:
       - name: Setup Scripts
-        uses: github/gh-aw/actions/setup@v0.47.2
+        uses: github/gh-aw/actions/setup@faf2523ba6ae8aa862dc5c98e06d72e54a342d1f # v0.47.2
         with:
           destination: /opt/gh-aw/actions
       - name: Download agent output artifact
@@ -1059,7 +1059,7 @@ jobs:
       success: ${{ steps.parse_results.outputs.success }}
     steps:
       - name: Setup Scripts
-        uses: github/gh-aw/actions/setup@v0.47.2
+        uses: github/gh-aw/actions/setup@faf2523ba6ae8aa862dc5c98e06d72e54a342d1f # v0.47.2
         with:
           destination: /opt/gh-aw/actions
       - name: Download agent artifacts
@@ -1083,7 +1083,7 @@ jobs:
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
         env:
           WORKFLOW_NAME: "Repo Co-Maintainer"
-          WORKFLOW_DESCRIPTION: "A friendly AI co-maintainer for FSharp.Control.AsyncSeq. Runs every 4 hours to:\n- Comment helpfully on open issues to unblock contributors and onboard newcomers\n- Identify issues that can be fixed and create draft pull requests with the fixes\n- Study the codebase and propose improvements via PRs\n- Maintain a persistent memory of work done and what remains\nAlways polite, constructive, and mindful of the project's goals: stability,\ninteroperability, and minimal dependencies."
+          WORKFLOW_DESCRIPTION: "A friendly AI co-maintainer for FSharp.Control.AsyncSeq. Runs daily to:\n- Comment helpfully on open issues to unblock contributors and onboard newcomers\n- Identify issues that can be fixed and create draft pull requests with the fixes\n- Study the codebase and propose improvements via PRs\n- Maintain a persistent memory of work done and what remains\nAlways polite, constructive, and mindful of the project's goals: stability,\ninteroperability, and minimal dependencies."
           HAS_PATCH: ${{ needs.agent.outputs.has_patch }}
         with:
           script: |
@@ -1172,7 +1172,7 @@ jobs:
       process_safe_outputs_temporary_id_map: ${{ steps.process_safe_outputs.outputs.temporary_id_map }}
     steps:
       - name: Setup Scripts
-        uses: github/gh-aw/actions/setup@v0.47.2
+        uses: github/gh-aw/actions/setup@faf2523ba6ae8aa862dc5c98e06d72e54a342d1f # v0.47.2
         with:
           destination: /opt/gh-aw/actions
       - name: Download agent output artifact
@@ -1242,7 +1242,7 @@ jobs:
     permissions: {}
     steps:
       - name: Setup Scripts
-        uses: github/gh-aw/actions/setup@v0.47.2
+        uses: github/gh-aw/actions/setup@faf2523ba6ae8aa862dc5c98e06d72e54a342d1f # v0.47.2
         with:
           destination: /opt/gh-aw/actions
       - name: Download cache-memory artifact (default)

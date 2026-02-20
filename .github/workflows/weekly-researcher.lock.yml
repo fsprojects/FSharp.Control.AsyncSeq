@@ -22,12 +22,12 @@
 # For more information: https://github.github.com/gh-aw/introduction/overview/
 #
 #
-# gh-aw-metadata: {"schema_version":"v1","frontmatter_hash":"d8e37220b2accaf41fa96b5cfde28760c07d348b9ef5dc68bde34757deec5723","compiler_version":"v0.47.2"}
+# gh-aw-metadata: {"schema_version":"v1","frontmatter_hash":"8aa6ac9e0fe59c17caf18a3c329ca34958e7e7234efcf21475833409e1e76726","compiler_version":"v0.47.2"}
 
 name: "Agentic Weekly Researcher (Ruby)"
 "on":
   schedule:
-  - cron: "0 9 * * 1"
+  - cron: "37 15 * * *"
     # Friendly format: daily (scattered)
   workflow_dispatch:
 
