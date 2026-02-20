@@ -25,12 +25,14 @@
 # - Comment helpfully on open issues to unblock contributors and onboard newcomers
 # - Identify issues that can be fixed and create draft pull requests with the fixes
 # - Study the codebase and propose improvements via PRs
+# - Keep dependencies and engineering up to date (e.g. .NET SDK, target frameworks)
+# - Prepare releases by updating RELEASE_NOTES.md and version.props, following SemVer
 # - Maintain a persistent memory of work done and what remains
 # - Maintain a monthly activity summary issue tracking all assistant actions
 # Always polite, constructive, and mindful of the project's goals: stability,
 # interoperability, and minimal dependencies.
 #
-# gh-aw-metadata: {"schema_version":"v1","frontmatter_hash":"eeed5d142270cd0087304ae46ff7b5f7ddee08480eda95e00f4029e74b96e68f","compiler_version":"v0.47.3"}
+# gh-aw-metadata: {"schema_version":"v1","frontmatter_hash":"b1dffdd0268102406e2fabeba23b5d27a09aa2dc2d7cd7ae2f15a3082918fda5","compiler_version":"v0.47.3"}
 
 name: "Auto Maintainer Assistant"
 "on":
@@ -1350,7 +1352,7 @@ jobs:
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
         env:
           WORKFLOW_NAME: "Auto Maintainer Assistant"
-          WORKFLOW_DESCRIPTION: "A friendly Auto Maintainer Assistant for FSharp.Control.AsyncSeq. Runs daily to:\n- Comment helpfully on open issues to unblock contributors and onboard newcomers\n- Identify issues that can be fixed and create draft pull requests with the fixes\n- Study the codebase and propose improvements via PRs\n- Maintain a persistent memory of work done and what remains\n- Maintain a monthly activity summary issue tracking all assistant actions\nAlways polite, constructive, and mindful of the project's goals: stability,\ninteroperability, and minimal dependencies."
+          WORKFLOW_DESCRIPTION: "A friendly Auto Maintainer Assistant for FSharp.Control.AsyncSeq. Runs daily to:\n- Comment helpfully on open issues to unblock contributors and onboard newcomers\n- Identify issues that can be fixed and create draft pull requests with the fixes\n- Study the codebase and propose improvements via PRs\n- Keep dependencies and engineering up to date (e.g. .NET SDK, target frameworks)\n- Prepare releases by updating RELEASE_NOTES.md and version.props, following SemVer\n- Maintain a persistent memory of work done and what remains\n- Maintain a monthly activity summary issue tracking all assistant actions\nAlways polite, constructive, and mindful of the project's goals: stability,\ninteroperability, and minimal dependencies."
           HAS_PATCH: ${{ needs.agent.outputs.has_patch }}
         with:
           script: |
