@@ -2611,3 +2611,157 @@ let ``AsyncSeqOp.FoldAsync with exception in folder should propagate`` () =
       () // Expected
   } |> Async.RunSynchronously
 
+[<Test>]
+let ``AsyncSeq.tryFirst should return None for empty sequence`` () =
+  let result = AsyncSeq.empty<int> |> AsyncSeq.tryFirst |> Async.RunSynchronously
+  Assert.AreEqual(None, result)
+
+[<Test>]
+let ``AsyncSeq.tryFirst should return first element`` () =
+  let result = asyncSeq { yield 1; yield 2; yield 3 } |> AsyncSeq.tryFirst |> Async.RunSynchronously
+  Assert.AreEqual(Some 1, result)
+
+[<Test>]
+let ``AsyncSeq.tryFirst should return singleton`` () =
+  let result = AsyncSeq.singleton 42 |> AsyncSeq.tryFirst |> Async.RunSynchronously
+  Assert.AreEqual(Some 42, result)
+
+[<Test>]
+let ``AsyncSeq.tryLast should return None for empty sequence`` () =
+  let result = AsyncSeq.empty<int> |> AsyncSeq.tryLast |> Async.RunSynchronously
+  Assert.AreEqual(None, result)
+
+[<Test>]
+let ``AsyncSeq.tryLast should return last element`` () =
+  let result = asyncSeq { yield 1; yield 2; yield 3 } |> AsyncSeq.tryLast |> Async.RunSynchronously
+  Assert.AreEqual(Some 3, result)
+
+[<Test>]
+let ``AsyncSeq.tryLast should return singleton`` () =
+  let result = AsyncSeq.singleton 99 |> AsyncSeq.tryLast |> Async.RunSynchronously
+  Assert.AreEqual(Some 99, result)
+
+[<Test>]
+let ``AsyncSeq.firstOrDefault should return default for empty sequence`` () =
+  let result = AsyncSeq.empty<int> |> AsyncSeq.firstOrDefault 0 |> Async.RunSynchronously
+  Assert.AreEqual(0, result)
+
+[<Test>]
+let ``AsyncSeq.firstOrDefault should return first element`` () =
+  let result = asyncSeq { yield 10; yield 20; yield 30 } |> AsyncSeq.firstOrDefault 0 |> Async.RunSynchronously
+  Assert.AreEqual(10, result)
+
+[<Test>]
+let ``AsyncSeq.tryPickAsync should return None when nothing matches`` () =
+  async {
+    let source = asyncSeq { yield 1; yield 2; yield 3 }
+    let! result = AsyncSeq.tryPickAsync (fun x -> async { return if x > 10 then Some x else None }) source
+    Assert.AreEqual(None, result)
+  } |> Async.RunSynchronously
+
+[<Test>]
+let ``AsyncSeq.tryPickAsync should return first match`` () =
+  async {
+    let source = asyncSeq { yield 1; yield 2; yield 3; yield 4 }
+    let! result = AsyncSeq.tryPickAsync (fun x -> async { return if x % 2 = 0 then Some (x * 10) else None }) source
+    Assert.AreEqual(Some 20, result)
+  } |> Async.RunSynchronously
+
+[<Test>]
+let ``AsyncSeq.tryPickAsync should return None for empty sequence`` () =
+  async {
+    let! result = AsyncSeq.tryPickAsync (fun (x: int) -> async { return Some x }) AsyncSeq.empty<int>
+    Assert.AreEqual(None, result)
+  } |> Async.RunSynchronously
+
+[<Test>]
+let ``AsyncSeq.pickAsync should return first match`` () =
+  async {
+    let source = asyncSeq { yield 1; yield 2; yield 3 }
+    let! result = AsyncSeq.pickAsync (fun x -> async { return if x = 2 then Some "found" else None }) source
+    Assert.AreEqual("found", result)
+  } |> Async.RunSynchronously
+
+[<Test>]
+let ``AsyncSeq.pickAsync should raise KeyNotFoundException when nothing matches`` () =
+  async {
+    let source = asyncSeq { yield 1; yield 2; yield 3 }
+    try
+      let! _ = AsyncSeq.pickAsync (fun _ -> async { return None }) source
+      Assert.Fail("Expected KeyNotFoundException")
+    with
+    | :? System.Collections.Generic.KeyNotFoundException -> ()
+  } |> Async.RunSynchronously
+
+[<Test>]
+let ``AsyncSeq.mapiAsync should provide correct indices`` () =
+  async {
+    let source = asyncSeq { yield "a"; yield "b"; yield "c" }
+    let! result =
+      AsyncSeq.mapiAsync (fun i x -> async { return (i, x) }) source
+      |> AsyncSeq.toListAsync
+    Assert.AreEqual([(0L, "a"); (1L, "b"); (2L, "c")], result)
+  } |> Async.RunSynchronously
+
+[<Test>]
+let ``AsyncSeq.mapiAsync on empty sequence should return empty`` () =
+  let result =
+    AsyncSeq.mapiAsync (fun i (x: int) -> async { return (i, x) }) AsyncSeq.empty<int>
+    |> AsyncSeq.toListSynchronously
+  Assert.AreEqual([], result)
+
+[<Test>]
+let ``AsyncSeq.indexed should pair each element with its index`` () =
+  let result =
+    asyncSeq { yield "x"; yield "y"; yield "z" }
+    |> AsyncSeq.indexed
+    |> AsyncSeq.toListSynchronously
+  Assert.AreEqual([(0L, "x"); (1L, "y"); (2L, "z")], result)
+
+[<Test>]
+let ``AsyncSeq.indexed on empty sequence should return empty`` () =
+  let result =
+    AsyncSeq.empty<int>
+    |> AsyncSeq.indexed
+    |> AsyncSeq.toListSynchronously
+  Assert.AreEqual([], result)
+
+[<Test>]
+let ``AsyncSeq.replicateUntilNoneAsync should stop at None`` () =
+  let mutable count = 0
+  let gen = async {
+    count <- count + 1
+    if count <= 3 then return Some count
+    else return None
+  }
+  let result = AsyncSeq.replicateUntilNoneAsync gen |> AsyncSeq.toListSynchronously
+  Assert.AreEqual([1; 2; 3], result)
+
+[<Test>]
+let ``AsyncSeq.replicateUntilNoneAsync with immediate None should return empty`` () =
+  let result = AsyncSeq.replicateUntilNoneAsync (async { return None }) |> AsyncSeq.toListSynchronously
+  Assert.AreEqual([], result)
+
+[<Test>]
+let ``AsyncSeq.zapp should apply sequence of functions to sequence of values`` () =
+  let fns = asyncSeq { yield (fun x -> x + 1); yield (fun x -> x * 2); yield (fun x -> x - 3) }
+  let vals = asyncSeq { yield 10; yield 10; yield 10 }
+  let result = AsyncSeq.zapp fns vals |> AsyncSeq.toListSynchronously
+  Assert.AreEqual([11; 20; 7], result)
+
+[<Test>]
+let ``AsyncSeq.zapp with shorter functions sequence should stop early`` () =
+  let fns = asyncSeq { yield (fun x -> x + 1) }
+  let vals = asyncSeq { yield 10; yield 20; yield 30 }
+  let result = AsyncSeq.zapp fns vals |> AsyncSeq.toListSynchronously
+  Assert.AreEqual([11], result)
+
+[<Test>]
+let ``AsyncSeq.zappAsync should apply async sequence of functions`` () =
+  async {
+    let fns = asyncSeq { yield (fun x -> async { return x + 1 }); yield (fun x -> async { return x * 2 }) }
+    let vals = asyncSeq { yield 5; yield 5 }
+    let! result = AsyncSeq.zappAsync fns vals |> AsyncSeq.toListAsync
+    Assert.AreEqual([6; 10], result)
+  } |> Async.RunSynchronously
+
