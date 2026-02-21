@@ -1717,6 +1717,59 @@ let ``AsyncSeq.mapAsyncUnorderedParallel should not preserve order`` () =
   Assert.IsTrue(allPresent, "All input elements should be present in results")
 
 
+[<Test>]
+let ``AsyncSeq.mapAsyncUnorderedParallelThrottled should produce all results`` () =
+  let input = [1; 2; 3; 4; 5]
+  let expected = [2; 4; 6; 8; 10] |> Set.ofList
+
+  let actual =
+    input
+    |> AsyncSeq.ofSeq
+    |> AsyncSeq.mapAsyncUnorderedParallelThrottled 3 (fun x -> async {
+      do! Async.Sleep(10)
+      return x * 2
+    })
+    |> AsyncSeq.toListAsync
+    |> runTest
+    |> Set.ofList
+
+  Assert.AreEqual(expected, actual)
+
+[<Test>]
+let ``AsyncSeq.mapAsyncUnorderedParallelThrottled should propagate handler exception`` () =
+  let res =
+    AsyncSeq.init 100L id
+    |> AsyncSeq.mapAsyncUnorderedParallelThrottled 10 (fun i -> async {
+      if i = 50L then return failwith "oh no"
+      else return i * 2L
+    })
+    |> AsyncSeq.toListAsync
+    |> Async.Catch
+    |> (fun x -> Async.RunSynchronously (x, timeout = 10000))
+
+  match res with
+  | Choice2Of2 _ -> ()
+  | Choice1Of2 _ -> Assert.Fail ("error expected")
+
+[<Test>]
+let ``AsyncSeq.mapAsyncUnorderedParallelThrottled should throttle`` () =
+  let count = ref 0
+  let parallelism = 5
+
+  let result =
+    AsyncSeq.init 50L id
+    |> AsyncSeq.mapAsyncUnorderedParallelThrottled parallelism (fun i -> async {
+      let c = Interlocked.Increment count
+      if c > parallelism then
+        return failwith (sprintf "concurrency exceeded: %d > %d" c parallelism)
+      do! Async.Sleep 5
+      Interlocked.Decrement count |> ignore
+      return i * 2L })
+    |> AsyncSeq.toListAsync
+    |> Async.RunSynchronously
+
+  Assert.AreEqual(50, result.Length)
+
 //[<Test>]
 //let ``AsyncSeq.mapParallelAsyncBounded should maintain order`` () =
 //  let ls = List.init 500 id
