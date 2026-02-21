@@ -1,6 +1,6 @@
 {
-  "last_run": "2026-02-21T13:57:43Z",
-  "workflow_run_id": "22258041770",
+  "last_run": "2026-02-21T16:18:24Z",
+  "workflow_run_id": "22260054627",
   "commented_issues": [
     {"number": 168, "run": "22226329040", "action": "suggested PackageLicenseExpression fix"},
     {"number": 173, "run": "22226329040", "action": "identified .fsi gating issue, linked PR #214"},
@@ -17,7 +17,7 @@
     {"branch": "co-maintainer/mergeall-accept-seq", "run": "22248981881", "number": 221, "title": "Allow AsyncSeq.mergeAll to accept seq instead of list", "closes": 165, "status": "merged by dsyme 2026-02-21"},
     {"branch": "co-maintainer/chunkby-consecutive-grouping", "run": "22249505878", "number": 222, "title": "Add AsyncSeq.chunkBy and AsyncSeq.chunkByAsync", "closes": 156, "status": "merged by dsyme 2026-02-21"},
     {"branch": "co-maintainer/release-3.3.1-1771646837", "run": "22249988090", "number": 223, "title": "Prepare release 3.3.1", "status": "merged by dsyme 2026-02-21"},
-    {"branch": "repo-assist/add-mapAsyncUnorderedParallelThrottled", "run": "22258041770", "title": "Add AsyncSeq.mapAsyncUnorderedParallelThrottled", "closes": 31, "status": "open - pending CI"}
+    {"branch": "repo-assist/add-mapasyncunorderedparallelthrottled-001ed43df569b4c9", "run": "22258041770", "number": 225, "title": "Add AsyncSeq.mapAsyncUnorderedParallelThrottled", "closes": 31, "status": "open - tests added in run 22260054627, all 190 pass"}
   ],
   "closed_or_rejected_prs": [
     {"branch": "fix/ofasyncenum-netstandard20", "run": "22226329040", "title": "Expose ofAsyncEnum/toAsyncEnum on netstandard2.0", "closes": 173, "status": "closed by maintainer - not merged"},
@@ -27,10 +27,8 @@
   "monthly_activity_issue": {"number": 220, "month": "2026-02"},
   "framework_note": "CRITICAL: Only create ONE PR per run. The framework has a bug where if create_pull_request is called multiple times, only one PR is created with wrong mixed content.",
   "next_run_todo": [
-    "Check if mapAsyncUnorderedParallelThrottled PR was merged - if so update memory and close issue #31",
-    "Issue #152 (Blazor WASM deadlock) - complex threading issue, needs ofAsyncEnum impl analysis",
-    "Issue #122 (iterAsyncParallel cancel) - old complex threading bug, skip unless clear fix found",
-    "Consider adding tests for mapAsyncUnorderedParallelThrottled if CI fails"
+    "Check if mapAsyncUnorderedParallelThrottled PR #225 was merged - if so update memory",
+    "Issue #152 (Blazor WASM deadlock) - complex threading issue; ofAsyncEnum uses Task.Run/WaitAsync which blocks on WASM single-thread context"
   ],
   "notes": [
     "Issue #155 (mapAsyncUnorderedParallel) was closed by dsyme on 2026-02-20 as completed",
@@ -44,6 +42,7 @@
     "chunkBy PR (#222) implements AsyncSeq.chunkBy and AsyncSeq.chunkByAsync returning AsyncSeq<'Key * 'T list>",
     "mergeAll PR (#221) widens parameter from list to seq, materialises to array internally",
     "release 3.3.1 PR (#223) was merged by dsyme on 2026-02-21 - bumps version.props to 3.3.1",
-    "mapAsyncUnorderedParallelThrottled PR created 2026-02-21 - closes issue #31 (2015 request)"
+    "mapAsyncUnorderedParallelThrottled PR (#225) created 2026-02-21, tests added 2026-02-21 after dsyme comment 'Needs tests and testing'; NuGet access now works in sandbox; all 190 tests pass",
+    "Network access was updated by dsyme (commit c0fdf4b 'allow dotnet network') - NuGet restore now works in Repo Assist runs"
   ]
 }
