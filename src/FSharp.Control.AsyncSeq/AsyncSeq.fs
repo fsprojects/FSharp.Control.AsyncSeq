@@ -1700,8 +1700,9 @@ module AsyncSeq =
 
   /// Merges all specified async sequences into an async sequence non-deterministically.
   // By moving the last emitted task to the end of the array, this algorithm achieves max-min fairness when merging AsyncSeqs
-  let mergeAll (ss:AsyncSeq<'T> list) : AsyncSeq<'T> =
+  let mergeAll (ss:seq<AsyncSeq<'T>>) : AsyncSeq<'T> =
     asyncSeq {
+      let ss = Seq.toArray ss
       let n = ss.Length
 
       let moveToEnd i (a: 'a[]) =
