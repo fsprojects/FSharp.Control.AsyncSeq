@@ -2,6 +2,8 @@
 * Quick summary of changes:
   - Performance improvements: optimized `iterAsync` and `iteriAsync`; optimized `collect`, `mapAsync` and `unfoldAsync`; fixed append memory leak (Issue #35).
   - Added `mapAsyncUnorderedParallel` for improved parallel performance.
+  - Added `AsyncSeq.chunkBy` and `AsyncSeq.chunkByAsync` for grouping consecutive elements by key ([#156](https://github.com/fsprojects/FSharp.Control.AsyncSeq/issues/156), [PR #222](https://github.com/fsprojects/FSharp.Control.AsyncSeq/pull/222)).
+  - `AsyncSeq.mergeAll` now accepts `seq<AsyncSeq<'T>>` instead of `list<AsyncSeq<'T>>` for broader compatibility ([#165](https://github.com/fsprojects/FSharp.Control.AsyncSeq/issues/165), [PR #221](https://github.com/fsprojects/FSharp.Control.AsyncSeq/pull/221)).
   - Set up BenchmarkDotNet for systematic benchmarking; performance benchmarks show measurable improvements (addresses Round 1 & 2 of #190).
   - Build/CI updates: configuration and build-step updates.
 
