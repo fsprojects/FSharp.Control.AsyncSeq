@@ -157,7 +157,7 @@ Always do Task 6 (Update Monthly Activity Summary Issue) in addition to any othe
         ```
 
    h. Post a **single, brief** comment on the issue pointing to the PR. Do not post additional comments about the same PR.
-3. Update your memory to record the fix attempt and test outcome. **Never create multiple PRs for the same issue.**
+3. Update your memory to record the fix attempt and test outcome. **Never create multiple open PRs for the same issue.**
 
 ### Task 3: Study the Codebase and Propose Improvements
 
