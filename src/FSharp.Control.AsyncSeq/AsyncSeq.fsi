@@ -484,6 +484,14 @@ module AsyncSeq =
     [<Obsolete("Use AsyncSeq.chunkBySize instead")>]
     val bufferByCount : bufferSize:int -> source:AsyncSeq<'T> -> AsyncSeq<'T []>
 
+    /// Groups consecutive elements of the async sequence that share the same key (as computed by an async projection)
+    /// and yields each group as a pair of the key and a list of elements.
+    val chunkByAsync<'T, 'Key when 'Key : equality> : projection:('T -> Async<'Key>) -> source:AsyncSeq<'T> -> AsyncSeq<'Key * 'T list>
+
+    /// Groups consecutive elements of the async sequence that share the same key (as computed by a projection)
+    /// and yields each group as a pair of the key and a list of elements.
+    val chunkBy<'T, 'Key when 'Key : equality> : projection:('T -> 'Key) -> source:AsyncSeq<'T> -> AsyncSeq<'Key * 'T list>
+
     #if !FABLE_COMPILER
     /// Buffer items from the async sequence until a specified buffer size is reached or a specified amount of time is elapsed.
     val bufferByCountAndTime : bufferSize:int -> timeoutMs:int -> source:AsyncSeq<'T> -> AsyncSeq<'T []>

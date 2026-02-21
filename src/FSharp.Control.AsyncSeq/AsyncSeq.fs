@@ -1558,6 +1558,33 @@ module AsyncSeq =
   let bufferByCount (bufferSize:int) (source:AsyncSeq<'T>) : AsyncSeq<'T[]> =
     chunkBySize bufferSize source
 
+  let chunkByAsync (projection:'T -> Async<'Key>) (source:AsyncSeq<'T>) : AsyncSeq<'Key * 'T list> = asyncSeq {
+    use ie = source.GetEnumerator()
+    let! move = ie.MoveNext()
+    let b = ref move
+    if b.Value.IsSome then
+      let! key0 = projection b.Value.Value
+      let mutable currentKey = key0
+      let buffer = ResizeArray<'T>()
+      buffer.Add b.Value.Value
+      let! moveNext = ie.MoveNext()
+      b := moveNext
+      while b.Value.IsSome do
+        let! key = projection b.Value.Value
+        if key = currentKey then
+          buffer.Add b.Value.Value
+        else
+          yield (currentKey, buffer |> Seq.toList)
+          currentKey <- key
+          buffer.Clear()
+          buffer.Add b.Value.Value
+        let! moveNext = ie.MoveNext()
+        b := moveNext
+      yield (currentKey, buffer |> Seq.toList) }
+
+  let chunkBy (projection:'T -> 'Key) (source:AsyncSeq<'T>) : AsyncSeq<'Key * 'T list> =
+    chunkByAsync (projection >> async.Return) source
+
   #if !FABLE_COMPILER
   let toSortedSeq fn source =
     toArrayAsync source |> Async.map fn |> Async.RunSynchronously
