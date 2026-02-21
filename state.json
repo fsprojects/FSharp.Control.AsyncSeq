@@ -1,6 +1,6 @@
 {
-  "last_run": "2026-02-21T03:31:48Z",
-  "workflow_run_id": "22249505878",
+  "last_run": "2026-02-21T04:06:03Z",
+  "workflow_run_id": "22249988090",
   "commented_issues": [
     {"number": 168, "run": "22226329040", "action": "suggested PackageLicenseExpression fix"},
     {"number": 173, "run": "22226329040", "action": "identified .fsi gating issue, linked PR #214"},
@@ -13,8 +13,9 @@
     {"number": 156, "run": "22249505878", "action": "announced draft PR for chunkBy/chunkByAsync"}
   ],
   "created_prs": [
-    {"branch": "co-maintainer/mergeall-accept-seq", "run": "22248981881", "number": 221, "title": "Allow AsyncSeq.mergeAll to accept seq instead of list", "closes": 165, "status": "open"},
-    {"branch": "co-maintainer/chunkby-consecutive-grouping", "run": "22249505878", "title": "Add AsyncSeq.chunkBy and AsyncSeq.chunkByAsync", "closes": 156, "status": "created - only PR this run"}
+    {"branch": "co-maintainer/mergeall-accept-seq", "run": "22248981881", "number": 221, "title": "Allow AsyncSeq.mergeAll to accept seq instead of list", "closes": 165, "status": "merged by dsyme 2026-02-21"},
+    {"branch": "co-maintainer/chunkby-consecutive-grouping", "run": "22249505878", "number": 222, "title": "Add AsyncSeq.chunkBy and AsyncSeq.chunkByAsync", "closes": 156, "status": "merged by dsyme 2026-02-21"},
+    {"branch": "co-maintainer/release-3.3.1-1771646837", "run": "22249988090", "title": "Prepare release 3.3.1", "status": "open - bumps version.props to 3.3.1, updates RELEASE_NOTES.md"}
   ],
   "closed_or_rejected_prs": [
     {"branch": "fix/ofasyncenum-netstandard20", "run": "22226329040", "title": "Expose ofAsyncEnum/toAsyncEnum on netstandard2.0", "closes": 173, "status": "closed by maintainer - not merged"},
@@ -24,10 +25,11 @@
   "monthly_activity_issue": {"number": 220, "month": "2026-02"},
   "framework_note": "CRITICAL: Only create ONE PR per run. The framework has a bug where if create_pull_request is called multiple times, only one PR is created with wrong mixed content.",
   "next_run_todo": [
-    "version bump to 3.3.1 (version.props is at 3.2.1 but RELEASE_NOTES.md has 3.3.1 entry) - consider as separate PR",
-    "Check if mergeAll PR #221 was merged and confirm issue #165 closed if so",
-    "Check if chunkBy PR was merged",
-    "Consider commenting on #152 (Blazor WASM deadlock) - needs analysis of ofAsyncEnum impl"
+    "Check if release 3.3.1 PR was merged - if so update memory",
+    "Issue #152 (Blazor WASM deadlock) - complex threading issue, needs ofAsyncEnum impl analysis",
+    "Issue #122 (iterAsyncParallel cancel) - old complex threading bug, skip unless clear fix found",
+    "Issue #125 (groupBy deadlock) - already has good comments from mlaily and dsyme, skip",
+    "Consider if there are any other improvements to propose after release"
   ],
   "notes": [
     "Issue #155 (mapAsyncUnorderedParallel) was closed by dsyme on 2026-02-20 as completed",
@@ -35,9 +37,11 @@
     "Issue #174 (iterAsyncParallelThrottled) already has a helpful comment from njlr",
     "Issue #123 (YieldFrom) already has a helpful comment from abelbraaksma",
     "PR #214 (ofAsyncEnum netstandard2.0) was closed/not merged by maintainer",
-    "RELEASE_NOTES.md has 3.3.1 entry but version.props is stuck at 3.2.1",
+    "RELEASE_NOTES.md has 3.3.1 entry and version.props is now being bumped to 3.3.1 via PR",
     "Issue #215 is a weekly research report (auto-generated) - ignore",
     "Issue #122 (iterAsyncParallel cancel) - old bug (2020), complex threading issue - needs careful analysis before PR",
-    "chunkBy PR (run 22249505878) implements AsyncSeq.chunkBy and AsyncSeq.chunkByAsync returning AsyncSeq<'Key * 'T list>"
+    "Issue #125 (groupBy+mapAsync deadlock) - already handled by existing docs + comments from mlaily/dsyme",
+    "chunkBy PR (#222) implements AsyncSeq.chunkBy and AsyncSeq.chunkByAsync returning AsyncSeq<'Key * 'T list>",
+    "mergeAll PR (#221) widens parameter from list to seq, materialises to array internally"
   ]
 }
