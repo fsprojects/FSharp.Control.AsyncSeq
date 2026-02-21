@@ -2611,3 +2611,35 @@ let ``AsyncSeqOp.FoldAsync with exception in folder should propagate`` () =
       () // Expected
   } |> Async.RunSynchronously
 
+[<Test>]
+let ``AsyncSeq.chunkBy empty sequence returns empty`` () =
+  let result = AsyncSeq.chunkBy id AsyncSeq.empty<int> |> AsyncSeq.toListSynchronously
+  Assert.AreEqual([], result)
+
+[<Test>]
+let ``AsyncSeq.chunkBy single element`` () =
+  let source = asyncSeq { yield 42 }
+  let result = AsyncSeq.chunkBy id source |> AsyncSeq.toListSynchronously
+  Assert.AreEqual([(42, [42])], result)
+
+[<Test>]
+let ``AsyncSeq.chunkBy groups consecutive equal keys`` () =
+  let source = asyncSeq { yield 1; yield 1; yield 2; yield 2; yield 1 }
+  let result = AsyncSeq.chunkBy id source |> AsyncSeq.toListSynchronously
+  Assert.AreEqual([(1, [1;1]); (2, [2;2]); (1, [1])], result)
+
+[<Test>]
+let ``AsyncSeq.chunkBy with projection`` () =
+  let source = asyncSeq { yield 1; yield 3; yield 2; yield 4; yield 5 }
+  let result = AsyncSeq.chunkBy (fun x -> x % 2 = 0) source |> AsyncSeq.toListSynchronously
+  Assert.AreEqual([(false, [1;3]); (true, [2;4]); (false, [5])], result)
+
+[<Test>]
+let ``AsyncSeq.chunkByAsync groups consecutive equal keys`` () =
+  async {
+    let source = asyncSeq { yield 1; yield 1; yield 2; yield 2 }
+    let result = AsyncSeq.chunkByAsync (fun x -> async { return x }) source |> AsyncSeq.toListSynchronously
+    Assert.AreEqual([(1, [1;1]); (2, [2;2])], result)
+  } |> Async.RunSynchronously
+
+
