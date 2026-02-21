@@ -925,6 +925,34 @@ module AsyncSeq =
         | Choice1Of2 value -> return value
         | Choice2Of2 ex -> return raise ex })
   }
+
+  let mapAsyncUnorderedParallelThrottled (parallelism:int) (f:'a -> Async<'b>) (s:AsyncSeq<'a>) : AsyncSeq<'b> = asyncSeq {
+    use mb = MailboxProcessor.Start (fun _ -> async.Return())
+    use sm = new SemaphoreSlim(parallelism)
+    let! err =
+      s
+      |> iterAsync (fun a -> async {
+        do! sm.WaitAsync () |> Async.awaitTaskUnitCancellationAsError
+        let! b = Async.StartChild (async {
+          try
+            let! result = f a
+            sm.Release() |> ignore
+            return Choice1Of2 result
+          with ex ->
+            sm.Release() |> ignore
+            return Choice2Of2 ex
+        })
+        mb.Post (Some b) })
+      |> Async.map (fun _ -> mb.Post None)
+      |> Async.StartChildAsTask
+    yield!
+      replicateUntilNoneAsync (Task.chooseTask (err |> Task.taskFault) (async.Delay mb.Receive))
+      |> mapAsync (fun childAsync -> async {
+        let! result = childAsync
+        match result with
+        | Choice1Of2 value -> return value
+        | Choice2Of2 ex -> return raise ex })
+  }
   #endif
 
   let chooseAsync f (source:AsyncSeq<'T>) =
