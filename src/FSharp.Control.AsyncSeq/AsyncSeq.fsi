@@ -502,7 +502,7 @@ module AsyncSeq =
 
     /// Merges all specified async sequences into an async sequence non-deterministically.
     /// The resulting async sequence produces elements when any argument sequence produces an element.
-    val mergeAll : sources:AsyncSeq<'T> list -> AsyncSeq<'T>
+    val mergeAll : sources:seq<AsyncSeq<'T>> -> AsyncSeq<'T>
     #endif
 
     /// Returns an async sequence which contains no contiguous duplicate elements based on the specified comparison function.
