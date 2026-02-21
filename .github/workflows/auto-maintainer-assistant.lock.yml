@@ -25,14 +25,11 @@
 # - Comment helpfully on open issues to unblock contributors and onboard newcomers
 # - Identify issues that can be fixed and create draft pull requests with the fixes
 # - Study the codebase and propose improvements via PRs
-# - Keep dependencies and engineering up to date (e.g. .NET SDK, target frameworks)
-# - Prepare releases by updating RELEASE_NOTES.md and version.props, following SemVer
 # - Maintain a persistent memory of work done and what remains
-# - Maintain a monthly activity summary issue tracking all assistant actions
 # Always polite, constructive, and mindful of the project's goals: stability,
 # interoperability, and minimal dependencies.
 #
-# gh-aw-metadata: {"schema_version":"v1","frontmatter_hash":"b1dffdd0268102406e2fabeba23b5d27a09aa2dc2d7cd7ae2f15a3082918fda5","compiler_version":"v0.47.6"}
+# gh-aw-metadata: {"schema_version":"v1","frontmatter_hash":"c1ff8c17b00ca87ff58cb9b4966dd4487c98b0c3e13a1b4791e680a15732db75","compiler_version":"v0.47.6"}
 
 name: "Auto Maintainer Assistant"
 "on":
@@ -166,7 +163,7 @@ jobs:
           
           ---
           
-          ## Adding a Comment to an Issue or Pull Request, Creating an Issue, Updating Issues, Creating a Pull Request, Adding Labels to Issues or Pull Requests, Removing Labels from Issues or Pull Requests, Pushing Changes to Branch, Linking a Sub-Issue, Reporting Missing Tools or Functionality, Reporting Missing Data
+          ## Adding a Comment to an Issue or Pull Request, Creating an Issue, Creating a Pull Request, Reporting Missing Tools or Functionality, Reporting Missing Data
           
           **IMPORTANT**: To perform the actions listed above, use the **safeoutputs** tools. Do NOT use `gh`, do NOT call the GitHub API directly. You do not have write access to the GitHub repository.
           
@@ -178,10 +175,6 @@ jobs:
           
           To create an issue, use the create_issue tool from safeoutputs.
           
-          **Updating an Issue**
-          
-          To update an issue, use the update_issue tool from safeoutputs.
-          
           **Creating a Pull Request**
           
           To create a pull request:
@@ -190,25 +183,6 @@ jobs:
           3. Add and commit your changes to the branch. Be careful to add exactly the files you intend, and check there are no extra files left un-added. Verify you haven't deleted or changed any files you didn't intend to.
           4. Do not push your changes. That will be done by the tool.
           5. Create the pull request with the create_pull_request tool from safeoutputs.
-          
-          **Adding Labels to Issues or Pull Requests**
-          
-          To add labels to an issue or pull request, use the add_labels tool from safeoutputs.
-          
-          **Removing Labels from Issues or Pull Requests**
-          
-          To remove labels from an issue or pull request, use the remove_labels tool from safeoutputs.
-          
-          **Pushing Changes to a Pull Request Branch**
-          
-          To push changes to the branch of a pull request:
-          1. Make any file changes directly in the working directory.
-          2. Add and commit your changes to the local copy of the pull request branch. Be careful to add exactly the files you intend, and verify you haven't deleted or changed any files you didn't intend to.
-          3. Push the branch to the repo by using the push_to_pull_request_branch tool from safeoutputs.
-          
-          **Linking a Sub-Issue**
-          
-          To link an issue as a sub-issue of another issue, use the link_sub_issue tool from safeoutputs.
           
           **Reporting Missing Tools or Functionality**
           
@@ -461,7 +435,7 @@ jobs:
           mkdir -p /tmp/gh-aw/safeoutputs
           mkdir -p /tmp/gh-aw/mcp-logs/safeoutputs
           cat > /opt/gh-aw/safeoutputs/config.json << 'GH_AW_SAFE_OUTPUTS_CONFIG_EOF'
-          {"add_comment":{"max":10,"target":"*"},"add_labels":{"max":10,"target":"*"},"create_issue":{"max":3},"create_pull_request":{},"link_sub_issue":{"max":10},"missing_data":{},"missing_tool":{},"noop":{"max":1},"push_to_pull_request_branch":{"max":0},"remove_labels":{"max":10},"update_issue":{"max":1}}
+          {"add_comment":{"max":10,"target":"*"},"create_issue":{"max":3},"create_pull_request":{},"missing_data":{},"missing_tool":{},"noop":{"max":1}}
           GH_AW_SAFE_OUTPUTS_CONFIG_EOF
           cat > /opt/gh-aw/safeoutputs/tools.json << 'GH_AW_SAFE_OUTPUTS_TOOLS_EOF'
           [
@@ -565,143 +539,6 @@ jobs:
               "name": "create_pull_request"
             },
             {
-              "description": "Add labels to an existing GitHub issue or pull request for categorization and filtering. Labels must already exist in the repository. For creating new issues with labels, use create_issue with the labels property instead. CONSTRAINTS: Maximum 10 label(s) can be added. Target: *.",
-              "inputSchema": {
-                "additionalProperties": false,
-                "properties": {
-                  "item_number": {
-                    "description": "Issue or PR number to add labels to. This is the numeric ID from the GitHub URL (e.g., 456 in github.com/owner/repo/issues/456). If omitted, adds labels to the issue or PR that triggered this workflow. Only works for issue or pull_request event triggers. For schedule, workflow_dispatch, or other triggers, item_number is required — omitting it will silently skip the label operation.",
-                    "type": "number"
-                  },
-                  "labels": {
-                    "description": "Label names to add (e.g., ['bug', 'priority-high']). Labels must exist in the repository.",
-                    "items": {
-                      "type": "string"
-                    },
-                    "type": "array"
-                  }
-                },
-                "type": "object"
-              },
-              "name": "add_labels"
-            },
-            {
-              "description": "Remove labels from an existing GitHub issue or pull request. Silently skips labels that don't exist on the item. Use this to clean up labels or manage label lifecycles (e.g., removing 'needs-review' after review is complete). CONSTRAINTS: Maximum 10 label(s) can be removed. Target: *.",
-              "inputSchema": {
-                "additionalProperties": false,
-                "properties": {
-                  "item_number": {
-                    "description": "Issue or PR number to remove labels from. This is the numeric ID from the GitHub URL (e.g., 456 in github.com/owner/repo/issues/456). If omitted, removes labels from the item that triggered this workflow.",
-                    "type": "number"
-                  },
-                  "labels": {
-                    "description": "Label names to remove (e.g., ['smoke', 'needs-triage']). Non-existent labels are silently skipped.",
-                    "items": {
-                      "type": "string"
-                    },
-                    "type": "array"
-                  }
-                },
-                "required": [
-                  "labels"
-                ],
-                "type": "object"
-              },
-              "name": "remove_labels"
-            },
-            {
-              "description": "Update an existing GitHub issue's title, body, labels, assignees, or milestone WITHOUT closing it. This tool is primarily for editing issue metadata and content. While it supports changing status between 'open' and 'closed', use close_issue instead when you want to close an issue with a closing comment. Body updates support replacing, appending to, prepending content, or updating a per-run \"island\" section. CONSTRAINTS: Maximum 1 issue(s) can be updated. Target: *.",
-              "inputSchema": {
-                "additionalProperties": false,
-                "properties": {
-                  "assignees": {
-                    "description": "Replace the issue assignees with this list of GitHub usernames (e.g., ['octocat', 'mona']).",
-                    "items": {
-                      "type": "string"
-                    },
-                    "type": "array"
-                  },
-                  "body": {
-                    "description": "Issue body content in Markdown. For 'replace', this becomes the entire body. For 'append'/'prepend', this content is added with a separator and an attribution footer. For 'replace-island', only the run-specific section is updated.",
-                    "type": "string"
-                  },
-                  "issue_number": {
-                    "description": "Issue number to update. This is the numeric ID from the GitHub URL (e.g., 789 in github.com/owner/repo/issues/789). Required when the workflow target is '*' (any issue).",
-                    "type": [
-                      "number",
-                      "string"
-                    ]
-                  },
-                  "labels": {
-                    "description": "Replace the issue labels with this list (e.g., ['bug', 'tracking:foo']). Labels must exist in the repository.",
-                    "items": {
-                      "type": "string"
-                    },
-                    "type": "array"
-                  },
-                  "milestone": {
-                    "description": "Milestone number to assign (e.g., 1). Use null to clear.",
-                    "type": [
-                      "number",
-                      "string"
-                    ]
-                  },
-                  "operation": {
-                    "description": "How to update the issue body: 'append' (default - add to end with separator), 'prepend' (add to start with separator), 'replace' (overwrite entire body), or 'replace-island' (update a run-specific section).",
-                    "enum": [
-                      "replace",
-                      "append",
-                      "prepend",
-                      "replace-island"
-                    ],
-                    "type": "string"
-                  },
-                  "status": {
-                    "description": "New issue status: 'open' to reopen a closed issue, 'closed' to close an open issue.",
-                    "enum": [
-                      "open",
-                      "closed"
-                    ],
-                    "type": "string"
-                  },
-                  "title": {
-                    "description": "New issue title to replace the existing title.",
-                    "type": "string"
-                  }
-                },
-                "type": "object"
-              },
-              "name": "update_issue"
-            },
-            {
-              "description": "Push committed changes to a pull request's branch. Use this to add follow-up commits to an existing PR, such as addressing review feedback or fixing issues. Changes must be committed locally before calling this tool.",
-              "inputSchema": {
-                "additionalProperties": false,
-                "properties": {
-                  "branch": {
-                    "description": "Branch name to push changes from. If omitted, uses the current working branch. Only specify if you need to push from a different branch.",
-                    "type": "string"
-                  },
-                  "message": {
-                    "description": "Commit message describing the changes. Follow repository commit message conventions (e.g., conventional commits).",
-                    "type": "string"
-                  },
-                  "pull_request_number": {
-                    "description": "Pull request number to push changes to. This is the numeric ID from the GitHub URL (e.g., 654 in github.com/owner/repo/pull/654). Required when the workflow target is '*' (any PR).",
-                    "type": [
-                      "number",
-                      "string"
-                    ]
-                  }
-                },
-                "required": [
-                  "message"
-                ],
-                "type": "object"
-              },
-              "name": "push_to_pull_request_branch"
-            },
-            {
               "description": "Report that a tool or capability needed to complete the task is not available, or share any information you deem important about missing functionality or limitations. Use this when you cannot accomplish what was requested because the required functionality is missing or access is restricted.",
               "inputSchema": {
                 "additionalProperties": false,
@@ -742,34 +579,6 @@ jobs:
                 "type": "object"
               },
               "name": "noop"
-            },
-            {
-              "description": "Link an issue as a sub-issue of a parent issue. Use this to establish parent-child relationships between issues for better organization and tracking of related work items. CONSTRAINTS: Maximum 10 sub-issue link(s) can be created.",
-              "inputSchema": {
-                "additionalProperties": false,
-                "properties": {
-                  "parent_issue_number": {
-                    "description": "The parent issue number to link the sub-issue to. This is the numeric ID from the GitHub URL (e.g., 100 in github.com/owner/repo/issues/100).",
-                    "type": [
-                      "number",
-                      "string"
-                    ]
-                  },
-                  "sub_issue_number": {
-                    "description": "The issue number to link as a sub-issue of the parent. This is the numeric ID from the GitHub URL (e.g., 101 in github.com/owner/repo/issues/101).",
-                    "type": [
-                      "number",
-                      "string"
-                    ]
-                  }
-                },
-                "required": [
-                  "parent_issue_number",
-                  "sub_issue_number"
-                ],
-                "type": "object"
-              },
-              "name": "link_sub_issue"
             },
             {
               "description": "Report that data or information needed to complete the task is not available. Use this when you cannot accomplish what was requested because required data, context, or information is missing.",
@@ -813,25 +622,6 @@ jobs:
                 },
                 "item_number": {
                   "issueOrPRNumber": true
-                },
-                "repo": {
-                  "type": "string",
-                  "maxLength": 256
-                }
-              }
-            },
-            "add_labels": {
-              "defaultMax": 5,
-              "fields": {
-                "item_number": {
-                  "issueOrPRNumber": true
-                },
-                "labels": {
-                  "required": true,
-                  "type": "array",
-                  "itemType": "string",
-                  "itemSanitize": true,
-                  "itemMaxLength": 128
                 },
                 "repo": {
                   "type": "string",
@@ -908,24 +698,6 @@ jobs:
                 }
               }
             },
-            "link_sub_issue": {
-              "defaultMax": 5,
-              "fields": {
-                "parent_issue_number": {
-                  "required": true,
-                  "issueNumberOrTemporaryId": true
-                },
-                "repo": {
-                  "type": "string",
-                  "maxLength": 256
-                },
-                "sub_issue_number": {
-                  "required": true,
-                  "issueNumberOrTemporaryId": true
-                }
-              },
-              "customValidation": "parentAndSubDifferent"
-            },
             "missing_data": {
               "defaultMax": 20,
               "fields": {
@@ -982,99 +754,6 @@ jobs:
                   "maxLength": 65000
                 }
               }
-            },
-            "push_to_pull_request_branch": {
-              "defaultMax": 1,
-              "fields": {
-                "branch": {
-                  "required": true,
-                  "type": "string",
-                  "sanitize": true,
-                  "maxLength": 256
-                },
-                "message": {
-                  "required": true,
-                  "type": "string",
-                  "sanitize": true,
-                  "maxLength": 65000
-                },
-                "pull_request_number": {
-                  "issueOrPRNumber": true
-                }
-              }
-            },
-            "remove_labels": {
-              "defaultMax": 5,
-              "fields": {
-                "item_number": {
-                  "issueOrPRNumber": true
-                },
-                "labels": {
-                  "required": true,
-                  "type": "array",
-                  "itemType": "string",
-                  "itemSanitize": true,
-                  "itemMaxLength": 128
-                },
-                "repo": {
-                  "type": "string",
-                  "maxLength": 256
-                }
-              }
-            },
-            "update_issue": {
-              "defaultMax": 1,
-              "fields": {
-                "assignees": {
-                  "type": "array",
-                  "itemType": "string",
-                  "itemSanitize": true,
-                  "itemMaxLength": 39
-                },
-                "body": {
-                  "type": "string",
-                  "sanitize": true,
-                  "maxLength": 65000
-                },
-                "issue_number": {
-                  "issueOrPRNumber": true
-                },
-                "labels": {
-                  "type": "array",
-                  "itemType": "string",
-                  "itemSanitize": true,
-                  "itemMaxLength": 128
-                },
-                "milestone": {
-                  "optionalPositiveInteger": true
-                },
-                "operation": {
-                  "type": "string",
-                  "enum": [
-                    "replace",
-                    "append",
-                    "prepend",
-                    "replace-island"
-                  ]
-                },
-                "repo": {
-                  "type": "string",
-                  "maxLength": 256
-                },
-                "status": {
-                  "type": "string",
-                  "enum": [
-                    "open",
-                    "closed"
-                  ]
-                },
-                "title": {
-                  "type": "string",
-                  "sanitize": true,
-                  "maxLength": 128
-                }
-              },
-              "customValidation": "requiresOneOf:status,title,body"
             }
           }
           GH_AW_SAFE_OUTPUTS_VALIDATION_EOF
@@ -1504,7 +1183,7 @@ jobs:
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
         env:
           WORKFLOW_NAME: "Auto Maintainer Assistant"
-          WORKFLOW_DESCRIPTION: "A friendly Auto Maintainer Assistant for FSharp.Control.AsyncSeq. Runs daily to:\n- Comment helpfully on open issues to unblock contributors and onboard newcomers\n- Identify issues that can be fixed and create draft pull requests with the fixes\n- Study the codebase and propose improvements via PRs\n- Keep dependencies and engineering up to date (e.g. .NET SDK, target frameworks)\n- Prepare releases by updating RELEASE_NOTES.md and version.props, following SemVer\n- Maintain a persistent memory of work done and what remains\n- Maintain a monthly activity summary issue tracking all assistant actions\nAlways polite, constructive, and mindful of the project's goals: stability,\ninteroperability, and minimal dependencies."
+          WORKFLOW_DESCRIPTION: "A friendly Auto Maintainer Assistant for FSharp.Control.AsyncSeq. Runs daily to:\n- Comment helpfully on open issues to unblock contributors and onboard newcomers\n- Identify issues that can be fixed and create draft pull requests with the fixes\n- Study the codebase and propose improvements via PRs\n- Maintain a persistent memory of work done and what remains\nAlways polite, constructive, and mindful of the project's goals: stability,\ninteroperability, and minimal dependencies."
           HAS_PATCH: ${{ needs.agent.outputs.has_patch }}
         with:
           script: |
@@ -1674,7 +1353,7 @@ jobs:
           name: agent-artifacts
           path: /tmp/gh-aw/
       - name: Checkout repository
-        if: (((!cancelled()) && (needs.agent.result != 'skipped')) && (contains(needs.agent.outputs.output_types, 'create_pull_request'))) || (((!cancelled()) && (needs.agent.result != 'skipped')) && (contains(needs.agent.outputs.output_types, 'push_to_pull_request_branch')))
+        if: ((!cancelled()) && (needs.agent.result != 'skipped')) && (contains(needs.agent.outputs.output_types, 'create_pull_request'))
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           ref: ${{ github.base_ref || github.ref_name }}
@@ -1682,7 +1361,7 @@ jobs:
           persist-credentials: false
           fetch-depth: 1
       - name: Configure Git credentials
-        if: (((!cancelled()) && (needs.agent.result != 'skipped')) && (contains(needs.agent.outputs.output_types, 'create_pull_request'))) || (((!cancelled()) && (needs.agent.result != 'skipped')) && (contains(needs.agent.outputs.output_types, 'push_to_pull_request_branch')))
+        if: ((!cancelled()) && (needs.agent.result != 'skipped')) && (contains(needs.agent.outputs.output_types, 'create_pull_request'))
         env:
           REPO_NAME: ${{ github.repository }}
           SERVER_URL: ${{ github.server_url }}
@@ -1699,7 +1378,7 @@ jobs:
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
         env:
           GH_AW_AGENT_OUTPUT: ${{ env.GH_AW_AGENT_OUTPUT }}
-          GH_AW_SAFE_OUTPUTS_HANDLER_CONFIG: "{\"add_comment\":{\"hide_older_comments\":true,\"max\":10,\"target\":\"*\"},\"add_labels\":{\"max\":10,\"target\":\"*\"},\"create_issue\":{\"labels\":[\"automation\",\"auto-maintainer-assistant\"],\"max\":3,\"title_prefix\":\"[Auto Maintainer Assistant] \"},\"create_pull_request\":{\"base_branch\":\"${{ github.base_ref || github.ref_name }}\",\"draft\":true,\"labels\":[\"automation\",\"auto-maintainer-assistant\"],\"max\":1,\"max_patch_size\":1024,\"title_prefix\":\"[Auto Maintainer Assistant] \"},\"link_sub_issue\":{\"max\":10},\"missing_data\":{},\"missing_tool\":{},\"push_to_pull_request_branch\":{\"base_branch\":\"${{ github.base_ref || github.ref_name }}\",\"if_no_changes\":\"warn\",\"max_patch_size\":1024},\"remove_labels\":{\"max\":10,\"target\":\"*\"},\"update_issue\":{\"allow_body\":true,\"max\":1,\"target\":\"*\"}}"
+          GH_AW_SAFE_OUTPUTS_HANDLER_CONFIG: "{\"add_comment\":{\"hide_older_comments\":true,\"max\":10,\"target\":\"*\"},\"create_issue\":{\"labels\":[\"automation\",\"auto-maintainer-assistant\"],\"max\":3,\"title_prefix\":\"[Auto Maintainer Assistant] \"},\"create_pull_request\":{\"base_branch\":\"${{ github.base_ref || github.ref_name }}\",\"draft\":true,\"labels\":[\"automation\",\"auto-maintainer-assistant\"],\"max\":1,\"max_patch_size\":1024,\"title_prefix\":\"[Auto Maintainer Assistant] \"},\"missing_data\":{},\"missing_tool\":{}}"
         with:
           github-token: ${{ secrets.GH_AW_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
           script: |
