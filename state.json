@@ -1,6 +1,6 @@
 {
-  "last_run": "2026-02-21T16:52:22Z",
-  "workflow_run_id": "22260534922",
+  "last_run": "2026-02-21T17:14:25Z",
+  "workflow_run_id": "22260866873",
   "commented_issues": [
     {"number": 168, "run": "22226329040", "action": "suggested PackageLicenseExpression fix"},
     {"number": 173, "run": "22226329040", "action": "identified .fsi gating issue, linked PR #214"},
@@ -23,7 +23,7 @@
     {"branch": "fix/ofasyncenum-netstandard20", "run": "22226329040", "title": "Expose ofAsyncEnum/toAsyncEnum on netstandard2.0", "closes": 173, "status": "closed by maintainer - not merged"},
     {"branch": "co-maintainer/mergeall-accept-seq-ff64ca901ccf3892", "run": "22240371333", "title": "Allow AsyncSeq.mergeAll to accept seq instead of list", "number": 219, "status": "closed by maintainer due to framework bug (multiple PRs in one run merged incorrectly)"}
   ],
-  "skip_next_run": [168, 173, 205, 165, 156, 160, 159, 31, 174, 123, 125],
+  "skip_next_run": [168, 173, 205, 165, 156, 160, 159, 31, 174, 123, 125, 152, 215, 226],
   "monthly_activity_issue": {"number": 220, "month": "2026-02"},
   "framework_note": "CRITICAL: Only create ONE PR per run. The framework has a bug where if create_pull_request is called multiple times, only one PR is created with wrong mixed content.",
   "last_release_prep_run": "22249988090",
@@ -48,6 +48,8 @@
     "mapAsyncUnorderedParallelThrottled PR (#225) merged by dsyme on 2026-02-21T16:44:51Z - adds mapAsyncUnorderedParallelThrottled",
     "Network access was updated by dsyme (commit c0fdf4b 'allow dotnet network') - NuGet restore now works in Repo Assist runs",
     "GitHub releases page only shows releases up to 2.0.24 (2020); 3.x versions are released via NuGet CI but not tagged on GitHub",
-    "Run 10 (workflow 22260534922, 2026-02-21T16:52Z) - no new issues; all open issues already in skip list; no actions taken"
+    "Run 10 (workflow 22260534922, 2026-02-21T16:52Z) - no new issues; all open issues already in skip list; no actions taken",
+    "Run 11 (workflow 22260866873, 2026-02-21T17:14Z) - no new issues; all open issues already in skip list; no actions taken",
+    "Issue #226 ([agentics] No-Op Runs) is an automated tracking issue - ignore"
   ]
 }
