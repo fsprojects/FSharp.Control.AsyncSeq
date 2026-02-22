@@ -1,6 +1,6 @@
 {
-  "last_run": "2026-02-22T00:49:00Z",
-  "workflow_run_id": "22267510040",
+  "last_run": "2026-02-22T01:00:00Z",
+  "workflow_run_id": "22267515796",
   "commented_issues": [
     {"number": 168, "run": "22226329040", "action": "suggested PackageLicenseExpression fix"},
     {"number": 173, "run": "22226329040", "action": "identified .fsi gating issue, linked PR #214"},
@@ -18,7 +18,7 @@
     {"branch": "co-maintainer/chunkby-consecutive-grouping", "run": "22249505878", "number": 222, "title": "Add AsyncSeq.chunkBy and AsyncSeq.chunkByAsync", "closes": 156, "status": "merged by dsyme 2026-02-21"},
     {"branch": "co-maintainer/release-3.3.1-1771646837", "run": "22249988090", "number": 223, "title": "Prepare release 3.3.1", "status": "merged by dsyme 2026-02-21"},
     {"branch": "repo-assist/add-mapasyncunorderedparallelthrottled-001ed43df569b4c9", "run": "22258041770", "number": 225, "title": "Add AsyncSeq.mapAsyncUnorderedParallelThrottled", "closes": 31, "status": "merged by dsyme 2026-02-21T16:44:51Z"},
-    {"branch": "repo-assist/deps-fix-license-bcl-2026-02-21-b39ffdb8841cd066", "run": "22266754407", "number": 228, "title": "Fix deprecated PackageLicenseUrl and update Microsoft.Bcl.AsyncInterfaces", "closes": 168, "status": "open (draft)"}
+    {"branch": "repo-assist/deps-fix-license-bcl-2026-02-21-b39ffdb8841cd066", "run": "22266754407", "number": 228, "title": "Fix deprecated PackageLicenseUrl and update Microsoft.Bcl.AsyncInterfaces", "closes": 168, "status": "open (draft) - CI pending, no checks triggered (likely draft PR)"}
   ],
   "closed_or_rejected_prs": [
     {"branch": "fix/ofasyncenum-netstandard20", "run": "22226329040", "title": "Expose ofAsyncEnum/toAsyncEnum on netstandard2.0", "closes": 173, "status": "closed by maintainer - not merged"},
@@ -30,21 +30,23 @@
   "last_release_prep_run": "22249988090",
   "last_release_prep_date": "2026-02-21",
   "last_deps_check_date": "2026-02-21",
-  "unreleased_since_331": ["mapAsyncUnorderedParallelThrottled (PR #225)"],
+  "unreleased_since_331": ["mapAsyncUnorderedParallelThrottled (PR #225)", "chunkBy/chunkByAsync (PR #222)", "mergeAll seq widening (PR #221)"],
   "labels_applied": [
     {"issue": 123, "label": "enhancement", "run": "22267510040"},
-    {"issue": 125, "label": "bug", "run": "22267510040"},
+    {"issue": 125, "label": "bug", "run": "22267510040", "note": "did not persist; re-applied in run 15 (22267515796)"},
     {"issue": 152, "label": "bug", "run": "22267510040"},
-    {"issue": 173, "label": "enhancement", "run": "22267510040"}
+    {"issue": 173, "label": "enhancement", "run": "22267510040"},
+    {"issue": 125, "label": "bug", "run": "22267515796", "note": "re-applied after label failed to persist in run 14"},
+    {"issue": 159, "label": "enhancement", "run": "22267515796"}
   ],
   "next_run_todo": [
-    "Prepare release 3.3.2 (mapAsyncUnorderedParallelThrottled added since 3.3.1) - wait until ~2026-02-24 before doing release prep (few days after 3.3.1 on 2026-02-21)",
-    "Issue #152 (Blazor WASM deadlock) - complex threading issue; ofAsyncEnum uses Task.Run/WaitAsync which blocks on WASM single-thread context",
-    "Consider test package major-version updates (NUnit 3.9→4.x, MS.Test.Sdk 16→18, coverlet 6→8) - deferred - NUnit 4 has breaking API changes"
+    "Prepare release 3.3.2 (mergeAll/chunkBy/mapAsyncUnorderedParallelThrottled added since 3.3.1) - target ~2026-02-24 (wait ~3 days after 3.3.1 on 2026-02-21)",
+    "Fix #152 (Blazor WASM deadlock): change ofAsyncEnum Dispose to fire-and-forget e.DisposeAsync() instead of Async.RunSynchronously; build and test before PR",
+    "Consider test package major-version updates (NUnit 3.9->4.x, MS.Test.Sdk 16->18, coverlet 6->8) - deferred - NUnit 4 has breaking API changes"
   ],
   "notes": [
     "Issue #155 (mapAsyncUnorderedParallel) was closed by dsyme on 2026-02-20 as completed",
-    "Issue #159 (deprecate FSharp.Control.IAsyncEnumerable) is a major design decision - skip, leave to maintainers",
+    "Issue #159 (deprecate FSharp.Control.IAsyncEnumerable) is a major design decision - skip, leave to maintainers; labelled enhancement in run 15",
     "Issue #174 (iterAsyncParallelThrottled) already has a helpful comment from njlr",
     "Issue #123 (YieldFrom) already has a helpful comment from abelbraaksma",
     "PR #214 (ofAsyncEnum netstandard2.0) was closed/not merged by maintainer",
@@ -58,7 +60,9 @@
     "Network access was updated by dsyme (commit c0fdf4b 'allow dotnet network') - NuGet restore now works in Repo Assist runs",
     "GitHub releases page only shows releases up to 2.0.24 (2020); 3.x versions are released via NuGet CI but not tagged on GitHub",
     "Run 13 (workflow 22266754407, 2026-02-21T23:54Z) - created deps/license maintenance PR #228 (branch: repo-assist/deps-fix-license-bcl-2026-02-21-b39ffdb8841cd066); fixes #168 (PackageLicenseUrl->PackageLicenseExpression Apache-2.0) and NU1605 warning (Microsoft.Bcl.AsyncInterfaces 5.0->10.0.3); 190/190 tests pass",
-    "Run 14 (workflow 22267510040, 2026-02-22T00:49Z) - applied labels: enhancement to #123 and #173, bug to #125 and #152; updated activity issue #220",
+    "Run 14 (workflow 22267510040, 2026-02-22T00:49Z) - applied labels: enhancement to #123 and #173, bug to #125 and #152; but #125 label did not persist",
+    "Run 15 (workflow 22267515796, 2026-02-22T01:00Z) - re-applied bug to #125; added enhancement to #159; investigated #152 (Blazor WASM deadlock root cause: Async.RunSynchronously in IDisposable.Dispose); updated activity issue #220",
+    "Issue #152 root cause: ofAsyncEnum uses Async.RunSynchronously in IDisposable.Dispose for enumerator cleanup - blocks single thread on WASM; fix = fire-and-forget e.DisposeAsync()",
     "Outdated test packages identified but NOT updated (major version bumps): BenchmarkDotNet 0.14.0->0.15.8, coverlet.collector 6.0.0->8.0.0, Microsoft.NET.Test.Sdk 16.11.0->18.0.1, NUnit 3.9.0->4.5.0, NUnit3TestAdapter 3.9.0->6.1.0",
     "Issue #226 ([agentics] No-Op Runs) is an automated tracking issue - ignore"
   ]
