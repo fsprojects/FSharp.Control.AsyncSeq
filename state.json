@@ -1,6 +1,6 @@
 {
-  "last_run": "2026-02-22T13:14:40Z",
-  "workflow_run_id": "22277836207",
+  "last_run": "2026-02-22T13:33:42Z",
+  "workflow_run_id": "22278136143",
   "commented_issues": [
     {"number": 168, "run": "22226329040", "action": "suggested PackageLicenseExpression fix"},
     {"number": 173, "run": "22226329040", "action": "identified .fsi gating issue, linked PR #214"},
@@ -15,7 +15,9 @@
     {"number": 152, "run": "22268210784", "action": "announced fix PR for ofAsyncEnum Blazor WASM deadlock"},
     {"number": 168, "run": "22273496797", "action": "noted PR #228 merged; closed issue"},
     {"number": 230, "run": "22273496797", "action": "analysed IAsyncDisposable scope; asked about approach; offered to draft PR"},
-    {"number": 230, "run": "22274606457", "action": "announced draft v4 BCL IAsyncEnumerable migration PR #231; asked Fable/ofAsyncEnum/EditorBrowsable questions"}
+    {"number": 230, "run": "22274606457", "action": "announced draft v4 BCL IAsyncEnumerable migration PR #231; asked Fable/ofAsyncEnum/EditorBrowsable questions"},
+    {"number": 125, "run": "22278136143", "action": "announced draft PR for CompilerMessage warning on groupBy/groupByAsync"},
+    {"number": 123, "run": "22278136143", "action": "advised on yield! status; offered to create PR or close issue"}
   ],
   "created_prs": [
     {"branch": "co-maintainer/mergeall-accept-seq", "run": "22248981881", "number": 221, "title": "Allow AsyncSeq.mergeAll to accept seq instead of list", "closes": 165, "status": "merged by dsyme 2026-02-21"},
@@ -24,8 +26,9 @@
     {"branch": "repo-assist/add-mapasyncunorderedparallelthrottled-001ed43df569b4c9", "run": "22258041770", "number": 225, "title": "Add AsyncSeq.mapAsyncUnorderedParallelThrottled", "closes": 31, "status": "merged by dsyme 2026-02-21T16:44:51Z"},
     {"branch": "repo-assist/deps-fix-license-bcl-2026-02-21-b39ffdb8841cd066", "run": "22266754407", "number": 228, "title": "Fix deprecated PackageLicenseUrl and update Microsoft.Bcl.AsyncInterfaces", "closes": 168, "status": "merged by dsyme 2026-02-22T01:38:42Z"},
     {"branch": "repo-assist/fix-ofasyncsenum-dispose-wasm-deadlock-issue152", "run": "22268210784", "number": 229, "title": "Fix ofAsyncEnum deadlock on single-threaded runtimes (Blazor WASM)", "closes": 152, "status": "merged by dsyme 2026-02-22T06:57:51Z"},
-    {"branch": "repo-assist/v4-bcl-iasyncenumerable-migration-3b81040f29c8a5a6", "run": "22274606457", "number": 231, "title": "Migrate AsyncSeq<'T> to BCL IAsyncEnumerable<'T> (v4.0)", "closes": 230, "status": "open; Copilot PRs #232 and #233 both merged into v4 branch; ready for dsyme review/merge"},
-    {"branch": "repo-assist/release-3.3.2", "run": "22277836207", "number": "TBD", "title": "[Repo Assist] Prepare release 3.3.2", "status": "draft PR submitted 2026-02-22T13:14Z; includes #225/#228/#229; all 190 tests pass"}
+    {"branch": "repo-assist/v4-bcl-iasyncenumerable-migration-3b81040f29c8a5a6", "run": "22274606457", "number": 231, "title": "Migrate AsyncSeq<'T> to BCL IAsyncEnumerable<'T> (v4.0)", "closes": 230, "status": "MERGED by dsyme 2026-02-22T13:32:02Z"},
+    {"branch": "repo-assist/release-3.3.2-e5676b77115977ac", "run": "22277836207", "number": 234, "title": "[Repo Assist] Prepare release 3.3.2", "status": "open draft; may conflict with main after v4 merge"},
+    {"branch": "repo-assist/fix-groupby-compilermessage-warning-issue125", "run": "22278136143", "number": "TBD", "title": "[Repo Assist] Add CompilerMessage warning to groupBy/groupByAsync (closes #125)", "closes": 125, "status": "draft PR submitted 2026-02-22T13:33Z; 189/190 tests pass (1 pre-existing flaky)"}
   ],
   "closed_or_rejected_prs": [
     {"branch": "fix/ofasyncenum-netstandard20", "run": "22226329040", "title": "Expose ofAsyncEnum/toAsyncEnum on netstandard2.0", "closes": 173, "status": "closed by maintainer - not merged"},
@@ -37,38 +40,38 @@
   "last_release_prep_run": "22277836207",
   "last_release_prep_date": "2026-02-22",
   "last_deps_check_date": "2026-02-21",
-  "unreleased_since_331": [],
   "next_run_todo": [
-    "Check if release 3.3.2 PR was created with correct number; update memory with actual PR number",
-    "Monitor PR #231 (v4 migration) - Copilot PRs #232 and #233 both merged; PR #231 is now ready for dsyme review/merge",
-    "Once PR #231 is merged: update README.md for v4 API changes",
-    "Once PR #231 is merged: mark ofAsyncEnum/toAsyncEnum [<Obsolete>] or remove stubs",
-    "Once PR #231 is merged: verify EditorBrowsable on IAsyncSeqEnumerator/AsyncSeqImpl internal types"
+    "Update README.md for v4 API changes (PR #231 merged by dsyme 2026-02-22T13:32Z)",
+    "Verify EditorBrowsable on IAsyncSeqEnumerator/AsyncSeqImpl internal types",
+    "Consider marking ofAsyncEnum/toAsyncEnum [<Obsolete>] in .fs (already done in .fsi via PR #231)",
+    "Fix Fable test build errors (pre-existing from v4 migration - tests/fable/...AsyncSeq.test.fs line 867 GetEnumerator->GetAsyncEnumerator)",
+    "Prepare v4.0.0 release once Fable issues resolved",
+    "PR #234 (release 3.3.2) may need to be reconsidered or rebased given v4 is now on main",
+    "Check if PR for groupBy CompilerMessage was created with correct number (TBD in memory)"
   ],
   "v4_migration_notes": {
     "branch": "repo-assist/v4-bcl-iasyncenumerable-migration-3b81040f29c8a5a6",
     "pr_number": 231,
-    "status": "open; all Fable fixes merged (#232 by Copilot, #233 by Copilot both merged by dsyme); ready for final review/merge",
+    "status": "MERGED by dsyme 2026-02-22T13:32:02Z",
     "approach": "AsyncSeq<'T> = BCL IAsyncEnumerable<'T>; internal IAsyncSeqEnumerator<'T> and AsyncSeqImpl<'T> adapter; GetEnumerator() extension on BCL type for internal use (not exported via .fsi); ofAsyncEnum/toAsyncEnum are now identity functions",
-    "still_todo": ["IAsyncSeqEnumerator/AsyncSeqImpl: add EditorBrowsable(Never)?", "Update README.md after merge", "Mark ofAsyncEnum/toAsyncEnum [<Obsolete>] or remove"]
+    "post_merge_todo": [
+      "Update README.md",
+      "Verify EditorBrowsable on IAsyncSeqEnumerator/AsyncSeqImpl",
+      "Fix Fable test errors (line 867: GetEnumerator -> GetAsyncEnumerator)",
+      "Prepare v4.0.0 release"
+    ]
   },
   "copilot_prs": [
     {"number": 232, "base": "repo-assist/v4-bcl-iasyncenumerable-migration-3b81040f29c8a5a6", "title": "[WIP] Fix AsyncSeq migration issues and Fable feedback", "status": "merged into v4 branch by dsyme 2026-02-22T11:39Z"},
     {"number": 233, "base": "repo-assist/v4-bcl-iasyncenumerable-migration-3b81040f29c8a5a6", "title": "Fix Fable compatibility: guard getIterator obsolete attribute and complete #if FABLE_COMPILER cleanup", "status": "merged into v4 branch by dsyme 2026-02-22T13:13Z"}
   ],
   "notes": [
-    "Issue #230 opened by dsyme on 2026-02-22 - 'Use System.IAsyncDisposable through this library' - run 17 commented; run 18 created draft v4 PR #231",
-    "dsyme responded to #230 (2026-02-22T09:34): 'We should switch to the standard dotnet IAsyncEnumerable and take the breaking change with a major version bump'",
-    "v4 migration: AsyncSeq<'T> = System.Collections.Generic.IAsyncEnumerable<'T>; internal machinery preserved via IAsyncSeqEnumerator<'T> adapter; all 190 tests pass",
-    "Issue #152 closed by dsyme on 2026-02-22T06:57:52Z (resolved by PR #229)",
-    "Issue #168 closed by Repo Assist in run 17 (PR #228 was already merged with the fix)",
-    "Network access was enabled by dsyme (commit c0fdf4b 'allow dotnet network') - NuGet restore works in Repo Assist runs",
-    "GitHub releases page only shows releases up to 2.0.24 (2020); 3.x versions are released via NuGet CI but not tagged on GitHub",
-    "Run 18 (workflow 22274606457, 2026-02-22T09:36Z) - v4 BCL migration PR #231 created; #230 commented; monthly activity updated",
-    "Run 19 (workflow 22275271399, 2026-02-22T10:22Z) - No new PRs created. Checked PR #231 status. Monthly activity issue #220 updated. dsyme reviewed PR #231; Copilot is fixing Fable+obsolete in PR #232.",
-    "Run 20 (workflow 22276980096, 2026-02-22T12:18Z) - Attempted to create release 3.3.2 PR - tool call made but no PR was actually created on GitHub (no branch or PR found). Copilot opened PR #233 for further Fable fix (guard getIterator obsolete attr); PR #233 later merged by dsyme",
-    "Run 21 (workflow 22277836207, 2026-02-22T13:14Z) - Created release 3.3.2 PR (TBD number); PR #233 merged into v4 branch; labelled #215 spam, #174 question; monthly activity #220 updated",
-    "Issue #215 ('Weekly Research Report') - AI-generated spam issue; labelled spam in run 21",
-    "Issue #159 ('Deprecate FSharp.Control.IAsyncEnumerable') - dsyme commented 'See #231' 2026-02-22T10:02Z; no need for Repo Assist to comment there."
+    "PR #231 (v4 migration) MERGED by dsyme 2026-02-22T13:32Z. Main now has AsyncSeq<'T> = BCL IAsyncEnumerable<'T>.",
+    "PR #234 (release 3.3.2) is still open draft; base SHA 612fae66 predates v4 merge; may need rebase or reconsideration.",
+    "Fable test project (tests/fable/...) has pre-existing build errors from v4 (GetEnumerator -> GetAsyncEnumerator on line 867).",
+    "Issue #125: dsyme asked for CompilerMessage warning on groupBy. Done in run 22 (PR submitted).",
+    "Issue #123: dsyme asked for status check. Commented in run 22; offered to create YieldFrom overload or close issue.",
+    "Issue #159 ('Deprecate FSharp.Control.IAsyncEnumerable'): dsyme commented 'See #231' 2026-02-22T10:02Z; now #231 merged, this issue can be closed.",
+    "Run 22 (workflow 22278136143, 2026-02-22T13:33Z) - Created PR for groupBy CompilerMessage warning (closes #125); commented on #125 and #123; updated monthly activity #220."
   ]
 }
