@@ -1,6 +1,6 @@
 {
-  "last_run": "2026-02-21T23:54:22Z",
-  "workflow_run_id": "22266754407",
+  "last_run": "2026-02-22T00:49:00Z",
+  "workflow_run_id": "22267510040",
   "commented_issues": [
     {"number": 168, "run": "22226329040", "action": "suggested PackageLicenseExpression fix"},
     {"number": 173, "run": "22226329040", "action": "identified .fsi gating issue, linked PR #214"},
@@ -11,14 +11,14 @@
     {"number": 165, "run": "22231625810", "action": "announced draft PR for mergeAll seq change"},
     {"number": 165, "run": "22248981881", "action": "re-announced draft PR #221 after framework bug closed previous attempt"},
     {"number": 156, "run": "22249505878", "action": "announced draft PR for chunkBy/chunkByAsync"},
-    {"number": 31, "run": "22258041770", "action": "announced draft PR for mapAsyncUnorderedParallelThrottled"}
+    {"number": 31, "run": "22258041770", "action": "announced draft PR #225 for mapAsyncUnorderedParallelThrottled"}
   ],
   "created_prs": [
     {"branch": "co-maintainer/mergeall-accept-seq", "run": "22248981881", "number": 221, "title": "Allow AsyncSeq.mergeAll to accept seq instead of list", "closes": 165, "status": "merged by dsyme 2026-02-21"},
     {"branch": "co-maintainer/chunkby-consecutive-grouping", "run": "22249505878", "number": 222, "title": "Add AsyncSeq.chunkBy and AsyncSeq.chunkByAsync", "closes": 156, "status": "merged by dsyme 2026-02-21"},
     {"branch": "co-maintainer/release-3.3.1-1771646837", "run": "22249988090", "number": 223, "title": "Prepare release 3.3.1", "status": "merged by dsyme 2026-02-21"},
     {"branch": "repo-assist/add-mapasyncunorderedparallelthrottled-001ed43df569b4c9", "run": "22258041770", "number": 225, "title": "Add AsyncSeq.mapAsyncUnorderedParallelThrottled", "closes": 31, "status": "merged by dsyme 2026-02-21T16:44:51Z"},
-    {"branch": "repo-assist/deps-fix-license-bcl-2026-02-21", "run": "22266754407", "title": "Fix deprecated PackageLicenseUrl and update Microsoft.Bcl.AsyncInterfaces", "closes": 168, "status": "open (draft)"}
+    {"branch": "repo-assist/deps-fix-license-bcl-2026-02-21-b39ffdb8841cd066", "run": "22266754407", "number": 228, "title": "Fix deprecated PackageLicenseUrl and update Microsoft.Bcl.AsyncInterfaces", "closes": 168, "status": "open (draft)"}
   ],
   "closed_or_rejected_prs": [
     {"branch": "fix/ofasyncenum-netstandard20", "run": "22226329040", "title": "Expose ofAsyncEnum/toAsyncEnum on netstandard2.0", "closes": 173, "status": "closed by maintainer - not merged"},
@@ -31,8 +31,14 @@
   "last_release_prep_date": "2026-02-21",
   "last_deps_check_date": "2026-02-21",
   "unreleased_since_331": ["mapAsyncUnorderedParallelThrottled (PR #225)"],
+  "labels_applied": [
+    {"issue": 123, "label": "enhancement", "run": "22267510040"},
+    {"issue": 125, "label": "bug", "run": "22267510040"},
+    {"issue": 152, "label": "bug", "run": "22267510040"},
+    {"issue": 173, "label": "enhancement", "run": "22267510040"}
+  ],
   "next_run_todo": [
-    "Prepare release 3.3.2 (mapAsyncUnorderedParallelThrottled added since 3.3.1) - wait a few days after 2026-02-21 before doing another release prep",
+    "Prepare release 3.3.2 (mapAsyncUnorderedParallelThrottled added since 3.3.1) - wait until ~2026-02-24 before doing release prep (few days after 3.3.1 on 2026-02-21)",
     "Issue #152 (Blazor WASM deadlock) - complex threading issue; ofAsyncEnum uses Task.Run/WaitAsync which blocks on WASM single-thread context",
     "Consider test package major-version updates (NUnit 3.9→4.x, MS.Test.Sdk 16→18, coverlet 6→8) - deferred - NUnit 4 has breaking API changes"
   ],
@@ -51,8 +57,9 @@
     "mapAsyncUnorderedParallelThrottled PR (#225) merged by dsyme on 2026-02-21T16:44:51Z - adds mapAsyncUnorderedParallelThrottled",
     "Network access was updated by dsyme (commit c0fdf4b 'allow dotnet network') - NuGet restore now works in Repo Assist runs",
     "GitHub releases page only shows releases up to 2.0.24 (2020); 3.x versions are released via NuGet CI but not tagged on GitHub",
-    "Run 13 (workflow 22266754407, 2026-02-21T23:54Z) - created deps/license maintenance PR (branch: repo-assist/deps-fix-license-bcl-2026-02-21); fixes #168 (PackageLicenseUrl→PackageLicenseExpression Apache-2.0) and NU1605 warning (Microsoft.Bcl.AsyncInterfaces 5.0→10.0.3); 190/190 tests pass",
-    "Outdated test packages identified but NOT updated (major version bumps): BenchmarkDotNet 0.14.0→0.15.8, coverlet.collector 6.0.0→8.0.0, Microsoft.NET.Test.Sdk 16.11.0→18.0.1, NUnit 3.9.0→4.5.0, NUnit3TestAdapter 3.9.0→6.1.0",
+    "Run 13 (workflow 22266754407, 2026-02-21T23:54Z) - created deps/license maintenance PR #228 (branch: repo-assist/deps-fix-license-bcl-2026-02-21-b39ffdb8841cd066); fixes #168 (PackageLicenseUrl->PackageLicenseExpression Apache-2.0) and NU1605 warning (Microsoft.Bcl.AsyncInterfaces 5.0->10.0.3); 190/190 tests pass",
+    "Run 14 (workflow 22267510040, 2026-02-22T00:49Z) - applied labels: enhancement to #123 and #173, bug to #125 and #152; updated activity issue #220",
+    "Outdated test packages identified but NOT updated (major version bumps): BenchmarkDotNet 0.14.0->0.15.8, coverlet.collector 6.0.0->8.0.0, Microsoft.NET.Test.Sdk 16.11.0->18.0.1, NUnit 3.9.0->4.5.0, NUnit3TestAdapter 3.9.0->6.1.0",
     "Issue #226 ([agentics] No-Op Runs) is an automated tracking issue - ignore"
   ]
 }
