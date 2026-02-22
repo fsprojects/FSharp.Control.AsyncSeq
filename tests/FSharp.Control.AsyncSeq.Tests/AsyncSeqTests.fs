@@ -157,6 +157,26 @@ let ``AsyncSeq.toListSynchronously``() =
 
 
 [<Test>]
+let ``asyncSeq yield! seq works``() =
+  let items = seq { 1; 2; 3 }
+  let s = asyncSeq {
+    yield! items
+  }
+  let a = s |> AsyncSeq.toListSynchronously
+  Assert.True(([1;2;3] = a))
+
+[<Test>]
+let ``asyncSeq yield! seq combines with other yields``() =
+  let items = seq { 2; 3 }
+  let s = asyncSeq {
+    yield 1
+    yield! items
+    yield 4
+  }
+  let a = s |> AsyncSeq.toListSynchronously
+  Assert.True(([1;2;3;4] = a))
+
+[<Test>]
 let ``AsyncSeq.concatSeq works``() =
   let ls = [ [1;2] ; [3;4] ]
   let actual = AsyncSeq.ofSeq ls |> AsyncSeq.concatSeq

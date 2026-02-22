@@ -868,6 +868,9 @@ module AsyncSeq =
     member x.For (seq:AsyncSeq<'T>, action:'T -> AsyncSeq<'TResult>) =
       collect action seq
 
+    member x.YieldFrom (s:seq<'T>) =
+      ofSeq s
+
   let unfoldAsync (f:'State -> Async<('T * 'State) option>) (s:'State) : AsyncSeq<'T> =
     new UnfoldAsyncEnumerator<_, _>(f, s) :> _
 
