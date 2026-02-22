@@ -562,6 +562,7 @@ module AsyncSeq =
     ///
     /// Note that the resulting async sequence has to be processed in parallel (e.g AsyncSeq.mapAsyncParallel) becaused
     /// completion of sub-sequences depends on completion of other sub-sequences.
+    [<CompilerMessage("The result of groupByAsync must be consumed with a parallel combinator such as AsyncSeq.mapAsyncParallel. Sequential consumption will deadlock because sub-sequence completion depends on other sub-sequences being consumed concurrently.", 9999)>]
     val groupByAsync<'T, 'Key when 'Key : equality> : projection:('T -> Async<'Key>) -> source:AsyncSeq<'T> -> AsyncSeq<'Key * AsyncSeq<'T>>
 
     /// Applies a key-generating function to each element and returns an async sequence containing unique keys
@@ -569,6 +570,7 @@ module AsyncSeq =
     ///
     /// Note that the resulting async sequence has to be processed in parallel (e.g AsyncSeq.mapAsyncParallel) becaused
     /// completion of sub-sequences depends on completion of other sub-sequences.
+    [<CompilerMessage("The result of groupBy must be consumed with a parallel combinator such as AsyncSeq.mapAsyncParallel. Sequential consumption will deadlock because sub-sequence completion depends on other sub-sequences being consumed concurrently.", 9999)>]
     val groupBy<'T, 'Key when 'Key : equality> : projection:('T -> 'Key) -> source:AsyncSeq<'T> -> AsyncSeq<'Key * AsyncSeq<'T>>
 
     #if (NETSTANDARD || NET)
