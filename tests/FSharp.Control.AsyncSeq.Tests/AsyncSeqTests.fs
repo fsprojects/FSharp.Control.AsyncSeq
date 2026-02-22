@@ -1227,18 +1227,16 @@ let ``AsyncSeq.ofObservableBuffered should work (one, take)``() =
 [<Test>]
 let ``AsyncSeq.getIterator should work``() =
   let s1 = [1..2] |> AsyncSeq.ofSeq
-  use i = s1.GetEnumerator()
-  match i.MoveNext() |> Async.RunSynchronously with
-  | None -> Assert.Fail("expected Some")
-  | Some v ->
-    Assert.AreEqual(v,1)
-    match i.MoveNext() |> Async.RunSynchronously with
-    | None -> Assert.Fail("expected Some")
-    | Some v ->
-        Assert.AreEqual(v,2)
-        match i.MoveNext() |> Async.RunSynchronously with
-        | None -> ()
-        | Some _ -> Assert.Fail("expected None")
+  let i = s1.GetAsyncEnumerator(System.Threading.CancellationToken.None)
+  try
+    let move () = i.MoveNextAsync().AsTask() |> Async.AwaitTask |> Async.RunSynchronously
+    Assert.True(move(), "expected first element")
+    Assert.AreEqual(i.Current, 1)
+    Assert.True(move(), "expected second element")
+    Assert.AreEqual(i.Current, 2)
+    Assert.False(move(), "expected end of sequence")
+  finally
+    i.DisposeAsync() |> ignore
 
 
 
