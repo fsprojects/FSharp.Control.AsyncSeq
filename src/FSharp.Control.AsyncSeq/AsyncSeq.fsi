@@ -112,6 +112,9 @@ module AsyncSeq =
         /// Implements "yield!" for the asyncSeq computation builder.
         member YieldFrom : source:AsyncSeq<'T> -> AsyncSeq<'T>
 
+        /// Implements "yield!" for a synchronous sequence in the asyncSeq computation builder.
+        member YieldFrom : source:seq<'T> -> AsyncSeq<'T>
+
         /// Implements empty for the asyncSeq computation builder.
         member Zero : unit -> AsyncSeq<'T>
 
