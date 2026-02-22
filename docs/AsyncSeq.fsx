@@ -26,6 +26,10 @@ latter based on a "synchronous push". Analogs for most operations defined for `S
 `AsyncSeq`. The power of `AsyncSeq` lies in that many of these operations also have analogs based on `Async` 
 allowing composition of complex asynchronous workflows.
 
+> **v4.0 and later:** `AsyncSeq<'T>` is a type alias for `System.Collections.Generic.IAsyncEnumerable<'T>`.
+> Any `IAsyncEnumerable<'T>` value (e.g. from EF Core, ASP.NET Core channels, or `taskSeq { }`) can be used
+> directly as an `AsyncSeq<'T>` without conversion, and vice-versa.
+
 The `AsyncSeq` type is located in the `FSharp.Control.AsyncSeq.dll` assembly which can be loaded in F# Interactive as follows:
 *)
 

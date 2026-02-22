@@ -3,9 +3,14 @@ FSharp.Control.AsyncSeq
 
 FSharp.Control.AsyncSeq is a collection of asynchronous programming utilities for F#.
 
-An AsyncSeq is a sequence in which individual elements are retrieved using an `Async` computation.
+An `AsyncSeq<'T>` is a sequence in which individual elements are retrieved using an `Async` computation.
 The power of `AsyncSeq` lies in that many of these operations also have analogs based on `Async` 
 allowing composition of complex asynchronous workflows, including compositional cancellation.
+
+> **v4.0:** `AsyncSeq<'T>` is now a type alias for `System.Collections.Generic.IAsyncEnumerable<'T>`.
+> Values flow freely between `AsyncSeq<'T>` and `IAsyncEnumerable<'T>` without any conversion.
+> `AsyncSeq.ofAsyncEnum` / `AsyncSeq.toAsyncEnum` are now no-ops and marked obsolete — remove them.
+> See the [README](https://github.com/fsprojects/FSharp.Control.AsyncSeq#version-40--bcl-iasyncenumerable-compatibility) for migration notes.
 
 An `AsyncSeq<'a>` can be generated using computation expression syntax much like `seq<'a>`:
 
