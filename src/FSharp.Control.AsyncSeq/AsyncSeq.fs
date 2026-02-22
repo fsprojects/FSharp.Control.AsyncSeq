@@ -1983,6 +1983,7 @@ module AsyncSeq =
       toAsyncSeqImpl s.tail.Value
 
 
+  [<CompilerMessage("The result of groupByAsync must be consumed with a parallel combinator such as AsyncSeq.mapAsyncParallel. Sequential consumption will deadlock because sub-sequence completion depends on other sub-sequences being consumed concurrently.", 9999)>]
   let groupByAsync (p:'a -> Async<'k>) (s:AsyncSeq<'a>) : AsyncSeq<'k * AsyncSeq<'a>> = asyncSeq {
     let groups = Dictionary<'k, AsyncSeqSrc< 'a>>()
     let close group =
@@ -2014,6 +2015,7 @@ module AsyncSeq =
         raise ex }
     yield! go () }
 
+  [<CompilerMessage("The result of groupBy must be consumed with a parallel combinator such as AsyncSeq.mapAsyncParallel. Sequential consumption will deadlock because sub-sequence completion depends on other sub-sequences being consumed concurrently.", 9999)>]
   let groupBy (p:'a -> 'k) (s:AsyncSeq<'a>) : AsyncSeq<'k * AsyncSeq<'a>> =
     groupByAsync (p >> async.Return) s
   #endif
