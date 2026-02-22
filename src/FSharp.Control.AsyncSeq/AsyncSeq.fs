@@ -26,6 +26,19 @@ type IAsyncSeqEnumerator<'T> =
     abstract MoveNext : unit -> Async<'T option>
     inherit IDisposable
 
+#if FABLE_COMPILER
+/// AsyncSeq<'T> for Fable: a library-specific interface that avoids ValueTask.
+[<NoEquality; NoComparison>]
+type AsyncSeq<'T> =
+    abstract GetEnumerator : unit -> IAsyncSeqEnumerator<'T>
+
+/// Adapter: wraps an internal pull-enumerator factory into an AsyncSeq<'T>.
+[<Sealed>]
+type AsyncSeqImpl<'T>(getEnum: unit -> IAsyncSeqEnumerator<'T>) =
+    member _.GetInternalEnumerator() = getEnum()
+    interface AsyncSeq<'T> with
+        member _.GetEnumerator() = getEnum()
+#else
 /// AsyncSeq<'T> is now the BCL IAsyncEnumerable<'T>.
 type AsyncSeq<'T> = System.Collections.Generic.IAsyncEnumerable<'T>
 
@@ -72,6 +85,7 @@ module AsyncSeqEnumeratorExtensions =
                         else return None }
                   interface System.IDisposable with
                     member _.Dispose() = e.DisposeAsync() |> ignore }
+#endif
 
 #if !FABLE_COMPILER
 type AsyncSeqSrc<'a> = private { tail : AsyncSeqSrcNode<'a> ref }
@@ -400,10 +414,16 @@ module AsyncSeqOp =
         | None ->
           return None }
       new UnfoldAsyncEnumerator<'S, 'U> (h, init) :> _
+#if FABLE_COMPILER
+    interface AsyncSeq<'T> with
+      member __.GetEnumerator() =
+        new OptimizedUnfoldEnumerator<'S, 'T>(f, init) :> IAsyncSeqEnumerator<'T>
+#else
     interface System.Collections.Generic.IAsyncEnumerable<'T> with
       member __.GetAsyncEnumerator(ct) =
         (AsyncSeqImpl(fun () -> new OptimizedUnfoldEnumerator<'S, 'T>(f, init) :> IAsyncSeqEnumerator<'T>)
          :> System.Collections.Generic.IAsyncEnumerable<'T>).GetAsyncEnumerator(ct)
+#endif
 
 
 
@@ -1921,13 +1941,15 @@ module AsyncSeq =
   #if !FABLE_COMPILER
 
   /// Converts a BCL IAsyncEnumerable to AsyncSeq. Identity function since AsyncSeq<'T> IS IAsyncEnumerable<'T> in v4+.
+  [<Obsolete("AsyncSeq<'T> is now identical to IAsyncEnumerable<'T>. This function is a no-op and can be removed.")>]
   let ofAsyncEnum (source: System.Collections.Generic.IAsyncEnumerable<'T>) : AsyncSeq<'T> = source
 
   /// Returns the AsyncSeq as a BCL IAsyncEnumerable<'a>. Identity function since AsyncSeq<'a> IS IAsyncEnumerable<'a> in v4+.
+  [<Obsolete("AsyncSeq<'T> is now identical to IAsyncEnumerable<'T>. This function is a no-op and can be removed.")>]
   let toAsyncEnum (source: AsyncSeq<'a>) : System.Collections.Generic.IAsyncEnumerable<'a> = source
 
-  let ofIQueryable (query : IQueryable<'a>) =
-     query :?> Collections.Generic.IAsyncEnumerable<'a> |> ofAsyncEnum
+  let ofIQueryable (query : IQueryable<'a>) : AsyncSeq<'a> =
+     query :?> Collections.Generic.IAsyncEnumerable<'a>
 
   module AsyncSeqSrcImpl =
 
