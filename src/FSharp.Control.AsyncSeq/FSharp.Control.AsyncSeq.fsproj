@@ -5,7 +5,7 @@
     <Summary>Asynchronous sequences for F#</Summary>
     <Description>Asynchronous sequences for F#</Description>
     <Copyright>Copyright 2017</Copyright>
-    <PackageLicenseUrl>https://github.com/fsprojects/FSharp.Control.AsyncSeq/blob/main/LICENSE.md</PackageLicenseUrl>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <PackageProjectUrl>https://fsprojects.github.io/FSharp.Control.AsyncSeq/</PackageProjectUrl>
     <PackageIconUrl>https://fsprojects.github.io/FSharp.Control.AsyncSeq/img/logo.png</PackageIconUrl>
     <PackageTags>F#;async;fsharp;streaming</PackageTags>
@@ -22,7 +22,7 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Update="FSharp.Core" Version="4.7.2" />
-    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="5.0" />
+    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="10.0.3" />
     <PackageReference Include="System.Threading.Channels" Version="*" />
     <Content Include="*.fsproj; **\*.fs; **\*.fsi;" PackagePath="fable\" />
   </ItemGroup>
