@@ -3,19 +3,23 @@ namespace FSharp.Control
 
 open System
 
-/// An enumerator for pulling results asynchronously
-type IAsyncEnumerator<'T> =
-     abstract MoveNext : unit -> Async<'T option>
-     inherit IDisposable
+#if FABLE_COMPILER
+/// Internal pull-based enumerator used by AsyncSeq<'T> in Fable builds.
+[<NoEquality; NoComparison>]
+type IAsyncSeqEnumerator<'T> =
+    abstract MoveNext : unit -> Async<'T option>
+    inherit IDisposable
 
-/// An asynchronous sequence represents a delayed computation that can be
-/// started to give an enumerator for pulling results asynchronously
-type IAsyncEnumerable<'T> =
-    abstract GetEnumerator : unit -> IAsyncEnumerator<'T>
-
-/// An asynchronous sequence represents a delayed computation that can be
-/// started to give an enumerator for pulling results asynchronously
-type AsyncSeq<'T> = IAsyncEnumerable<'T>
+/// An asynchronous sequence.
+[<NoEquality; NoComparison>]
+type AsyncSeq<'T> =
+    abstract GetEnumerator : unit -> IAsyncSeqEnumerator<'T>
+#else
+/// An asynchronous sequence; equivalent to System.Collections.Generic.IAsyncEnumerable<'T>.
+/// Use the asyncSeq { ... } computation expression to create values, and the AsyncSeq module
+/// for combinators.
+type AsyncSeq<'T> = System.Collections.Generic.IAsyncEnumerable<'T>
+#endif
 
 [<RequireQualifiedAccess>]
 module AsyncSeq =
@@ -107,6 +111,9 @@ module AsyncSeq =
 
         /// Implements "yield!" for the asyncSeq computation builder.
         member YieldFrom : source:AsyncSeq<'T> -> AsyncSeq<'T>
+
+        /// Implements "yield!" for a synchronous sequence in the asyncSeq computation builder.
+        member YieldFrom : source:seq<'T> -> AsyncSeq<'T>
 
         /// Implements empty for the asyncSeq computation builder.
         member Zero : unit -> AsyncSeq<'T>
@@ -522,7 +529,9 @@ module AsyncSeq =
     /// Returns an async sequence which contains no contiguous duplicate elements.
     val distinctUntilChanged : source:AsyncSeq<'T> -> AsyncSeq<'T> when 'T : equality
 
+#if FABLE_COMPILER
     [<System.Obsolete("Use .GetEnumerator directly") >]
+#endif
     val getIterator : source:AsyncSeq<'T> -> (unit -> Async<'T option>)
 
     #if !FABLE_COMPILER
@@ -556,6 +565,7 @@ module AsyncSeq =
     ///
     /// Note that the resulting async sequence has to be processed in parallel (e.g AsyncSeq.mapAsyncParallel) becaused
     /// completion of sub-sequences depends on completion of other sub-sequences.
+    [<CompilerMessage("The result of groupByAsync must be consumed with a parallel combinator such as AsyncSeq.mapAsyncParallel. Sequential consumption will deadlock because sub-sequence completion depends on other sub-sequences being consumed concurrently.", 9999)>]
     val groupByAsync<'T, 'Key when 'Key : equality> : projection:('T -> Async<'Key>) -> source:AsyncSeq<'T> -> AsyncSeq<'Key * AsyncSeq<'T>>
 
     /// Applies a key-generating function to each element and returns an async sequence containing unique keys
@@ -563,14 +573,17 @@ module AsyncSeq =
     ///
     /// Note that the resulting async sequence has to be processed in parallel (e.g AsyncSeq.mapAsyncParallel) becaused
     /// completion of sub-sequences depends on completion of other sub-sequences.
+    [<CompilerMessage("The result of groupBy must be consumed with a parallel combinator such as AsyncSeq.mapAsyncParallel. Sequential consumption will deadlock because sub-sequence completion depends on other sub-sequences being consumed concurrently.", 9999)>]
     val groupBy<'T, 'Key when 'Key : equality> : projection:('T -> 'Key) -> source:AsyncSeq<'T> -> AsyncSeq<'Key * AsyncSeq<'T>>
 
-    #if (NETSTANDARD2_1 || NETCOREAPP3_0)
+    #if (NETSTANDARD || NET)
 
-    /// Creates an asynchronous computation that asynchronously yields results from the provided .NET IAsyncEnumerable.
+    /// Returns the input AsyncSeq as a BCL IAsyncEnumerable<'T>. Identity since AsyncSeq<'T> IS IAsyncEnumerable<'T> in v4.
+    [<Obsolete("AsyncSeq<'T> is now identical to IAsyncEnumerable<'T>. This function is a no-op and can be removed.")>]
     val ofAsyncEnum<'T> : source: Collections.Generic.IAsyncEnumerable<'T> -> AsyncSeq<'T>
 
-    /// Creates an .NET IAsyncEnumerable from the provided AsyncSeq computation.
+    /// Returns the input AsyncSeq as a BCL IAsyncEnumerable<'T>. Identity since AsyncSeq<'T> IS IAsyncEnumerable<'T> in v4.
+    [<Obsolete("AsyncSeq<'T> is now identical to IAsyncEnumerable<'T>. This function is a no-op and can be removed.")>]
     val toAsyncEnum<'T> : source: AsyncSeq<'T> -> Collections.Generic.IAsyncEnumerable<'T>
 
     val ofIQueryable<'T> : source: Linq.IQueryable<'T> -> AsyncSeq<'T>

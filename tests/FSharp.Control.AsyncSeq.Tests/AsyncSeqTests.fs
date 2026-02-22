@@ -157,6 +157,26 @@ let ``AsyncSeq.toListSynchronously``() =
 
 
 [<Test>]
+let ``asyncSeq yield! seq works``() =
+  let items = seq { 1; 2; 3 }
+  let s = asyncSeq {
+    yield! items
+  }
+  let a = s |> AsyncSeq.toListSynchronously
+  Assert.True(([1;2;3] = a))
+
+[<Test>]
+let ``asyncSeq yield! seq combines with other yields``() =
+  let items = seq { 2; 3 }
+  let s = asyncSeq {
+    yield 1
+    yield! items
+    yield 4
+  }
+  let a = s |> AsyncSeq.toListSynchronously
+  Assert.True(([1;2;3;4] = a))
+
+[<Test>]
 let ``AsyncSeq.concatSeq works``() =
   let ls = [ [1;2] ; [3;4] ]
   let actual = AsyncSeq.ofSeq ls |> AsyncSeq.concatSeq
@@ -1227,18 +1247,16 @@ let ``AsyncSeq.ofObservableBuffered should work (one, take)``() =
 [<Test>]
 let ``AsyncSeq.getIterator should work``() =
   let s1 = [1..2] |> AsyncSeq.ofSeq
-  use i = s1.GetEnumerator()
-  match i.MoveNext() |> Async.RunSynchronously with
-  | None -> Assert.Fail("expected Some")
-  | Some v ->
-    Assert.AreEqual(v,1)
-    match i.MoveNext() |> Async.RunSynchronously with
-    | None -> Assert.Fail("expected Some")
-    | Some v ->
-        Assert.AreEqual(v,2)
-        match i.MoveNext() |> Async.RunSynchronously with
-        | None -> ()
-        | Some _ -> Assert.Fail("expected None")
+  let i = s1.GetAsyncEnumerator(System.Threading.CancellationToken.None)
+  try
+    let move () = i.MoveNextAsync().AsTask() |> Async.AwaitTask |> Async.RunSynchronously
+    Assert.True(move(), "expected first element")
+    Assert.AreEqual(i.Current, 1)
+    Assert.True(move(), "expected second element")
+    Assert.AreEqual(i.Current, 2)
+    Assert.False(move(), "expected end of sequence")
+  finally
+    i.DisposeAsync() |> ignore
 
 
 
