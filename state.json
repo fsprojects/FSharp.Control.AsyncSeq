@@ -1,6 +1,6 @@
 {
-  "last_run": "2026-02-22T01:41:00Z",
-  "workflow_run_id": "22268210784",
+  "last_run": "2026-02-22T08:19:25Z",
+  "workflow_run_id": "22273496797",
   "commented_issues": [
     {"number": 168, "run": "22226329040", "action": "suggested PackageLicenseExpression fix"},
     {"number": 173, "run": "22226329040", "action": "identified .fsi gating issue, linked PR #214"},
@@ -12,7 +12,9 @@
     {"number": 165, "run": "22248981881", "action": "re-announced draft PR #221 after framework bug closed previous attempt"},
     {"number": 156, "run": "22249505878", "action": "announced draft PR for chunkBy/chunkByAsync"},
     {"number": 31, "run": "22258041770", "action": "announced draft PR #225 for mapAsyncUnorderedParallelThrottled"},
-    {"number": 152, "run": "22268210784", "action": "announced fix PR for ofAsyncEnum Blazor WASM deadlock"}
+    {"number": 152, "run": "22268210784", "action": "announced fix PR for ofAsyncEnum Blazor WASM deadlock"},
+    {"number": 168, "run": "22273496797", "action": "noted PR #228 merged; closed issue"},
+    {"number": 230, "run": "22273496797", "action": "analysed IAsyncDisposable scope; asked about approach; offered to draft PR"}
   ],
   "created_prs": [
     {"branch": "co-maintainer/mergeall-accept-seq", "run": "22248981881", "number": 221, "title": "Allow AsyncSeq.mergeAll to accept seq instead of list", "closes": 165, "status": "merged by dsyme 2026-02-21"},
@@ -20,29 +22,22 @@
     {"branch": "co-maintainer/release-3.3.1-1771646837", "run": "22249988090", "number": 223, "title": "Prepare release 3.3.1", "status": "merged by dsyme 2026-02-21"},
     {"branch": "repo-assist/add-mapasyncunorderedparallelthrottled-001ed43df569b4c9", "run": "22258041770", "number": 225, "title": "Add AsyncSeq.mapAsyncUnorderedParallelThrottled", "closes": 31, "status": "merged by dsyme 2026-02-21T16:44:51Z"},
     {"branch": "repo-assist/deps-fix-license-bcl-2026-02-21-b39ffdb8841cd066", "run": "22266754407", "number": 228, "title": "Fix deprecated PackageLicenseUrl and update Microsoft.Bcl.AsyncInterfaces", "closes": 168, "status": "merged by dsyme 2026-02-22T01:38:42Z"},
-    {"branch": "repo-assist/fix-ofasyncsenum-dispose-wasm-deadlock-issue152", "run": "22268210784", "title": "Fix ofAsyncEnum deadlock on single-threaded runtimes (Blazor WASM)", "closes": 152, "status": "open (draft) - 190/190 tests pass"}
+    {"branch": "repo-assist/fix-ofasyncsenum-dispose-wasm-deadlock-issue152", "run": "22268210784", "number": 229, "title": "Fix ofAsyncEnum deadlock on single-threaded runtimes (Blazor WASM)", "closes": 152, "status": "merged by dsyme 2026-02-22T06:57:51Z"}
   ],
   "closed_or_rejected_prs": [
     {"branch": "fix/ofasyncenum-netstandard20", "run": "22226329040", "title": "Expose ofAsyncEnum/toAsyncEnum on netstandard2.0", "closes": 173, "status": "closed by maintainer - not merged"},
     {"branch": "co-maintainer/mergeall-accept-seq-ff64ca901ccf3892", "run": "22240371333", "title": "Allow AsyncSeq.mergeAll to accept seq instead of list", "number": 219, "status": "closed by maintainer due to framework bug (multiple PRs in one run merged incorrectly)"}
   ],
-  "skip_next_run": [168, 173, 205, 165, 156, 160, 159, 31, 174, 123, 125, 152, 215, 226],
+  "skip_next_run": [173, 205, 165, 156, 160, 159, 31, 174, 123, 125, 152, 215, 226],
   "monthly_activity_issue": {"number": 220, "month": "2026-02"},
   "framework_note": "CRITICAL: Only create ONE PR per run. The framework has a bug where if create_pull_request is called multiple times, only one PR is created with wrong mixed content.",
   "last_release_prep_run": "22249988090",
   "last_release_prep_date": "2026-02-21",
   "last_deps_check_date": "2026-02-21",
-  "unreleased_since_331": ["mapAsyncUnorderedParallelThrottled (PR #225)", "chunkBy/chunkByAsync (PR #222)", "mergeAll seq widening (PR #221)", "deps/license fix (PR #228)"],
-  "labels_applied": [
-    {"issue": 123, "label": "enhancement", "run": "22267510040"},
-    {"issue": 125, "label": "bug", "run": "22267510040"},
-    {"issue": 152, "label": "bug", "run": "22267510040"},
-    {"issue": 173, "label": "enhancement", "run": "22267510040"},
-    {"issue": 125, "label": "bug", "run": "22267515796"},
-    {"issue": 159, "label": "enhancement", "run": "22267515796"}
-  ],
+  "unreleased_since_331": ["mapAsyncUnorderedParallelThrottled (PR #225)", "chunkBy/chunkByAsync (PR #222)", "mergeAll seq widening (PR #221)", "deps/license fix (PR #228)", "Blazor WASM deadlock fix (PR #229)"],
   "next_run_todo": [
-    "Prepare release 3.3.2 (mergeAll/chunkBy/mapAsyncUnorderedParallelThrottled/deps-license added since 3.3.1) - target ~2026-02-24 (wait ~3 days after 3.3.1 on 2026-02-21)",
+    "Prepare release 3.3.2 - target ~2026-02-24 - includes mapAsyncUnorderedParallelThrottled, chunkBy/chunkByAsync, mergeAll seq, deps/license, Blazor WASM fix",
+    "Investigate IAsyncDisposable migration (issue #230) - waiting for dsyme to confirm approach (a=additive, b=replace IDisposable)",
     "Consider test package major-version updates (NUnit 3.9->4.x, MS.Test.Sdk 16->18, coverlet 6->8) - deferred - NUnit 4 has breaking API changes"
   ],
   "notes": [
@@ -61,8 +56,11 @@
     "Network access was enabled by dsyme (commit c0fdf4b 'allow dotnet network') - NuGet restore works in Repo Assist runs",
     "GitHub releases page only shows releases up to 2.0.24 (2020); 3.x versions are released via NuGet CI but not tagged on GitHub",
     "PR #228 merged by dsyme on 2026-02-22T01:38:42Z - fixes PackageLicenseUrl and updates Microsoft.Bcl.AsyncInterfaces",
-    "Issue #168 should now be auto-closed by merge of PR #228 (had Closes #168 in PR body)",
-    "Run 16 (workflow 22268210784, 2026-02-22T01:41Z) - created draft PR for #152 (ofAsyncEnum Blazor WASM deadlock fix); branch: repo-assist/fix-ofasyncsenum-dispose-wasm-deadlock-issue152; commented on #152; 190/190 tests pass",
-    "Fix for #152: ofAsyncEnum Dispose changed from Async.RunSynchronously to e.DisposeAsync() |> ignore (fire-and-forget ValueTask)"
+    "Issue #168 closed by Repo Assist in run 17 (PR #228 was already merged with the fix)",
+    "PR #229 merged by dsyme on 2026-02-22T06:57:51Z - fixes ofAsyncEnum deadlock on Blazor WASM / single-threaded runtimes",
+    "Issue #152 closed by dsyme on 2026-02-22T06:57:52Z (resolved by PR #229)",
+    "Issue #230 opened by dsyme on 2026-02-22 - 'Use System.IAsyncDisposable through this library' - labelled enhancement/refactor/breaking change; waiting for approach decision",
+    "Library's IAsyncEnumerator<'T> inherits IDisposable (not IAsyncDisposable) - changing this is a breaking change; ~30+ inline implementations in AsyncSeq.fs",
+    "Run 17 (workflow 22273496797, 2026-02-22T08:19Z) - labelled #230, commented on #168 (closed) and #230; updated monthly activity"
   ]
 }
