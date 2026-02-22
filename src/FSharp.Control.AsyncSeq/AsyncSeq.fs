@@ -1906,7 +1906,9 @@ module AsyncSeq =
       use _ =
           { new IDisposable with
               member __.Dispose() =
-                  e.DisposeAsync().AsTask() |> Async.AwaitTask |> Async.RunSynchronously }
+                  // Fire-and-forget: avoids Async.RunSynchronously which deadlocks
+                  // on single-threaded runtimes such as Blazor WASM (see issue #152).
+                  e.DisposeAsync() |> ignore }
 
       let mutable currentResult = true
       while currentResult do
