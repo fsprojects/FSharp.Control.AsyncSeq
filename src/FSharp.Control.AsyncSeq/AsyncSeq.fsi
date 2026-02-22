@@ -526,7 +526,9 @@ module AsyncSeq =
     /// Returns an async sequence which contains no contiguous duplicate elements.
     val distinctUntilChanged : source:AsyncSeq<'T> -> AsyncSeq<'T> when 'T : equality
 
+#if FABLE_COMPILER
     [<System.Obsolete("Use .GetEnumerator directly") >]
+#endif
     val getIterator : source:AsyncSeq<'T> -> (unit -> Async<'T option>)
 
     #if !FABLE_COMPILER
