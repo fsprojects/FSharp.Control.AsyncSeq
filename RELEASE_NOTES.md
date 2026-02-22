@@ -1,3 +1,8 @@
+### 4.0.0
+* Added `AsyncSeq.mapAsyncUnorderedParallelThrottled` for throttled unordered parallel mapping ([#31](https://github.com/fsprojects/FSharp.Control.AsyncSeq/issues/31), [PR #225](https://github.com/fsprojects/FSharp.Control.AsyncSeq/pull/225)).
+* Fixed `ofAsyncEnum` deadlock on single-threaded runtimes such as Blazor WASM ([#152](https://github.com/fsprojects/FSharp.Control.AsyncSeq/issues/152), [PR #229](https://github.com/fsprojects/FSharp.Control.AsyncSeq/pull/229)).
+* Updated `PackageLicenseExpression` (removed deprecated `PackageLicenseUrl`) and updated `Microsoft.Bcl.AsyncInterfaces` to 10.0.3 ([#168](https://github.com/fsprojects/FSharp.Control.AsyncSeq/issues/168), [PR #228](https://github.com/fsprojects/FSharp.Control.AsyncSeq/pull/228)).
+
 ### 3.3.1
 * Quick summary of changes:
   - Performance improvements: optimized `iterAsync` and `iteriAsync`; optimized `collect`, `mapAsync` and `unfoldAsync`; fixed append memory leak (Issue #35).
