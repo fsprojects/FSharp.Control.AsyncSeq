@@ -3,19 +3,10 @@ namespace FSharp.Control
 
 open System
 
-/// An enumerator for pulling results asynchronously
-type IAsyncEnumerator<'T> =
-     abstract MoveNext : unit -> Async<'T option>
-     inherit IDisposable
-
-/// An asynchronous sequence represents a delayed computation that can be
-/// started to give an enumerator for pulling results asynchronously
-type IAsyncEnumerable<'T> =
-    abstract GetEnumerator : unit -> IAsyncEnumerator<'T>
-
-/// An asynchronous sequence represents a delayed computation that can be
-/// started to give an enumerator for pulling results asynchronously
-type AsyncSeq<'T> = IAsyncEnumerable<'T>
+/// An asynchronous sequence; equivalent to System.Collections.Generic.IAsyncEnumerable<'T>.
+/// Use the asyncSeq { ... } computation expression to create values, and the AsyncSeq module
+/// for combinators.
+type AsyncSeq<'T> = System.Collections.Generic.IAsyncEnumerable<'T>
 
 [<RequireQualifiedAccess>]
 module AsyncSeq =
@@ -565,12 +556,12 @@ module AsyncSeq =
     /// completion of sub-sequences depends on completion of other sub-sequences.
     val groupBy<'T, 'Key when 'Key : equality> : projection:('T -> 'Key) -> source:AsyncSeq<'T> -> AsyncSeq<'Key * AsyncSeq<'T>>
 
-    #if (NETSTANDARD2_1 || NETCOREAPP3_0)
+    #if (NETSTANDARD || NET)
 
-    /// Creates an asynchronous computation that asynchronously yields results from the provided .NET IAsyncEnumerable.
+    /// Returns the input AsyncSeq as a BCL IAsyncEnumerable<'T>. Identity since AsyncSeq<'T> IS IAsyncEnumerable<'T> in v4.
     val ofAsyncEnum<'T> : source: Collections.Generic.IAsyncEnumerable<'T> -> AsyncSeq<'T>
 
-    /// Creates an .NET IAsyncEnumerable from the provided AsyncSeq computation.
+    /// Returns the input AsyncSeq as a BCL IAsyncEnumerable<'T>. Identity since AsyncSeq<'T> IS IAsyncEnumerable<'T> in v4.
     val toAsyncEnum<'T> : source: AsyncSeq<'T> -> Collections.Generic.IAsyncEnumerable<'T>
 
     val ofIQueryable<'T> : source: Linq.IQueryable<'T> -> AsyncSeq<'T>
