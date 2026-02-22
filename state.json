@@ -1,6 +1,6 @@
 {
-  "last_run": "2026-02-22T10:22:23Z",
-  "workflow_run_id": "22275271399",
+  "last_run": "2026-02-22T12:18:34Z",
+  "workflow_run_id": "22276980096",
   "commented_issues": [
     {"number": 168, "run": "22226329040", "action": "suggested PackageLicenseExpression fix"},
     {"number": 173, "run": "22226329040", "action": "identified .fsi gating issue, linked PR #214"},
@@ -24,7 +24,8 @@
     {"branch": "repo-assist/add-mapasyncunorderedparallelthrottled-001ed43df569b4c9", "run": "22258041770", "number": 225, "title": "Add AsyncSeq.mapAsyncUnorderedParallelThrottled", "closes": 31, "status": "merged by dsyme 2026-02-21T16:44:51Z"},
     {"branch": "repo-assist/deps-fix-license-bcl-2026-02-21-b39ffdb8841cd066", "run": "22266754407", "number": 228, "title": "Fix deprecated PackageLicenseUrl and update Microsoft.Bcl.AsyncInterfaces", "closes": 168, "status": "merged by dsyme 2026-02-22T01:38:42Z"},
     {"branch": "repo-assist/fix-ofasyncsenum-dispose-wasm-deadlock-issue152", "run": "22268210784", "number": 229, "title": "Fix ofAsyncEnum deadlock on single-threaded runtimes (Blazor WASM)", "closes": 152, "status": "merged by dsyme 2026-02-22T06:57:51Z"},
-    {"branch": "repo-assist/v4-bcl-iasyncenumerable-migration-3b81040f29c8a5a6", "run": "22274606457", "number": 231, "title": "Migrate AsyncSeq<'T> to BCL IAsyncEnumerable<'T> (v4.0)", "closes": 230, "status": "open draft; dsyme reviewed; Copilot working on fixes in PR #232"}
+    {"branch": "repo-assist/v4-bcl-iasyncenumerable-migration-3b81040f29c8a5a6", "run": "22274606457", "number": 231, "title": "Migrate AsyncSeq<'T> to BCL IAsyncEnumerable<'T> (v4.0)", "closes": 230, "status": "open (not draft); Copilot working on PR #233 for Fable fix; dsyme merged PR #232 into v4 branch 2026-02-22T11:39Z"},
+    {"branch": "repo-assist/release-3.3.2", "run": "22276980096", "number": "TBD", "title": "[Repo Assist] Prepare release 3.3.2", "status": "draft PR submitted 2026-02-22T12:18Z; includes #225/#228/#229; all 190 tests pass"}
   ],
   "closed_or_rejected_prs": [
     {"branch": "fix/ofasyncenum-netstandard20", "run": "22226329040", "title": "Expose ofAsyncEnum/toAsyncEnum on netstandard2.0", "closes": 173, "status": "closed by maintainer - not merged"},
@@ -33,25 +34,25 @@
   "skip_next_run": [173, 205, 165, 156, 160, 159, 31, 174, 123, 125, 152, 215, 226, 230],
   "monthly_activity_issue": {"number": 220, "month": "2026-02"},
   "framework_note": "CRITICAL: Only create ONE PR per run. The framework has a bug where if create_pull_request is called multiple times, only one PR is created with wrong mixed content.",
-  "last_release_prep_run": "22249988090",
-  "last_release_prep_date": "2026-02-21",
+  "last_release_prep_run": "22276980096",
+  "last_release_prep_date": "2026-02-22",
   "last_deps_check_date": "2026-02-21",
-  "unreleased_since_331": ["mapAsyncUnorderedParallelThrottled (PR #225)", "Blazor WASM deadlock fix (PR #229)", "deps/license fix (PR #228)"],
+  "unreleased_since_331": [],
   "next_run_todo": [
-    "Prepare release 3.3.2 - target ~2026-02-24 - includes PRs #225, #228, #229 merged since 3.3.1",
-    "Monitor PR #232 (Copilot Fable+obsolete fixes targeting PR #231 branch) - once merged, check if PR #231 needs README/RELEASE_NOTES update",
-    "Once PR #231 is merged: update README.md for v4 API changes, update RELEASE_NOTES.md"
+    "Check if release 3.3.2 PR was created with correct number; update memory with actual PR number",
+    "Monitor PR #231 (v4 migration) - once PR #233 (Fable fix) is merged into v4 branch, PR #231 can be merged",
+    "Once PR #231 is merged: update README.md for v4 API changes",
+    "Once PR #231 is merged: verify EditorBrowsable on IAsyncSeqEnumerator/AsyncSeqImpl internal types"
   ],
   "v4_migration_notes": {
     "branch": "repo-assist/v4-bcl-iasyncenumerable-migration-3b81040f29c8a5a6",
     "pr_number": 231,
-    "status": "open draft; dsyme reviewed 2026-02-22T10:05Z; Copilot created PR #232 to fix Fable errors and mark ofAsyncEnum/toAsyncEnum [<Obsolete>]",
+    "status": "open (not draft); Copilot PR #232 merged into v4 branch by dsyme 2026-02-22T11:39Z; Copilot PR #233 targeting v4 branch (guard getIterator obsolete attr for #if FABLE_COMPILER)",
     "approach": "AsyncSeq<'T> = BCL IAsyncEnumerable<'T>; internal IAsyncSeqEnumerator<'T> and AsyncSeqImpl<'T> adapter; GetEnumerator() extension on BCL type for internal use (not exported via .fsi); ofAsyncEnum/toAsyncEnum are now identity functions",
-    "open_questions_resolved": ["Fable: fix errors in CI (handled by Copilot PR #232)", "ofAsyncEnum/toAsyncEnum: mark [<Obsolete>] (handled by Copilot PR #232)"],
-    "still_todo": ["IAsyncSeqEnumerator/AsyncSeqImpl: add EditorBrowsable(Never)?", "Update README.md", "Update RELEASE_NOTES.md"]
+    "still_todo": ["IAsyncSeqEnumerator/AsyncSeqImpl: add EditorBrowsable(Never)?", "Update README.md after merge"]
   },
   "copilot_prs": [
-    {"number": 232, "base": "repo-assist/v4-bcl-iasyncenumerable-migration-3b81040f29c8a5a6", "title": "[WIP] Fix AsyncSeq migration issues and Fable feedback", "status": "open WIP; fixing Fable CI errors and adding [<Obsolete>] to ofAsyncEnum/toAsyncEnum", "created": "2026-02-22T10:06:38Z"}
+    {"number": 233, "base": "repo-assist/v4-bcl-iasyncenumerable-migration-3b81040f29c8a5a6", "title": "Fix Fable compatibility: guard getIterator obsolete attribute and complete #if FABLE_COMPILER cleanup", "status": "open draft; guards getIterator obsolete attr with #if FABLE_COMPILER; previous PR #232 was merged", "created": "2026-02-22T11:40:28Z"}
   ],
   "notes": [
     "Issue #230 opened by dsyme on 2026-02-22 - 'Use System.IAsyncDisposable through this library' - run 17 commented; run 18 created draft v4 PR #231",
@@ -63,6 +64,7 @@
     "GitHub releases page only shows releases up to 2.0.24 (2020); 3.x versions are released via NuGet CI but not tagged on GitHub",
     "Run 18 (workflow 22274606457, 2026-02-22T09:36Z) - v4 BCL migration PR #231 created; #230 commented; monthly activity updated",
     "Run 19 (workflow 22275271399, 2026-02-22T10:22Z) - No new PRs created. Checked PR #231 status. Monthly activity issue #220 updated. dsyme reviewed PR #231; Copilot is fixing Fable+obsolete in PR #232.",
+    "Run 20 (workflow 22276980096, 2026-02-22T12:18Z) - Created release 3.3.2 PR (TBD number); all 190 tests pass; dsyme merged PR #232 into v4 branch; Copilot opened PR #233 for further Fable fix (guard getIterator obsolete attr); monthly activity #220 updated",
     "Issue #159 ('Deprecate FSharp.Control.IAsyncEnumerable') - dsyme commented 'See #231' 2026-02-22T10:02Z; no need for Repo Assist to comment there."
   ]
 }
