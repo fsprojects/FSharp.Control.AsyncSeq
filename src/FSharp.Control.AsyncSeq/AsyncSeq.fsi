@@ -198,6 +198,14 @@ module AsyncSeq =
     /// singleton input sequence.
     val pairwise : source:AsyncSeq<'T> -> AsyncSeq<'T * 'T>
 
+    /// Returns an asynchronous sequence that yields sliding windows of the given size
+    /// over the source sequence, each yielded as an array. The first window is emitted
+    /// once <c>windowSize</c> elements have been consumed; subsequent windows slide one
+    /// element at a time. The sequence is empty when the source has fewer than
+    /// <c>windowSize</c> elements. Raises <c>System.ArgumentException</c> if
+    /// <c>windowSize</c> is less than 1.
+    val windowed : windowSize:int -> source:AsyncSeq<'T> -> AsyncSeq<'T []>
+
     /// Asynchronously aggregate the elements of the input asynchronous sequence using the
     /// specified asynchronous 'aggregation' function.
     val foldAsync : folder:('State -> 'T -> Async<'State>) -> state:'State -> source:AsyncSeq<'T> -> Async<'State>

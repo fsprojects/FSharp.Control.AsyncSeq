@@ -1087,6 +1087,21 @@ module AsyncSeq =
           let! moven = ie.MoveNext()
           b := moven }
 
+  let windowed (windowSize:int) (source:AsyncSeq<'T>) : AsyncSeq<'T[]> =
+    if windowSize < 1 then invalidArg (nameof windowSize) "must be positive"
+    asyncSeq {
+      let window = System.Collections.Generic.Queue<'T>(windowSize)
+      use ie = source.GetEnumerator()
+      let! move = ie.MoveNext()
+      let b = ref move
+      while b.Value.IsSome do
+          window.Enqueue(b.Value.Value)
+          if window.Count = windowSize then
+              yield window.ToArray()
+              window.Dequeue() |> ignore
+          let! moven = ie.MoveNext()
+          b := moven }
+
   let pickAsync (f:'T -> Async<'U option>) (source:AsyncSeq<'T>) = async {
       use ie = source.GetEnumerator()
       let! v = ie.MoveNext()
