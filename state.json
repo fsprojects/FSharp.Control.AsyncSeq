@@ -1,20 +1,20 @@
 {
-  "last_run": "2026-02-23T17:50:45Z",
-  "workflow_run_id": "22318024622",
-  "run_number": 25,
-  "tasks_run_this_session": ["task_3", "task_11"],
+  "last_run": "2026-02-23T19:49:46Z",
+  "workflow_run_id": "22322171572",
+  "run_number": 26,
+  "tasks_run_this_session": ["task_5", "task_10", "task_11"],
   "last_task_run": {
     "task_1": "2026-02-22T13:41:00Z",
     "task_2": "2026-02-22T13:41:00Z",
     "task_3": "2026-02-23T17:50:45Z",
     "task_4": "2026-02-22T10:00:00Z",
-    "task_5": "2026-02-22T19:59:49Z",
+    "task_5": "2026-02-23T19:49:46Z",
     "task_6": "2026-02-22T10:00:00Z",
     "task_7": "2026-02-22T13:20:00Z",
     "task_8": "2026-02-22T10:00:00Z",
     "task_9": "2026-02-22T10:00:00Z",
-    "task_10": "2026-02-22T19:59:49Z",
-    "task_11": "2026-02-23T17:50:45Z"
+    "task_10": "2026-02-23T19:49:46Z",
+    "task_11": "2026-02-23T19:49:46Z"
   },
   "issue_cursor": null,
   "pr_cursor": null,
@@ -40,29 +40,29 @@
     "123": {"pr": 236, "status": "merged"}
   },
   "improvement_prs": {
-    "221": "mergeAll seq",
-    "222": "chunkBy",
-    "225": "mapAsyncUnorderedParallelThrottled",
-    "228": "deps+license",
-    "229": "ofAsyncEnum deadlock",
-    "231": "v4 IAsyncEnumerable migration",
-    "234": "release 3.3.2",
-    "235": "groupBy CompilerMessage",
-    "236": "YieldFrom seq",
-    "237": "version bump to 4.0.0",
+    "221": "mergeAll seq (merged)",
+    "222": "chunkBy (merged)",
+    "225": "mapAsyncUnorderedParallelThrottled (merged)",
+    "228": "deps+license (merged)",
+    "229": "ofAsyncEnum deadlock (merged)",
+    "231": "v4 IAsyncEnumerable migration (merged)",
+    "234": "release 3.3.2 (merged)",
+    "235": "groupBy CompilerMessage (merged)",
+    "236": "YieldFrom seq (merged)",
+    "237": "version bump to 4.0.0 (merged)",
     "238": "v4 docs migration notes (merged)",
-    "240": "yield! list<T> tests (merged by dsyme 2026-02-23)",
-    "windowed_pr": "AsyncSeq.windowed sliding window (pending review, branch: repo-assist/improve-windowed)"
+    "240": "yield! list<T> tests (merged)",
+    "241": "AsyncSeq.windowed sliding window (open, branch: repo-assist/improve-windowed-fd152e69801b31ac)",
+    "242": "AsyncSeq.reduce and reduceAsync (open, branch: repo-assist/improve-reduce-20260223)"
   },
   "welcomed_users": [],
   "stale_pr_nudged": [],
   "monthly_activity_issue": 220,
   "notes": [
-    "v4.0.0 released but no GitHub Release created (last GitHub Release is 2.0.24 from 2020)",
-    "Issue #239 (Oxpecker HtmlContainer conflict) opened and closed by dsyme on 2026-02-22",
-    "Issue #215 (spam) closed",
-    "Issue #159 (deprecate FSharp.Control.IAsyncEnumerable) closed",
-    "PR #240 (yield! list tests) merged by dsyme on 2026-02-23",
-    "windowed PR submitted run 25 (branch: repo-assist/improve-windowed) - PR number unknown yet"
+    "v4.0.0 released on NuGet but no GitHub Release created (last GitHub Release is 2.0.24 from 2020)",
+    "PR #241 (windowed): open, draft, no CI failures, no merge conflicts with main",
+    "PR #242 (reduce): open, draft, 199 tests pass",
+    "Next tasks priority: task_4 (deps), task_6 (stale nudges), task_8 (release), task_9 (welcome)",
+    "Future improvements: minBy/maxBy/min/max, Fable test fix, interop docs examples"
   ]
 }
