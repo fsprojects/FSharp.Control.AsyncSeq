@@ -1151,6 +1151,46 @@ module AsyncSeq =
   let inline sum (source : AsyncSeq<'T>) : Async<'T> =
     (LanguagePrimitives.GenericZero, source) ||> fold (+)
 
+  let minByAsync (projection: 'T -> Async<'Key>) (source: AsyncSeq<'T>) : Async<'T> =
+    async {
+      let! result =
+        source |> foldAsync (fun (acc: ('T * 'Key) option) v ->
+          async {
+            let! k = projection v
+            match acc with
+            | None -> return Some (v, k)
+            | Some (_, ak) -> return if k < ak then Some (v, k) else acc
+          }) None
+      match result with
+      | None -> return raise (System.InvalidOperationException("The input sequence was empty."))
+      | Some (v, _) -> return v }
+
+  let minBy (projection: 'T -> 'Key) (source: AsyncSeq<'T>) : Async<'T> =
+    minByAsync (projection >> async.Return) source
+
+  let maxByAsync (projection: 'T -> Async<'Key>) (source: AsyncSeq<'T>) : Async<'T> =
+    async {
+      let! result =
+        source |> foldAsync (fun (acc: ('T * 'Key) option) v ->
+          async {
+            let! k = projection v
+            match acc with
+            | None -> return Some (v, k)
+            | Some (_, ak) -> return if k > ak then Some (v, k) else acc
+          }) None
+      match result with
+      | None -> return raise (System.InvalidOperationException("The input sequence was empty."))
+      | Some (v, _) -> return v }
+
+  let maxBy (projection: 'T -> 'Key) (source: AsyncSeq<'T>) : Async<'T> =
+    maxByAsync (projection >> async.Return) source
+
+  let min (source: AsyncSeq<'T>) : Async<'T> =
+    minBy id source
+
+  let max (source: AsyncSeq<'T>) : Async<'T> =
+    maxBy id source
+
   let scan f (state:'State) (source : AsyncSeq<'T>) =
     scanAsync (fun st v -> f st v |> async.Return) state source
 
@@ -1686,7 +1726,7 @@ module AsyncSeq =
           | Some rem -> async.Return rem
           | None -> Async.StartChildAsTask(ie.MoveNext())
         let t = Stopwatch.GetTimestamp()
-        let! time = Async.StartChildAsTask(Async.Sleep (max 0 rt))
+        let! time = Async.StartChildAsTask(Async.Sleep (Operators.max 0 rt))
         let! moveOr = Async.chooseTasks move time
         let delta = int ((Stopwatch.GetTimestamp() - t) * 1000L / Stopwatch.Frequency)
         match moveOr with
