@@ -1145,6 +1145,25 @@ module AsyncSeq =
   let fold f (state:'State) (source : AsyncSeq<'T>) =
     foldAsync (fun st v -> f st v |> async.Return) state source
 
+  let reduceAsync (f: 'T -> 'T -> Async<'T>) (source: AsyncSeq<'T>) : Async<'T> = async {
+      use ie = source.GetEnumerator()
+      let! first = ie.MoveNext()
+      match first with
+      | None -> return raise (InvalidOperationException("The input sequence was empty."))
+      | Some v ->
+          let acc = ref v
+          let! next = ie.MoveNext()
+          let b = ref next
+          while b.Value.IsSome do
+              let! newAcc = f acc.Value b.Value.Value
+              acc := newAcc
+              let! more = ie.MoveNext()
+              b := more
+          return acc.Value }
+
+  let reduce (f: 'T -> 'T -> 'T) (source: AsyncSeq<'T>) : Async<'T> =
+      reduceAsync (fun a b -> f a b |> async.Return) source
+
   let length (source : AsyncSeq<'T>) =
     fold (fun st _ -> st + 1L) 0L source
 
