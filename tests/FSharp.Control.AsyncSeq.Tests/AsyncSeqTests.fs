@@ -211,6 +211,52 @@ let ``AsyncSeq.sum works``() =
       let expected = ls |> List.sum
       Assert.True((expected = actual))
 
+[<Test>]
+let ``AsyncSeq.sumBy works``() =
+  for i in 0 .. 10 do
+      let ls = [ 1 .. i ]
+      let actual = AsyncSeq.ofSeq ls |> AsyncSeq.sumBy float |> Async.RunSynchronously
+      let expected = ls |> List.sumBy float
+      Assert.AreEqual(expected, actual)
+
+[<Test>]
+let ``AsyncSeq.sumByAsync works``() =
+  for i in 0 .. 10 do
+      let ls = [ 1 .. i ]
+      let actual = AsyncSeq.ofSeq ls |> AsyncSeq.sumByAsync (float >> async.Return) |> Async.RunSynchronously
+      let expected = ls |> List.sumBy float
+      Assert.AreEqual(expected, actual)
+
+[<Test>]
+let ``AsyncSeq.average works``() =
+  for i in 1 .. 10 do
+      let ls = [ 1.0 .. float i ]
+      let actual = AsyncSeq.ofSeq ls |> AsyncSeq.average |> Async.RunSynchronously
+      let expected = ls |> List.average
+      Assert.AreEqual(expected, actual)
+
+[<Test>]
+let ``AsyncSeq.average raises on empty sequence``() =
+  Assert.Throws<System.ArgumentException>(fun () ->
+      AsyncSeq.empty<float> |> AsyncSeq.average |> Async.RunSynchronously |> ignore
+  ) |> ignore
+
+[<Test>]
+let ``AsyncSeq.averageBy works``() =
+  for i in 1 .. 10 do
+      let ls = [ 1 .. i ]
+      let actual = AsyncSeq.ofSeq ls |> AsyncSeq.averageBy float |> Async.RunSynchronously
+      let expected = ls |> List.averageBy float
+      Assert.AreEqual(expected, actual)
+
+[<Test>]
+let ``AsyncSeq.averageByAsync works``() =
+  for i in 1 .. 10 do
+      let ls = [ 1 .. i ]
+      let actual = AsyncSeq.ofSeq ls |> AsyncSeq.averageByAsync (float >> async.Return) |> Async.RunSynchronously
+      let expected = ls |> List.averageBy float
+      Assert.AreEqual(expected, actual)
+
 
 [<Test>]
 let ``AsyncSeq.length works``() =
