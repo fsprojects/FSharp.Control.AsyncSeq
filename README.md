@@ -5,6 +5,10 @@
 See [the home page](http://fsprojects.github.io/FSharp.Control.AsyncSeq/) for details. The home page can be [edited, forked or cloned](https://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/docs/content)
 Please contribute to this project. Don't ask for permission, just fork the repository and send pull requests.
 
+## Contributing
+
+Contributions are warmly welcomed! To get started, fork the repository and create a branch from `main`. Keep pull requests small and focused on a single concern, and make sure all existing tests pass before submitting (`dotnet test`). For bug reports, please include a minimal reproduction. For significant new features or breaking changes, consider opening an issue first to discuss the approach with the maintainers. All contributors are expected to follow the [F# Software Foundation Code of Conduct](https://foundation.fsharp.org/code_of_conduct).
+
 ## Version 4.0 — BCL IAsyncEnumerable Compatibility
 
 As of **v4.0**, `AsyncSeq<'T>` is a type alias for `System.Collections.Generic.IAsyncEnumerable<'T>` (the BCL type). This means:
