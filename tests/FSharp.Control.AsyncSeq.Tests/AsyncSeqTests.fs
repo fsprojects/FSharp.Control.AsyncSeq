@@ -211,6 +211,52 @@ let ``AsyncSeq.sum works``() =
       let expected = ls |> List.sum
       Assert.True((expected = actual))
 
+[<Test>]
+let ``AsyncSeq.sumBy works``() =
+  for i in 0 .. 10 do
+      let ls = [ 1 .. i ]
+      let actual = AsyncSeq.ofSeq ls |> AsyncSeq.sumBy float |> Async.RunSynchronously
+      let expected = ls |> List.sumBy float
+      Assert.AreEqual(expected, actual)
+
+[<Test>]
+let ``AsyncSeq.sumByAsync works``() =
+  for i in 0 .. 10 do
+      let ls = [ 1 .. i ]
+      let actual = AsyncSeq.ofSeq ls |> AsyncSeq.sumByAsync (float >> async.Return) |> Async.RunSynchronously
+      let expected = ls |> List.sumBy float
+      Assert.AreEqual(expected, actual)
+
+[<Test>]
+let ``AsyncSeq.average works``() =
+  for i in 1 .. 10 do
+      let ls = [ 1.0 .. float i ]
+      let actual = AsyncSeq.ofSeq ls |> AsyncSeq.average |> Async.RunSynchronously
+      let expected = ls |> List.average
+      Assert.AreEqual(expected, actual)
+
+[<Test>]
+let ``AsyncSeq.average raises on empty sequence``() =
+  Assert.Throws<System.ArgumentException>(fun () ->
+      AsyncSeq.empty<float> |> AsyncSeq.average |> Async.RunSynchronously |> ignore
+  ) |> ignore
+
+[<Test>]
+let ``AsyncSeq.averageBy works``() =
+  for i in 1 .. 10 do
+      let ls = [ 1 .. i ]
+      let actual = AsyncSeq.ofSeq ls |> AsyncSeq.averageBy float |> Async.RunSynchronously
+      let expected = ls |> List.averageBy float
+      Assert.AreEqual(expected, actual)
+
+[<Test>]
+let ``AsyncSeq.averageByAsync works``() =
+  for i in 1 .. 10 do
+      let ls = [ 1 .. i ]
+      let actual = AsyncSeq.ofSeq ls |> AsyncSeq.averageByAsync (float >> async.Return) |> Async.RunSynchronously
+      let expected = ls |> List.averageBy float
+      Assert.AreEqual(expected, actual)
+
 
 [<Test>]
 let ``AsyncSeq.length works``() =
@@ -2330,6 +2376,45 @@ let ``AsyncSeq.fold with empty sequence should return seed``() =
   Assert.AreEqual(10, result)
 
 [<Test>]
+let ``AsyncSeq.reduce sums non-empty sequence`` () =
+  let result = asyncSeq { yield 1; yield 2; yield 3; yield 4; yield 5 }
+               |> AsyncSeq.reduce (+)
+               |> Async.RunSynchronously
+  Assert.AreEqual(15, result)
+
+[<Test>]
+let ``AsyncSeq.reduce single element returns that element`` () =
+  let result = asyncSeq { yield 42 }
+               |> AsyncSeq.reduce (+)
+               |> Async.RunSynchronously
+  Assert.AreEqual(42, result)
+
+[<Test>]
+let ``AsyncSeq.reduce empty sequence raises InvalidOperationException`` () =
+  Assert.Throws<InvalidOperationException>(fun () ->
+    AsyncSeq.empty<int>
+    |> AsyncSeq.reduce (+)
+    |> Async.RunSynchronously
+    |> ignore) |> ignore
+
+[<Test>]
+let ``AsyncSeq.reduceAsync accumulates with async function`` () =
+  async {
+    let result =
+      asyncSeq { yield 10; yield 3; yield 2 }
+      |> AsyncSeq.reduceAsync (fun a b -> async { return a - b })
+      |> Async.RunSynchronously
+    Assert.AreEqual(5, result)
+  } |> Async.RunSynchronously
+
+[<Test>]
+let ``AsyncSeq.reduce matches Seq.reduce`` () =
+  for ls in [ [1]; [1;2]; [3;1;4;1;5;9;2;6] ] do
+    let expected = Seq.reduce (+) ls
+    let actual = AsyncSeq.ofSeq ls |> AsyncSeq.reduce (+) |> Async.RunSynchronously
+    Assert.AreEqual(expected, actual)
+
+[<Test>]
 let ``AsyncSeq.ofSeq should work with large sequence``() =
   let largeSeq = seq { 1 .. 100 }
   let asyncSeq = AsyncSeq.ofSeq largeSeq
@@ -2552,6 +2637,46 @@ let ``AsyncSeq.pairwise with three elements should produce two pairs`` () =
   let source = asyncSeq { yield 1; yield 2; yield 3 }
   let result = AsyncSeq.pairwise source |> AsyncSeq.toListSynchronously
   Assert.AreEqual([(1, 2); (2, 3)], result)
+
+[<Test>]
+let ``AsyncSeq.windowed empty sequence returns empty`` () =
+  let result = AsyncSeq.windowed 3 AsyncSeq.empty<int> |> AsyncSeq.toListSynchronously
+  Assert.AreEqual([], result)
+
+[<Test>]
+let ``AsyncSeq.windowed fewer elements than window returns empty`` () =
+  let source = asyncSeq { yield 1; yield 2 }
+  let result = AsyncSeq.windowed 3 source |> AsyncSeq.toListSynchronously
+  Assert.AreEqual([], result)
+
+[<Test>]
+let ``AsyncSeq.windowed exact window size returns single window`` () =
+  let source = asyncSeq { yield 1; yield 2; yield 3 }
+  let result = AsyncSeq.windowed 3 source |> AsyncSeq.toListSynchronously
+  Assert.AreEqual([[|1; 2; 3|]], result)
+
+[<Test>]
+let ``AsyncSeq.windowed sliding window produces correct windows`` () =
+  let source = asyncSeq { yield 1; yield 2; yield 3; yield 4; yield 5 }
+  let result = AsyncSeq.windowed 3 source |> AsyncSeq.toListSynchronously
+  Assert.AreEqual([[|1;2;3|]; [|2;3;4|]; [|3;4;5|]], result)
+
+[<Test>]
+let ``AsyncSeq.windowed size 1 returns each element as singleton array`` () =
+  let source = asyncSeq { yield 10; yield 20; yield 30 }
+  let result = AsyncSeq.windowed 1 source |> AsyncSeq.toListSynchronously
+  Assert.AreEqual([[|10|]; [|20|]; [|30|]], result)
+
+[<Test>]
+let ``AsyncSeq.windowed size 2 is equivalent to pairwise as arrays`` () =
+  let source = asyncSeq { yield 1; yield 2; yield 3; yield 4 }
+  let result = AsyncSeq.windowed 2 source |> AsyncSeq.toListSynchronously
+  Assert.AreEqual([[|1;2|]; [|2;3|]; [|3;4|]], result)
+
+[<Test>]
+let ``AsyncSeq.windowed with size 0 raises ArgumentException`` () =
+  Assert.Throws<System.ArgumentException>(fun () ->
+    AsyncSeq.windowed 0 (asyncSeq { yield 1 }) |> AsyncSeq.toListSynchronously |> ignore) |> ignore
 
 [<Test>]
 let ``AsyncSeq.distinctUntilChangedWith should work with custom equality`` () =
