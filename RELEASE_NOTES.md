@@ -1,3 +1,11 @@
+### 4.1.0
+
+* Added `AsyncSeq.windowed` — produces a sliding window of a given size over an async sequence ([PR #241](https://github.com/fsprojects/FSharp.Control.AsyncSeq/pull/241)).
+* Added `AsyncSeq.reduce` and `AsyncSeq.reduceAsync` — folds without a seed value, mirroring `Seq.reduce` ([PR #242](https://github.com/fsprojects/FSharp.Control.AsyncSeq/pull/242)).
+* Added `AsyncSeq.sumBy`, `AsyncSeq.sumByAsync`, `AsyncSeq.average`, `AsyncSeq.averageBy`, and `AsyncSeq.averageByAsync` — numeric aggregation combinators mirroring the corresponding `Seq` module functions ([PR #245](https://github.com/fsprojects/FSharp.Control.AsyncSeq/pull/245)).
+* Added `AsyncSeq.min`, `AsyncSeq.max`, `AsyncSeq.minBy`, `AsyncSeq.maxBy`, `AsyncSeq.minByAsync`, and `AsyncSeq.maxByAsync` — min/max aggregation combinators mirroring `Seq.min`/`Seq.max`/`Seq.minBy`/`Seq.maxBy` ([PR #243](https://github.com/fsprojects/FSharp.Control.AsyncSeq/pull/243)).
+* Added `AsyncSeq.distinct`, `AsyncSeq.distinctBy`, `AsyncSeq.distinctByAsync`, `AsyncSeq.countBy`, `AsyncSeq.countByAsync`, `AsyncSeq.exactlyOne`, and `AsyncSeq.tryExactlyOne` — set-membership and cardinality combinators mirroring the corresponding `Seq` module functions ([PR #249](https://github.com/fsprojects/FSharp.Control.AsyncSeq/pull/249)).
+
 ### 4.0.0
 
 * **Breaking:** `AsyncSeq<'T>` is now `System.Collections.Generic.IAsyncEnumerable<'T>` (the BCL type). `ofAsyncEnum` and `toAsyncEnum` are now identity functions and marked `[<Obsolete>]`. Code that directly calls `.GetEnumerator()`/`.MoveNext()` must switch to `.GetAsyncEnumerator(ct)`/`.MoveNextAsync()` ([#230](https://github.com/fsprojects/FSharp.Control.AsyncSeq/issues/230), [PR #231](https://github.com/fsprojects/FSharp.Control.AsyncSeq/pull/231)).
