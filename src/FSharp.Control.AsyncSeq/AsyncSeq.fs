@@ -1060,6 +1060,28 @@ module AsyncSeq =
       | None -> return def
       | Some v -> return v }
 
+  let exactlyOne (source : AsyncSeq<'T>) = async {
+      use ie = source.GetEnumerator()
+      let! first = ie.MoveNext()
+      match first with
+      | None -> return raise (System.InvalidOperationException("The input sequence was empty."))
+      | Some v ->
+          let! second = ie.MoveNext()
+          match second with
+          | None -> return v
+          | Some _ -> return raise (System.InvalidOperationException("The input sequence contains more than one element.")) }
+
+  let tryExactlyOne (source : AsyncSeq<'T>) = async {
+      use ie = source.GetEnumerator()
+      let! first = ie.MoveNext()
+      match first with
+      | None -> return None
+      | Some v ->
+          let! second = ie.MoveNext()
+          match second with
+          | None -> return Some v
+          | Some _ -> return None }
+
   let scanAsync f (state:'TState) (source : AsyncSeq<'T>) = asyncSeq {
         yield state
         let z = ref state
@@ -1251,6 +1273,22 @@ module AsyncSeq =
       if count = 0 then invalidArg "source" "The input sequence was empty."
       return LanguagePrimitives.DivideByInt sum count
     }
+
+  let countByAsync (projection : 'T -> Async<'Key>) (source : AsyncSeq<'T>) : Async<('Key * int) array> =
+    async {
+      let! dict =
+        source |> foldAsync (fun (d : System.Collections.Generic.Dictionary<'Key,int>) v ->
+          async {
+            let! k = projection v
+            let mutable cnt = 0
+            if d.TryGetValue(k, &cnt) then d.[k] <- cnt + 1
+            else d.[k] <- 1
+            return d
+          }) (System.Collections.Generic.Dictionary<'Key,int>())
+      return dict |> Seq.map (fun kv -> kv.Key, kv.Value) |> Seq.toArray }
+
+  let countBy (projection : 'T -> 'Key) (source : AsyncSeq<'T>) : Async<('Key * int) array> =
+    countByAsync (projection >> async.Return) source
 
   let scan f (state:'State) (source : AsyncSeq<'T>) =
     scanAsync (fun st v -> f st v |> async.Return) state source
@@ -1996,6 +2034,19 @@ module AsyncSeq =
 
   let distinctUntilChanged (s:AsyncSeq<'T>) : AsyncSeq<'T> =
     distinctUntilChangedWith ((=)) s
+
+  let distinctByAsync (projection : 'T -> Async<'Key>) (source : AsyncSeq<'T>) : AsyncSeq<'T> = asyncSeq {
+      let seen = System.Collections.Generic.HashSet<'Key>()
+      for v in source do
+        let! k = projection v
+        if seen.Add(k) then
+          yield v }
+
+  let distinctBy (projection : 'T -> 'Key) (source : AsyncSeq<'T>) : AsyncSeq<'T> =
+    distinctByAsync (projection >> async.Return) source
+
+  let distinct (source : AsyncSeq<'T>) : AsyncSeq<'T> =
+    distinctBy id source
 
   let getIterator (s:AsyncSeq<'T>) : (unit -> Async<'T option>) =
       let curr = s.GetEnumerator()

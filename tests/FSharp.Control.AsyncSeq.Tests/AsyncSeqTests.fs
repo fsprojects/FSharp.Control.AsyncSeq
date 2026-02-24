@@ -2907,3 +2907,106 @@ let ``AsyncSeq.chunkByAsync groups consecutive equal keys`` () =
   } |> Async.RunSynchronously
 
 
+
+// ===== distinct / distinctBy / distinctByAsync =====
+
+[<Test>]
+let ``AsyncSeq.distinct removes all duplicates`` () =
+  let source = asyncSeq { yield 1; yield 2; yield 1; yield 3; yield 2 }
+  let result = AsyncSeq.distinct source |> AsyncSeq.toListSynchronously
+  Assert.AreEqual([1; 2; 3], result)
+
+[<Test>]
+let ``AsyncSeq.distinct empty sequence returns empty`` () =
+  let result = AsyncSeq.distinct AsyncSeq.empty<int> |> AsyncSeq.toListSynchronously
+  Assert.AreEqual([], result)
+
+[<Test>]
+let ``AsyncSeq.distinct all unique elements returns all`` () =
+  let source = asyncSeq { yield 1; yield 2; yield 3 }
+  let result = AsyncSeq.distinct source |> AsyncSeq.toListSynchronously
+  Assert.AreEqual([1; 2; 3], result)
+
+[<Test>]
+let ``AsyncSeq.distinctBy removes duplicates by key`` () =
+  let source = asyncSeq { yield (1, "a"); yield (2, "b"); yield (1, "c") }
+  let result = AsyncSeq.distinctBy fst source |> AsyncSeq.toListSynchronously
+  Assert.AreEqual([(1, "a"); (2, "b")], result)
+
+[<Test>]
+let ``AsyncSeq.distinctByAsync removes duplicates by async key`` () =
+  async {
+    let source = asyncSeq { yield 1; yield 2; yield 1; yield 3 }
+    let result = AsyncSeq.distinctByAsync (fun x -> async { return x % 2 }) source |> AsyncSeq.toListSynchronously
+    Assert.AreEqual([1; 2], result)
+  } |> Async.RunSynchronously
+
+// ===== countBy / countByAsync =====
+
+[<Test>]
+let ``AsyncSeq.countBy counts elements by key`` () =
+  async {
+    let source = asyncSeq { yield 1; yield 2; yield 1; yield 3; yield 2; yield 2 }
+    let result = AsyncSeq.countBy id source |> Async.RunSynchronously
+    let sorted = result |> Array.sortBy fst
+    Assert.AreEqual([| (1, 2); (2, 3); (3, 1) |], sorted)
+  } |> Async.RunSynchronously
+
+[<Test>]
+let ``AsyncSeq.countBy empty sequence returns empty array`` () =
+  async {
+    let result = AsyncSeq.countBy id AsyncSeq.empty<int> |> Async.RunSynchronously
+    Assert.AreEqual([||], result)
+  } |> Async.RunSynchronously
+
+[<Test>]
+let ``AsyncSeq.countByAsync counts elements by async key`` () =
+  async {
+    let source = asyncSeq { yield 1; yield 2; yield 3; yield 4 }
+    let result = AsyncSeq.countByAsync (fun x -> async { return x % 2 }) source |> Async.RunSynchronously
+    let sorted = result |> Array.sortBy fst
+    Assert.AreEqual([| (0, 2); (1, 2) |], sorted)
+  } |> Async.RunSynchronously
+
+// ===== exactlyOne / tryExactlyOne =====
+
+[<Test>]
+let ``AsyncSeq.exactlyOne returns single element`` () =
+  async {
+    let source = asyncSeq { yield 42 }
+    let result = AsyncSeq.exactlyOne source |> Async.RunSynchronously
+    Assert.AreEqual(42, result)
+  } |> Async.RunSynchronously
+
+[<Test>]
+let ``AsyncSeq.exactlyOne raises on empty sequence`` () =
+  Assert.Throws<InvalidOperationException>(fun () ->
+    AsyncSeq.exactlyOne AsyncSeq.empty<int> |> Async.RunSynchronously |> ignore) |> ignore
+
+[<Test>]
+let ``AsyncSeq.exactlyOne raises on sequence with more than one element`` () =
+  Assert.Throws<InvalidOperationException>(fun () ->
+    asyncSeq { yield 1; yield 2 } |> AsyncSeq.exactlyOne |> Async.RunSynchronously |> ignore) |> ignore
+
+[<Test>]
+let ``AsyncSeq.tryExactlyOne returns Some for single element`` () =
+  async {
+    let source = asyncSeq { yield 42 }
+    let result = AsyncSeq.tryExactlyOne source |> Async.RunSynchronously
+    Assert.AreEqual(Some 42, result)
+  } |> Async.RunSynchronously
+
+[<Test>]
+let ``AsyncSeq.tryExactlyOne returns None for empty sequence`` () =
+  async {
+    let result = AsyncSeq.tryExactlyOne AsyncSeq.empty<int> |> Async.RunSynchronously
+    Assert.AreEqual(None, result)
+  } |> Async.RunSynchronously
+
+[<Test>]
+let ``AsyncSeq.tryExactlyOne returns None for sequence with more than one element`` () =
+  async {
+    let source = asyncSeq { yield 1; yield 2 }
+    let result = AsyncSeq.tryExactlyOne source |> Async.RunSynchronously
+    Assert.AreEqual(None, result)
+  } |> Async.RunSynchronously

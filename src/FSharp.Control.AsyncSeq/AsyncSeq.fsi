@@ -163,6 +163,14 @@ module AsyncSeq =
     /// given asynchronous sequence (or None if the sequence is empty).
     val tryFirst : source:AsyncSeq<'T> -> Async<'T option>
 
+    /// Asynchronously returns the only element of the asynchronous sequence.
+    /// Raises InvalidOperationException if the sequence is empty or contains more than one element.
+    val exactlyOne : source:AsyncSeq<'T> -> Async<'T>
+
+    /// Asynchronously returns the only element of the asynchronous sequence, or None if the
+    /// sequence is empty or contains more than one element.
+    val tryExactlyOne : source:AsyncSeq<'T> -> Async<'T option>
+
     /// Aggregates the elements of the input asynchronous sequence using the
     /// specified 'aggregation' function. The result is an asynchronous
     /// sequence of intermediate aggregation result.
@@ -275,6 +283,14 @@ module AsyncSeq =
                                 when ^U : (static member ( + ) : ^U * ^U -> ^U)
                                 and  ^U : (static member DivideByInt : ^U * int -> ^U)
                                 and  ^U : (static member Zero : ^U)
+
+    /// Asynchronously count the elements of the input asynchronous sequence grouped by the result of the given asynchronous key projection.
+    /// Returns an array of (key, count) pairs.
+    val countByAsync : projection:('T -> Async<'Key>) -> source:AsyncSeq<'T> -> Async<('Key * int) array> when 'Key : equality
+
+    /// Asynchronously count the elements of the input asynchronous sequence grouped by the result of the given key projection.
+    /// Returns an array of (key, count) pairs.
+    val countBy : projection:('T -> 'Key) -> source:AsyncSeq<'T> -> Async<('Key * int) array> when 'Key : equality
 
     /// Asynchronously determine if the sequence contains the given value
     val contains : value:'T -> source:AsyncSeq<'T> -> Async<bool> when 'T : equality
@@ -593,6 +609,18 @@ module AsyncSeq =
 
     /// Returns an async sequence which contains no contiguous duplicate elements.
     val distinctUntilChanged : source:AsyncSeq<'T> -> AsyncSeq<'T> when 'T : equality
+
+    /// Returns an async sequence containing only distinct elements, determined by the given asynchronous key projection.
+    /// Elements are compared using structural equality on the projected key.
+    val distinctByAsync : projection:('T -> Async<'Key>) -> source:AsyncSeq<'T> -> AsyncSeq<'T> when 'Key : equality
+
+    /// Returns an async sequence containing only distinct elements, determined by the given key projection.
+    /// Elements are compared using structural equality on the projected key.
+    val distinctBy : projection:('T -> 'Key) -> source:AsyncSeq<'T> -> AsyncSeq<'T> when 'Key : equality
+
+    /// Returns an async sequence containing only distinct elements.
+    /// Elements are compared using structural equality.
+    val distinct : source:AsyncSeq<'T> -> AsyncSeq<'T> when 'T : equality
 
 #if FABLE_COMPILER
     [<System.Obsolete("Use .GetEnumerator directly") >]
