@@ -214,6 +214,14 @@ module AsyncSeq =
     /// specified 'aggregation' function.
     val fold : folder:('State -> 'T -> 'State) -> state:'State -> source:AsyncSeq<'T> -> Async<'State>
 
+    /// Asynchronously reduce the elements of the input asynchronous sequence using the
+    /// specified asynchronous 'reduction' function. Raises InvalidOperationException if the sequence is empty.
+    val reduceAsync : reduction:('T -> 'T -> Async<'T>) -> source:AsyncSeq<'T> -> Async<'T>
+
+    /// Asynchronously reduce the elements of the input asynchronous sequence using the
+    /// specified 'reduction' function. Raises InvalidOperationException if the sequence is empty.
+    val reduce : reduction:('T -> 'T -> 'T) -> source:AsyncSeq<'T> -> Async<'T>
+
     /// Asynchronously sum the elements of the input asynchronous sequence using the specified function.
     val inline sum : source:AsyncSeq< ^T > -> Async< ^T>
                                 when ^T : (static member ( + ) : ^T * ^T -> ^T)
