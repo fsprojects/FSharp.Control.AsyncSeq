@@ -1,20 +1,20 @@
 {
-  "last_run": "2026-02-24T12:09:34Z",
-  "workflow_run_id": "22350132655",
-  "run_number": 30,
-  "tasks_run_this_session": ["task_5", "task_9", "task_6", "task_11"],
+  "last_run": "2026-02-24T12:16:02Z",
+  "workflow_run_id": "22350350120",
+  "run_number": 31,
+  "tasks_run_this_session": ["task_10", "task_11"],
   "last_task_run": {
     "task_1": "2026-02-22T13:41:00Z",
     "task_2": "2026-02-22T13:41:00Z",
-    "task_3": "2026-02-23T20:01:33Z",
+    "task_3": "2026-02-24T12:16:02Z",
     "task_4": "2026-02-24T02:25:52Z",
     "task_5": "2026-02-24T12:09:34Z",
     "task_6": "2026-02-24T12:09:34Z",
     "task_7": "2026-02-22T13:20:00Z",
     "task_8": "2026-02-24T02:25:52Z",
     "task_9": "2026-02-24T12:09:34Z",
-    "task_10": "2026-02-23T20:36:28Z",
-    "task_11": "2026-02-24T12:09:34Z"
+    "task_10": "2026-02-24T12:16:02Z",
+    "task_11": "2026-02-24T12:16:02Z"
   },
   "issue_cursor": null,
   "pr_cursor": null,
@@ -58,7 +58,8 @@
     "244": "docs: Contributing section to README (merged)",
     "245": "AsyncSeq.sumBy/sumByAsync/average/averageBy/averageByAsync (merged)",
     "246": "release 4.1.0 prep (open, updated to include #243)",
-    "247": "deps update BenchmarkDotNet/TestSdk/coverlet (open)"
+    "247": "deps update BenchmarkDotNet/TestSdk/coverlet (open)",
+    "249_pending": "distinct/distinctBy/distinctByAsync/countBy/countByAsync/exactlyOne/tryExactlyOne (open, PR number TBD)"
   },
   "welcomed_users": [],
   "stale_pr_nudged": [],
@@ -67,12 +68,12 @@
     "Monthly Activity issue #248 (2026-02) is open",
     "PR #246 (release 4.1.0): open draft, updated to include min/max/minBy/maxBy in release notes",
     "PR #247 (test deps): open draft, clean",
-    "PR #243 (min/max): merged by dsyme on 2026-02-24",
+    "New PR created (pending number): distinct/distinctBy/distinctByAsync/countBy/countByAsync/exactlyOne/tryExactlyOne; 234 tests pass",
     "NUnit 3.9.0 -> 4.x update not done (major, requires test code changes)",
     "FSharp.Core minimum version update not done (would be a breaking library change)",
     "v4.0.0 released on NuGet but no GitHub Release created; release 4.1.0 prep PR open",
     "Fable test pre-existing build errors: FS0039/FS0041 in AsyncSeq.test.fs (need investigation)",
-    "Next task priorities: task_1 (triage), task_2 (fix issues), task_7 (labels), task_10 (forward work)",
-    "Future feature ideas: zip3, countBy/countByAsync, distinctBy/distinctByAsync, exactlyOne"
+    "Next task priorities: task_7 (labels - no open issues), task_1 (triage - no open issues), task_2 (fix issues), task_4 (deps/engineering)",
+    "Future feature ideas: zip3, fix Fable test build errors"
   ]
 }
