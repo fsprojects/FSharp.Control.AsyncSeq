@@ -2600,6 +2600,46 @@ let ``AsyncSeq.pairwise with three elements should produce two pairs`` () =
   Assert.AreEqual([(1, 2); (2, 3)], result)
 
 [<Test>]
+let ``AsyncSeq.windowed empty sequence returns empty`` () =
+  let result = AsyncSeq.windowed 3 AsyncSeq.empty<int> |> AsyncSeq.toListSynchronously
+  Assert.AreEqual([], result)
+
+[<Test>]
+let ``AsyncSeq.windowed fewer elements than window returns empty`` () =
+  let source = asyncSeq { yield 1; yield 2 }
+  let result = AsyncSeq.windowed 3 source |> AsyncSeq.toListSynchronously
+  Assert.AreEqual([], result)
+
+[<Test>]
+let ``AsyncSeq.windowed exact window size returns single window`` () =
+  let source = asyncSeq { yield 1; yield 2; yield 3 }
+  let result = AsyncSeq.windowed 3 source |> AsyncSeq.toListSynchronously
+  Assert.AreEqual([[|1; 2; 3|]], result)
+
+[<Test>]
+let ``AsyncSeq.windowed sliding window produces correct windows`` () =
+  let source = asyncSeq { yield 1; yield 2; yield 3; yield 4; yield 5 }
+  let result = AsyncSeq.windowed 3 source |> AsyncSeq.toListSynchronously
+  Assert.AreEqual([[|1;2;3|]; [|2;3;4|]; [|3;4;5|]], result)
+
+[<Test>]
+let ``AsyncSeq.windowed size 1 returns each element as singleton array`` () =
+  let source = asyncSeq { yield 10; yield 20; yield 30 }
+  let result = AsyncSeq.windowed 1 source |> AsyncSeq.toListSynchronously
+  Assert.AreEqual([[|10|]; [|20|]; [|30|]], result)
+
+[<Test>]
+let ``AsyncSeq.windowed size 2 is equivalent to pairwise as arrays`` () =
+  let source = asyncSeq { yield 1; yield 2; yield 3; yield 4 }
+  let result = AsyncSeq.windowed 2 source |> AsyncSeq.toListSynchronously
+  Assert.AreEqual([[|1;2|]; [|2;3|]; [|3;4|]], result)
+
+[<Test>]
+let ``AsyncSeq.windowed with size 0 raises ArgumentException`` () =
+  Assert.Throws<System.ArgumentException>(fun () ->
+    AsyncSeq.windowed 0 (asyncSeq { yield 1 }) |> AsyncSeq.toListSynchronously |> ignore) |> ignore
+
+[<Test>]
 let ``AsyncSeq.distinctUntilChangedWith should work with custom equality`` () =
   let source = asyncSeq { yield "a"; yield "A"; yield "B"; yield "b"; yield "c" }
   let customEq (x: string) (y: string) = x.ToLower() = y.ToLower()
