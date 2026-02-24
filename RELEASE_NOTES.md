@@ -4,6 +4,7 @@
 * Added `AsyncSeq.reduce` and `AsyncSeq.reduceAsync` — folds without a seed value, mirroring `Seq.reduce` ([PR #242](https://github.com/fsprojects/FSharp.Control.AsyncSeq/pull/242)).
 * Added `AsyncSeq.sumBy`, `AsyncSeq.sumByAsync`, `AsyncSeq.average`, `AsyncSeq.averageBy`, and `AsyncSeq.averageByAsync` — numeric aggregation combinators mirroring the corresponding `Seq` module functions ([PR #245](https://github.com/fsprojects/FSharp.Control.AsyncSeq/pull/245)).
 * Added `AsyncSeq.min`, `AsyncSeq.max`, `AsyncSeq.minBy`, `AsyncSeq.maxBy`, `AsyncSeq.minByAsync`, and `AsyncSeq.maxByAsync` — min/max aggregation combinators mirroring `Seq.min`/`Seq.max`/`Seq.minBy`/`Seq.maxBy` ([PR #243](https://github.com/fsprojects/FSharp.Control.AsyncSeq/pull/243)).
+* Added `AsyncSeq.distinct`, `AsyncSeq.distinctBy`, `AsyncSeq.distinctByAsync`, `AsyncSeq.countBy`, `AsyncSeq.countByAsync`, `AsyncSeq.exactlyOne`, and `AsyncSeq.tryExactlyOne` — set-membership and cardinality combinators mirroring the corresponding `Seq` module functions ([PR #249](https://github.com/fsprojects/FSharp.Control.AsyncSeq/pull/249)).
 
 ### 4.0.0
 
