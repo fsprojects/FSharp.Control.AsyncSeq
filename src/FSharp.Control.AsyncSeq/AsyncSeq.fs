@@ -1151,6 +1151,33 @@ module AsyncSeq =
   let inline sum (source : AsyncSeq<'T>) : Async<'T> =
     (LanguagePrimitives.GenericZero, source) ||> fold (+)
 
+  let inline sumBy (projection : 'T -> ^U) (source : AsyncSeq<'T>) : Async<^U> =
+    fold (fun s x -> s + projection x) LanguagePrimitives.GenericZero source
+
+  let inline sumByAsync (projection : 'T -> Async<^U>) (source : AsyncSeq<'T>) : Async<^U> =
+    foldAsync (fun s x -> async { let! v = projection x in return s + v }) LanguagePrimitives.GenericZero source
+
+  let inline average (source : AsyncSeq<^T>) : Async<^T> =
+    async {
+      let! sum, count = fold (fun (s, n) x -> (s + x, n + 1)) (LanguagePrimitives.GenericZero, 0) source
+      if count = 0 then invalidArg "source" "The input sequence was empty."
+      return LanguagePrimitives.DivideByInt sum count
+    }
+
+  let inline averageBy (projection : 'T -> ^U) (source : AsyncSeq<'T>) : Async<^U> =
+    async {
+      let! sum, count = fold (fun (s, n) x -> (s + projection x, n + 1)) (LanguagePrimitives.GenericZero, 0) source
+      if count = 0 then invalidArg "source" "The input sequence was empty."
+      return LanguagePrimitives.DivideByInt sum count
+    }
+
+  let inline averageByAsync (projection : 'T -> Async<^U>) (source : AsyncSeq<'T>) : Async<^U> =
+    async {
+      let! sum, count = foldAsync (fun (s, n) x -> async { let! v = projection x in return (s + v, n + 1) }) (LanguagePrimitives.GenericZero, 0) source
+      if count = 0 then invalidArg "source" "The input sequence was empty."
+      return LanguagePrimitives.DivideByInt sum count
+    }
+
   let scan f (state:'State) (source : AsyncSeq<'T>) =
     scanAsync (fun st v -> f st v |> async.Return) state source
 

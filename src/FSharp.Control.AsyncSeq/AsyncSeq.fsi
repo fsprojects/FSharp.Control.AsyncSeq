@@ -211,6 +211,37 @@ module AsyncSeq =
                                 when ^T : (static member ( + ) : ^T * ^T -> ^T)
                                 and  ^T : (static member Zero : ^T)
 
+    /// Asynchronously sum the mapped elements of an asynchronous sequence using a synchronous projection.
+    val inline sumBy : projection:('T -> ^U) -> source:AsyncSeq<'T> -> Async< ^U>
+                                when ^U : (static member ( + ) : ^U * ^U -> ^U)
+                                and  ^U : (static member Zero : ^U)
+
+    /// Asynchronously sum the mapped elements of an asynchronous sequence using an asynchronous projection.
+    val inline sumByAsync : projection:('T -> Async< ^U>) -> source:AsyncSeq<'T> -> Async< ^U>
+                                when ^U : (static member ( + ) : ^U * ^U -> ^U)
+                                and  ^U : (static member Zero : ^U)
+
+    /// Asynchronously compute the average of the elements of the input asynchronous sequence.
+    /// Raises InvalidArgumentException if the sequence is empty.
+    val inline average : source:AsyncSeq< ^T> -> Async< ^T>
+                                when ^T : (static member ( + ) : ^T * ^T -> ^T)
+                                and  ^T : (static member DivideByInt : ^T * int -> ^T)
+                                and  ^T : (static member Zero : ^T)
+
+    /// Asynchronously compute the average of the mapped elements of an asynchronous sequence using a synchronous projection.
+    /// Raises InvalidArgumentException if the sequence is empty.
+    val inline averageBy : projection:('T -> ^U) -> source:AsyncSeq<'T> -> Async< ^U>
+                                when ^U : (static member ( + ) : ^U * ^U -> ^U)
+                                and  ^U : (static member DivideByInt : ^U * int -> ^U)
+                                and  ^U : (static member Zero : ^U)
+
+    /// Asynchronously compute the average of the mapped elements of an asynchronous sequence using an asynchronous projection.
+    /// Raises InvalidArgumentException if the sequence is empty.
+    val inline averageByAsync : projection:('T -> Async< ^U>) -> source:AsyncSeq<'T> -> Async< ^U>
+                                when ^U : (static member ( + ) : ^U * ^U -> ^U)
+                                and  ^U : (static member DivideByInt : ^U * int -> ^U)
+                                and  ^U : (static member Zero : ^U)
+
     /// Asynchronously determine if the sequence contains the given value
     val contains : value:'T -> source:AsyncSeq<'T> -> Async<bool> when 'T : equality
 
