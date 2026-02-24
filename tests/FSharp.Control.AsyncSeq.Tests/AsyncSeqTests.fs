@@ -212,6 +212,54 @@ let ``AsyncSeq.sum works``() =
       Assert.True((expected = actual))
 
 [<Test>]
+let ``AsyncSeq.min returns minimum element``() =
+  for i in 1 .. 10 do
+      let ls = [ 1 .. i ] |> List.rev
+      let actual = AsyncSeq.ofSeq ls |> AsyncSeq.min |> Async.RunSynchronously
+      Assert.AreEqual(1, actual)
+
+[<Test>]
+let ``AsyncSeq.min raises on empty sequence``() =
+  Assert.Throws<System.InvalidOperationException>(fun () ->
+      AsyncSeq.empty<int> |> AsyncSeq.min |> Async.RunSynchronously |> ignore) |> ignore
+
+[<Test>]
+let ``AsyncSeq.max returns maximum element``() =
+  for i in 1 .. 10 do
+      let ls = [ 1 .. i ]
+      let actual = AsyncSeq.ofSeq ls |> AsyncSeq.max |> Async.RunSynchronously
+      Assert.AreEqual(i, actual)
+
+[<Test>]
+let ``AsyncSeq.max raises on empty sequence``() =
+  Assert.Throws<System.InvalidOperationException>(fun () ->
+      AsyncSeq.empty<int> |> AsyncSeq.max |> Async.RunSynchronously |> ignore) |> ignore
+
+[<Test>]
+let ``AsyncSeq.minBy returns element with minimum projected value``() =
+  let ls = [ ("b", 2); ("a", 1); ("c", 3) ]
+  let actual = AsyncSeq.ofSeq ls |> AsyncSeq.minBy snd |> Async.RunSynchronously
+  Assert.AreEqual(("a", 1), actual)
+
+[<Test>]
+let ``AsyncSeq.maxBy returns element with maximum projected value``() =
+  let ls = [ ("b", 2); ("a", 1); ("c", 3) ]
+  let actual = AsyncSeq.ofSeq ls |> AsyncSeq.maxBy snd |> Async.RunSynchronously
+  Assert.AreEqual(("c", 3), actual)
+
+[<Test>]
+let ``AsyncSeq.minByAsync uses async projection``() =
+  let ls = [ 3; 1; 4; 1; 5; 9 ]
+  let actual = AsyncSeq.ofSeq ls |> AsyncSeq.minByAsync (fun x -> async.Return x) |> Async.RunSynchronously
+  Assert.AreEqual(1, actual)
+
+[<Test>]
+let ``AsyncSeq.maxByAsync uses async projection``() =
+  let ls = [ 3; 1; 4; 1; 5; 9 ]
+  let actual = AsyncSeq.ofSeq ls |> AsyncSeq.maxByAsync (fun x -> async.Return x) |> Async.RunSynchronously
+  Assert.AreEqual(9, actual)
+
+[<Test>]
 let ``AsyncSeq.sumBy works``() =
   for i in 0 .. 10 do
       let ls = [ 1 .. i ]

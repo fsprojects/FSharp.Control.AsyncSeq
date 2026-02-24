@@ -227,6 +227,24 @@ module AsyncSeq =
                                 when ^T : (static member ( + ) : ^T * ^T -> ^T)
                                 and  ^T : (static member Zero : ^T)
 
+    /// Asynchronously find the element with the minimum projected value. Raises InvalidOperationException if the sequence is empty.
+    val minByAsync : projection:('T -> Async<'Key>) -> source:AsyncSeq<'T> -> Async<'T> when 'Key : comparison
+
+    /// Asynchronously find the element with the minimum projected value. Raises InvalidOperationException if the sequence is empty.
+    val minBy : projection:('T -> 'Key) -> source:AsyncSeq<'T> -> Async<'T> when 'Key : comparison
+
+    /// Asynchronously find the element with the maximum projected value. Raises InvalidOperationException if the sequence is empty.
+    val maxByAsync : projection:('T -> Async<'Key>) -> source:AsyncSeq<'T> -> Async<'T> when 'Key : comparison
+
+    /// Asynchronously find the element with the maximum projected value. Raises InvalidOperationException if the sequence is empty.
+    val maxBy : projection:('T -> 'Key) -> source:AsyncSeq<'T> -> Async<'T> when 'Key : comparison
+
+    /// Asynchronously find the minimum element. Raises InvalidOperationException if the sequence is empty.
+    val min : source:AsyncSeq<'T> -> Async<'T> when 'T : comparison
+
+    /// Asynchronously find the maximum element. Raises InvalidOperationException if the sequence is empty.
+    val max : source:AsyncSeq<'T> -> Async<'T> when 'T : comparison
+
     /// Asynchronously sum the mapped elements of an asynchronous sequence using a synchronous projection.
     val inline sumBy : projection:('T -> ^U) -> source:AsyncSeq<'T> -> Async< ^U>
                                 when ^U : (static member ( + ) : ^U * ^U -> ^U)
