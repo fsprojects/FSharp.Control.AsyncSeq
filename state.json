@@ -1,8 +1,8 @@
 {
-  "last_run": "2026-02-24T17:48:32Z",
-  "workflow_run_id": "22362991497",
-  "run_number": 34,
-  "tasks_run_this_session": ["task_5", "task_11"],
+  "last_run": "2026-02-24T21:55:02Z",
+  "workflow_run_id": "22371680169",
+  "run_number": 35,
+  "tasks_run_this_session": ["command_mode_issue_251"],
   "last_task_run": {
     "task_1": "2026-02-24T12:26:25Z",
     "task_2": "2026-02-22T13:41:00Z",
@@ -14,7 +14,7 @@
     "task_8": "2026-02-24T02:25:52Z",
     "task_9": "2026-02-24T12:34:53Z",
     "task_10": "2026-02-24T12:16:02Z",
-    "task_11": "2026-02-24T17:48:32Z"
+    "task_11": "2026-02-24T21:55:02Z"
   },
   "issue_cursor": null,
   "pr_cursor": null,
@@ -27,7 +27,8 @@
     "160": "2026-02-20T22:00:00Z",
     "230": "2026-02-22T10:00:00Z",
     "125": "2026-02-22T13:41:00Z",
-    "123": "2026-02-22T13:41:00Z"
+    "123": "2026-02-22T13:41:00Z",
+    "251": "2026-02-24T21:55:02Z"
   },
   "fix_attempts": {
     "165": {"pr": 221, "status": "merged"},
@@ -37,7 +38,8 @@
     "152": {"pr": 229, "status": "merged"},
     "230": {"pr": 231, "status": "merged"},
     "125": {"pr": 235, "status": "merged"},
-    "123": {"pr": 236, "status": "merged"}
+    "123": {"pr": 236, "status": "merged"},
+    "251": {"pr": "tbd", "status": "open", "branch": "repo-assist/fix-issue-251-nuget-trusted-publishing"}
   },
   "improvement_prs": {
     "221": "mergeAll seq (merged)",
@@ -57,24 +59,25 @@
     "243": "AsyncSeq.min/max/minBy/maxBy/minByAsync/maxByAsync (merged)",
     "244": "docs: Contributing section to README (merged)",
     "245": "AsyncSeq.sumBy/sumByAsync/average/averageBy/averageByAsync (merged)",
-    "246": "release 4.1.0 prep (open, RELEASE_NOTES includes #241-#243,#245)",
-    "247": "deps update BenchmarkDotNet/TestSdk/coverlet (open)",
-    "249": "distinct/distinctBy/distinctByAsync/countBy/countByAsync/exactlyOne/tryExactlyOne (open)"
+    "246": "release 4.1.0 prep (merged per git log)",
+    "247": "deps update BenchmarkDotNet/TestSdk/coverlet (merged per maintainer checkbox)",
+    "249": "distinct/distinctBy/distinctByAsync/countBy/countByAsync/exactlyOne/tryExactlyOne (merged per maintainer checkbox)",
+    "trusted-publishing": "NuGet OIDC trusted publishing for issue #251 (open draft, branch: repo-assist/fix-issue-251-nuget-trusted-publishing)"
   },
   "welcomed_users": [],
   "stale_pr_nudged": [],
   "monthly_activity_issue": 248,
   "notes": [
     "Monthly Activity issue #248 (2026-02) is open",
-    "PR #246 (release 4.1.0): open draft, updated to include min/max/minBy/maxBy in release notes",
-    "PR #247 (test deps): open draft, clean",
-    "PR #249 (distinct/countBy/exactlyOne): open draft, 234 tests pass, clean",
-    "All 3 open PRs are clean (no merge conflicts, no CI failures as of 2026-02-24)",
+    "PR #246 (release 4.1.0): merged per git log",
+    "PR #247 (test deps): merged (maintainer checked off in issue #248)",
+    "PR #249 (distinct/countBy/exactlyOne): merged (maintainer checked off in issue #248)",
+    "Trusted publishing PR: open draft (branch repo-assist/fix-issue-251-nuget-trusted-publishing), PR number TBD",
+    "Trusted publishing requires one-time nuget.org setup by dsyme (see issue #251 comment)",
     "NUnit 3.9.0 -> 4.x update not done (major, requires test code changes)",
     "FSharp.Core minimum version update not done (would be a breaking library change)",
-    "v4.0.0 released on NuGet but no GitHub Release created",
+    "v4.1.0 released per PR #246 merge",
     "Fable test pre-existing build errors: FS0039/FS0041 in AsyncSeq.test.fs (need investigation)",
-    "zip3/zipWith3/zipWithAsync3: planned after current PR backlog (#246,#247,#249) clears",
-    "Next task priorities: task_2 (no open bugs), task_4/task_8 (PRs #246,#247 already open), task_1/task_7 (only automated issues open)"
+    "zip3/zipWith3/zipWithAsync3: planned for future PRs"
   ]
 }
