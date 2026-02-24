@@ -1087,6 +1087,21 @@ module AsyncSeq =
           let! moven = ie.MoveNext()
           b := moven }
 
+  let windowed (windowSize:int) (source:AsyncSeq<'T>) : AsyncSeq<'T[]> =
+    if windowSize < 1 then invalidArg (nameof windowSize) "must be positive"
+    asyncSeq {
+      let window = System.Collections.Generic.Queue<'T>(windowSize)
+      use ie = source.GetEnumerator()
+      let! move = ie.MoveNext()
+      let b = ref move
+      while b.Value.IsSome do
+          window.Enqueue(b.Value.Value)
+          if window.Count = windowSize then
+              yield window.ToArray()
+              window.Dequeue() |> ignore
+          let! moven = ie.MoveNext()
+          b := moven }
+
   let pickAsync (f:'T -> Async<'U option>) (source:AsyncSeq<'T>) = async {
       use ie = source.GetEnumerator()
       let! v = ie.MoveNext()
@@ -1145,6 +1160,25 @@ module AsyncSeq =
   let fold f (state:'State) (source : AsyncSeq<'T>) =
     foldAsync (fun st v -> f st v |> async.Return) state source
 
+  let reduceAsync (f: 'T -> 'T -> Async<'T>) (source: AsyncSeq<'T>) : Async<'T> = async {
+      use ie = source.GetEnumerator()
+      let! first = ie.MoveNext()
+      match first with
+      | None -> return raise (InvalidOperationException("The input sequence was empty."))
+      | Some v ->
+          let acc = ref v
+          let! next = ie.MoveNext()
+          let b = ref next
+          while b.Value.IsSome do
+              let! newAcc = f acc.Value b.Value.Value
+              acc := newAcc
+              let! more = ie.MoveNext()
+              b := more
+          return acc.Value }
+
+  let reduce (f: 'T -> 'T -> 'T) (source: AsyncSeq<'T>) : Async<'T> =
+      reduceAsync (fun a b -> f a b |> async.Return) source
+
   let length (source : AsyncSeq<'T>) =
     fold (fun st _ -> st + 1L) 0L source
 
@@ -1190,6 +1224,33 @@ module AsyncSeq =
 
   let max (source: AsyncSeq<'T>) : Async<'T> =
     maxBy id source
+
+  let inline sumBy (projection : 'T -> ^U) (source : AsyncSeq<'T>) : Async<^U> =
+    fold (fun s x -> s + projection x) LanguagePrimitives.GenericZero source
+
+  let inline sumByAsync (projection : 'T -> Async<^U>) (source : AsyncSeq<'T>) : Async<^U> =
+    foldAsync (fun s x -> async { let! v = projection x in return s + v }) LanguagePrimitives.GenericZero source
+
+  let inline average (source : AsyncSeq<^T>) : Async<^T> =
+    async {
+      let! sum, count = fold (fun (s, n) x -> (s + x, n + 1)) (LanguagePrimitives.GenericZero, 0) source
+      if count = 0 then invalidArg "source" "The input sequence was empty."
+      return LanguagePrimitives.DivideByInt sum count
+    }
+
+  let inline averageBy (projection : 'T -> ^U) (source : AsyncSeq<'T>) : Async<^U> =
+    async {
+      let! sum, count = fold (fun (s, n) x -> (s + projection x, n + 1)) (LanguagePrimitives.GenericZero, 0) source
+      if count = 0 then invalidArg "source" "The input sequence was empty."
+      return LanguagePrimitives.DivideByInt sum count
+    }
+
+  let inline averageByAsync (projection : 'T -> Async<^U>) (source : AsyncSeq<'T>) : Async<^U> =
+    async {
+      let! sum, count = foldAsync (fun (s, n) x -> async { let! v = projection x in return (s + v, n + 1) }) (LanguagePrimitives.GenericZero, 0) source
+      if count = 0 then invalidArg "source" "The input sequence was empty."
+      return LanguagePrimitives.DivideByInt sum count
+    }
 
   let scan f (state:'State) (source : AsyncSeq<'T>) =
     scanAsync (fun st v -> f st v |> async.Return) state source
