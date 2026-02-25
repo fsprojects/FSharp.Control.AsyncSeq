@@ -208,16 +208,6 @@ let changes (key:Key, mi:ModifyIndex) : AsyncSeq<Value> =
 The function `changes` produces an async sequence which emits elements whenever the value corresponding to the key changes. Suppose also that we would like to trigger an operation
 whenever the key changes or based on a fixed interval. We can represent a fixed interval as an async sequence as follows:
 
-*)
-
-let intervalMs (periodMs:int) = asyncSeq {
-  yield DateTime.UtcNow
-  while true do
-    do! Async.Sleep periodMs
-    yield DateTime.UtcNow }
-
-(**
-
 Putting it all together:
 
 *)

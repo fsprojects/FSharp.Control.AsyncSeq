@@ -42,6 +42,11 @@ be synchronous `'T -> bool`:
 
 open System
 
+// At the top of docs/ComparisonWithObservable.fsx
+type Tweet = { Id: int; Content: string }
+let filterTweet (tweet: Tweet) = async { return tweet.Content.Contains("keyword") }
+let storeTweet (tweet: Tweet) = printfn "Storing tweet %d" tweet.Id
+
 let tweetsObs : IObservable<Tweet> =
   failwith "TODO: create observable"
 
@@ -95,6 +100,9 @@ With a little effort, we were able to adapt `IObservable<'a>` to our needs. Next
 filtered tweets. Again, we can adapt the function `storeTweet` defined above to the observable model and bind the
 observable of filtered tweets to it:
 *)
+
+let storeTweet (tweet: Tweet) : Async<unit> =
+  failwith "TODO"
 
 let storedTweetsObs : IObservable<unit> =
   filteredTweetsObs'
