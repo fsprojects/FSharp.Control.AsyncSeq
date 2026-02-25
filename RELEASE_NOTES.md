@@ -1,7 +1,10 @@
-### 4.1.0
+### 4.2.0
 
 * Added `AsyncSeq.zip3`, `AsyncSeq.zipWith3`, and `AsyncSeq.zipWithAsync3` — combinators for zipping three async sequences, mirroring `Seq.zip3` ([PR #254](https://github.com/fsprojects/FSharp.Control.AsyncSeq/pull/254)).
-* Added `AsyncSeq.windowed` — produces a sliding window of a given size over an async sequence ([PR #241](https://github.com/fsprojects/FSharp.Control.AsyncSeq/pull/241)).
+
+### 4.1.0
+
+async sequence ([PR #241](https://github.com/fsprojects/FSharp.Control.AsyncSeq/pull/241)).
 * Added `AsyncSeq.reduce` and `AsyncSeq.reduceAsync` — folds without a seed value, mirroring `Seq.reduce` ([PR #242](https://github.com/fsprojects/FSharp.Control.AsyncSeq/pull/242)).
 * Added `AsyncSeq.sumBy`, `AsyncSeq.sumByAsync`, `AsyncSeq.average`, `AsyncSeq.averageBy`, and `AsyncSeq.averageByAsync` — numeric aggregation combinators mirroring the corresponding `Seq` module functions ([PR #245](https://github.com/fsprojects/FSharp.Control.AsyncSeq/pull/245)).
 * Added `AsyncSeq.min`, `AsyncSeq.max`, `AsyncSeq.minBy`, `AsyncSeq.maxBy`, `AsyncSeq.minByAsync`, and `AsyncSeq.maxByAsync` — min/max aggregation combinators mirroring `Seq.min`/`Seq.max`/`Seq.minBy`/`Seq.maxBy` ([PR #243](https://github.com/fsprojects/FSharp.Control.AsyncSeq/pull/243)).
