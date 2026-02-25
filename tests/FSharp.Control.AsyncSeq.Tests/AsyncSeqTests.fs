@@ -896,6 +896,42 @@ let ``AsyncSeq.zipWithAsyncParallel``() =
           Assert.True(EQ expected actual)
 
 [<Test>]
+let ``AsyncSeq.zip3``() =
+  for la in [ []; [1]; [1;2;3;4;5] ] do
+     for lb in [ []; [1]; [1;2;3;4;5] ] do
+          for lc in [ []; [1]; [1;2;3;4;5] ] do
+              let a = la |> AsyncSeq.ofSeq
+              let b = lb |> AsyncSeq.ofSeq
+              let c = lc |> AsyncSeq.ofSeq
+              let actual = AsyncSeq.zip3 a b c
+              let expected = Seq.zip3 la lb lc |> AsyncSeq.ofSeq
+              Assert.True(EQ expected actual)
+
+[<Test>]
+let ``AsyncSeq.zipWith3``() =
+  for la in [ []; [1]; [1;2;3;4;5] ] do
+     for lb in [ []; [1]; [1;2;3;4;5] ] do
+          for lc in [ []; [1]; [1;2;3;4;5] ] do
+              let a = la |> AsyncSeq.ofSeq
+              let b = lb |> AsyncSeq.ofSeq
+              let c = lc |> AsyncSeq.ofSeq
+              let actual = AsyncSeq.zipWith3 (fun a b c -> a + b + c) a b c
+              let expected = Seq.zip3 la lb lc |> Seq.map (fun (a,b,c) -> a+b+c) |> AsyncSeq.ofSeq
+              Assert.True(EQ expected actual)
+
+[<Test>]
+let ``AsyncSeq.zipWithAsync3``() =
+  for la in [ []; [1]; [1;2;3;4;5] ] do
+     for lb in [ []; [1]; [1;2;3;4;5] ] do
+          for lc in [ []; [1]; [1;2;3;4;5] ] do
+              let a = la |> AsyncSeq.ofSeq
+              let b = lb |> AsyncSeq.ofSeq
+              let c = lc |> AsyncSeq.ofSeq
+              let actual = AsyncSeq.zipWithAsync3 (fun a b c -> a + b + c |> async.Return) a b c
+              let expected = Seq.zip3 la lb lc |> Seq.map (fun (a,b,c) -> a+b+c) |> AsyncSeq.ofSeq
+              Assert.True(EQ expected actual)
+
+[<Test>]
 let ``AsyncSeq.append works``() =
   for la in [ []; [1]; [1;2;3;4;5] ] do
      for lb in [ []; [1]; [1;2;3;4;5] ] do

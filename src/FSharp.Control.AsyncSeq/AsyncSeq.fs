@@ -1552,6 +1552,32 @@ module AsyncSeq =
   let zipWithIndexAsync (f:int64 -> 'T -> Async<'U>) (s:AsyncSeq<'T>) : AsyncSeq<'U> =
     mapiAsync f s
 
+  let zipWithAsync3 (f:'T1 -> 'T2 -> 'T3 -> Async<'U>) (source1:AsyncSeq<'T1>) (source2:AsyncSeq<'T2>) (source3:AsyncSeq<'T3>) : AsyncSeq<'U> = asyncSeq {
+      use ie1 = source1.GetEnumerator()
+      use ie2 = source2.GetEnumerator()
+      use ie3 = source3.GetEnumerator()
+      let! move1 = ie1.MoveNext()
+      let! move2 = ie2.MoveNext()
+      let! move3 = ie3.MoveNext()
+      let b1 = ref move1
+      let b2 = ref move2
+      let b3 = ref move3
+      while b1.Value.IsSome && b2.Value.IsSome && b3.Value.IsSome do
+          let! res = f b1.Value.Value b2.Value.Value b3.Value.Value
+          yield res
+          let! move1n = ie1.MoveNext()
+          let! move2n = ie2.MoveNext()
+          let! move3n = ie3.MoveNext()
+          b1 := move1n
+          b2 := move2n
+          b3 := move3n }
+
+  let zip3 (source1:AsyncSeq<'T1>) (source2:AsyncSeq<'T2>) (source3:AsyncSeq<'T3>) : AsyncSeq<'T1 * 'T2 * 'T3> =
+      zipWithAsync3 (fun a b c -> async.Return (a, b, c)) source1 source2 source3
+
+  let zipWith3 (f:'T1 -> 'T2 -> 'T3 -> 'U) (source1:AsyncSeq<'T1>) (source2:AsyncSeq<'T2>) (source3:AsyncSeq<'T3>) : AsyncSeq<'U> =
+      zipWithAsync3 (fun a b c -> f a b c |> async.Return) source1 source2 source3
+
   let zappAsync (fs:AsyncSeq<'T -> Async<'U>>) (s:AsyncSeq<'T>) : AsyncSeq<'U> =
       zipWithAsync (|>) s fs
 
