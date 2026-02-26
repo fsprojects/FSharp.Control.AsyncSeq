@@ -1,3 +1,11 @@
+### 4.3.0
+
+* Added `AsyncSeq.head` — returns the first element of the sequence; raises `InvalidOperationException` if empty, mirroring `Seq.head`.
+* Added `AsyncSeq.iteri` — iterates the sequence calling a synchronous action with each element's index, mirroring `Seq.iteri`.
+* Added `AsyncSeq.find` — returns the first element satisfying a predicate; raises `KeyNotFoundException` if no match, mirroring `Seq.find`.
+* Added `AsyncSeq.tryFindAsync` — async-predicate variant of `AsyncSeq.tryFind`, returning the first matching element as `option`.
+* Added `AsyncSeq.tail` — returns the sequence without its first element, mirroring `Seq.tail`.
+
 ### 4.2.0
 
 * Added `AsyncSeq.zip3`, `AsyncSeq.zipWith3`, and `AsyncSeq.zipWithAsync3` — combinators for zipping three async sequences, mirroring `Seq.zip3` ([PR #254](https://github.com/fsprojects/FSharp.Control.AsyncSeq/pull/254)).

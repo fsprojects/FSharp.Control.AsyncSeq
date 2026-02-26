@@ -1060,6 +1060,12 @@ module AsyncSeq =
       | None -> return def
       | Some v -> return v }
 
+  let head (source : AsyncSeq<'T>) = async {
+      let! result = tryFirst source
+      match result with
+      | None -> return raise (System.InvalidOperationException("The input sequence was empty."))
+      | Some v -> return v }
+
   let exactlyOne (source : AsyncSeq<'T>) = async {
       use ie = source.GetEnumerator()
       let! first = ie.MoveNext()
@@ -1167,6 +1173,12 @@ module AsyncSeq =
 
   let tryFind f (source : AsyncSeq<'T>) =
     source |> tryPick (fun v -> if f v then Some v else None)
+
+  let tryFindAsync f (source : AsyncSeq<'T>) =
+    source |> tryPickAsync (fun v -> async { let! b = f v in return if b then Some v else None })
+
+  let find f (source : AsyncSeq<'T>) =
+    source |> pick (fun v -> if f v then Some v else None)
 
   let exists f (source : AsyncSeq<'T>) =
     source |> tryFind f |> Async.map Option.isSome
@@ -1714,6 +1726,8 @@ module AsyncSeq =
               n := n.Value - 1
           let! moven = ie.MoveNext()
           b := moven }
+
+  let tail (source : AsyncSeq<'T>) : AsyncSeq<'T> = skip 1 source
 
   let toArrayAsync (source : AsyncSeq<'T>) : Async<'T[]> = async {
       let ra = (new ResizeArray<_>())

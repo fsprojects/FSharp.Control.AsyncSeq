@@ -3046,3 +3046,98 @@ let ``AsyncSeq.tryExactlyOne returns None for sequence with more than one elemen
     let result = AsyncSeq.tryExactlyOne source |> Async.RunSynchronously
     Assert.AreEqual(None, result)
   } |> Async.RunSynchronously
+
+// ===== head =====
+
+[<Test>]
+let ``AsyncSeq.head returns first element`` () =
+  let source = asyncSeq { yield 42; yield 99 }
+  let result = AsyncSeq.head source |> Async.RunSynchronously
+  Assert.AreEqual(42, result)
+
+[<Test>]
+let ``AsyncSeq.head raises on empty sequence`` () =
+  Assert.Throws<InvalidOperationException>(fun () ->
+    AsyncSeq.head AsyncSeq.empty<int> |> Async.RunSynchronously |> ignore) |> ignore
+
+// ===== iteri =====
+
+[<Test>]
+let ``AsyncSeq.iteri calls action with correct indices`` () =
+  let indices = System.Collections.Generic.List<int>()
+  let values  = System.Collections.Generic.List<int>()
+  asyncSeq { yield 10; yield 20; yield 30 }
+  |> AsyncSeq.iteri (fun i v -> indices.Add(i); values.Add(v))
+  |> Async.RunSynchronously
+  Assert.AreEqual([| 0; 1; 2 |], indices |> Seq.toArray)
+  Assert.AreEqual([| 10; 20; 30 |], values |> Seq.toArray)
+
+[<Test>]
+let ``AsyncSeq.iteri on empty sequence does nothing`` () =
+  let mutable count = 0
+  AsyncSeq.empty<int>
+  |> AsyncSeq.iteri (fun _ _ -> count <- count + 1)
+  |> Async.RunSynchronously
+  Assert.AreEqual(0, count)
+
+// ===== find / tryFindAsync =====
+
+[<Test>]
+let ``AsyncSeq.find returns matching element`` () =
+  for i in 0 .. 10 do
+    let ls = [ 1 .. i + 1 ]
+    let result = AsyncSeq.ofSeq ls |> AsyncSeq.find (fun x -> x = i + 1) |> Async.RunSynchronously
+    Assert.AreEqual(i + 1, result)
+
+[<Test>]
+let ``AsyncSeq.find raises KeyNotFoundException when no match`` () =
+  Assert.Throws<System.Collections.Generic.KeyNotFoundException>(fun () ->
+    AsyncSeq.ofSeq [ 1; 2; 3 ] |> AsyncSeq.find (fun x -> x = 99) |> Async.RunSynchronously |> ignore)
+  |> ignore
+
+[<Test>]
+let ``AsyncSeq.tryFindAsync returns Some when found`` () =
+  for i in 0 .. 10 do
+    let ls = [ 1 .. i + 1 ]
+    let result =
+      AsyncSeq.ofSeq ls
+      |> AsyncSeq.tryFindAsync (fun x -> async { return x = i + 1 })
+      |> Async.RunSynchronously
+    Assert.AreEqual(Some (i + 1), result)
+
+[<Test>]
+let ``AsyncSeq.tryFindAsync returns None when not found`` () =
+  let result =
+    AsyncSeq.ofSeq [ 1; 2; 3 ]
+    |> AsyncSeq.tryFindAsync (fun x -> async { return x = 99 })
+    |> Async.RunSynchronously
+  Assert.AreEqual(None, result)
+
+// ===== tail =====
+
+[<Test>]
+let ``AsyncSeq.tail skips first element`` () =
+  let result =
+    asyncSeq { yield 1; yield 2; yield 3 }
+    |> AsyncSeq.tail
+    |> AsyncSeq.toListAsync
+    |> Async.RunSynchronously
+  Assert.AreEqual([ 2; 3 ], result)
+
+[<Test>]
+let ``AsyncSeq.tail on singleton returns empty`` () =
+  let result =
+    asyncSeq { yield 42 }
+    |> AsyncSeq.tail
+    |> AsyncSeq.toListAsync
+    |> Async.RunSynchronously
+  Assert.AreEqual([], result)
+
+[<Test>]
+let ``AsyncSeq.tail on empty returns empty`` () =
+  let result =
+    AsyncSeq.empty<int>
+    |> AsyncSeq.tail
+    |> AsyncSeq.toListAsync
+    |> Async.RunSynchronously
+  Assert.AreEqual([], result)
