@@ -3141,3 +3141,71 @@ let ``AsyncSeq.tail on empty returns empty`` () =
     |> AsyncSeq.toListAsync
     |> Async.RunSynchronously
   Assert.AreEqual([], result)
+
+// ===== findAsync / existsAsync / forallAsync =====
+
+[<Test>]
+let ``AsyncSeq.findAsync returns matching element`` () =
+  for i in 0 .. 10 do
+    let ls = [ 1 .. i + 1 ]
+    let result =
+      AsyncSeq.ofSeq ls
+      |> AsyncSeq.findAsync (fun x -> async { return x = i + 1 })
+      |> Async.RunSynchronously
+    Assert.AreEqual(i + 1, result)
+
+[<Test>]
+let ``AsyncSeq.findAsync raises KeyNotFoundException when no match`` () =
+  Assert.Throws<System.Collections.Generic.KeyNotFoundException>(fun () ->
+    AsyncSeq.ofSeq [ 1; 2; 3 ]
+    |> AsyncSeq.findAsync (fun x -> async { return x = 99 })
+    |> Async.RunSynchronously |> ignore)
+  |> ignore
+
+[<Test>]
+let ``AsyncSeq.existsAsync returns true when element found`` () =
+  let result =
+    AsyncSeq.ofSeq [ 1; 2; 3 ]
+    |> AsyncSeq.existsAsync (fun x -> async { return x = 2 })
+    |> Async.RunSynchronously
+  Assert.IsTrue(result)
+
+[<Test>]
+let ``AsyncSeq.existsAsync returns false on empty sequence`` () =
+  let result =
+    AsyncSeq.empty<int>
+    |> AsyncSeq.existsAsync (fun _ -> async { return true })
+    |> Async.RunSynchronously
+  Assert.IsFalse(result)
+
+[<Test>]
+let ``AsyncSeq.existsAsync returns false when no match`` () =
+  let result =
+    AsyncSeq.ofSeq [ 1; 2; 3 ]
+    |> AsyncSeq.existsAsync (fun x -> async { return x = 99 })
+    |> Async.RunSynchronously
+  Assert.IsFalse(result)
+
+[<Test>]
+let ``AsyncSeq.forallAsync returns true when all match`` () =
+  let result =
+    AsyncSeq.ofSeq [ 2; 4; 6 ]
+    |> AsyncSeq.forallAsync (fun x -> async { return x % 2 = 0 })
+    |> Async.RunSynchronously
+  Assert.IsTrue(result)
+
+[<Test>]
+let ``AsyncSeq.forallAsync returns false when some do not match`` () =
+  let result =
+    AsyncSeq.ofSeq [ 2; 3; 6 ]
+    |> AsyncSeq.forallAsync (fun x -> async { return x % 2 = 0 })
+    |> Async.RunSynchronously
+  Assert.IsFalse(result)
+
+[<Test>]
+let ``AsyncSeq.forallAsync returns true on empty sequence`` () =
+  let result =
+    AsyncSeq.empty<int>
+    |> AsyncSeq.forallAsync (fun _ -> async { return false })
+    |> Async.RunSynchronously
+  Assert.IsTrue(result)
