@@ -163,6 +163,10 @@ module AsyncSeq =
     /// given asynchronous sequence (or None if the sequence is empty).
     val tryFirst : source:AsyncSeq<'T> -> Async<'T option>
 
+    /// Asynchronously returns the first element of the asynchronous sequence.
+    /// Raises InvalidOperationException if the sequence is empty.
+    val head : source:AsyncSeq<'T> -> Async<'T>
+
     /// Asynchronously returns the only element of the asynchronous sequence.
     /// Raises InvalidOperationException if the sequence is empty or contains more than one element.
     val exactlyOne : source:AsyncSeq<'T> -> Async<'T>
@@ -188,6 +192,10 @@ module AsyncSeq =
     /// every value, passing along the index of that element.
     /// The input sequence will be asked for the next element after the processing of an element completes.
     val iteriAsync : action:(int -> 'T -> Async<unit>) -> source:AsyncSeq<'T> -> Async<unit>
+
+    /// Iterates over the input sequence and calls the specified function for
+    /// every value, passing along the index of that element.
+    val iteri : action:(int -> 'T -> unit) -> source:AsyncSeq<'T> -> Async<unit>
 
     #if !FABLE_COMPILER
     /// Iterates over the input sequence and calls the specified asynchronous function for
@@ -311,6 +319,13 @@ module AsyncSeq =
 
     /// Asynchronously find the first value in a sequence for which the predicate returns true
     val tryFind : predicate:('T -> bool) -> source:AsyncSeq<'T> -> Async<'T option>
+
+    /// Asynchronously find the first value in a sequence for which the async predicate returns true
+    val tryFindAsync : predicate:('T -> Async<bool>) -> source:AsyncSeq<'T> -> Async<'T option>
+
+    /// Asynchronously find the first value in a sequence for which the predicate returns true.
+    /// Raises KeyNotFoundException if no matching element is found.
+    val find : predicate:('T -> bool) -> source:AsyncSeq<'T> -> Async<'T>
 
     /// Asynchronously determine if there is a value in the sequence for which the predicate returns true
     val exists : predicate:('T -> bool) -> source:AsyncSeq<'T> -> Async<bool>
@@ -516,6 +531,10 @@ module AsyncSeq =
     /// Skips the first N elements of an asynchronous sequence and
     /// then returns the rest of the sequence unmodified.
     val skip : count:int -> source:AsyncSeq<'T> -> AsyncSeq<'T>
+
+    /// Returns an asynchronous sequence that skips the first element of the input sequence.
+    /// Returns an empty sequence if the source is empty.
+    val tail : source:AsyncSeq<'T> -> AsyncSeq<'T>
 
     /// Creates an async computation which iterates the AsyncSeq and collects the output into an array.
     val toArrayAsync : source:AsyncSeq<'T> -> Async<'T []>
