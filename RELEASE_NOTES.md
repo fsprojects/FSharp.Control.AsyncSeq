@@ -1,3 +1,9 @@
+### 4.4.0
+
+* Added `AsyncSeq.findAsync` — async-predicate variant of `AsyncSeq.find`; raises `KeyNotFoundException` if no match, mirroring `Seq.find`.
+* Added `AsyncSeq.existsAsync` — async-predicate variant of `AsyncSeq.exists`, mirroring `Seq.exists`.
+* Added `AsyncSeq.forallAsync` — async-predicate variant of `AsyncSeq.forall`, mirroring `Seq.forall`.
+
 ### 4.3.0
 
 * Added `AsyncSeq.head` — returns the first element of the sequence; raises `InvalidOperationException` if empty, mirroring `Seq.head`.

@@ -1180,11 +1180,20 @@ module AsyncSeq =
   let find f (source : AsyncSeq<'T>) =
     source |> pick (fun v -> if f v then Some v else None)
 
+  let findAsync f (source : AsyncSeq<'T>) =
+    source |> pickAsync (fun v -> async { let! b = f v in return if b then Some v else None })
+
   let exists f (source : AsyncSeq<'T>) =
     source |> tryFind f |> Async.map Option.isSome
 
+  let existsAsync f (source : AsyncSeq<'T>) =
+    source |> tryFindAsync f |> Async.map Option.isSome
+
   let forall f (source : AsyncSeq<'T>) =
     source |> exists (f >> not) |> Async.map not
+
+  let forallAsync f (source : AsyncSeq<'T>) =
+    source |> existsAsync (fun v -> async { let! b = f v in return not b }) |> Async.map not
 
   let foldAsync f (state:'State) (source : AsyncSeq<'T>) =
     match source with
