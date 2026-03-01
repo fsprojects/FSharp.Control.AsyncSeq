@@ -1066,6 +1066,32 @@ module AsyncSeq =
       | None -> return raise (System.InvalidOperationException("The input sequence was empty."))
       | Some v -> return v }
 
+  let last (source : AsyncSeq<'T>) = async {
+      let! result = tryLast source
+      match result with
+      | None -> return raise (System.InvalidOperationException("The input sequence was empty."))
+      | Some v -> return v }
+
+  let tryItem (index : int) (source : AsyncSeq<'T>) = async {
+      if index < 0 then return None
+      else
+          use ie = source.GetEnumerator()
+          let! first = ie.MoveNext()
+          let b = ref first
+          let i = ref 0
+          while b.Value.IsSome && !i < index do
+              let! next = ie.MoveNext()
+              b := next
+              i := !i + 1
+          if !i = index then return b.Value
+          else return None }
+
+  let item (index : int) (source : AsyncSeq<'T>) = async {
+      let! result = tryItem index source
+      match result with
+      | None -> return raise (System.ArgumentException(sprintf "The input sequence has an insufficient number of elements. index = %d" index))
+      | Some v -> return v }
+
   let exactlyOne (source : AsyncSeq<'T>) = async {
       use ie = source.GetEnumerator()
       let! first = ie.MoveNext()

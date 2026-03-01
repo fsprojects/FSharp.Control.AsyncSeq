@@ -1,3 +1,9 @@
+### 4.5.0
+
+* Added `AsyncSeq.last` — returns the last element of the sequence; raises `InvalidOperationException` if empty, mirroring `Seq.last`.
+* Added `AsyncSeq.item` — returns the element at the specified index; raises `ArgumentException` if out of bounds, mirroring `Seq.item`.
+* Added `AsyncSeq.tryItem` — returns the element at the specified index as `option`, or `None` if the index is out of bounds, mirroring `Seq.tryItem`.
+
 ### 4.4.0
 
 * Added `AsyncSeq.findAsync` — async-predicate variant of `AsyncSeq.find`; raises `KeyNotFoundException` if no match, mirroring `Seq.find`.

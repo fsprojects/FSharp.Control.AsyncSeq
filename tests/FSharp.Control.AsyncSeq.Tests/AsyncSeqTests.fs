@@ -3209,3 +3209,68 @@ let ``AsyncSeq.forallAsync returns true on empty sequence`` () =
     |> AsyncSeq.forallAsync (fun _ -> async { return false })
     |> Async.RunSynchronously
   Assert.IsTrue(result)
+
+// ===== last =====
+
+[<Test>]
+let ``AsyncSeq.last returns last element`` () =
+  let source = asyncSeq { yield 1; yield 2; yield 3 }
+  let result = AsyncSeq.last source |> Async.RunSynchronously
+  Assert.AreEqual(3, result)
+
+[<Test>]
+let ``AsyncSeq.last on singleton returns that element`` () =
+  let result = AsyncSeq.last (AsyncSeq.singleton 42) |> Async.RunSynchronously
+  Assert.AreEqual(42, result)
+
+[<Test>]
+let ``AsyncSeq.last raises on empty sequence`` () =
+  Assert.Throws<InvalidOperationException>(fun () ->
+    AsyncSeq.last AsyncSeq.empty<int> |> Async.RunSynchronously |> ignore) |> ignore
+
+// ===== item =====
+
+[<Test>]
+let ``AsyncSeq.item returns element at index 0`` () =
+  let source = asyncSeq { yield 10; yield 20; yield 30 }
+  let result = AsyncSeq.item 0 source |> Async.RunSynchronously
+  Assert.AreEqual(10, result)
+
+[<Test>]
+let ``AsyncSeq.item returns element at index 2`` () =
+  let source = asyncSeq { yield 10; yield 20; yield 30 }
+  let result = AsyncSeq.item 2 source |> Async.RunSynchronously
+  Assert.AreEqual(30, result)
+
+[<Test>]
+let ``AsyncSeq.item raises when index out of bounds`` () =
+  Assert.Throws<ArgumentException>(fun () ->
+    AsyncSeq.item 5 (AsyncSeq.ofSeq [1;2;3]) |> Async.RunSynchronously |> ignore) |> ignore
+
+[<Test>]
+let ``AsyncSeq.item raises when index negative`` () =
+  Assert.Throws<ArgumentException>(fun () ->
+    AsyncSeq.item -1 (AsyncSeq.ofSeq [1;2;3]) |> Async.RunSynchronously |> ignore) |> ignore
+
+// ===== tryItem =====
+
+[<Test>]
+let ``AsyncSeq.tryItem returns Some for valid index`` () =
+  let source = asyncSeq { yield 10; yield 20; yield 30 }
+  let result = AsyncSeq.tryItem 1 source |> Async.RunSynchronously
+  Assert.AreEqual(Some 20, result)
+
+[<Test>]
+let ``AsyncSeq.tryItem returns None for out-of-bounds index`` () =
+  let result = AsyncSeq.tryItem 10 (AsyncSeq.ofSeq [1;2;3]) |> Async.RunSynchronously
+  Assert.AreEqual(None, result)
+
+[<Test>]
+let ``AsyncSeq.tryItem returns None for negative index`` () =
+  let result = AsyncSeq.tryItem -1 (AsyncSeq.ofSeq [1;2;3]) |> Async.RunSynchronously
+  Assert.AreEqual(None, result)
+
+[<Test>]
+let ``AsyncSeq.tryItem returns None on empty sequence`` () =
+  let result = AsyncSeq.tryItem 0 AsyncSeq.empty<int> |> Async.RunSynchronously
+  Assert.AreEqual(None, result)
