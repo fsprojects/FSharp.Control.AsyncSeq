@@ -1066,6 +1066,13 @@ module AsyncSeq =
       | None -> return raise (System.InvalidOperationException("The input sequence was empty."))
       | Some v -> return v }
 
+  let tryHead (source : AsyncSeq<'T>) = tryFirst source
+
+  let isEmpty (source : AsyncSeq<'T>) = async {
+      use ie = source.GetEnumerator()
+      let! v = ie.MoveNext()
+      return v.IsNone }
+
   let last (source : AsyncSeq<'T>) = async {
       let! result = tryLast source
       match result with
@@ -1380,6 +1387,10 @@ module AsyncSeq =
 
   let filter f (source : AsyncSeq<'T>) =
     filterAsync (f >> async.Return) source
+
+  let except (excluded : seq<'T>) (source : AsyncSeq<'T>) : AsyncSeq<'T> =
+    let s = System.Collections.Generic.HashSet(excluded)
+    source |> filter (fun x -> not (s.Contains(x)))
 
   #if !FABLE_COMPILER
   let iterAsyncParallel (f:'a -> Async<unit>) (s:AsyncSeq<'a>) : Async<unit> = async {

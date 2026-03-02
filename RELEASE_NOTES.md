@@ -1,3 +1,9 @@
+### 4.6.0
+
+* Added `AsyncSeq.isEmpty` — returns `true` if the sequence contains no elements; short-circuits after the first element, mirroring `Seq.isEmpty`.
+* Added `AsyncSeq.tryHead` — returns the first element as `option`, or `None` if the sequence is empty, mirroring `Seq.tryHead` (equivalent to the existing `AsyncSeq.tryFirst`).
+* Added `AsyncSeq.except` — returns a new sequence excluding all elements present in a given collection, mirroring `Seq.except`.
+
 ### 4.5.0
 
 * Added `AsyncSeq.last` — returns the last element of the sequence; raises `InvalidOperationException` if empty, mirroring `Seq.last`.
