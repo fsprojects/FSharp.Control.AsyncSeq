@@ -3326,10 +3326,6 @@ let ``AsyncSeq.except with all excluded returns empty sequence`` () =
   let result = AsyncSeq.except [1; 2; 3] source |> AsyncSeq.toArrayAsync |> Async.RunSynchronously
   Assert.AreEqual([||], result)
 
-[<Test>]
-let ``AsyncSeq.except on empty source returns empty`` () =
-  let result = AsyncSeq.except [1; 2] AsyncSeq.empty<int> |> AsyncSeq.toArrayAsync |> Async.RunSynchronously
-
 // ===== findIndex / tryFindIndex / findIndexAsync / tryFindIndexAsync =====
 
 [<Test>]
