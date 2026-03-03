@@ -3275,6 +3275,57 @@ let ``AsyncSeq.tryItem returns None on empty sequence`` () =
   let result = AsyncSeq.tryItem 0 AsyncSeq.empty<int> |> Async.RunSynchronously
   Assert.AreEqual(None, result)
 
+// ===== isEmpty =====
+
+[<Test>]
+let ``AsyncSeq.isEmpty returns true for empty sequence`` () =
+  let result = AsyncSeq.isEmpty AsyncSeq.empty<int> |> Async.RunSynchronously
+  Assert.True(result)
+
+[<Test>]
+let ``AsyncSeq.isEmpty returns false for non-empty sequence`` () =
+  let source = asyncSeq { yield 1; yield 2 }
+  let result = AsyncSeq.isEmpty source |> Async.RunSynchronously
+  Assert.False(result)
+
+[<Test>]
+let ``AsyncSeq.isEmpty returns false for singleton`` () =
+  let result = AsyncSeq.isEmpty (AsyncSeq.singleton 42) |> Async.RunSynchronously
+  Assert.False(result)
+
+// ===== tryHead =====
+
+[<Test>]
+let ``AsyncSeq.tryHead returns Some for non-empty sequence`` () =
+  let source = asyncSeq { yield 42; yield 99 }
+  let result = AsyncSeq.tryHead source |> Async.RunSynchronously
+  Assert.AreEqual(Some 42, result)
+
+[<Test>]
+let ``AsyncSeq.tryHead returns None for empty sequence`` () =
+  let result = AsyncSeq.tryHead AsyncSeq.empty<int> |> Async.RunSynchronously
+  Assert.AreEqual(None, result)
+
+// ===== except =====
+
+[<Test>]
+let ``AsyncSeq.except removes excluded elements`` () =
+  let source = asyncSeq { yield 1; yield 2; yield 3; yield 4; yield 5 }
+  let result = AsyncSeq.except [2; 4] source |> AsyncSeq.toArrayAsync |> Async.RunSynchronously
+  Assert.AreEqual([| 1; 3; 5 |], result)
+
+[<Test>]
+let ``AsyncSeq.except with empty excluded returns all elements`` () =
+  let source = asyncSeq { yield 1; yield 2; yield 3 }
+  let result = AsyncSeq.except [] source |> AsyncSeq.toArrayAsync |> Async.RunSynchronously
+  Assert.AreEqual([| 1; 2; 3 |], result)
+
+[<Test>]
+let ``AsyncSeq.except with all excluded returns empty sequence`` () =
+  let source = asyncSeq { yield 1; yield 2; yield 3 }
+  let result = AsyncSeq.except [1; 2; 3] source |> AsyncSeq.toArrayAsync |> Async.RunSynchronously
+  Assert.AreEqual([||], result)
+
 // ===== findIndex / tryFindIndex / findIndexAsync / tryFindIndexAsync =====
 
 [<Test>]

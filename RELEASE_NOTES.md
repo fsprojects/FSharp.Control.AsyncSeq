@@ -1,10 +1,16 @@
 ### 4.6.0
 
+<<<<<<< repo-assist/improve-isempty-tryhead-except-2471744-646c6897389cdfcb
+* Added `AsyncSeq.isEmpty` — returns `true` if the sequence contains no elements; short-circuits after the first element, mirroring `Seq.isEmpty`.
+* Added `AsyncSeq.tryHead` — returns the first element as `option`, or `None` if the sequence is empty, mirroring `Seq.tryHead` (equivalent to the existing `AsyncSeq.tryFirst`).
+* Added `AsyncSeq.except` — returns a new sequence excluding all elements present in a given collection, mirroring `Seq.except`.
+=======
 * Added `AsyncSeq.findIndex` — returns the index of the first element satisfying a predicate; raises `KeyNotFoundException` if no match, mirroring `Seq.findIndex`.
 * Added `AsyncSeq.tryFindIndex` — returns the index of the first element satisfying a predicate as `option`, or `None` if not found, mirroring `Seq.tryFindIndex`.
 * Added `AsyncSeq.findIndexAsync` — async-predicate variant of `AsyncSeq.findIndex`; raises `KeyNotFoundException` if no match.
 * Added `AsyncSeq.tryFindIndexAsync` — async-predicate variant of `AsyncSeq.tryFindIndex`; returns `option`.
 * Added `AsyncSeq.sortWith` — sorts the sequence using a custom comparison function, returning an array, mirroring `Seq.sortWith`.
+>>>>>>> main
 
 ### 4.5.0
 

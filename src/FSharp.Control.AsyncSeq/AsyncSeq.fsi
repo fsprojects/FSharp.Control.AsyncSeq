@@ -179,6 +179,14 @@ module AsyncSeq =
     /// Raises InvalidOperationException if the sequence is empty.
     val head : source:AsyncSeq<'T> -> Async<'T>
 
+    /// Asynchronously returns the first element of the asynchronous sequence as an option,
+    /// or None if the sequence is empty. Mirrors Seq.tryHead.
+    val tryHead : source:AsyncSeq<'T> -> Async<'T option>
+
+    /// Asynchronously returns true if the asynchronous sequence contains no elements, false otherwise.
+    /// Short-circuits after the first element. Mirrors Seq.isEmpty.
+    val isEmpty : source:AsyncSeq<'T> -> Async<bool>
+
     /// Asynchronously returns the only element of the asynchronous sequence.
     /// Raises InvalidOperationException if the sequence is empty or contains more than one element.
     val exactlyOne : source:AsyncSeq<'T> -> Async<'T>
@@ -395,6 +403,10 @@ module AsyncSeq =
     /// Same as AsyncSeq.filterAsync, but the specified predicate is synchronous
     /// and processes the input element immediately.
     val filter : predicate:('T -> bool) -> source:AsyncSeq<'T> -> AsyncSeq<'T>
+
+    /// Returns a new asynchronous sequence containing only elements that are not present
+    /// in the given excluded collection. Uses a HashSet for O(1) lookup. Mirrors Seq.except.
+    val except : excluded:seq<'T> -> source:AsyncSeq<'T> -> AsyncSeq<'T> when 'T : equality
 
     /// Creates an asynchronous sequence that lazily takes element from an
     /// input synchronous sequence and returns them one-by-one.
