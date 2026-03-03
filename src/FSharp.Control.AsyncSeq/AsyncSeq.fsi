@@ -343,6 +343,22 @@ module AsyncSeq =
     /// Raises KeyNotFoundException if no matching element is found.
     val findAsync : predicate:('T -> Async<bool>) -> source:AsyncSeq<'T> -> Async<'T>
 
+    /// Asynchronously find the index of the first value in a sequence for which the predicate returns true.
+    /// Returns None if no matching element is found.
+    val tryFindIndex : predicate:('T -> bool) -> source:AsyncSeq<'T> -> Async<int option>
+
+    /// Asynchronously find the index of the first value in a sequence for which the async predicate returns true.
+    /// Returns None if no matching element is found.
+    val tryFindIndexAsync : predicate:('T -> Async<bool>) -> source:AsyncSeq<'T> -> Async<int option>
+
+    /// Asynchronously find the index of the first value in a sequence for which the predicate returns true.
+    /// Raises KeyNotFoundException if no matching element is found.
+    val findIndex : predicate:('T -> bool) -> source:AsyncSeq<'T> -> Async<int>
+
+    /// Asynchronously find the index of the first value in a sequence for which the async predicate returns true.
+    /// Raises KeyNotFoundException if no matching element is found.
+    val findIndexAsync : predicate:('T -> Async<bool>) -> source:AsyncSeq<'T> -> Async<int>
+
     /// Asynchronously determine if there is a value in the sequence for which the predicate returns true
     val exists : predicate:('T -> bool) -> source:AsyncSeq<'T> -> Async<bool>
 
@@ -602,6 +618,12 @@ module AsyncSeq =
     /// that sequence is iterated. As a result this function should not be used with
     /// large or infinite sequences.
     val sortByDescending : projection:('T -> 'Key) -> source:AsyncSeq<'T> -> array<'T> when 'Key : comparison
+
+    /// Sorts the given async sequence using the given comparison function and returns an array.
+    /// This function returns an array that digests the whole initial sequence as soon as
+    /// that sequence is iterated. As a result this function should not be used with
+    /// large or infinite sequences.
+    val sortWith : comparer:('T -> 'T -> int) -> source:AsyncSeq<'T> -> array<'T>
     #endif
 
     /// Interleaves two async sequences of the same type into a resulting sequence. The provided

@@ -1,3 +1,11 @@
+### 4.6.0
+
+* Added `AsyncSeq.findIndex` — returns the index of the first element satisfying a predicate; raises `KeyNotFoundException` if no match, mirroring `Seq.findIndex`.
+* Added `AsyncSeq.tryFindIndex` — returns the index of the first element satisfying a predicate as `option`, or `None` if not found, mirroring `Seq.tryFindIndex`.
+* Added `AsyncSeq.findIndexAsync` — async-predicate variant of `AsyncSeq.findIndex`; raises `KeyNotFoundException` if no match.
+* Added `AsyncSeq.tryFindIndexAsync` — async-predicate variant of `AsyncSeq.tryFindIndex`; returns `option`.
+* Added `AsyncSeq.sortWith` — sorts the sequence using a custom comparison function, returning an array, mirroring `Seq.sortWith`.
+
 ### 4.5.0
 
 * Added `AsyncSeq.last` — returns the last element of the sequence; raises `InvalidOperationException` if empty, mirroring `Seq.last`.

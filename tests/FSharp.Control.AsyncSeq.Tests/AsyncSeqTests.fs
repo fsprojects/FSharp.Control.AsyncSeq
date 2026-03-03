@@ -3274,3 +3274,86 @@ let ``AsyncSeq.tryItem returns None for negative index`` () =
 let ``AsyncSeq.tryItem returns None on empty sequence`` () =
   let result = AsyncSeq.tryItem 0 AsyncSeq.empty<int> |> Async.RunSynchronously
   Assert.AreEqual(None, result)
+
+// ===== findIndex / tryFindIndex / findIndexAsync / tryFindIndexAsync =====
+
+[<Test>]
+let ``AsyncSeq.findIndex returns index of first matching element`` () =
+  for i in 0 .. 9 do
+    let ls = [ 1 .. 10 ]
+    let result = AsyncSeq.ofSeq ls |> AsyncSeq.findIndex (fun x -> x = i + 1) |> Async.RunSynchronously
+    Assert.AreEqual(i, result)
+
+[<Test>]
+let ``AsyncSeq.findIndex raises KeyNotFoundException when no match`` () =
+  Assert.Throws<System.Collections.Generic.KeyNotFoundException>(fun () ->
+    AsyncSeq.ofSeq [ 1; 2; 3 ] |> AsyncSeq.findIndex (fun x -> x = 99) |> Async.RunSynchronously |> ignore)
+  |> ignore
+
+[<Test>]
+let ``AsyncSeq.tryFindIndex returns Some index when found`` () =
+  let ls = [ 10; 20; 30; 40 ]
+  let result = AsyncSeq.ofSeq ls |> AsyncSeq.tryFindIndex (fun x -> x = 30) |> Async.RunSynchronously
+  Assert.AreEqual(Some 2, result)
+
+[<Test>]
+let ``AsyncSeq.tryFindIndex returns None when not found`` () =
+  let result = AsyncSeq.ofSeq [ 1; 2; 3 ] |> AsyncSeq.tryFindIndex (fun x -> x = 99) |> Async.RunSynchronously
+  Assert.AreEqual(None, result)
+
+[<Test>]
+let ``AsyncSeq.tryFindIndex returns Some 0 for first element`` () =
+  let result = AsyncSeq.ofSeq [ 5; 6; 7 ] |> AsyncSeq.tryFindIndex (fun x -> x = 5) |> Async.RunSynchronously
+  Assert.AreEqual(Some 0, result)
+
+[<Test>]
+let ``AsyncSeq.findIndexAsync returns index of first matching element`` () =
+  let ls = [ 1; 2; 3; 4; 5 ]
+  let result =
+    AsyncSeq.ofSeq ls
+    |> AsyncSeq.findIndexAsync (fun x -> async { return x = 3 })
+    |> Async.RunSynchronously
+  Assert.AreEqual(2, result)
+
+[<Test>]
+let ``AsyncSeq.findIndexAsync raises KeyNotFoundException when no match`` () =
+  Assert.Throws<System.Collections.Generic.KeyNotFoundException>(fun () ->
+    AsyncSeq.ofSeq [ 1; 2; 3 ]
+    |> AsyncSeq.findIndexAsync (fun x -> async { return x = 99 })
+    |> Async.RunSynchronously |> ignore)
+  |> ignore
+
+[<Test>]
+let ``AsyncSeq.tryFindIndexAsync returns Some index when found`` () =
+  let result =
+    AsyncSeq.ofSeq [ 10; 20; 30 ]
+    |> AsyncSeq.tryFindIndexAsync (fun x -> async { return x = 20 })
+    |> Async.RunSynchronously
+  Assert.AreEqual(Some 1, result)
+
+[<Test>]
+let ``AsyncSeq.tryFindIndexAsync returns None when not found`` () =
+  let result =
+    AsyncSeq.ofSeq [ 1; 2; 3 ]
+    |> AsyncSeq.tryFindIndexAsync (fun x -> async { return x = 99 })
+    |> Async.RunSynchronously
+  Assert.AreEqual(None, result)
+
+// ===== sortWith =====
+
+[<Test>]
+let ``AsyncSeq.sortWith sorts using custom comparer`` () =
+  let source = asyncSeq { yield 3; yield 1; yield 4; yield 1; yield 5 }
+  let result = AsyncSeq.sortWith compare source
+  Assert.AreEqual([| 1; 1; 3; 4; 5 |], result)
+
+[<Test>]
+let ``AsyncSeq.sortWith sorts descending with negated comparer`` () =
+  let source = asyncSeq { yield 3; yield 1; yield 4; yield 1; yield 5 }
+  let result = AsyncSeq.sortWith (fun a b -> compare b a) source
+  Assert.AreEqual([| 5; 4; 3; 1; 1 |], result)
+
+[<Test>]
+let ``AsyncSeq.sortWith returns empty array for empty sequence`` () =
+  let result = AsyncSeq.sortWith compare AsyncSeq.empty<int>
+  Assert.AreEqual([||], result)

@@ -1209,6 +1209,46 @@ module AsyncSeq =
   let findAsync f (source : AsyncSeq<'T>) =
     source |> pickAsync (fun v -> async { let! b = f v in return if b then Some v else None })
 
+  let tryFindIndex f (source : AsyncSeq<'T>) = async {
+    use ie = source.GetEnumerator()
+    let! first = ie.MoveNext()
+    let b = ref first
+    let i = ref 0
+    while b.Value.IsSome && not (f b.Value.Value) do
+        let! next = ie.MoveNext()
+        b := next
+        i := !i + 1
+    return if b.Value.IsSome then Some !i else None }
+
+  let tryFindIndexAsync f (source : AsyncSeq<'T>) = async {
+    use ie = source.GetEnumerator()
+    let! first = ie.MoveNext()
+    let b = ref first
+    let i = ref 0
+    let mutable keepGoing = b.Value.IsSome
+    while keepGoing do
+        let! matches = f b.Value.Value
+        if matches then
+            keepGoing <- false
+        else
+            let! next = ie.MoveNext()
+            b := next
+            if b.Value.IsSome then i := !i + 1
+            else keepGoing <- false
+    return if b.Value.IsSome then Some !i else None }
+
+  let findIndex f (source : AsyncSeq<'T>) = async {
+    let! result = tryFindIndex f source
+    match result with
+    | None -> return raise (System.Collections.Generic.KeyNotFoundException("An element satisfying the predicate was not found in the collection."))
+    | Some i -> return i }
+
+  let findIndexAsync f (source : AsyncSeq<'T>) = async {
+    let! result = tryFindIndexAsync f source
+    match result with
+    | None -> return raise (System.Collections.Generic.KeyNotFoundException("An element satisfying the predicate was not found in the collection."))
+    | Some i -> return i }
+
   let exists f (source : AsyncSeq<'T>) =
     source |> tryFind f |> Async.map Option.isSome
 
@@ -1885,6 +1925,9 @@ module AsyncSeq =
 
   let sortByDescending (projection:'T -> 'Key) (source:AsyncSeq<'T>) : array<'T> when 'Key : comparison =
     toSortedSeq (Array.sortByDescending projection) source
+
+  let sortWith (comparer:'T -> 'T -> int) (source:AsyncSeq<'T>) : array<'T> =
+    toSortedSeq (Array.sortWith comparer) source
   #endif
 
   #if !FABLE_COMPILER
