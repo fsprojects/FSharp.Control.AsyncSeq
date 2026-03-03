@@ -1,8 +1,8 @@
 {
-  "last_run": "2026-03-02T17:11:00Z",
-  "workflow_run_id": "22586934803",
-  "run_number": 48,
-  "tasks_run_this_session": ["task_10", "task_11"],
+  "last_run": "2026-03-03T17:11:21Z",
+  "workflow_run_id": "22634204067",
+  "run_number": 51,
+  "tasks_run_this_session": ["task_8", "task_11"],
   "last_task_run": {
     "task_1": "2026-02-24T12:26:25Z",
     "task_2": "2026-02-25T17:18:57Z",
@@ -11,10 +11,10 @@
     "task_5": "2026-03-02T17:11:00Z",
     "task_6": "2026-02-24T12:34:53Z",
     "task_7": "2026-02-24T12:26:25Z",
-    "task_8": "2026-03-01T17:01:07Z",
+    "task_8": "2026-03-03T17:11:21Z",
     "task_9": "2026-02-24T12:34:53Z",
     "task_10": "2026-03-02T17:11:00Z",
-    "task_11": "2026-03-02T17:11:00Z"
+    "task_11": "2026-03-03T17:11:21Z"
   },
   "issue_cursor": null,
   "pr_cursor": null,
@@ -62,28 +62,28 @@
     "246": "release 4.1.0 prep (merged)",
     "247": "deps update BenchmarkDotNet/TestSdk/coverlet (merged)",
     "249": "distinct/distinctBy/distinctByAsync/countBy/countByAsync/exactlyOne/tryExactlyOne (merged)",
-    "254": "zip3/zipWith3/zipWithAsync3 (merged by maintainer 2026-02-25)",
-    "255": "head/iteri/find/tryFindAsync/tail (merged by maintainer 2026-02-27)",
+    "254": "zip3/zipWith3/zipWithAsync3 (merged)",
+    "255": "head/iteri/find/tryFindAsync/tail (merged)",
     "256": "release 4.3.0 prep (closed/superseded)",
-    "257": "findAsync/existsAsync/forallAsync (merged by maintainer 2026-02-28)",
-    "259": "last/item/tryItem (merged by maintainer 2026-03-01)",
-    "release-v4.4.0": "Prepare release 4.4.0 - superseded, closed",
-    "262": "Prepare release 4.5.0 - bump version.props 4.2.0->4.5.0 (run 22548097857) - OPEN",
-    "261": "Add findIndex/tryFindIndex/findIndexAsync/tryFindIndexAsync/sortWith - 5 combinators, 279 tests (run 22548097857) - OPEN",
-    "264": "Add isEmpty/tryHead/except - 3 combinators, 276/276 tests pass (run 22586934803) - OPEN"
+    "257": "findAsync/existsAsync/forallAsync (merged)",
+    "259": "last/item/tryItem (merged)",
+    "261": "findIndex/tryFindIndex/findIndexAsync/tryFindIndexAsync/sortWith (merged 2026-03-03)",
+    "262": "release 4.5.0 prep (merged 2026-03-03)",
+    "264": "isEmpty/tryHead/except (merged 2026-03-03)",
+    "release-v4.6.0": "Prepare release 4.6.0 - fix merge conflict + bump 4.5.0->4.6.0 (run 22634204067) - OPEN (pending patch push)"
   },
   "welcomed_users": [],
   "stale_pr_nudged": [],
   "monthly_activity_issue": 263,
   "notes": [
-    "Monthly Activity issue #248 (2026-02) closed; issue #260 created then superseded by #263 for 2026-03",
-    "Open PRs: #261 (findindex-sortwith), #262 (release v4.5.0), #264 (isEmpty/tryHead/except)",
+    "PRs #261, #262, #264 all merged by dsyme on 2026-03-03",
+    "RELEASE_NOTES.md had unresolved conflict markers from #261 and #264 landing simultaneously - fixed in release-v4.6.0 PR",
+    "Open PRs: release-v4.6.0 (pending, no PR number yet until patch is pushed)",
     "Trusted publishing: Applied by dsyme via 'update publishing' commit 2026-02-25",
     "NUnit 3.9.0 -> 4.x update not done (major, requires test code changes)",
     "Fable test pre-existing build errors: FS0039/FS0041 in AsyncSeq.test.fs",
     "No GitHub Release created for v4.x yet (last release on GitHub is 2.0.24 from 2020)",
     "Build env quirk: multi-TF parallel build causes cache file race; workaround: build main lib first (-f netstandard2.1), then test project (--no-dependencies -p:BuildInParallel=false)",
-    "BenchmarkDotNet version mismatch: tests/benchmarks use 0.15.8 vs 0.14.0 - worth fixing",
-    "Next ideas: splitAt, allPairs, mapFold, NUnit 4.x update, fix Fable test errors, create GitHub Release, BenchmarkDotNet version alignment"
+    "Next ideas: splitAt, allPairs, mapFold, NUnit 4.x update, fix Fable test errors, create GitHub Release, BenchmarkDotNet version alignment, scan/scanAsync, pairwise"
   ]
 }
