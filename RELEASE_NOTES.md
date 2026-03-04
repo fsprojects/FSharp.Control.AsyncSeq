@@ -1,3 +1,10 @@
+### 4.7.0
+
+* Added `AsyncSeq.mapFoldAsync` — maps each element using an asynchronous folder that also threads an accumulator state, returning both the array of results and the final state; mirrors `Seq.mapFold`.
+* Added `AsyncSeq.mapFold` — synchronous variant of `AsyncSeq.mapFoldAsync`, mirroring `Seq.mapFold`.
+* Added `AsyncSeq.allPairs` — returns an async sequence of all pairs from two input sequences (cartesian product); the second source is fully buffered before iteration, mirroring `Seq.allPairs`.
+* Added `AsyncSeq.rev` — returns a new async sequence with all elements in reverse order; the entire source sequence is buffered before yielding, mirroring `Seq.rev`.
+
 ### 4.6.0
 
 * Added `AsyncSeq.isEmpty` — returns `true` if the sequence contains no elements; short-circuits after the first element, mirroring `Seq.isEmpty`.
