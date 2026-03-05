@@ -1,8 +1,8 @@
 {
-  "last_run": "2026-03-04T17:09:33Z",
-  "workflow_run_id": "22680296985",
-  "run_number": 52,
-  "tasks_run_this_session": ["task_3", "task_10", "task_11"],
+  "last_run": "2026-03-05T17:46:32Z",
+  "workflow_run_id": "22728661573",
+  "run_number": 53,
+  "tasks_run_this_session": ["task_10", "task_11"],
   "last_task_run": {
     "task_1": "2026-02-24T12:26:25Z",
     "task_2": "2026-02-25T17:18:57Z",
@@ -13,8 +13,8 @@
     "task_7": "2026-02-24T12:26:25Z",
     "task_8": "2026-03-03T17:11:21Z",
     "task_9": "2026-02-24T12:34:53Z",
-    "task_10": "2026-03-04T17:09:33Z",
-    "task_11": "2026-03-04T17:09:33Z"
+    "task_10": "2026-03-05T17:46:32Z",
+    "task_11": "2026-03-05T17:46:32Z"
   },
   "issue_cursor": null,
   "pr_cursor": null,
@@ -71,20 +71,22 @@
     "262": "release 4.5.0 prep (merged 2026-03-03)",
     "264": "isEmpty/tryHead/except (merged 2026-03-03)",
     "265": "release 4.6.0 prep (merged 2026-03-04)",
-    "improve-new-combinators": "mapFold/mapFoldAsync/allPairs/rev (open, run 22680296985)"
+    "266": "mapFold/mapFoldAsync/allPairs/rev (open)",
+    "improve-splitAt-branch": "splitAt (open, run 22728661573)"
   },
   "welcomed_users": [],
   "stale_pr_nudged": [],
   "monthly_activity_issue": 263,
   "notes": [
-    "PR #265 (release 4.6.0) merged by dsyme on 2026-03-04",
-    "New combinators PR (improve-new-combinators branch) open - 4 functions: mapFold, mapFoldAsync, allPairs, rev",
+    "PR #266 (mapFold/mapFoldAsync/allPairs/rev) still open - waiting for review",
+    "New PR created this run: splitAt combinator (branch repo-assist/improve-splitAt)",
+    "splitAt: splits at index, returns first N as array + remainder as AsyncSeq; single enumeration; 6 new tests; 293 total",
     "Trusted publishing: Applied by dsyme via 'update publishing' commit 2026-02-25",
     "NUnit 3.9.0 -> 4.x update not done (major, requires test code changes)",
     "Fable test pre-existing build errors: FS0039/FS0041 in AsyncSeq.test.fs",
     "No GitHub Release created for v4.x yet (last release on GitHub is 2.0.24 from 2020)",
-    "Build env quirk: multi-TF parallel build causes cache file race; workaround: build main lib first (-f netstandard2.1), then test project (--no-dependencies -p:BuildInParallel=false)",
-    "Next ideas: splitAt, NUnit 4.x update, fix Fable test errors, create GitHub Release, BenchmarkDotNet version alignment, scan/scanAsync, pairwise - NOTE: scan/scanAsync and pairwise already exist in the library!",
-    "After new-combinators PR merges, consider release 4.7.0 prep PR"
+    "Build env quirk: multi-TF parallel build causes cache file race; workaround: build main lib first (-f netstandard2.1), then test project (-p:BuildInParallel=false)",
+    "Next ideas after splitAt: NUnit 4.x update, fix Fable test errors, create GitHub Release, BenchmarkDotNet version alignment (benchmarks 0.14.0 vs tests 0.15.8), transpose",
+    "After PRs #266 and splitAt PR merge, prepare release 4.7.0"
   ]
 }
