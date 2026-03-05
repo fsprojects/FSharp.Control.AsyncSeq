@@ -586,6 +586,11 @@ module AsyncSeq =
     /// Returns an empty sequence if the source is empty.
     val tail : source:AsyncSeq<'T> -> AsyncSeq<'T>
 
+    /// Splits an async sequence at the given index. Returns an async computation that yields
+    /// the first `count` elements as an array and the remaining elements as a new AsyncSeq.
+    /// The source is enumerated once; the returned AsyncSeq lazily produces the remainder.
+    val splitAt : count:int -> source:AsyncSeq<'T> -> Async<'T array * AsyncSeq<'T>>
+
     /// Creates an async computation which iterates the AsyncSeq and collects the output into an array.
     val toArrayAsync : source:AsyncSeq<'T> -> Async<'T []>
 

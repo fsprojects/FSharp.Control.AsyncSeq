@@ -3408,3 +3408,47 @@ let ``AsyncSeq.sortWith sorts descending with negated comparer`` () =
 let ``AsyncSeq.sortWith returns empty array for empty sequence`` () =
   let result = AsyncSeq.sortWith compare AsyncSeq.empty<int>
   Assert.AreEqual([||], result)
+
+[<Test>]
+let ``AsyncSeq.splitAt splits a sequence at the given index`` () =
+  let source = asyncSeq { yield 1; yield 2; yield 3; yield 4; yield 5 }
+  let first, rest = AsyncSeq.splitAt 3 source |> Async.RunSynchronously
+  let restArr = rest |> AsyncSeq.toArrayAsync |> Async.RunSynchronously
+  Assert.AreEqual([| 1; 2; 3 |], first)
+  Assert.AreEqual([| 4; 5 |], restArr)
+
+[<Test>]
+let ``AsyncSeq.splitAt with count=0 returns empty array and full rest`` () =
+  let source = asyncSeq { yield 10; yield 20 }
+  let first, rest = AsyncSeq.splitAt 0 source |> Async.RunSynchronously
+  let restArr = rest |> AsyncSeq.toArrayAsync |> Async.RunSynchronously
+  Assert.AreEqual([||], first)
+  Assert.AreEqual([| 10; 20 |], restArr)
+
+[<Test>]
+let ``AsyncSeq.splitAt with count >= length returns all elements in first and empty rest`` () =
+  let source = asyncSeq { yield 1; yield 2; yield 3 }
+  let first, rest = AsyncSeq.splitAt 10 source |> Async.RunSynchronously
+  let restArr = rest |> AsyncSeq.toArrayAsync |> Async.RunSynchronously
+  Assert.AreEqual([| 1; 2; 3 |], first)
+  Assert.AreEqual([||], restArr)
+
+[<Test>]
+let ``AsyncSeq.splitAt on empty sequence returns empty first and empty rest`` () =
+  let first, rest = AsyncSeq.splitAt 3 AsyncSeq.empty<int> |> Async.RunSynchronously
+  let restArr = rest |> AsyncSeq.toArrayAsync |> Async.RunSynchronously
+  Assert.AreEqual([||], first)
+  Assert.AreEqual([||], restArr)
+
+[<Test>]
+let ``AsyncSeq.splitAt with count equal to length returns all in first and empty rest`` () =
+  let source = asyncSeq { yield 7; yield 8; yield 9 }
+  let first, rest = AsyncSeq.splitAt 3 source |> Async.RunSynchronously
+  let restArr = rest |> AsyncSeq.toArrayAsync |> Async.RunSynchronously
+  Assert.AreEqual([| 7; 8; 9 |], first)
+  Assert.AreEqual([||], restArr)
+
+[<Test>]
+let ``AsyncSeq.splitAt with negative count throws ArgumentException`` () =
+  Assert.Throws<System.ArgumentException>(fun () ->
+    AsyncSeq.splitAt -1 AsyncSeq.empty<int> |> Async.RunSynchronously |> ignore) |> ignore

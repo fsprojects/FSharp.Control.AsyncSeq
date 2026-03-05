@@ -1,3 +1,7 @@
+### 4.7.0
+
+* Added `AsyncSeq.splitAt` — splits a sequence at the given index, returning the first `count` elements as an array and the remaining elements as a new `AsyncSeq`. Mirrors `Seq.splitAt`. The source is enumerated once.
+
 ### 4.6.0
 
 * Added `AsyncSeq.isEmpty` — returns `true` if the sequence contains no elements; short-circuits after the first element, mirroring `Seq.isEmpty`.
