@@ -3408,3 +3408,135 @@ let ``AsyncSeq.sortWith sorts descending with negated comparer`` () =
 let ``AsyncSeq.sortWith returns empty array for empty sequence`` () =
   let result = AsyncSeq.sortWith compare AsyncSeq.empty<int>
   Assert.AreEqual([||], result)
+
+// ===== removeAt =====
+
+[<Test>]
+let ``AsyncSeq.removeAt removes the element at the specified index`` () =
+  let result =
+    AsyncSeq.ofSeq [ 1; 2; 3; 4; 5 ]
+    |> AsyncSeq.removeAt 2
+    |> AsyncSeq.toArrayAsync
+    |> Async.RunSynchronously
+  Assert.AreEqual([| 1; 2; 4; 5 |], result)
+
+[<Test>]
+let ``AsyncSeq.removeAt removes the first element (index 0)`` () =
+  let result =
+    AsyncSeq.ofSeq [ 10; 20; 30 ]
+    |> AsyncSeq.removeAt 0
+    |> AsyncSeq.toArrayAsync
+    |> Async.RunSynchronously
+  Assert.AreEqual([| 20; 30 |], result)
+
+[<Test>]
+let ``AsyncSeq.removeAt removes the last element`` () =
+  let result =
+    AsyncSeq.ofSeq [ 1; 2; 3 ]
+    |> AsyncSeq.removeAt 2
+    |> AsyncSeq.toArrayAsync
+    |> Async.RunSynchronously
+  Assert.AreEqual([| 1; 2 |], result)
+
+[<Test>]
+let ``AsyncSeq.removeAt raises ArgumentException for negative index`` () =
+  Assert.Throws<System.ArgumentException>(fun () ->
+    AsyncSeq.ofSeq [ 1; 2; 3 ]
+    |> AsyncSeq.removeAt -1
+    |> AsyncSeq.toArrayAsync
+    |> Async.RunSynchronously |> ignore)
+  |> ignore
+
+// ===== updateAt =====
+
+[<Test>]
+let ``AsyncSeq.updateAt replaces element at specified index`` () =
+  let result =
+    AsyncSeq.ofSeq [ 1; 2; 3; 4 ]
+    |> AsyncSeq.updateAt 1 99
+    |> AsyncSeq.toArrayAsync
+    |> Async.RunSynchronously
+  Assert.AreEqual([| 1; 99; 3; 4 |], result)
+
+[<Test>]
+let ``AsyncSeq.updateAt replaces first element`` () =
+  let result =
+    AsyncSeq.ofSeq [ 1; 2; 3 ]
+    |> AsyncSeq.updateAt 0 99
+    |> AsyncSeq.toArrayAsync
+    |> Async.RunSynchronously
+  Assert.AreEqual([| 99; 2; 3 |], result)
+
+[<Test>]
+let ``AsyncSeq.updateAt replaces last element`` () =
+  let result =
+    AsyncSeq.ofSeq [ 1; 2; 3 ]
+    |> AsyncSeq.updateAt 2 99
+    |> AsyncSeq.toArrayAsync
+    |> Async.RunSynchronously
+  Assert.AreEqual([| 1; 2; 99 |], result)
+
+[<Test>]
+let ``AsyncSeq.updateAt raises ArgumentException for negative index`` () =
+  Assert.Throws<System.ArgumentException>(fun () ->
+    AsyncSeq.ofSeq [ 1; 2; 3 ]
+    |> AsyncSeq.updateAt -1 0
+    |> AsyncSeq.toArrayAsync
+    |> Async.RunSynchronously |> ignore)
+  |> ignore
+
+// ===== insertAt =====
+
+[<Test>]
+let ``AsyncSeq.insertAt inserts element at specified index`` () =
+  let result =
+    AsyncSeq.ofSeq [ 1; 2; 4; 5 ]
+    |> AsyncSeq.insertAt 2 3
+    |> AsyncSeq.toArrayAsync
+    |> Async.RunSynchronously
+  Assert.AreEqual([| 1; 2; 3; 4; 5 |], result)
+
+[<Test>]
+let ``AsyncSeq.insertAt inserts at index 0 (prepend)`` () =
+  let result =
+    AsyncSeq.ofSeq [ 2; 3 ]
+    |> AsyncSeq.insertAt 0 1
+    |> AsyncSeq.toArrayAsync
+    |> Async.RunSynchronously
+  Assert.AreEqual([| 1; 2; 3 |], result)
+
+[<Test>]
+let ``AsyncSeq.insertAt appends when index equals sequence length`` () =
+  let result =
+    AsyncSeq.ofSeq [ 1; 2; 3 ]
+    |> AsyncSeq.insertAt 3 4
+    |> AsyncSeq.toArrayAsync
+    |> Async.RunSynchronously
+  Assert.AreEqual([| 1; 2; 3; 4 |], result)
+
+[<Test>]
+let ``AsyncSeq.insertAt inserts into empty sequence at index 0`` () =
+  let result =
+    AsyncSeq.empty<int>
+    |> AsyncSeq.insertAt 0 42
+    |> AsyncSeq.toArrayAsync
+    |> Async.RunSynchronously
+  Assert.AreEqual([| 42 |], result)
+
+[<Test>]
+let ``AsyncSeq.insertAt raises ArgumentException for negative index`` () =
+  Assert.Throws<System.ArgumentException>(fun () ->
+    AsyncSeq.ofSeq [ 1; 2; 3 ]
+    |> AsyncSeq.insertAt -1 0
+    |> AsyncSeq.toArrayAsync
+    |> Async.RunSynchronously |> ignore)
+  |> ignore
+
+[<Test>]
+let ``AsyncSeq.insertAt raises ArgumentException when index exceeds length`` () =
+  Assert.Throws<System.ArgumentException>(fun () ->
+    AsyncSeq.ofSeq [ 1; 2; 3 ]
+    |> AsyncSeq.insertAt 5 0
+    |> AsyncSeq.toArrayAsync
+    |> Async.RunSynchronously |> ignore)
+  |> ignore

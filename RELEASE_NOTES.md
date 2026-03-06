@@ -1,3 +1,9 @@
+### 4.7.0
+
+* Added `AsyncSeq.removeAt` — returns a new sequence with the element at the specified index removed, mirroring `Seq.removeAt`.
+* Added `AsyncSeq.updateAt` — returns a new sequence with the element at the specified index replaced by a given value, mirroring `Seq.updateAt`.
+* Added `AsyncSeq.insertAt` — returns a new sequence with a value inserted before the element at the specified index (or appended if the index equals the sequence length), mirroring `Seq.insertAt`.
+
 ### 4.6.0
 
 * Added `AsyncSeq.isEmpty` — returns `true` if the sequence contains no elements; short-circuits after the first element, mirroring `Seq.isEmpty`.

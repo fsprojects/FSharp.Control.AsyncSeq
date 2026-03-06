@@ -1432,6 +1432,32 @@ module AsyncSeq =
     let s = System.Collections.Generic.HashSet(excluded)
     source |> filter (fun x -> not (s.Contains(x)))
 
+  let removeAt (index : int) (source : AsyncSeq<'T>) : AsyncSeq<'T> = asyncSeq {
+    if index < 0 then invalidArg "index" "must be non-negative"
+    let i = ref 0
+    for x in source do
+      if i.Value <> index then yield x
+      i := i.Value + 1 }
+
+  let updateAt (index : int) (value : 'T) (source : AsyncSeq<'T>) : AsyncSeq<'T> = asyncSeq {
+    if index < 0 then invalidArg "index" "must be non-negative"
+    let i = ref 0
+    for x in source do
+      if i.Value = index then yield value
+      else yield x
+      i := i.Value + 1 }
+
+  let insertAt (index : int) (value : 'T) (source : AsyncSeq<'T>) : AsyncSeq<'T> = asyncSeq {
+    if index < 0 then invalidArg "index" "must be non-negative"
+    let i = ref 0
+    for x in source do
+      if i.Value = index then yield value
+      yield x
+      i := i.Value + 1
+    if i.Value = index then yield value
+    elif i.Value < index then
+      invalidArg "index" "The index is outside the range of elements in the collection." }
+
   #if !FABLE_COMPILER
   let iterAsyncParallel (f:'a -> Async<unit>) (s:AsyncSeq<'a>) : Async<unit> = async {
     use mb = MailboxProcessor.Start (ignore >> async.Return)
