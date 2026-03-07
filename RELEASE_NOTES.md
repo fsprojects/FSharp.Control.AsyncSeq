@@ -1,9 +1,12 @@
-### 4.7.0
+### 4.8.0
 
 * Added `AsyncSeq.mapFoldAsync` — maps each element using an asynchronous folder that also threads an accumulator state, returning both the array of results and the final state; mirrors `Seq.mapFold`.
 * Added `AsyncSeq.mapFold` — synchronous variant of `AsyncSeq.mapFoldAsync`, mirroring `Seq.mapFold`.
 * Added `AsyncSeq.allPairs` — returns an async sequence of all pairs from two input sequences (cartesian product); the second source is fully buffered before iteration, mirroring `Seq.allPairs`.
 * Added `AsyncSeq.rev` — returns a new async sequence with all elements in reverse order; the entire source sequence is buffered before yielding, mirroring `Seq.rev`.
+
+### 4.7.0
+
 * Added `AsyncSeq.splitAt` — splits a sequence at the given index, returning the first `count` elements as an array and the remaining elements as a new `AsyncSeq`. Mirrors `Seq.splitAt`. The source is enumerated once.
 * Added `AsyncSeq.removeAt` — returns a new sequence with the element at the specified index removed, mirroring `Seq.removeAt`.
 * Added `AsyncSeq.updateAt` — returns a new sequence with the element at the specified index replaced by a given value, mirroring `Seq.updateAt`.
