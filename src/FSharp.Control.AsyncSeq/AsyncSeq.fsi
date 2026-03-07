@@ -408,6 +408,19 @@ module AsyncSeq =
     /// in the given excluded collection. Uses a HashSet for O(1) lookup. Mirrors Seq.except.
     val except : excluded:seq<'T> -> source:AsyncSeq<'T> -> AsyncSeq<'T> when 'T : equality
 
+    /// Returns a new asynchronous sequence with the element at the specified index removed.
+    /// Raises ArgumentException if index is negative. Mirrors Seq.removeAt.
+    val removeAt : index:int -> source:AsyncSeq<'T> -> AsyncSeq<'T>
+
+    /// Returns a new asynchronous sequence with the element at the specified index replaced by the given value.
+    /// Raises ArgumentException if index is negative. Mirrors Seq.updateAt.
+    val updateAt : index:int -> value:'T -> source:AsyncSeq<'T> -> AsyncSeq<'T>
+
+    /// Returns a new asynchronous sequence with the given value inserted before the element at the specified index.
+    /// An index equal to the length of the sequence appends the value at the end.
+    /// Raises ArgumentException if index is negative or greater than the sequence length. Mirrors Seq.insertAt.
+    val insertAt : index:int -> value:'T -> source:AsyncSeq<'T> -> AsyncSeq<'T>
+
     /// Creates an asynchronous sequence that lazily takes element from an
     /// input synchronous sequence and returns them one-by-one.
     val ofSeq : source:seq<'T> -> AsyncSeq<'T>
