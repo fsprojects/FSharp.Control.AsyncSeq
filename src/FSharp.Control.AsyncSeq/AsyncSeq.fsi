@@ -418,6 +418,19 @@ module AsyncSeq =
     /// in the given excluded collection. Uses a HashSet for O(1) lookup. Mirrors Seq.except.
     val except : excluded:seq<'T> -> source:AsyncSeq<'T> -> AsyncSeq<'T> when 'T : equality
 
+    /// Returns a new asynchronous sequence with the element at the specified index removed.
+    /// Raises ArgumentException if index is negative. Mirrors Seq.removeAt.
+    val removeAt : index:int -> source:AsyncSeq<'T> -> AsyncSeq<'T>
+
+    /// Returns a new asynchronous sequence with the element at the specified index replaced by the given value.
+    /// Raises ArgumentException if index is negative. Mirrors Seq.updateAt.
+    val updateAt : index:int -> value:'T -> source:AsyncSeq<'T> -> AsyncSeq<'T>
+
+    /// Returns a new asynchronous sequence with the given value inserted before the element at the specified index.
+    /// An index equal to the length of the sequence appends the value at the end.
+    /// Raises ArgumentException if index is negative or greater than the sequence length. Mirrors Seq.insertAt.
+    val insertAt : index:int -> value:'T -> source:AsyncSeq<'T> -> AsyncSeq<'T>
+
     /// Creates an asynchronous sequence that lazily takes element from an
     /// input synchronous sequence and returns them one-by-one.
     val ofSeq : source:seq<'T> -> AsyncSeq<'T>
@@ -599,6 +612,11 @@ module AsyncSeq =
     /// Returns an asynchronous sequence that skips the first element of the input sequence.
     /// Returns an empty sequence if the source is empty.
     val tail : source:AsyncSeq<'T> -> AsyncSeq<'T>
+
+    /// Splits an async sequence at the given index. Returns an async computation that yields
+    /// the first `count` elements as an array and the remaining elements as a new AsyncSeq.
+    /// The source is enumerated once; the returned AsyncSeq lazily produces the remainder.
+    val splitAt : count:int -> source:AsyncSeq<'T> -> Async<'T array * AsyncSeq<'T>>
 
     /// Creates an async computation which iterates the AsyncSeq and collects the output into an array.
     val toArrayAsync : source:AsyncSeq<'T> -> Async<'T []>
