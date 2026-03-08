@@ -3408,3 +3408,257 @@ let ``AsyncSeq.sortWith sorts descending with negated comparer`` () =
 let ``AsyncSeq.sortWith returns empty array for empty sequence`` () =
   let result = AsyncSeq.sortWith compare AsyncSeq.empty<int>
   Assert.AreEqual([||], result)
+
+// ── AsyncSeq.mapFold ──────────────────────────────────────────────────────────
+
+[<Test>]
+let ``AsyncSeq.mapFold maps elements and accumulates state`` () =
+  let source = asyncSeq { yield 1; yield 2; yield 3 }
+  let results, finalState =
+    AsyncSeq.mapFold (fun acc x -> (x * 2, acc + x)) 0 source |> Async.RunSynchronously
+  Assert.AreEqual([| 2; 4; 6 |], results)
+  Assert.AreEqual(6, finalState)
+
+[<Test>]
+let ``AsyncSeq.mapFold returns empty array and initial state for empty sequence`` () =
+  let results, finalState =
+    AsyncSeq.mapFold (fun acc x -> (x, acc + x)) 99 AsyncSeq.empty<int> |> Async.RunSynchronously
+  Assert.AreEqual([||], results)
+  Assert.AreEqual(99, finalState)
+
+[<Test>]
+let ``AsyncSeq.mapFoldAsync maps elements asynchronously and accumulates state`` () =
+  let source = asyncSeq { yield 10; yield 20; yield 30 }
+  let results, finalState =
+    AsyncSeq.mapFoldAsync (fun acc x -> async { return (x + 1, acc + x) }) 0 source
+    |> Async.RunSynchronously
+  Assert.AreEqual([| 11; 21; 31 |], results)
+  Assert.AreEqual(60, finalState)
+
+[<Test>]
+let ``AsyncSeq.mapFoldAsync returns empty array and initial state for empty sequence`` () =
+  let results, finalState =
+    AsyncSeq.mapFoldAsync (fun acc x -> async { return (x, acc + 1) }) 5 AsyncSeq.empty<int>
+    |> Async.RunSynchronously
+  Assert.AreEqual([||], results)
+  Assert.AreEqual(5, finalState)
+
+// ── AsyncSeq.allPairs ────────────────────────────────────────────────────────
+
+[<Test>]
+let ``AsyncSeq.allPairs returns cartesian product`` () =
+  let s1 = asyncSeq { yield 1; yield 2 }
+  let s2 = asyncSeq { yield 'a'; yield 'b'; yield 'c' }
+  let result =
+    AsyncSeq.allPairs s1 s2 |> AsyncSeq.toArrayAsync |> Async.RunSynchronously
+  Assert.AreEqual(
+    [| (1,'a'); (1,'b'); (1,'c'); (2,'a'); (2,'b'); (2,'c') |],
+    result)
+
+[<Test>]
+let ``AsyncSeq.allPairs returns empty when first source is empty`` () =
+  let result =
+    AsyncSeq.allPairs AsyncSeq.empty<int> (asyncSeq { yield 1; yield 2 })
+    |> AsyncSeq.toArrayAsync |> Async.RunSynchronously
+  Assert.AreEqual([||], result)
+
+[<Test>]
+let ``AsyncSeq.allPairs returns empty when second source is empty`` () =
+  let result =
+    AsyncSeq.allPairs (asyncSeq { yield 1; yield 2 }) AsyncSeq.empty<int>
+    |> AsyncSeq.toArrayAsync |> Async.RunSynchronously
+  Assert.AreEqual([||], result)
+
+// ── AsyncSeq.rev ─────────────────────────────────────────────────────────────
+
+[<Test>]
+let ``AsyncSeq.rev reverses a sequence`` () =
+  let source = asyncSeq { yield 1; yield 2; yield 3; yield 4; yield 5 }
+  let result = AsyncSeq.rev source |> AsyncSeq.toArrayAsync |> Async.RunSynchronously
+  Assert.AreEqual([| 5; 4; 3; 2; 1 |], result)
+
+[<Test>]
+let ``AsyncSeq.rev returns empty sequence for empty input`` () =
+  let result = AsyncSeq.rev AsyncSeq.empty<int> |> AsyncSeq.toArrayAsync |> Async.RunSynchronously
+  Assert.AreEqual([||], result)
+
+[<Test>]
+let ``AsyncSeq.rev returns singleton for single element`` () =
+  let result = AsyncSeq.rev (asyncSeq { yield 42 }) |> AsyncSeq.toArrayAsync |> Async.RunSynchronously
+  Assert.AreEqual([| 42 |], result)
+
+[<Test>]
+let ``AsyncSeq.splitAt splits a sequence at the given index`` () =
+  let source = asyncSeq { yield 1; yield 2; yield 3; yield 4; yield 5 }
+  let first, rest = AsyncSeq.splitAt 3 source |> Async.RunSynchronously
+  let restArr = rest |> AsyncSeq.toArrayAsync |> Async.RunSynchronously
+  Assert.AreEqual([| 1; 2; 3 |], first)
+  Assert.AreEqual([| 4; 5 |], restArr)
+
+[<Test>]
+let ``AsyncSeq.splitAt with count=0 returns empty array and full rest`` () =
+  let source = asyncSeq { yield 10; yield 20 }
+  let first, rest = AsyncSeq.splitAt 0 source |> Async.RunSynchronously
+  let restArr = rest |> AsyncSeq.toArrayAsync |> Async.RunSynchronously
+  Assert.AreEqual([||], first)
+  Assert.AreEqual([| 10; 20 |], restArr)
+
+[<Test>]
+let ``AsyncSeq.splitAt with count >= length returns all elements in first and empty rest`` () =
+  let source = asyncSeq { yield 1; yield 2; yield 3 }
+  let first, rest = AsyncSeq.splitAt 10 source |> Async.RunSynchronously
+  let restArr = rest |> AsyncSeq.toArrayAsync |> Async.RunSynchronously
+  Assert.AreEqual([| 1; 2; 3 |], first)
+  Assert.AreEqual([||], restArr)
+
+[<Test>]
+let ``AsyncSeq.splitAt on empty sequence returns empty first and empty rest`` () =
+  let first, rest = AsyncSeq.splitAt 3 AsyncSeq.empty<int> |> Async.RunSynchronously
+  let restArr = rest |> AsyncSeq.toArrayAsync |> Async.RunSynchronously
+  Assert.AreEqual([||], first)
+  Assert.AreEqual([||], restArr)
+
+[<Test>]
+let ``AsyncSeq.splitAt with count equal to length returns all in first and empty rest`` () =
+  let source = asyncSeq { yield 7; yield 8; yield 9 }
+  let first, rest = AsyncSeq.splitAt 3 source |> Async.RunSynchronously
+  let restArr = rest |> AsyncSeq.toArrayAsync |> Async.RunSynchronously
+  Assert.AreEqual([| 7; 8; 9 |], first)
+  Assert.AreEqual([||], restArr)
+
+[<Test>]
+let ``AsyncSeq.splitAt with negative count throws ArgumentException`` () =
+  Assert.Throws<System.ArgumentException>(fun () ->
+    AsyncSeq.splitAt -1 AsyncSeq.empty<int> |> Async.RunSynchronously |> ignore) |> ignore
+
+// ===== removeAt =====
+
+[<Test>]
+let ``AsyncSeq.removeAt removes the element at the specified index`` () =
+  let result =
+    AsyncSeq.ofSeq [ 1; 2; 3; 4; 5 ]
+    |> AsyncSeq.removeAt 2
+    |> AsyncSeq.toArrayAsync
+    |> Async.RunSynchronously
+  Assert.AreEqual([| 1; 2; 4; 5 |], result)
+
+[<Test>]
+let ``AsyncSeq.removeAt removes the first element (index 0)`` () =
+  let result =
+    AsyncSeq.ofSeq [ 10; 20; 30 ]
+    |> AsyncSeq.removeAt 0
+    |> AsyncSeq.toArrayAsync
+    |> Async.RunSynchronously
+  Assert.AreEqual([| 20; 30 |], result)
+
+[<Test>]
+let ``AsyncSeq.removeAt removes the last element`` () =
+  let result =
+    AsyncSeq.ofSeq [ 1; 2; 3 ]
+    |> AsyncSeq.removeAt 2
+    |> AsyncSeq.toArrayAsync
+    |> Async.RunSynchronously
+  Assert.AreEqual([| 1; 2 |], result)
+
+[<Test>]
+let ``AsyncSeq.removeAt raises ArgumentException for negative index`` () =
+  Assert.Throws<System.ArgumentException>(fun () ->
+    AsyncSeq.ofSeq [ 1; 2; 3 ]
+    |> AsyncSeq.removeAt -1
+    |> AsyncSeq.toArrayAsync
+    |> Async.RunSynchronously |> ignore)
+  |> ignore
+
+// ===== updateAt =====
+
+[<Test>]
+let ``AsyncSeq.updateAt replaces element at specified index`` () =
+  let result =
+    AsyncSeq.ofSeq [ 1; 2; 3; 4 ]
+    |> AsyncSeq.updateAt 1 99
+    |> AsyncSeq.toArrayAsync
+    |> Async.RunSynchronously
+  Assert.AreEqual([| 1; 99; 3; 4 |], result)
+
+[<Test>]
+let ``AsyncSeq.updateAt replaces first element`` () =
+  let result =
+    AsyncSeq.ofSeq [ 1; 2; 3 ]
+    |> AsyncSeq.updateAt 0 99
+    |> AsyncSeq.toArrayAsync
+    |> Async.RunSynchronously
+  Assert.AreEqual([| 99; 2; 3 |], result)
+
+[<Test>]
+let ``AsyncSeq.updateAt replaces last element`` () =
+  let result =
+    AsyncSeq.ofSeq [ 1; 2; 3 ]
+    |> AsyncSeq.updateAt 2 99
+    |> AsyncSeq.toArrayAsync
+    |> Async.RunSynchronously
+  Assert.AreEqual([| 1; 2; 99 |], result)
+
+[<Test>]
+let ``AsyncSeq.updateAt raises ArgumentException for negative index`` () =
+  Assert.Throws<System.ArgumentException>(fun () ->
+    AsyncSeq.ofSeq [ 1; 2; 3 ]
+    |> AsyncSeq.updateAt -1 0
+    |> AsyncSeq.toArrayAsync
+    |> Async.RunSynchronously |> ignore)
+  |> ignore
+
+// ===== insertAt =====
+
+[<Test>]
+let ``AsyncSeq.insertAt inserts element at specified index`` () =
+  let result =
+    AsyncSeq.ofSeq [ 1; 2; 4; 5 ]
+    |> AsyncSeq.insertAt 2 3
+    |> AsyncSeq.toArrayAsync
+    |> Async.RunSynchronously
+  Assert.AreEqual([| 1; 2; 3; 4; 5 |], result)
+
+[<Test>]
+let ``AsyncSeq.insertAt inserts at index 0 (prepend)`` () =
+  let result =
+    AsyncSeq.ofSeq [ 2; 3 ]
+    |> AsyncSeq.insertAt 0 1
+    |> AsyncSeq.toArrayAsync
+    |> Async.RunSynchronously
+  Assert.AreEqual([| 1; 2; 3 |], result)
+
+[<Test>]
+let ``AsyncSeq.insertAt appends when index equals sequence length`` () =
+  let result =
+    AsyncSeq.ofSeq [ 1; 2; 3 ]
+    |> AsyncSeq.insertAt 3 4
+    |> AsyncSeq.toArrayAsync
+    |> Async.RunSynchronously
+  Assert.AreEqual([| 1; 2; 3; 4 |], result)
+
+[<Test>]
+let ``AsyncSeq.insertAt inserts into empty sequence at index 0`` () =
+  let result =
+    AsyncSeq.empty<int>
+    |> AsyncSeq.insertAt 0 42
+    |> AsyncSeq.toArrayAsync
+    |> Async.RunSynchronously
+  Assert.AreEqual([| 42 |], result)
+
+[<Test>]
+let ``AsyncSeq.insertAt raises ArgumentException for negative index`` () =
+  Assert.Throws<System.ArgumentException>(fun () ->
+    AsyncSeq.ofSeq [ 1; 2; 3 ]
+    |> AsyncSeq.insertAt -1 0
+    |> AsyncSeq.toArrayAsync
+    |> Async.RunSynchronously |> ignore)
+  |> ignore
+
+[<Test>]
+let ``AsyncSeq.insertAt raises ArgumentException when index exceeds length`` () =
+  Assert.Throws<System.ArgumentException>(fun () ->
+    AsyncSeq.ofSeq [ 1; 2; 3 ]
+    |> AsyncSeq.insertAt 5 0
+    |> AsyncSeq.toArrayAsync
+    |> Async.RunSynchronously |> ignore)
+  |> ignore

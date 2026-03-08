@@ -1295,6 +1295,23 @@ module AsyncSeq =
   let reduce (f: 'T -> 'T -> 'T) (source: AsyncSeq<'T>) : Async<'T> =
       reduceAsync (fun a b -> f a b |> async.Return) source
 
+  let mapFoldAsync (folder: 'State -> 'T -> Async<'Result * 'State>) (state: 'State) (source: AsyncSeq<'T>) : Async<'Result array * 'State> = async {
+      let results = ResizeArray<'Result>()
+      let mutable st = state
+      use ie = source.GetEnumerator()
+      let! move = ie.MoveNext()
+      let b = ref move
+      while b.Value.IsSome do
+          let! (r, st') = folder st b.Value.Value
+          results.Add(r)
+          st <- st'
+          let! next = ie.MoveNext()
+          b := next
+      return (results.ToArray(), st) }
+
+  let mapFold (folder: 'State -> 'T -> 'Result * 'State) (state: 'State) (source: AsyncSeq<'T>) : Async<'Result array * 'State> =
+      mapFoldAsync (fun st x -> folder st x |> async.Return) state source
+
   let length (source : AsyncSeq<'T>) =
     fold (fun st _ -> st + 1L) 0L source
 
@@ -1431,6 +1448,32 @@ module AsyncSeq =
   let except (excluded : seq<'T>) (source : AsyncSeq<'T>) : AsyncSeq<'T> =
     let s = System.Collections.Generic.HashSet(excluded)
     source |> filter (fun x -> not (s.Contains(x)))
+
+  let removeAt (index : int) (source : AsyncSeq<'T>) : AsyncSeq<'T> = asyncSeq {
+    if index < 0 then invalidArg "index" "must be non-negative"
+    let i = ref 0
+    for x in source do
+      if i.Value <> index then yield x
+      i := i.Value + 1 }
+
+  let updateAt (index : int) (value : 'T) (source : AsyncSeq<'T>) : AsyncSeq<'T> = asyncSeq {
+    if index < 0 then invalidArg "index" "must be non-negative"
+    let i = ref 0
+    for x in source do
+      if i.Value = index then yield value
+      else yield x
+      i := i.Value + 1 }
+
+  let insertAt (index : int) (value : 'T) (source : AsyncSeq<'T>) : AsyncSeq<'T> = asyncSeq {
+    if index < 0 then invalidArg "index" "must be non-negative"
+    let i = ref 0
+    for x in source do
+      if i.Value = index then yield value
+      yield x
+      i := i.Value + 1
+    if i.Value = index then yield value
+    elif i.Value < index then
+      invalidArg "index" "The index is outside the range of elements in the collection." }
 
   #if !FABLE_COMPILER
   let iterAsyncParallel (f:'a -> Async<unit>) (s:AsyncSeq<'a>) : Async<unit> = async {
@@ -1676,6 +1719,25 @@ module AsyncSeq =
   let zipWith3 (f:'T1 -> 'T2 -> 'T3 -> 'U) (source1:AsyncSeq<'T1>) (source2:AsyncSeq<'T2>) (source3:AsyncSeq<'T3>) : AsyncSeq<'U> =
       zipWithAsync3 (fun a b c -> f a b c |> async.Return) source1 source2 source3
 
+  let allPairs (source1: AsyncSeq<'T1>) (source2: AsyncSeq<'T2>) : AsyncSeq<'T1 * 'T2> = asyncSeq {
+      let buf = System.Collections.Generic.List<'T2>()
+      use ie2 = source2.GetEnumerator()
+      let! move2 = ie2.MoveNext()
+      let b2 = ref move2
+      while b2.Value.IsSome do
+          buf.Add(b2.Value.Value)
+          let! next2 = ie2.MoveNext()
+          b2 := next2
+      use ie1 = source1.GetEnumerator()
+      let! move1 = ie1.MoveNext()
+      let b1 = ref move1
+      while b1.Value.IsSome do
+          let x = b1.Value.Value
+          for y in buf do
+              yield (x, y)
+          let! next1 = ie1.MoveNext()
+          b1 := next1 }
+
   let zappAsync (fs:AsyncSeq<'T -> Async<'U>>) (s:AsyncSeq<'T>) : AsyncSeq<'U> =
       zipWithAsync (|>) s fs
 
@@ -1815,6 +1877,35 @@ module AsyncSeq =
 
   let tail (source : AsyncSeq<'T>) : AsyncSeq<'T> = skip 1 source
 
+  /// Splits an async sequence at the given index, returning the first `count` elements as an array
+  /// and the remaining elements as a new AsyncSeq. The source is enumerated once.
+  let splitAt (count: int) (source: AsyncSeq<'T>) : Async<'T array * AsyncSeq<'T>> = async {
+      if count < 0 then invalidArg "count" "must be non-negative"
+      let ie = source.GetEnumerator()
+      let ra = ResizeArray<'T>()
+      let! m = ie.MoveNext()
+      let b = ref m
+      while b.Value.IsSome && ra.Count < count do
+          ra.Add b.Value.Value
+          let! next = ie.MoveNext()
+          b := next
+      let first = ra.ToArray()
+      let rest =
+          if b.Value.IsNone then
+              ie.Dispose()
+              empty<'T>
+          else
+              let cur = ref b.Value
+              asyncSeq {
+                  try
+                      while cur.Value.IsSome do
+                          yield cur.Value.Value
+                          let! next = ie.MoveNext()
+                          cur := next
+                  finally
+                      ie.Dispose() }
+      return first, rest }
+
   let toArrayAsync (source : AsyncSeq<'T>) : Async<'T[]> = async {
       let ra = (new ResizeArray<_>())
       use ie = source.GetEnumerator()
@@ -1939,6 +2030,11 @@ module AsyncSeq =
 
   let sortWith (comparer:'T -> 'T -> int) (source:AsyncSeq<'T>) : array<'T> =
     toSortedSeq (Array.sortWith comparer) source
+
+  let rev (source: AsyncSeq<'T>) : AsyncSeq<'T> = asyncSeq {
+      let! arr = toArrayAsync source
+      for i in arr.Length - 1 .. -1 .. 0 do
+          yield arr.[i] }
   #endif
 
   #if !FABLE_COMPILER
