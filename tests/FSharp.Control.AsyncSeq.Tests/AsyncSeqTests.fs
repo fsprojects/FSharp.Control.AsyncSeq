@@ -3409,6 +3409,84 @@ let ``AsyncSeq.sortWith returns empty array for empty sequence`` () =
   let result = AsyncSeq.sortWith compare AsyncSeq.empty<int>
   Assert.AreEqual([||], result)
 
+// ── AsyncSeq.mapFold ──────────────────────────────────────────────────────────
+
+[<Test>]
+let ``AsyncSeq.mapFold maps elements and accumulates state`` () =
+  let source = asyncSeq { yield 1; yield 2; yield 3 }
+  let results, finalState =
+    AsyncSeq.mapFold (fun acc x -> (x * 2, acc + x)) 0 source |> Async.RunSynchronously
+  Assert.AreEqual([| 2; 4; 6 |], results)
+  Assert.AreEqual(6, finalState)
+
+[<Test>]
+let ``AsyncSeq.mapFold returns empty array and initial state for empty sequence`` () =
+  let results, finalState =
+    AsyncSeq.mapFold (fun acc x -> (x, acc + x)) 99 AsyncSeq.empty<int> |> Async.RunSynchronously
+  Assert.AreEqual([||], results)
+  Assert.AreEqual(99, finalState)
+
+[<Test>]
+let ``AsyncSeq.mapFoldAsync maps elements asynchronously and accumulates state`` () =
+  let source = asyncSeq { yield 10; yield 20; yield 30 }
+  let results, finalState =
+    AsyncSeq.mapFoldAsync (fun acc x -> async { return (x + 1, acc + x) }) 0 source
+    |> Async.RunSynchronously
+  Assert.AreEqual([| 11; 21; 31 |], results)
+  Assert.AreEqual(60, finalState)
+
+[<Test>]
+let ``AsyncSeq.mapFoldAsync returns empty array and initial state for empty sequence`` () =
+  let results, finalState =
+    AsyncSeq.mapFoldAsync (fun acc x -> async { return (x, acc + 1) }) 5 AsyncSeq.empty<int>
+    |> Async.RunSynchronously
+  Assert.AreEqual([||], results)
+  Assert.AreEqual(5, finalState)
+
+// ── AsyncSeq.allPairs ────────────────────────────────────────────────────────
+
+[<Test>]
+let ``AsyncSeq.allPairs returns cartesian product`` () =
+  let s1 = asyncSeq { yield 1; yield 2 }
+  let s2 = asyncSeq { yield 'a'; yield 'b'; yield 'c' }
+  let result =
+    AsyncSeq.allPairs s1 s2 |> AsyncSeq.toArrayAsync |> Async.RunSynchronously
+  Assert.AreEqual(
+    [| (1,'a'); (1,'b'); (1,'c'); (2,'a'); (2,'b'); (2,'c') |],
+    result)
+
+[<Test>]
+let ``AsyncSeq.allPairs returns empty when first source is empty`` () =
+  let result =
+    AsyncSeq.allPairs AsyncSeq.empty<int> (asyncSeq { yield 1; yield 2 })
+    |> AsyncSeq.toArrayAsync |> Async.RunSynchronously
+  Assert.AreEqual([||], result)
+
+[<Test>]
+let ``AsyncSeq.allPairs returns empty when second source is empty`` () =
+  let result =
+    AsyncSeq.allPairs (asyncSeq { yield 1; yield 2 }) AsyncSeq.empty<int>
+    |> AsyncSeq.toArrayAsync |> Async.RunSynchronously
+  Assert.AreEqual([||], result)
+
+// ── AsyncSeq.rev ─────────────────────────────────────────────────────────────
+
+[<Test>]
+let ``AsyncSeq.rev reverses a sequence`` () =
+  let source = asyncSeq { yield 1; yield 2; yield 3; yield 4; yield 5 }
+  let result = AsyncSeq.rev source |> AsyncSeq.toArrayAsync |> Async.RunSynchronously
+  Assert.AreEqual([| 5; 4; 3; 2; 1 |], result)
+
+[<Test>]
+let ``AsyncSeq.rev returns empty sequence for empty input`` () =
+  let result = AsyncSeq.rev AsyncSeq.empty<int> |> AsyncSeq.toArrayAsync |> Async.RunSynchronously
+  Assert.AreEqual([||], result)
+
+[<Test>]
+let ``AsyncSeq.rev returns singleton for single element`` () =
+  let result = AsyncSeq.rev (asyncSeq { yield 42 }) |> AsyncSeq.toArrayAsync |> Async.RunSynchronously
+  Assert.AreEqual([| 42 |], result)
+
 [<Test>]
 let ``AsyncSeq.splitAt splits a sequence at the given index`` () =
   let source = asyncSeq { yield 1; yield 2; yield 3; yield 4; yield 5 }

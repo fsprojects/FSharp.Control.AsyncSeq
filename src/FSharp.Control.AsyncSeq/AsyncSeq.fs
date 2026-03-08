@@ -1295,6 +1295,23 @@ module AsyncSeq =
   let reduce (f: 'T -> 'T -> 'T) (source: AsyncSeq<'T>) : Async<'T> =
       reduceAsync (fun a b -> f a b |> async.Return) source
 
+  let mapFoldAsync (folder: 'State -> 'T -> Async<'Result * 'State>) (state: 'State) (source: AsyncSeq<'T>) : Async<'Result array * 'State> = async {
+      let results = ResizeArray<'Result>()
+      let mutable st = state
+      use ie = source.GetEnumerator()
+      let! move = ie.MoveNext()
+      let b = ref move
+      while b.Value.IsSome do
+          let! (r, st') = folder st b.Value.Value
+          results.Add(r)
+          st <- st'
+          let! next = ie.MoveNext()
+          b := next
+      return (results.ToArray(), st) }
+
+  let mapFold (folder: 'State -> 'T -> 'Result * 'State) (state: 'State) (source: AsyncSeq<'T>) : Async<'Result array * 'State> =
+      mapFoldAsync (fun st x -> folder st x |> async.Return) state source
+
   let length (source : AsyncSeq<'T>) =
     fold (fun st _ -> st + 1L) 0L source
 
@@ -1702,6 +1719,25 @@ module AsyncSeq =
   let zipWith3 (f:'T1 -> 'T2 -> 'T3 -> 'U) (source1:AsyncSeq<'T1>) (source2:AsyncSeq<'T2>) (source3:AsyncSeq<'T3>) : AsyncSeq<'U> =
       zipWithAsync3 (fun a b c -> f a b c |> async.Return) source1 source2 source3
 
+  let allPairs (source1: AsyncSeq<'T1>) (source2: AsyncSeq<'T2>) : AsyncSeq<'T1 * 'T2> = asyncSeq {
+      let buf = System.Collections.Generic.List<'T2>()
+      use ie2 = source2.GetEnumerator()
+      let! move2 = ie2.MoveNext()
+      let b2 = ref move2
+      while b2.Value.IsSome do
+          buf.Add(b2.Value.Value)
+          let! next2 = ie2.MoveNext()
+          b2 := next2
+      use ie1 = source1.GetEnumerator()
+      let! move1 = ie1.MoveNext()
+      let b1 = ref move1
+      while b1.Value.IsSome do
+          let x = b1.Value.Value
+          for y in buf do
+              yield (x, y)
+          let! next1 = ie1.MoveNext()
+          b1 := next1 }
+
   let zappAsync (fs:AsyncSeq<'T -> Async<'U>>) (s:AsyncSeq<'T>) : AsyncSeq<'U> =
       zipWithAsync (|>) s fs
 
@@ -1994,6 +2030,11 @@ module AsyncSeq =
 
   let sortWith (comparer:'T -> 'T -> int) (source:AsyncSeq<'T>) : array<'T> =
     toSortedSeq (Array.sortWith comparer) source
+
+  let rev (source: AsyncSeq<'T>) : AsyncSeq<'T> = asyncSeq {
+      let! arr = toArrayAsync source
+      for i in arr.Length - 1 .. -1 .. 0 do
+          yield arr.[i] }
   #endif
 
   #if !FABLE_COMPILER
