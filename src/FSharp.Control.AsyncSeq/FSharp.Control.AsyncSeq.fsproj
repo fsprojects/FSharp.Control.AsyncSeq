@@ -9,6 +9,8 @@
     <PackageProjectUrl>https://fsprojects.github.io/FSharp.Control.AsyncSeq/</PackageProjectUrl>
     <PackageIconUrl>https://fsprojects.github.io/FSharp.Control.AsyncSeq/img/logo.png</PackageIconUrl>
     <PackageTags>F#;async;fsharp;streaming</PackageTags>
+    <FsDocsLicenseLink>https://github.com/fsprojects/FSharp.Control.AsyncSeq/blob/main/LICENSE.md</FsDocsLicenseLink>
+    <FsDocsReleaseNotesLink>https://github.com/fsprojects/FSharp.Control.AsyncSeq/blob/main/RELEASE_NOTES.md</FsDocsReleaseNotesLink>
     <IncludeSymbols>true</IncludeSymbols>
     <RepositoryUrl>https://github.com/fsprojects/FSharp.Control.AsyncSeq</RepositoryUrl>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>

@@ -4,11 +4,11 @@
 #r "FSharp.Control.AsyncSeq.dll"
 (*** condition: fsx ***)
 #if FSX
-#r "nuget: FSharp.Control.AsyncSeq,{{package-version}}"
+#r "nuget: FSharp.Control.AsyncSeq,{{fsdocs-package-version}}"
 #endif // FSX
 (*** condition: ipynb ***)
 #if IPYNB
-#r "nuget: FSharp.Control.AsyncSeq,{{package-version}}"
+#r "nuget: FSharp.Control.AsyncSeq,{{fsdocs-package-version}}"
 #endif // IPYNB
 
 (**
