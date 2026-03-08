@@ -29,9 +29,11 @@ keywords: F#, asynchronous sequences, AsyncSeq, IAsyncEnumerable, async workflow
 
 An asynchronous sequence is a sequence in which individual elements are _awaited_, so the next element of the sequence is not necessarily available immediately. This allows for efficient composition of asynchronous workflows which involve sequences of data.
 
-The `FSharp.Control.AsyncSeq` library is an implementation of functional asynchronous sequences for F#. The central type of the library is `AsyncSeq<'T>` and is a type alias for `System.Collections.Generic.IAsyncEnumerable<'T>`.
+FSharp.Control.AsyncSeq is an implementation of functional-first programming over asynchronous sequences for F#. The central type of the library, `AsyncSeq<'T>`, is a type alias for the standard type `System.Collections.Generic.IAsyncEnumerable<'T>`.
 
-This library was also [one of the world's first implementations of asynchronous sequences](http://tomasp.net/blog/async-sequences.aspx) with integrated language support through computation expressions and has been used in production for many years. It is a mature library with a rich set of operations and is widely used in the F# community.
+This library was also [one of the world's first implementations of langauge integrated asynchronous sequences](http://tomasp.net/blog/async-sequences.aspx) - that is, asynchronous sequences with integrated language support through computation expressions. It is a mature library used in production for many years and is widely used in the F# community.
+
+### Generating asynchronous sequences
 
 To use the library, referrence the NuGet package `FSharp.Control.AsyncSeq` in your project and open the `FSharp.Control` namespace:
 *)
@@ -39,9 +41,7 @@ To use the library, referrence the NuGet package `FSharp.Control.AsyncSeq` in yo
 open FSharp.Control
 
 (**
-### Generating asynchronous sequences
-
-An asynchronous sequence can be generated using a computation expression, much like `seq<'T>`:
+An asynchronous sequence can be generated using a computation expression:
 *)
 
 let async12 = asyncSeq {
@@ -54,85 +54,6 @@ or more succinctly:
 *)
 
 let async12b = asyncSeq { 1; 2 }
-
-(**
-Another way to generate an asynchronous sequence is using the `Async.unfoldAsync` function. This
-function accepts as an argument a function which can generate individual elements based on a state and 
-signal completion of the sequence.
-
-For example, suppose that you're writing a program which consumes the Twitter API and stores tweets
-which satisfy some criteria into a database. There are several asynchronous request-reply interactions at play - 
-one to retrieve a batch of tweets from the Twitter API, another to determine whether a tweet satisfies some
-criteria and finally an operation to write the desired tweet to a database. 
-
-Given the type `Tweet` to represent an individual tweet, the operation to retrieve a batch of tweets can 
-be modeled with type `int -> Async<(Tweet[] * int) option>` where the incoming `int` represents the 
-offset into the tweet stream. The asynchronous result is an `Option` which when `None` indicates the
-end of the stream, and otherwise contains the batch of retrieved tweets as well as the next offset.
-
-The above function to retrieve a batch of tweets can be used to generate an asynchronous sequence 
-of tweet batches as follows:
-*)
-
-type Tweet = {
-  user : string
-  message : string
-}
-
-let getTweetBatch (offset: int) : Async<(Tweet[] * int) option> = 
-  async { return failwith "TODO: call Twitter API" }
-
-let tweetBatches : AsyncSeq<Tweet[]> = 
-  AsyncSeq.unfoldAsync getTweetBatch 0
-
-(**
-The asynchronous sequence `tweetBatches` will when iterated, incrementally consume the entire tweet stream.
-
-Next, suppose that the tweet filtering function makes a call to a web service which determines
-whether a particular tweet is of interest and should be stored in the database. This function can be modeled with
-type `Tweet -> Async<bool>`. We can flatten the `tweetBatches` sequence and then filter it as follows:
-*)
-
-let filterTweet (t: Tweet) : Async<bool> =
-  failwith "TODO: call web service"
-
-let filteredTweets : AsyncSeq<Tweet> = 
-  tweetBatches
-  |> AsyncSeq.concatSeq // flatten
-  |> AsyncSeq.filterAsync filterTweet // filter
-
-(**
-When the resulting sequence `filteredTweets` is consumed, it will lazily consume the underlying
-sequence `tweetBatches`, select individual tweets and filter them using the function `filterTweets`.
-
-Finally, the function which stores a tweet in the database can be modeled by type `Tweet -> Async<unit>`.
-We can store all filtered tweets as follows:
-*)
-
-let storeTweet (t: Tweet) : Async<unit> =
-  failwith "TODO: call database"
-
-let storeFilteredTweets : Async<unit> =
-  filteredTweets
-  |> AsyncSeq.iterAsync storeTweet
-
-(**
-Note that the value `storeFilteredTweets` is an asynchronous computation of type `Async<unit>`. At this point,
-it is a *representation* of the workflow which consists of reading batches of tweets, filtering them and storing them
-in the database. When executed, the workflow will consume the entire tweet stream. The entire workflow can be
-succinctly declared and executed as follows:
-*)
-
-AsyncSeq.unfoldAsync getTweetBatch 0
-|> AsyncSeq.concatSeq
-|> AsyncSeq.filterAsync filterTweet
-|> AsyncSeq.iterAsync storeTweet
-|> Async.RunSynchronously
-
-(**
-The above snippet effectively orchestrates several asynchronous request-reply interactions into a cohesive unit
-composed using familiar operations on sequences. Furthermore, it will be executed efficiently in a non-blocking manner.
-*)
 
 (**
 ### Comparison with `FSharp.Control.TaskSeq`
