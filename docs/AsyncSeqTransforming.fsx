@@ -36,9 +36,7 @@ open FSharp.Control
 
 (**
 
-## Transforming Sequences
-
-### Using computation expressions
+## Transforming Sequences with computation expressions
 
 The most general and simplest way to transform asynchronous sequences is to write a function that accepts an `AsyncSeq<_>` and returns an `AsyncSeq<_>` and is implemented using an `asyncSeq { ... }` computation expression. For example, the following function transforms a sequence of integers into a sequence of strings that labels each integer as even or odd:
 
@@ -74,7 +72,7 @@ let transformWithAsync (input: AsyncSeq<int>) : AsyncSeq<string> =
 
 (**
 
-### map and mapAsync
+## Using map and mapAsync
 
 Instead of writing a full computation expression, you can use `AsyncSeq.map` to transform each element of a sequence synchronously:
 
@@ -99,7 +97,7 @@ let lengths : AsyncSeq<int> =
 
 (**
 
-### filter and filterAsync
+## Using filter and filterAsync
 
 `AsyncSeq.filter` keeps only elements satisfying a synchronous predicate:
 
@@ -121,23 +119,3 @@ let isInteresting (s: string) : Async<bool> =
 let interesting : AsyncSeq<string> =
     strings |> AsyncSeq.filterAsync isInteresting
 
-(**
-
-### mapFoldAsync
-
-`AsyncSeq.mapFoldAsync` combines a map and a fold in a single pass. The folder function receives
-the current accumulator state and an element, and returns an `Async` of a *(result, newState)* pair.
-The call returns the array of mapped results together with the final state:
-
-*)
-
-let words = asyncSeq { yield! [ "F#"; "is"; "great" ] }
-
-// Number each element with a running index, and count total characters as state.
-let numberAndCount : Async<string array * int> =
-    words
-    |> AsyncSeq.mapFoldAsync
-        (fun totalChars word -> async {
-            let numbered = sprintf "%d: %s" totalChars word
-            return numbered, totalChars + word.Length })
-        0
