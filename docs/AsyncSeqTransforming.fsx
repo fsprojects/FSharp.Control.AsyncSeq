@@ -4,8 +4,8 @@ title: Transforming and Reducing Sequences
 category: Documentation
 categoryindex: 2
 index: 3
-description: How to transform, filter and reduce F# asynchronous sequences using map, filter, reduce, fold and sum operations.
-keywords: F#, asynchronous sequences, AsyncSeq, map, filter, reduce, fold, sum
+description: How to transform and filter F# asynchronous sequences using map, filter and mapFoldAsync.
+keywords: F#, asynchronous sequences, AsyncSeq, map, filter, mapFoldAsync
 ---
 *)
 (*** condition: prepare ***)
@@ -24,9 +24,11 @@ keywords: F#, asynchronous sequences, AsyncSeq, map, filter, reduce, fold, sum
 (**
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/fsprojects/FSharp.Control.AsyncSeq/gh-pages?filepath=AsyncSeqTransforming.ipynb)
 
-# Transforming and Reducing Sequences
+# Transforming and Filtering Sequences
 
-This document covers some of the core operations for transforming and aggregating `AsyncSeq<'T>` values: `map`, `mapAsync`, `filter`, `filterAsync`, `reduceAsync`, `sumBy` and `sumByAsync`.
+This document covers the core operations for transforming and filtering `AsyncSeq<'T>` values:
+`map`, `mapAsync`, `filter`, `filterAsync`, and `mapFoldAsync`.
+For operations that consume a sequence into a single result, see [Consuming Sequences](AsyncSeqConsuming.fsx).
 
 *)
 
@@ -121,50 +123,21 @@ let interesting : AsyncSeq<string> =
 
 (**
 
-### reduceAsync
+### mapFoldAsync
 
-`AsyncSeq.reduceAsync` reduces a sequence to a single value using an asynchronous binary
-operation. It raises `InvalidOperationException` on an empty sequence (use `foldAsync` with an
-explicit initial state if you need to handle that case):
+`AsyncSeq.mapFoldAsync` combines a map and a fold in a single pass. The folder function receives
+the current accumulator state and an element, and returns an `Async` of a *(result, newState)* pair.
+The call returns the array of mapped results together with the final state:
 
 *)
 
 let words = asyncSeq { yield! [ "F#"; "is"; "great" ] }
 
-let sentence : Async<string> =
-    words |> AsyncSeq.reduceAsync (fun acc w -> async { return acc + " " + w })
-
-(**
-
----
-
-## Aggregating Sequences
-
-### sumBy and sumByAsync
-
-`AsyncSeq.sumBy` projects each element to a numeric value and sums the results. It returns an
-`Async` because consuming the sequence is asynchronous, even though the projection itself is
-synchronous:
-
-*)
-
-let numbers = asyncSeq { yield! [ 1 .. 10 ] }
-
-let sumOfSquares : Async<int> =
-    numbers |> AsyncSeq.sumBy (fun n -> n * n)
-
-(**
-
-`AsyncSeq.sumByAsync` is the same when the projection needs to perform async work:
-
-*)
-
-let fetchScore (n: int) : Async<float> =
-    async { return float n * 0.5 } // placeholder
-
-let totalScore : Async<float> =
-    numbers |> AsyncSeq.sumByAsync fetchScore
-
-(**
-Other aggregation functions such as `averageBy` and `averageByAsync` are also available and work similarly.
-*)
+// Number each element with a running index, and count total characters as state.
+let numberAndCount : Async<string array * int> =
+    words
+    |> AsyncSeq.mapFoldAsync
+        (fun totalChars word -> async {
+            let numbered = sprintf "%d: %s" totalChars word
+            return numbered, totalChars + word.Length })
+        0

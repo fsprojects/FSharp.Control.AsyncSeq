@@ -3,7 +3,7 @@
 title: Advanced AsyncSeq Operations
 category: Documentation
 categoryindex: 2
-index: 5
+index: 6
 description: Advanced F# asynchronous sequence operations including groupBy, distinct-until-changed and time-or-count buffering.
 keywords: F#, asynchronous sequences, AsyncSeq, groupBy, distinctUntilChanged, bufferByCountAndTime
 ---

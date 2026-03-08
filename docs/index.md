@@ -1,28 +1,55 @@
 # FSharp.Control.AsyncSeq
 
-FSharp.Control.AsyncSeq is a collection of asynchronous programming utilities for F#.
+FSharp.Control.AsyncSeq is an implementation of functional-first programming over asynchronous sequences for F#.
 
 An asynchronous sequence is a sequence in which individual elements are _awaited_, so the next element of the sequence is not necessarily available immediately. This allows for efficient composition of asynchronous workflows which involve sequences of data.
 
-FSharp.Control.AsyncSeq is an implementation of functional-first programming over asynchronous sequences for F#. The central type of the library, `AsyncSeq<'T>`, is a type alias for the standard type `System.Collections.Generic.IAsyncEnumerable<'T>`.
+## Quick Start
 
-This was [one of the world's first implementations of langauge integrated asynchronous sequences](http://tomasp.net/blog/async-sequences.aspx) - that is, asynchronous sequences with integrated language support through computation expressions. It is a mature library used in production for many years and is widely used in the F# community.
+To use, reference [the NuGet package `FSharp.Control.AsyncSeq`](https://www.nuget.org/packages/FSharp.Control.AsyncSeq) in your project and open the `FSharp.Control` namespace:
 
-An `AsyncSeq<'a>` can be generated using computation expression syntax much like `seq<'a>`:
+```fsharp
+open FSharp.Control
+```
 
-    let oneThenTwo = asyncSeq {
-      yield 1
-      do! Async.Sleep 1000 // non-blocking sleep
-      yield 2
-    }
+An `AsyncSeq<_>` can be generated using computation expression syntax:
+
+```fsharp
+let oneThenTwo = asyncSeq {
+    yield 1
+    do! Async.Sleep 1000 // non-blocking sleep
+    yield 2
+}
+```
+
+Asynchronous sequences must be started, usually by some consuming operation. When started, the above asynchronous sequence `oneThenTwo` will yield the value `1` immediately, but the value `2` will only be available after a delay of 1 second and any consumer must _await_ the second value.
+
+There are many ways to consume an `AsyncSeq<'a>`, for example using `AsyncSeq.iter`:
+
+```fsharp
+oneThenTwo |> AsyncSeq.iter (printfn "Got %d") |> Async.RunSynchronously
+```
+
+or an async computation expression:
+
+```fsharp
+async {
+    for x in oneThenTwo do
+        printfn "Got %d" x
+} |> Async.RunSynchronously
+```
 
 ## Learning
 
-* [Tutorial](AsyncSeq.fsx).
 * [Generating sequences](AsyncSeqGenerating.fsx)
-* [Transforming and reducing sequences](AsyncSeqTransforming.fsx)
+* [Transforming sequences](AsyncSeqTransforming.fsx)
 * [Combining sequences](AsyncSeqCombining.fsx)
+* [Consuming sequences](AsyncSeqConsuming.fsx)
 * [Advanced topics](AsyncSeqAdvanced.fsx)
+
+## History
+
+This was [one of the world's first implementations of langauge integrated asynchronous sequences](http://tomasp.net/blog/async-sequences.aspx) - that is, asynchronous sequences with integrated language support through computation expressions. It is a mature library used in production for many years and is widely used in the F# community.
 
 ## Related Libraries
 
@@ -35,3 +62,8 @@ Both libraries implement that .NET standard `IAsyncEnumerable<'T>` interface, so
 ### seq<'T>
 
 The central difference between `seq<'T>` and `AsyncSeq<'T>` can be illustrated by introducing the notion of time. Suppose that generating subsequent elements of a sequence requires an IO-bound operation. Invoking long  running IO-bound operations from within a `seq<'T>` will _block_ the thread which calls `MoveNext` on the corresponding `IEnumerator`. An `AsyncSeq` on the other hand can use facilities provided by the F# `Async` type to make more efficient use of system resources.
+
+## Related Articles
+
+ * [Programming with F# asynchronous sequences](http://tomasp.net/blog/async-sequences.aspx/)
+

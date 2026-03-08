@@ -3,7 +3,7 @@
 title: Combining Asynchronous Sequences
 category: Documentation
 categoryindex: 2
-index: 4
+index: 5
 description: How to combine multiple F# asynchronous sequences using append, zip, interleave, merge and combineLatest.
 keywords: F#, asynchronous sequences, AsyncSeq, append, zip, interleave, merge, combineLatest
 ---
