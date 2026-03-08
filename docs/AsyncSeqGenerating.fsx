@@ -185,7 +185,7 @@ let withCleanup = asyncSeq {
 
 ---
 
-## Generating with `AsyncSeq.unfoldAsync`
+## Generating with `unfoldAsync`
 
 `AsyncSeq.unfoldAsync` builds a sequence from a seed state. The supplied function receives
 the current state and returns an `Async` of `Some (element, nextState)` to emit an element
