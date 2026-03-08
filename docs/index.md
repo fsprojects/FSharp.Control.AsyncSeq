@@ -1,16 +1,12 @@
-FSharp.Control.AsyncSeq
-=============
+# FSharp.Control.AsyncSeq
 
 FSharp.Control.AsyncSeq is a collection of asynchronous programming utilities for F#.
 
-An `AsyncSeq<'T>` is a sequence in which individual elements are retrieved using an `Async` computation.
-The power of `AsyncSeq` lies in that many of these operations also have analogs based on `Async` 
-allowing composition of complex asynchronous workflows, including compositional cancellation.
+An asynchronous sequence is a sequence in which individual elements are _awaited_, so the next element of the sequence is not necessarily available immediately. This allows for efficient composition of asynchronous workflows which involve sequences of data.
 
-> **v4.0:** `AsyncSeq<'T>` is now a type alias for `System.Collections.Generic.IAsyncEnumerable<'T>`.
-> Values flow freely between `AsyncSeq<'T>` and `IAsyncEnumerable<'T>` without any conversion.
-> `AsyncSeq.ofAsyncEnum` / `AsyncSeq.toAsyncEnum` are now no-ops and marked obsolete — remove them.
-> See the [README](https://github.com/fsprojects/FSharp.Control.AsyncSeq#version-40--bcl-iasyncenumerable-compatibility) for migration notes.
+FSharp.Control.AsyncSeq is an implementation of functional-first programming over asynchronous sequences for F#. The central type of the library, `AsyncSeq<'T>`, is a type alias for the standard type `System.Collections.Generic.IAsyncEnumerable<'T>`.
+
+This was [one of the world's first implementations of langauge integrated asynchronous sequences](http://tomasp.net/blog/async-sequences.aspx) - that is, asynchronous sequences with integrated language support through computation expressions. It is a mature library used in production for many years and is widely used in the F# community.
 
 An `AsyncSeq<'a>` can be generated using computation expression syntax much like `seq<'a>`:
 
@@ -20,34 +16,26 @@ An `AsyncSeq<'a>` can be generated using computation expression syntax much like
       yield 2
     }
 
-Learning
---------------------------
+## Learning
 
-[AsyncSeq](AsyncSeq.html) contains narrative and code samples explaining asynchronous sequences.
+* [Tutorial](AsyncSeq.fsx).
+* [Generating sequences](AsyncSeqGenerating.fsx)
+* [Transforming and reducing sequences](AsyncSeqTransforming.fsx)
+* [Combining sequences](AsyncSeqCombining.fsx)
+* [Advanced topics](AsyncSeqAdvanced.fsx)
 
-[AsyncSeq Examples](AsyncSeqExamples.html) contains examples.
+## Related Libraries
 
-[Terminology](terminology.html) a reference for some of the terminology around F# async.
- 
-[Comparison with IObservable](ComparisonWithIObservable.html) contains discussion about the difference between async sequences and IObservables.
+### `FSharp.Control.TaskSeq`
 
-[API Reference](reference/index.html) contains automatically generated documentation for all types, modules and functions in the library. 
-This includes additional brief samples on using most of the functions.
+[`FSharp.Control.TaskSeq`](https://github.com/fsprojects/FSharp.Control.TaskSeq/) provides a similar API oriented towards `Task<'T>` instead of `Async<'T>`. The choice between them is mostly a matter of preference or performance. The `AsyncSeq` library integrates well with the F# `Async<_>` type, while the `TaskSeq` library is more performant and integrates well with the .NET `Task<_>` type.
 
-Contributing and copyright
---------------------------
+Both libraries implement that .NET standard `IAsyncEnumerable<'T>` interface, so they can be used interchangeably in most scenarios.
 
-The project is hosted on [GitHub][gh] where you can [report issues][issues], fork 
-the project and submit pull requests. If you're adding a new public API, please also 
-consider adding [samples][content] that can be turned into a documentation. You might
-also want to read the [library design notes][readme] to understand how it works.
+### seq<'T>
 
-The library is available under Apache 2.0 license, which allows modification and 
-redistribution for both commercial and non-commercial purposes. For more information see the 
-[License file][license] in the GitHub repository. 
+The central difference between `seq<'T>` and `AsyncSeq<'T>` can be illustrated by introducing the notion of time. Suppose that generating subsequent elements of a sequence requires an IO-bound operation. Invoking long  running IO-bound operations from within a `seq<'T>` will _block_ the thread which calls `MoveNext` on the corresponding `IEnumerator`. An `AsyncSeq` on the other hand can use facilities provided by the F# `Async` type to make more efficient use of system resources.
 
-  [content]: https://github.com/fsprojects/FSharp.Control.AsyncSeq/tree/master/docs/content
-  [gh]: https://github.com/fsprojects/FSharp.Control.AsyncSeq
-  [issues]: https://github.com/fsprojects/FSharp.Control.AsyncSeq/issues
-  [readme]: https://github.com/fsprojects/FSharp.Control.AsyncSeq/blob/master/README.md
-  [license]: https://github.com/fsprojects/FSharp.Control.AsyncSeq/blob/master/LICENSE.txt
+### IObservable<'T>
+
+See [Comparison with IObservable](ComparisonWithObservable.fsx).
