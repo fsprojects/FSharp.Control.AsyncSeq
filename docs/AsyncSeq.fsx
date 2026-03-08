@@ -31,7 +31,7 @@ An asynchronous sequence is a sequence in which individual elements are _awaited
 
 The `FSharp.Control.AsyncSeq` library is an implementation of functional asynchronous sequences for F#. The central type of the library is `AsyncSeq<'T>` and is a type alias for `System.Collections.Generic.IAsyncEnumerable<'T>`.
 
-This library was also [one of the world's first implementations of asynchronous sequences](http://tomasp.net/blog/async-sequences.aspx) and has been used in production for many years. It is a mature library with a rich set of operations defined on `AsyncSeq` and is widely used in the F# community.
+This library was also [one of the world's first implementations of asynchronous sequences](http://tomasp.net/blog/async-sequences.aspx) with integrated language support through computation expressions and has been used in production for many years. It is a mature library with a rich set of operations and is widely used in the F# community.
 
 To use the library, referrence the NuGet package `FSharp.Control.AsyncSeq` in your project and open the `FSharp.Control` namespace:
 *)
@@ -135,6 +135,12 @@ composed using familiar operations on sequences. Furthermore, it will be execute
 *)
 
 (**
+### Comparison with `FSharp.Control.TaskSeq`
+
+A related library is [`FSharp.Control.TaskSeq`](https://github.com/fsprojects/FSharp.Control.TaskSeq/) which provides a similar API for sequences of `Task<'T>` instead of `Async<'T>`. The two libraries are very similar and the choice between them is mostly a matter of preference or performance. The `AsyncSeq` library integrates well with the F# `Async` type, while the `TaskSeq` library is more performant and integrates well with the .NET `Task` type.
+
+Both libraries implement that .NET standard `IAsyncEnumerable<'T>` interface, so they can be used interchangeably in most scenarios.
+
 ### Comparison with seq<'T>
 
 The central difference between `seq<'T>` and `AsyncSeq<'T>` can be illustrated by introducing the notion of time.
