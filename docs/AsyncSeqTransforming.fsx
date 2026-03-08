@@ -5,7 +5,7 @@ category: Documentation
 categoryindex: 2
 index: 3
 description: How to transform, filter and reduce F# asynchronous sequences using map, filter, reduce, fold and sum operations.
-keywords: F#, asynchronous sequences, AsyncSeq, map, filter, reduce, fold, sum, mapFoldAsync
+keywords: F#, asynchronous sequences, AsyncSeq, map, filter, reduce, fold, sum
 ---
 *)
 (*** condition: prepare ***)
@@ -26,8 +26,7 @@ keywords: F#, asynchronous sequences, AsyncSeq, map, filter, reduce, fold, sum, 
 
 # Transforming and Reducing Sequences
 
-This document covers some of the core operations for transforming and aggregating `AsyncSeq<'T>` values:
-`map`, `mapAsync`, `filter`, `filterAsync`, `reduceAsync`, `mapFoldAsync`, `sumBy` and `sumByAsync`.
+This document covers some of the core operations for transforming and aggregating `AsyncSeq<'T>` values: `map`, `mapAsync`, `filter`, `filterAsync`, `reduceAsync`, `sumBy` and `sumByAsync`.
 
 *)
 
@@ -134,25 +133,6 @@ let words = asyncSeq { yield! [ "F#"; "is"; "great" ] }
 
 let sentence : Async<string> =
     words |> AsyncSeq.reduceAsync (fun acc w -> async { return acc + " " + w })
-
-(**
-
-### mapFoldAsync
-
-`AsyncSeq.mapFoldAsync` combines a map and a fold in a single pass. The folder function receives
-the current accumulator state and an element, and returns an `Async` of a *(result, newState)* pair.
-The call returns the array of mapped results together with the final state:
-
-*)
-
-// Number each element with a running index, and count total characters as state.
-let numberAndCount : Async<string array * int> =
-    words
-    |> AsyncSeq.mapFoldAsync
-        (fun totalChars word -> async {
-            let numbered = sprintf "%d: %s" totalChars word
-            return numbered, totalChars + word.Length })
-        0
 
 (**
 

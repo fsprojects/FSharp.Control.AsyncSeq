@@ -288,7 +288,10 @@ each element with `Choice<'T1,'T2>` so you can distinguish the source:
 type Heartbeat = Heartbeat
 type ConfigChange = ConfigChange of string
 
-let heartbeats    : AsyncSeq<Heartbeat>     = AsyncSeq.replicateInfiniteAsync (async { do! Async.Sleep 5000; return Heartbeat })
+let heartbeats : AsyncSeq<Heartbeat> = AsyncSeq.replicateInfiniteAsync (async { 
+    do! Async.Sleep 5000
+    return Heartbeat 
+})
 let configChanges : AsyncSeq<ConfigChange>  = failwith "TODO: long-poll config store"
 
 let merged : AsyncSeq<Choice<Heartbeat, ConfigChange>> =
