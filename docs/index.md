@@ -35,7 +35,3 @@ Both libraries implement that .NET standard `IAsyncEnumerable<'T>` interface, so
 ### seq<'T>
 
 The central difference between `seq<'T>` and `AsyncSeq<'T>` can be illustrated by introducing the notion of time. Suppose that generating subsequent elements of a sequence requires an IO-bound operation. Invoking long  running IO-bound operations from within a `seq<'T>` will _block_ the thread which calls `MoveNext` on the corresponding `IEnumerator`. An `AsyncSeq` on the other hand can use facilities provided by the F# `Async` type to make more efficient use of system resources.
-
-### IObservable<'T>
-
-See [Comparison with IObservable](ComparisonWithObservable.fsx).
