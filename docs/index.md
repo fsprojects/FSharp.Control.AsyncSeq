@@ -53,17 +53,16 @@ This was [one of the world's first implementations of langauge integrated asynch
 
 ## Related Libraries
 
-### `FSharp.Control.TaskSeq`
+### FSharp.Control.TaskSeq
 
-[`FSharp.Control.TaskSeq`](https://github.com/fsprojects/FSharp.Control.TaskSeq/) provides a similar API oriented towards `Task<'T>` instead of `Async<'T>`. The choice between them is mostly a matter of preference or performance. The `AsyncSeq` library integrates well with the F# `Async<_>` type, while the `TaskSeq` library is more performant and integrates well with the .NET `Task<_>` type.
+[FSharp.Control.TaskSeq](https://github.com/fsprojects/FSharp.Control.TaskSeq/) provides a similar API, oriented towards `Task<'T>` instead of `Async<'T>`. The choice between them is mostly a matter of preference or performance. The `AsyncSeq` library integrates well with the F# `Async<_>` type, while the `TaskSeq` library is more performant and integrates well with the .NET `Task<_>` type.
 
 Both libraries implement that .NET standard `IAsyncEnumerable<'T>` interface, so they can be used interchangeably in most scenarios.
 
-### seq<'T>
+### FSharp.Collections.Seq
 
-The central difference between `seq<'T>` and `AsyncSeq<'T>` can be illustrated by introducing the notion of time. Suppose that generating subsequent elements of a sequence requires an IO-bound operation. Invoking long  running IO-bound operations from within a `seq<'T>` will _block_ the thread which calls `MoveNext` on the corresponding `IEnumerator`. An `AsyncSeq` on the other hand can use facilities provided by the F# `Async` type to make more efficient use of system resources.
+The central difference between `seq<'T>` and `AsyncSeq<'T>` is the notion of time. Suppose that generating subsequent elements of a sequence requires an IO-bound operation. Invoking long  running IO-bound operations from within a `seq<'T>` will _block_ the thread which calls `MoveNext` on the corresponding `IEnumerator`. An `AsyncSeq` on the other hand can use facilities provided by the F# `Async` type to make more efficient use of system resources.
 
 ## Related Articles
 
- * [Programming with F# asynchronous sequences](http://tomasp.net/blog/async-sequences.aspx/)
-
+* [Programming with F# asynchronous sequences](http://tomasp.net/blog/async-sequences.aspx/)
