@@ -1,3 +1,13 @@
+(**
+---
+title: Comparison with IObservable
+category: Documentation
+categoryindex: 2
+index: 3
+description: A comparison of F# asynchronous sequences with IObservable.
+keywords: F#, asynchronous sequences, AsyncSeq, IObservable, reactive
+---
+*)
 (*** condition: prepare ***)
 #nowarn "211"
 #I "../src/FSharp.Control.AsyncSeq/bin/Release/netstandard2.1"

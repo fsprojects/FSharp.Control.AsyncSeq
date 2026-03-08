@@ -1,3 +1,13 @@
+(**
+---
+title: F# AsyncSeq Examples
+category: Documentation
+categoryindex: 2
+index: 2
+description: Examples demonstrating the use of F# asynchronous sequences.
+keywords: F#, asynchronous sequences, AsyncSeq, examples
+---
+*)
 (*** condition: prepare ***)
 #nowarn "211"
 #I "../src/FSharp.Control.AsyncSeq/bin/Release/netstandard2.1"

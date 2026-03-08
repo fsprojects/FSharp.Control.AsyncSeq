@@ -404,8 +404,8 @@ Jest.describe("AsyncSeq.interleave", fun () ->
     })
 )
 
-Jest.describe("AsyncSeq.bufferBy", fun () ->
-    Jest.test("AsyncSeq.bufferByCount", async {
+Jest.describe("AsyncSeq.chunkBy", fun () ->
+    Jest.test("AsyncSeq.chunkBySize", async {
         let! actual =
             asyncSeq {
                 yield 1
@@ -414,31 +414,31 @@ Jest.describe("AsyncSeq.bufferBy", fun () ->
                 yield 4
                 yield 5
             }
-            |> AsyncSeq.bufferByCount 2 |> AsyncSeq.toArrayAsync
+            |> AsyncSeq.chunkBySize 2 |> AsyncSeq.toArrayAsync
         let expected = [|[|1;2|];[|3;4|];[|5|]|]
 
         Jest.expect(actual).toEqual(expected)
         Jest.expect(actual).toHaveLength(expected.Length)
     })
 
-    Jest.test("AsyncSeq.bufferByCount various sizes", async {
+    Jest.test("AsyncSeq.chunkBySize various sizes", async {
         for sz in 0 .. 10 do
             let! actual =
                 asyncSeq {
                     for i in 1 .. sz do
                        yield i
                 }
-                |> AsyncSeq.bufferByCount 1 |> AsyncSeq.toArrayAsync
+                |> AsyncSeq.chunkBySize 1 |> AsyncSeq.toArrayAsync
             let expected = [|for i in 1 .. sz -> [|i|]|]
 
             Jest.expect(actual).toEqual(expected)
             Jest.expect(actual).toHaveLength(expected.Length)
     })
 
-    Jest.test("AsyncSeq.bufferByCount empty", async {
+    Jest.test("AsyncSeq.chunkBySize empty", async {
         let! actual =
             AsyncSeq.empty<int>
-            |> AsyncSeq.bufferByCount 2
+            |> AsyncSeq.chunkBySize 2
             |> AsyncSeq.toArrayAsync
         let expected = [||]
 
@@ -860,22 +860,6 @@ Jest.test("AsyncSeq.while should allow do at end", async {
 
     Jest.expect(actual).toEqual([||])
     Jest.expect(x.Value).toBe(3)
-})
-
-Jest.test("AsyncSeq.getIterator should work", async {
-    let s1 = [1..2] |> AsyncSeq.ofSeq
-    use i = s1.GetEnumerator()
-
-    match! i.MoveNext() with
-    | None as v -> Jest.expect(v).toBeDefined()
-    | Some v ->
-        Jest.expect(v).toBe(1)
-
-        match! i.MoveNext() with
-        | None as v -> Jest.expect(v).toBeDefined()
-        | Some v ->
-            Jest.expect(v).toBe(2)
-            do! Jest.expect(i.MoveNext()).toBeUndefined()
 })
 
 Jest.test("asyncSeq.For should delay", async {

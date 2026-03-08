@@ -1,3 +1,13 @@
+(**
+---
+title: F# Asynchronous Sequences
+category: Documentation
+categoryindex: 2
+index: 1
+description: An introduction to F# asynchronous sequences and how to use them.
+keywords: F#, asynchronous sequences, AsyncSeq, IAsyncEnumerable, async workflows
+---
+*)
 (*** condition: prepare ***)
 #nowarn "211"
 #I "../src/FSharp.Control.AsyncSeq/bin/Release/netstandard2.1"
@@ -15,37 +25,35 @@
 (**
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/fsprojects/FSharp.Control.AsyncSeq/gh-pages?filepath=AsyncSeq.ipynb)
 
-# F# Async: FSharp.Control.AsyncSeq
+# F# Asynchronous Sequences
 
-> NOTE: There is also the option to use [FSharp.Control.TaskSeq](https://github.com/fsprojects/FSharp.Control.TaskSeq) which has a very similar usage model.
+An asynchronous sequence is a sequence in which individual elements are _awaited_, so the next element of the sequence is not necessarily available immediately. This allows for efficient composition of asynchronous workflows which involve sequences of data.
 
-An AsyncSeq is a sequence in which individual elements are retrieved using an `Async` computation.
-It is similar to `seq<'a>` in that subsequent elements are pulled on-demand.
-`AsyncSeq` also bears similarity to `IObservable<'a>` with the former being based on an "asynchronous pull" and the
-latter based on a "synchronous push". Analogs for most operations defined for `Seq`, `List` and `IObservable` are also defined for 
-`AsyncSeq`. The power of `AsyncSeq` lies in that many of these operations also have analogs based on `Async` 
-allowing composition of complex asynchronous workflows.
+The `FSharp.Control.AsyncSeq` library is an implementation of functional asynchronous sequences for F#. The central type of the library is `AsyncSeq<'T>` and is a type alias for `System.Collections.Generic.IAsyncEnumerable<'T>`.
 
-> **v4.0 and later:** `AsyncSeq<'T>` is a type alias for `System.Collections.Generic.IAsyncEnumerable<'T>`.
-> Any `IAsyncEnumerable<'T>` value (e.g. from EF Core, ASP.NET Core channels, or `taskSeq { }`) can be used
-> directly as an `AsyncSeq<'T>` without conversion, and vice-versa.
+This library was also [one of the world's first implementations of asynchronous sequences](http://tomasp.net/blog/async-sequences.aspx) and has been used in production for many years. It is a mature library with a rich set of operations defined on `AsyncSeq` and is widely used in the F# community.
 
-The `AsyncSeq` type is located in the `FSharp.Control.AsyncSeq.dll` assembly which can be loaded in F# Interactive as follows:
+To use the library, referrence the NuGet package `FSharp.Control.AsyncSeq` in your project and open the `FSharp.Control` namespace:
 *)
 
-#r "../../../bin/FSharp.Control.AsyncSeq.dll"
 open FSharp.Control
 
 (**
 ### Generating asynchronous sequences
 
-An `AsyncSeq<'T>` can be generated using computation expression syntax much like `seq<'T>`:
+An asynchronous sequence can be generated using a computation expression, much like `seq<'T>`:
 *)
 
 let async12 = asyncSeq {
   yield 1
   yield 2
 }
+
+(**
+or more succinctly:
+*)
+
+let async12b = asyncSeq { 1; 2 }
 
 (**
 Another way to generate an asynchronous sequence is using the `Async.unfoldAsync` function. This
@@ -72,7 +80,7 @@ type Tweet = {
 }
 
 let getTweetBatch (offset: int) : Async<(Tweet[] * int) option> = 
-  failwith "TODO: call Twitter API"
+  async { return failwith "TODO: call Twitter API" }
 
 let tweetBatches : AsyncSeq<Tweet[]> = 
   AsyncSeq.unfoldAsync getTweetBatch 0
@@ -136,6 +144,8 @@ corresponding `IEnumerator`. An `AsyncSeq` on the other hand can use facilities 
 more efficient use of system resources.
 *)
 
+open System.Threading
+
 let withTime = seq {
   Thread.Sleep(1000) // calling thread will block
   yield 1
@@ -143,7 +153,7 @@ let withTime = seq {
   yield 1
 }
 
-let withTime' = asyncSeq {
+let withTime2 = asyncSeq {
   do! Async.Sleep 1000 // non-blocking sleep
   yield 1
   do! Async.Sleep 1000 // non-blocking sleep
