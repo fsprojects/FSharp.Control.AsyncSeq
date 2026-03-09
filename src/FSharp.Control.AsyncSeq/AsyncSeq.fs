@@ -2035,6 +2035,18 @@ module AsyncSeq =
       let! arr = toArrayAsync source
       for i in arr.Length - 1 .. -1 .. 0 do
           yield arr.[i] }
+
+  /// Transposes the rows and columns of an async sequence of sequences.
+  /// Buffers the entire source sequence. Raises InvalidOperationException if inner sequences
+  /// have different lengths. Mirrors Seq.transpose.
+  let transpose (source: AsyncSeq<seq<'T>>) : AsyncSeq<'T[]> = asyncSeq {
+      let! rows = toListAsync (source |> map Seq.toArray)
+      if not rows.IsEmpty then
+          let firstLen = rows.Head.Length
+          if rows |> List.exists (fun row -> row.Length <> firstLen) then
+              invalidOp "The input sequences have different lengths."
+          for col in 0 .. firstLen - 1 do
+              yield rows |> List.map (fun row -> row.[col]) |> List.toArray }
   #endif
 
   #if !FABLE_COMPILER

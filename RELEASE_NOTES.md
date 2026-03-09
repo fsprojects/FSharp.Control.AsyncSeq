@@ -1,3 +1,7 @@
+### 4.9.0
+
+* Added `AsyncSeq.transpose` — transposes an async sequence of sequences, yielding each column as an array; buffers all rows before yielding; mirrors `Seq.transpose`. Raises `InvalidOperationException` if inner sequences have different lengths.
+
 ### 4.8.0
 
 * Added `AsyncSeq.mapFoldAsync` — maps each element using an asynchronous folder that also threads an accumulator state, returning both the array of results and the final state; mirrors `Seq.mapFold`.

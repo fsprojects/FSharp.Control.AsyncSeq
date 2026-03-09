@@ -3662,3 +3662,69 @@ let ``AsyncSeq.insertAt raises ArgumentException when index exceeds length`` () 
     |> AsyncSeq.toArrayAsync
     |> Async.RunSynchronously |> ignore)
   |> ignore
+
+// ===== transpose =====
+
+[<Test>]
+let ``AsyncSeq.transpose basic 2x3 matrix`` () =
+  let source =
+    asyncSeq {
+      yield seq { yield 1; yield 2; yield 3 }
+      yield seq { yield 4; yield 5; yield 6 }
+    }
+  let result = AsyncSeq.transpose source |> AsyncSeq.toArrayAsync |> Async.RunSynchronously
+  Assert.AreEqual(3, result.Length)
+  Assert.AreEqual([| 1; 4 |], result.[0])
+  Assert.AreEqual([| 2; 5 |], result.[1])
+  Assert.AreEqual([| 3; 6 |], result.[2])
+
+[<Test>]
+let ``AsyncSeq.transpose empty outer sequence yields empty`` () =
+  let result =
+    AsyncSeq.empty<seq<int>>
+    |> AsyncSeq.transpose
+    |> AsyncSeq.toArrayAsync
+    |> Async.RunSynchronously
+  Assert.AreEqual([||], result)
+
+[<Test>]
+let ``AsyncSeq.transpose single row returns one column per element`` () =
+  let source = asyncSeq { yield seq { yield 1; yield 2; yield 3 } }
+  let result = AsyncSeq.transpose source |> AsyncSeq.toArrayAsync |> Async.RunSynchronously
+  Assert.AreEqual(3, result.Length)
+  Assert.AreEqual([| 1 |], result.[0])
+  Assert.AreEqual([| 2 |], result.[1])
+  Assert.AreEqual([| 3 |], result.[2])
+
+[<Test>]
+let ``AsyncSeq.transpose single column returns one row per element`` () =
+  let source =
+    asyncSeq {
+      yield seq { yield 1 }
+      yield seq { yield 2 }
+      yield seq { yield 3 }
+    }
+  let result = AsyncSeq.transpose source |> AsyncSeq.toArrayAsync |> Async.RunSynchronously
+  Assert.AreEqual(1, result.Length)
+  Assert.AreEqual([| 1; 2; 3 |], result.[0])
+
+[<Test>]
+let ``AsyncSeq.transpose of singleton rows yields one column`` () =
+  let source = asyncSeq { yield seq { yield 7 }; yield seq { yield 8 } }
+  let result = AsyncSeq.transpose source |> AsyncSeq.toArrayAsync |> Async.RunSynchronously
+  Assert.AreEqual(1, result.Length)
+  Assert.AreEqual([| 7; 8 |], result.[0])
+
+[<Test>]
+let ``AsyncSeq.transpose raises InvalidOperationException for jagged input`` () =
+  let source =
+    asyncSeq {
+      yield seq { yield 1; yield 2 }
+      yield seq { yield 3 }
+    }
+  Assert.Throws<System.InvalidOperationException>(fun () ->
+    AsyncSeq.transpose source
+    |> AsyncSeq.toArrayAsync
+    |> Async.RunSynchronously
+    |> ignore)
+  |> ignore
