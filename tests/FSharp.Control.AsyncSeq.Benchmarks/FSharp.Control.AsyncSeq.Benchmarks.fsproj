@@ -10,7 +10,7 @@
     <Compile Include="AsyncSeqBenchmarks.fs" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="BenchmarkDotNet" Version="0.14.0" />
+    <PackageReference Include="BenchmarkDotNet" Version="0.15.8" />
     <ProjectReference Include="..\..\src\FSharp.Control.AsyncSeq\FSharp.Control.AsyncSeq.fsproj" />
   </ItemGroup>
 </Project>
