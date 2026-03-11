@@ -1,17 +1,1 @@
-{
-  "last_run": "2026-03-09T00:05:50Z",
-  "run": 56,
-  "open_prs": {
-    "fix_269": "fix docs fsdocs-tool 21.0.0 (open)",
-    "release_4_8_0": "release 4.8.0 bump 4.7.0->4.8.0 (open)",
-    "transpose": "AsyncSeq.transpose (open)"
-  },
-  "monthly_issue": 263,
-  "commented": ["165","156","168","173","205","160","230","125","123","251","269"],
-  "notes": [
-    "version.props=4.7.0; RELEASE_NOTES has 4.8.0 unreleased; release-4.8.0 PR open",
-    "After transpose PR merges, prepare release 4.9.0",
-    "Build quirk: -f netstandard2.1 then -p:BuildInParallel=false",
-    "fsdocs-tool 21.0.0 fixes MSBuild v15.1 compat on .NET SDK 8.x"
-  ]
-}
+{"last_run":"2026-03-11T00:05:27Z","run":57,"open_prs":{"transpose":"AsyncSeq.transpose open","dep_updates":"test dep updates open"},"monthly_issue":263,"commented":["165","156","168","173","205","160","230","125","123","251","269"],"notes":["version.props=4.8.0;RELEASE_NOTES has 4.9.0 unreleased","After transpose PR merges prepare release 4.9.0","Build: use --no-incremental to force rebuild","NUnit3TestAdapter updated 3.9→4.6","BenchmarkDotNet benchmarks updated 0.14→0.15.8"]}
