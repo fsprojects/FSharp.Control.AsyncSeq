@@ -1,3 +1,7 @@
+### 4.9.0
+
+* Added `AsyncSeq.transpose` — transposes a sequence of sequences so each element of the result is an array of the i-th elements of all inner sequences; all inner sequences must have the same length and the entire source is buffered, mirroring `Seq.transpose`.
+
 ### 4.8.0
 
 * Added `AsyncSeq.mapFoldAsync` — maps each element using an asynchronous folder that also threads an accumulator state, returning both the array of results and the final state; mirrors `Seq.mapFold`.

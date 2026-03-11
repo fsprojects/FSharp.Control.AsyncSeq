@@ -3662,3 +3662,44 @@ let ``AsyncSeq.insertAt raises ArgumentException when index exceeds length`` () 
     |> AsyncSeq.toArrayAsync
     |> Async.RunSynchronously |> ignore)
   |> ignore
+
+// ── AsyncSeq.transpose ────────────────────────────────────────────────────────
+
+[<Test>]
+let ``AsyncSeq.transpose transposes rows and columns`` () =
+  let source = asyncSeq { yield [1; 2; 3]; yield [4; 5; 6] }
+  let result = AsyncSeq.transpose source |> AsyncSeq.toArrayAsync |> Async.RunSynchronously
+  Assert.AreEqual([| [|1;4|]; [|2;5|]; [|3;6|] |], result)
+
+[<Test>]
+let ``AsyncSeq.transpose single row`` () =
+  let source = asyncSeq { yield [10; 20; 30] }
+  let result = AsyncSeq.transpose source |> AsyncSeq.toArrayAsync |> Async.RunSynchronously
+  Assert.AreEqual([| [|10|]; [|20|]; [|30|] |], result)
+
+[<Test>]
+let ``AsyncSeq.transpose empty source returns empty`` () =
+  let result = AsyncSeq.transpose AsyncSeq.empty<int[]> |> AsyncSeq.toArrayAsync |> Async.RunSynchronously
+  Assert.AreEqual([||], result)
+
+[<Test>]
+let ``AsyncSeq.transpose single column`` () =
+  let source = asyncSeq { yield [1]; yield [2]; yield [3] }
+  let result = AsyncSeq.transpose source |> AsyncSeq.toArrayAsync |> Async.RunSynchronously
+  Assert.AreEqual([| [|1;2;3|] |], result)
+
+[<Test>]
+let ``AsyncSeq.transpose square matrix`` () =
+  let source = asyncSeq { yield [1; 2]; yield [3; 4] }
+  let result = AsyncSeq.transpose source |> AsyncSeq.toArrayAsync |> Async.RunSynchronously
+  Assert.AreEqual([| [|1;3|]; [|2;4|] |], result)
+
+[<Test>]
+let ``AsyncSeq.transpose raises on mismatched row lengths`` () =
+  Assert.Throws<System.ArgumentException>(fun () ->
+    asyncSeq { yield [1; 2]; yield [3] }
+    |> AsyncSeq.transpose
+    |> AsyncSeq.toArrayAsync
+    |> Async.RunSynchronously
+    |> ignore)
+  |> ignore

@@ -2035,6 +2035,17 @@ module AsyncSeq =
       let! arr = toArrayAsync source
       for i in arr.Length - 1 .. -1 .. 0 do
           yield arr.[i] }
+
+  let transpose (source: AsyncSeq<#seq<'T>>) : AsyncSeq<'T[]> = asyncSeq {
+      let! rows = toArrayAsync source
+      if rows.Length > 0 then
+          let rowArrays = rows |> Array.map (fun r -> (r :> seq<'T>) |> Seq.toArray)
+          let colCount = rowArrays.[0].Length
+          for row in rowArrays do
+              if row.Length <> colCount then
+                  invalidArg "source" "All inner sequences must have the same length."
+          for c in 0 .. colCount - 1 do
+              yield [| for row in rowArrays -> row.[c] |] }
   #endif
 
   #if !FABLE_COMPILER

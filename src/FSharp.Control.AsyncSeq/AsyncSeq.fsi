@@ -673,6 +673,12 @@ module AsyncSeq =
     /// sequence is buffered before yielding any elements, mirroring Seq.rev.
     /// This function should not be used with large or infinite sequences.
     val rev : source:AsyncSeq<'T> -> AsyncSeq<'T>
+
+    /// Transposes a sequence of sequences: each element of the result is an array
+    /// of the i-th elements of all inner sequences, mirroring Seq.transpose.
+    /// All inner sequences must have the same length; the entire source is buffered.
+    /// This function should not be used with large or infinite sequences.
+    val transpose : source:AsyncSeq<#seq<'T>> -> AsyncSeq<'T[]>
     #endif
 
     /// Interleaves two async sequences of the same type into a resulting sequence. The provided
