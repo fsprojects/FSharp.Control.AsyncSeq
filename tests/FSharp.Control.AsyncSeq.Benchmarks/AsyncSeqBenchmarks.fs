@@ -113,6 +113,72 @@ type AsyncSeqBuilderBenchmarks() =
         |> AsyncSeq.iterAsync (fun _ -> async.Return())
         |> Async.RunSynchronously
 
+/// Benchmarks for filter, choose, and fold operations (optimised direct-enumerator implementations)
+[<MemoryDiagnoser>]
+[<SimpleJob(RuntimeMoniker.Net80)>]
+type AsyncSeqFilterChooseFoldBenchmarks() =
+
+    [<Params(1000, 10000)>]
+    member val ElementCount = 0 with get, set
+
+    /// Benchmark filterAsync — all elements pass the predicate
+    [<Benchmark(Baseline = true)>]
+    member this.FilterAsyncAllPass() =
+        AsyncSeq.replicate this.ElementCount 1
+        |> AsyncSeq.filterAsync (fun _ -> async.Return true)
+        |> AsyncSeq.iterAsync (fun _ -> async.Return())
+        |> Async.RunSynchronously
+
+    /// Benchmark filterAsync — no elements pass the predicate (entire sequence scanned)
+    [<Benchmark>]
+    member this.FilterAsyncNonePass() =
+        AsyncSeq.replicate this.ElementCount 1
+        |> AsyncSeq.filterAsync (fun _ -> async.Return false)
+        |> AsyncSeq.iterAsync (fun _ -> async.Return())
+        |> Async.RunSynchronously
+
+    /// Benchmark chooseAsync — all elements selected
+    [<Benchmark>]
+    member this.ChooseAsyncAllSelected() =
+        AsyncSeq.replicate this.ElementCount 42
+        |> AsyncSeq.chooseAsync (fun x -> async.Return (Some x))
+        |> AsyncSeq.iterAsync (fun _ -> async.Return())
+        |> Async.RunSynchronously
+
+    /// Benchmark foldAsync — sum all elements
+    [<Benchmark>]
+    member this.FoldAsync() =
+        AsyncSeq.replicate this.ElementCount 1
+        |> AsyncSeq.foldAsync (fun acc x -> async.Return (acc + x)) 0
+        |> Async.RunSynchronously
+        |> ignore
+
+/// Benchmarks for multi-step pipeline composition
+[<MemoryDiagnoser>]
+[<SimpleJob(RuntimeMoniker.Net80)>]
+type AsyncSeqPipelineBenchmarks() =
+
+    [<Params(1000, 10000)>]
+    member val ElementCount = 0 with get, set
+
+    /// Benchmark map → filter → fold pipeline (exercises the three optimised combinators together)
+    [<Benchmark(Baseline = true)>]
+    member this.MapFilterFold() =
+        AsyncSeq.replicate this.ElementCount 1
+        |> AsyncSeq.mapAsync  (fun x -> async.Return (x * 2))
+        |> AsyncSeq.filterAsync (fun x -> async.Return (x > 0))
+        |> AsyncSeq.foldAsync (fun acc x -> async.Return (acc + x)) 0
+        |> Async.RunSynchronously
+        |> ignore
+
+    /// Benchmark collecting to an array
+    [<Benchmark>]
+    member this.ToArray() =
+        AsyncSeq.replicate this.ElementCount 1
+        |> AsyncSeq.toArrayAsync
+        |> Async.RunSynchronously
+        |> ignore
+
 /// Entry point for running benchmarks
 module AsyncSeqBenchmarkRunner =
     
@@ -138,15 +204,25 @@ module AsyncSeqBenchmarkRunner =
                 printfn "Running Builder Pattern Benchmarks..."
                 BenchmarkRunner.Run<AsyncSeqBuilderBenchmarks>() |> ignore
                 0
+            | Some "filter-choose-fold" ->
+                printfn "Running Filter/Choose/Fold Benchmarks..."
+                BenchmarkRunner.Run<AsyncSeqFilterChooseFoldBenchmarks>() |> ignore
+                0
+            | Some "pipeline" ->
+                printfn "Running Pipeline Composition Benchmarks..."
+                BenchmarkRunner.Run<AsyncSeqPipelineBenchmarks>() |> ignore
+                0
             | Some "all" | None ->
                 printfn "Running All Benchmarks..."
                 BenchmarkRunner.Run<AsyncSeqCoreBenchmarks>() |> ignore
                 BenchmarkRunner.Run<AsyncSeqAppendBenchmarks>() |> ignore
                 BenchmarkRunner.Run<AsyncSeqBuilderBenchmarks>() |> ignore
+                BenchmarkRunner.Run<AsyncSeqFilterChooseFoldBenchmarks>() |> ignore
+                BenchmarkRunner.Run<AsyncSeqPipelineBenchmarks>() |> ignore
                 0
             | Some suite ->
                 printfn "Unknown benchmark suite: %s" suite
-                printfn "Available suites: core, append, builder, all"
+                printfn "Available suites: core, append, builder, filter-choose-fold, pipeline, all"
                 1
         
         printfn ""

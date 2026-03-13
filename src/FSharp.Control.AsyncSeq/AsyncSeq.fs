@@ -924,6 +924,56 @@ module AsyncSeq =
           disposed <- true
           source.Dispose()
 
+  // Optimized filterAsync enumerator that avoids computation builder overhead
+  type private OptimizedFilterAsyncEnumerator<'T>(source: IAsyncSeqEnumerator<'T>, f: 'T -> Async<bool>) =
+    let mutable disposed = false
+
+    interface IAsyncSeqEnumerator<'T> with
+      member _.MoveNext() = async {
+        let mutable result: 'T option = None
+        let mutable isDone = false
+        while not isDone do
+          let! moveResult = source.MoveNext()
+          match moveResult with
+          | None -> isDone <- true
+          | Some value ->
+            let! keep = f value
+            if keep then
+              result <- Some value
+              isDone <- true
+        return result }
+
+      member _.Dispose() =
+        if not disposed then
+          disposed <- true
+          source.Dispose()
+
+  // Optimized chooseAsync enumerator that avoids computation builder overhead
+  type private OptimizedChooseAsyncEnumerator<'T, 'U>(source: IAsyncSeqEnumerator<'T>, f: 'T -> Async<'U option>) =
+    let mutable disposed = false
+
+    interface IAsyncSeqEnumerator<'U> with
+      member _.MoveNext() = async {
+        let mutable result: 'U option = None
+        let mutable isDone = false
+        while not isDone do
+          let! moveResult = source.MoveNext()
+          match moveResult with
+          | None -> isDone <- true
+          | Some value ->
+            let! chosen = f value
+            match chosen with
+            | Some u ->
+              result <- Some u
+              isDone <- true
+            | None -> ()
+        return result }
+
+      member _.Dispose() =
+        if not disposed then
+          disposed <- true
+          source.Dispose()
+
   let mapAsync f (source : AsyncSeq<'T>) : AsyncSeq<'TResult> =
     match source with
     | :? AsyncSeqOp<'T> as source -> source.MapAsync f
@@ -1008,12 +1058,7 @@ module AsyncSeq =
     match source with
     | :? AsyncSeqOp<'T> as source -> source.ChooseAsync f
     | _ ->
-      asyncSeq {
-        for itm in source do
-          let! v = f itm
-          match v with
-          | Some v -> yield v
-          | _ -> () }
+      AsyncSeqImpl(fun () -> new OptimizedChooseAsyncEnumerator<'T, 'U>(source.GetEnumerator(), f) :> IAsyncSeqEnumerator<'U>) :> AsyncSeq<'U>
 
   let ofSeqAsync (source:seq<Async<'T>>) : AsyncSeq<'T> =
       asyncSeq {
@@ -1022,10 +1067,8 @@ module AsyncSeq =
               yield v
       }
 
-  let filterAsync f (source : AsyncSeq<'T>) = asyncSeq {
-    for v in source do
-      let! b = f v
-      if b then yield v }
+  let filterAsync f (source : AsyncSeq<'T>) : AsyncSeq<'T> =
+    AsyncSeqImpl(fun () -> new OptimizedFilterAsyncEnumerator<'T>(source.GetEnumerator(), f) :> IAsyncSeqEnumerator<'T>) :> AsyncSeq<'T>
 
   let tryLast (source : AsyncSeq<'T>) = async {
       use ie = source.GetEnumerator()
@@ -1271,7 +1314,17 @@ module AsyncSeq =
   let foldAsync f (state:'State) (source : AsyncSeq<'T>) =
     match source with
     | :? AsyncSeqOp<'T> as source -> source.FoldAsync f state
-    | _ -> source |> scanAsync f state |> lastOrDefault state
+    | _ -> async {
+        use ie = source.GetEnumerator()
+        let mutable st = state
+        let! move = ie.MoveNext()
+        let mutable b = move
+        while b.IsSome do
+          let! st' = f st b.Value
+          st <- st'
+          let! next = ie.MoveNext()
+          b <- next
+        return st }
 
   let fold f (state:'State) (source : AsyncSeq<'T>) =
     foldAsync (fun st v -> f st v |> async.Return) state source
