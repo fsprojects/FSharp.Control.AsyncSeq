@@ -179,53 +179,19 @@ type AsyncSeqPipelineBenchmarks() =
         |> Async.RunSynchronously
         |> ignore
 
-/// Entry point for running benchmarks
+/// Entry point for running benchmarks.
+/// Delegates directly to BenchmarkSwitcher so all BenchmarkDotNet CLI options
+/// (--filter, --job short, --exporters, etc.) work out of the box.
+/// Examples:
+///   dotnet run -c Release                                     # run all
+///   dotnet run -c Release -- --filter '*Filter*'              # specific class
+///   dotnet run -c Release -- --filter '*' --job short         # quick smoke-run
 module AsyncSeqBenchmarkRunner =
-    
+
     [<EntryPoint>]
     let Main args =
-        printfn "AsyncSeq Performance Benchmarks"
-        printfn "================================"
-        printfn "Running comprehensive performance benchmarks to establish baseline metrics"
-        printfn "and verify fixes for known performance issues (memory leaks, O(n²) patterns)."
-        printfn ""
-        
-        let result = 
-            match args |> Array.tryHead with
-            | Some "core" ->
-                printfn "Running Core Operations Benchmarks..."
-                BenchmarkRunner.Run<AsyncSeqCoreBenchmarks>() |> ignore
-                0
-            | Some "append" ->
-                printfn "Running Append Operations Benchmarks..."
-                BenchmarkRunner.Run<AsyncSeqAppendBenchmarks>() |> ignore
-                0
-            | Some "builder" ->
-                printfn "Running Builder Pattern Benchmarks..."
-                BenchmarkRunner.Run<AsyncSeqBuilderBenchmarks>() |> ignore
-                0
-            | Some "filter-choose-fold" ->
-                printfn "Running Filter/Choose/Fold Benchmarks..."
-                BenchmarkRunner.Run<AsyncSeqFilterChooseFoldBenchmarks>() |> ignore
-                0
-            | Some "pipeline" ->
-                printfn "Running Pipeline Composition Benchmarks..."
-                BenchmarkRunner.Run<AsyncSeqPipelineBenchmarks>() |> ignore
-                0
-            | Some "all" | None ->
-                printfn "Running All Benchmarks..."
-                BenchmarkRunner.Run<AsyncSeqCoreBenchmarks>() |> ignore
-                BenchmarkRunner.Run<AsyncSeqAppendBenchmarks>() |> ignore
-                BenchmarkRunner.Run<AsyncSeqBuilderBenchmarks>() |> ignore
-                BenchmarkRunner.Run<AsyncSeqFilterChooseFoldBenchmarks>() |> ignore
-                BenchmarkRunner.Run<AsyncSeqPipelineBenchmarks>() |> ignore
-                0
-            | Some suite ->
-                printfn "Unknown benchmark suite: %s" suite
-                printfn "Available suites: core, append, builder, filter-choose-fold, pipeline, all"
-                1
-        
-        printfn ""
-        printfn "Benchmarks completed. Results provide baseline performance metrics"
-        printfn "for future performance improvements and regression detection."
-        result
+        BenchmarkSwitcher
+            .FromAssembly(typeof<AsyncSeqCoreBenchmarks>.Assembly)
+            .Run(args)
+        |> ignore
+        0
