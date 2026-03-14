@@ -113,43 +113,85 @@ type AsyncSeqBuilderBenchmarks() =
         |> AsyncSeq.iterAsync (fun _ -> async.Return())
         |> Async.RunSynchronously
 
-/// Entry point for running benchmarks
+/// Benchmarks for filter, choose, and fold operations (optimised direct-enumerator implementations)
+[<MemoryDiagnoser>]
+[<SimpleJob(RuntimeMoniker.Net80)>]
+type AsyncSeqFilterChooseFoldBenchmarks() =
+
+    [<Params(1000, 10000)>]
+    member val ElementCount = 0 with get, set
+
+    /// Benchmark filterAsync — all elements pass the predicate
+    [<Benchmark(Baseline = true)>]
+    member this.FilterAsyncAllPass() =
+        AsyncSeq.replicate this.ElementCount 1
+        |> AsyncSeq.filterAsync (fun _ -> async.Return true)
+        |> AsyncSeq.iterAsync (fun _ -> async.Return())
+        |> Async.RunSynchronously
+
+    /// Benchmark filterAsync — no elements pass the predicate (entire sequence scanned)
+    [<Benchmark>]
+    member this.FilterAsyncNonePass() =
+        AsyncSeq.replicate this.ElementCount 1
+        |> AsyncSeq.filterAsync (fun _ -> async.Return false)
+        |> AsyncSeq.iterAsync (fun _ -> async.Return())
+        |> Async.RunSynchronously
+
+    /// Benchmark chooseAsync — all elements selected
+    [<Benchmark>]
+    member this.ChooseAsyncAllSelected() =
+        AsyncSeq.replicate this.ElementCount 42
+        |> AsyncSeq.chooseAsync (fun x -> async.Return (Some x))
+        |> AsyncSeq.iterAsync (fun _ -> async.Return())
+        |> Async.RunSynchronously
+
+    /// Benchmark foldAsync — sum all elements
+    [<Benchmark>]
+    member this.FoldAsync() =
+        AsyncSeq.replicate this.ElementCount 1
+        |> AsyncSeq.foldAsync (fun acc x -> async.Return (acc + x)) 0
+        |> Async.RunSynchronously
+        |> ignore
+
+/// Benchmarks for multi-step pipeline composition
+[<MemoryDiagnoser>]
+[<SimpleJob(RuntimeMoniker.Net80)>]
+type AsyncSeqPipelineBenchmarks() =
+
+    [<Params(1000, 10000)>]
+    member val ElementCount = 0 with get, set
+
+    /// Benchmark map → filter → fold pipeline (exercises the three optimised combinators together)
+    [<Benchmark(Baseline = true)>]
+    member this.MapFilterFold() =
+        AsyncSeq.replicate this.ElementCount 1
+        |> AsyncSeq.mapAsync  (fun x -> async.Return (x * 2))
+        |> AsyncSeq.filterAsync (fun x -> async.Return (x > 0))
+        |> AsyncSeq.foldAsync (fun acc x -> async.Return (acc + x)) 0
+        |> Async.RunSynchronously
+        |> ignore
+
+    /// Benchmark collecting to an array
+    [<Benchmark>]
+    member this.ToArray() =
+        AsyncSeq.replicate this.ElementCount 1
+        |> AsyncSeq.toArrayAsync
+        |> Async.RunSynchronously
+        |> ignore
+
+/// Entry point for running benchmarks.
+/// Delegates directly to BenchmarkSwitcher so all BenchmarkDotNet CLI options
+/// (--filter, --job short, --exporters, etc.) work out of the box.
+/// Examples:
+///   dotnet run -c Release                                     # run all
+///   dotnet run -c Release -- --filter '*Filter*'              # specific class
+///   dotnet run -c Release -- --filter '*' --job short         # quick smoke-run
 module AsyncSeqBenchmarkRunner =
-    
+
     [<EntryPoint>]
     let Main args =
-        printfn "AsyncSeq Performance Benchmarks"
-        printfn "================================"
-        printfn "Running comprehensive performance benchmarks to establish baseline metrics"
-        printfn "and verify fixes for known performance issues (memory leaks, O(n²) patterns)."
-        printfn ""
-        
-        let result = 
-            match args |> Array.tryHead with
-            | Some "core" ->
-                printfn "Running Core Operations Benchmarks..."
-                BenchmarkRunner.Run<AsyncSeqCoreBenchmarks>() |> ignore
-                0
-            | Some "append" ->
-                printfn "Running Append Operations Benchmarks..."
-                BenchmarkRunner.Run<AsyncSeqAppendBenchmarks>() |> ignore
-                0
-            | Some "builder" ->
-                printfn "Running Builder Pattern Benchmarks..."
-                BenchmarkRunner.Run<AsyncSeqBuilderBenchmarks>() |> ignore
-                0
-            | Some "all" | None ->
-                printfn "Running All Benchmarks..."
-                BenchmarkRunner.Run<AsyncSeqCoreBenchmarks>() |> ignore
-                BenchmarkRunner.Run<AsyncSeqAppendBenchmarks>() |> ignore
-                BenchmarkRunner.Run<AsyncSeqBuilderBenchmarks>() |> ignore
-                0
-            | Some suite ->
-                printfn "Unknown benchmark suite: %s" suite
-                printfn "Available suites: core, append, builder, all"
-                1
-        
-        printfn ""
-        printfn "Benchmarks completed. Results provide baseline performance metrics"
-        printfn "for future performance improvements and regression detection."
-        result
+        BenchmarkSwitcher
+            .FromAssembly(typeof<AsyncSeqCoreBenchmarks>.Assembly)
+            .Run(args)
+        |> ignore
+        0
