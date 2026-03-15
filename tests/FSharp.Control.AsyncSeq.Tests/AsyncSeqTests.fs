@@ -3662,3 +3662,59 @@ let ``AsyncSeq.insertAt raises ArgumentException when index exceeds length`` () 
     |> AsyncSeq.toArrayAsync
     |> Async.RunSynchronously |> ignore)
   |> ignore
+
+[<Test>]
+let ``AsyncSeq.take more than length returns all elements`` () =
+  let result =
+    AsyncSeq.ofSeq [ 1; 2; 3 ]
+    |> AsyncSeq.take 10
+    |> AsyncSeq.toArrayAsync
+    |> Async.RunSynchronously
+  Assert.AreEqual([| 1; 2; 3 |], result)
+
+[<Test>]
+let ``AsyncSeq.take raises ArgumentException for negative count`` () =
+  Assert.Throws<System.ArgumentException>(fun () ->
+    AsyncSeq.ofSeq [ 1; 2; 3 ]
+    |> AsyncSeq.take -1
+    |> AsyncSeq.toArrayAsync
+    |> Async.RunSynchronously |> ignore)
+  |> ignore
+
+[<Test>]
+let ``AsyncSeq.take from infinite sequence`` () =
+  let result =
+    AsyncSeq.replicateInfinite 7
+    |> AsyncSeq.take 5
+    |> AsyncSeq.toArrayAsync
+    |> Async.RunSynchronously
+  Assert.AreEqual([| 7; 7; 7; 7; 7 |], result)
+
+[<Test>]
+let ``AsyncSeq.skip more than length returns empty`` () =
+  let result =
+    AsyncSeq.ofSeq [ 1; 2; 3 ]
+    |> AsyncSeq.skip 10
+    |> AsyncSeq.toArrayAsync
+    |> Async.RunSynchronously
+  Assert.AreEqual([||], result)
+
+[<Test>]
+let ``AsyncSeq.skip raises ArgumentException for negative count`` () =
+  Assert.Throws<System.ArgumentException>(fun () ->
+    AsyncSeq.ofSeq [ 1; 2; 3 ]
+    |> AsyncSeq.skip -1
+    |> AsyncSeq.toArrayAsync
+    |> Async.RunSynchronously |> ignore)
+  |> ignore
+
+[<Test>]
+let ``AsyncSeq.take then skip roundtrip`` () =
+  let source = [| 1..20 |]
+  let result =
+    AsyncSeq.ofSeq source
+    |> AsyncSeq.skip 5
+    |> AsyncSeq.take 10
+    |> AsyncSeq.toArrayAsync
+    |> Async.RunSynchronously
+  Assert.AreEqual([| 6..15 |], result)
