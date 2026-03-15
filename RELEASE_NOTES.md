@@ -3,7 +3,9 @@
 * Performance: `filterAsync` — replaced `asyncSeq`-builder implementation with a direct optimised enumerator, reducing allocation and generator overhead.
 * Performance: `chooseAsync` — fallback (non-`AsyncSeqOp`) path now uses a direct optimised enumerator instead of the `asyncSeq` builder.
 * Performance: `foldAsync` — fallback (non-`AsyncSeqOp`) path now uses a direct loop instead of composing `scanAsync` + `lastOrDefault`, avoiding intermediate sequence allocations.
-* Benchmarks: added `AsyncSeqFilterChooseFoldBenchmarks` and `AsyncSeqPipelineBenchmarks` benchmark classes to measure `filterAsync`, `chooseAsync`, `foldAsync`, `toArrayAsync`, and common multi-step pipelines.
+* Performance: `take` — replaced `asyncSeq`-builder implementation with a direct optimised enumerator (`OptimizedTakeEnumerator`), eliminating generator-machinery overhead for this common slicing operation.
+* Performance: `skip` — replaced `asyncSeq`-builder implementation with a direct optimised enumerator (`OptimizedSkipEnumerator`), eliminating generator-machinery overhead for this common slicing operation.
+* Benchmarks: added `AsyncSeqFilterChooseFoldBenchmarks`, `AsyncSeqPipelineBenchmarks`, and `AsyncSeqSliceBenchmarks` benchmark classes.
 
 ### 4.8.0
 
