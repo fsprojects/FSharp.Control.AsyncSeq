@@ -395,6 +395,11 @@ module AsyncSeq =
     /// Asynchronously determine the number of elements in the sequence
     val length : source:AsyncSeq<'T> -> Async<int64>
 
+    /// Asynchronously counts elements up to a maximum. Returns the actual count if the sequence has
+    /// fewer than 'max' elements, otherwise returns 'max'. Avoids full enumeration of long sequences.
+    /// Mirrors TaskSeq.lengthOrMax.
+    val lengthOrMax : max:int -> source:AsyncSeq<'T> -> Async<int>
+
     /// Same as AsyncSeq.scanAsync, but the specified function is synchronous.
     val scan : folder:('State -> 'T -> 'State) -> state:'State -> source:AsyncSeq<'T> -> AsyncSeq<'State>
 
@@ -430,6 +435,25 @@ module AsyncSeq =
     /// An index equal to the length of the sequence appends the value at the end.
     /// Raises ArgumentException if index is negative or greater than the sequence length. Mirrors Seq.insertAt.
     val insertAt : index:int -> value:'T -> source:AsyncSeq<'T> -> AsyncSeq<'T>
+
+    /// Returns a new asynchronous sequence with the given values inserted before the element at the specified index.
+    /// An index equal to the length of the sequence appends the values at the end.
+    /// Raises ArgumentException if index is negative or greater than the sequence length. Mirrors Seq.insertManyAt.
+    val insertManyAt : index:int -> values:seq<'T> -> source:AsyncSeq<'T> -> AsyncSeq<'T>
+
+    /// Returns a new asynchronous sequence with 'count' elements removed starting at the specified index.
+    /// Raises ArgumentException if index or count is negative. Mirrors Seq.removeManyAt.
+    val removeManyAt : index:int -> count:int -> source:AsyncSeq<'T> -> AsyncSeq<'T>
+
+    /// Returns a new asynchronous sequence where each element is boxed to type obj.
+    val box : source:AsyncSeq<'T> -> AsyncSeq<obj>
+
+    /// Returns a new asynchronous sequence where each obj element is unboxed to type 'T.
+    val unbox<'T> : source:AsyncSeq<obj> -> AsyncSeq<'T>
+
+    /// Returns a new asynchronous sequence where each obj element is dynamically cast to type 'T.
+    /// Raises InvalidCastException if an element cannot be cast.
+    val cast<'T> : source:AsyncSeq<obj> -> AsyncSeq<'T>
 
     /// Creates an asynchronous sequence that lazily takes element from an
     /// input synchronous sequence and returns them one-by-one.

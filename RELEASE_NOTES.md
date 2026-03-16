@@ -1,3 +1,14 @@
+### 4.11.0
+
+* Added `AsyncSeq.insertManyAt` — inserts multiple values before the element at the given index. Mirrors `Seq.insertManyAt` and `TaskSeq.insertManyAt`.
+* Added `AsyncSeq.removeManyAt` — removes a run of elements starting at the given index. Mirrors `Seq.removeManyAt` and `TaskSeq.removeManyAt`.
+* Added `AsyncSeq.box` — boxes each element to `obj`. Mirrors `TaskSeq.box`.
+* Added `AsyncSeq.unbox<'T>` — unboxes each `obj` element to `'T`. Mirrors `TaskSeq.unbox`.
+* Added `AsyncSeq.cast<'T>` — dynamically casts each `obj` element to `'T`. Mirrors `TaskSeq.cast`.
+* Added `AsyncSeq.lengthOrMax` — counts elements up to a maximum, avoiding full enumeration of long or infinite sequences. Mirrors `TaskSeq.lengthOrMax`.
+* Note: `AsyncSeq.except` already accepts `seq<'T>` for the excluded collection, so no separate `exceptOfSeq` is needed.
+* Part of ongoing design-parity work with FSharp.Control.TaskSeq (see #277).
+
 ### 4.10.0
 
 * Added `AsyncSeq.withCancellation` — returns a new `AsyncSeq` that passes the given `CancellationToken` to `GetAsyncEnumerator`, overriding whatever token would otherwise be supplied. Mirrors `TaskSeq.withCancellation` and is useful when consuming sequences from libraries (e.g. Entity Framework) that accept a cancellation token through `GetAsyncEnumerator`. Part of ongoing design-parity work with FSharp.Control.TaskSeq (see #277).
