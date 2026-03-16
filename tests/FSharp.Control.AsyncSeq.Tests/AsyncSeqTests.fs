@@ -3662,3 +3662,60 @@ let ``AsyncSeq.insertAt raises ArgumentException when index exceeds length`` () 
     |> AsyncSeq.toArrayAsync
     |> Async.RunSynchronously |> ignore)
   |> ignore
+
+// ===== withCancellation =====
+
+[<Test>]
+let ``AsyncSeq.withCancellation passes token to enumerator`` () =
+  use cts = new System.Threading.CancellationTokenSource()
+  let receivedToken = ref System.Threading.CancellationToken.None
+  let source =
+    { new System.Collections.Generic.IAsyncEnumerable<int> with
+        member _.GetAsyncEnumerator(ct) =
+          receivedToken.Value <- ct
+          (AsyncSeq.ofSeq [1; 2; 3]).GetAsyncEnumerator(ct) }
+  source
+  |> AsyncSeq.withCancellation cts.Token
+  |> AsyncSeq.toArrayAsync
+  |> Async.RunSynchronously
+  |> ignore
+  Assert.AreEqual(cts.Token, receivedToken.Value)
+
+[<Test>]
+let ``AsyncSeq.withCancellation overrides incoming token`` () =
+  use cts1 = new System.Threading.CancellationTokenSource()
+  use cts2 = new System.Threading.CancellationTokenSource()
+  let receivedToken = ref System.Threading.CancellationToken.None
+  let source : System.Collections.Generic.IAsyncEnumerable<int> =
+    { new System.Collections.Generic.IAsyncEnumerable<int> with
+        member _.GetAsyncEnumerator(ct) =
+          receivedToken.Value <- ct
+          (AsyncSeq.ofSeq [1; 2; 3]).GetAsyncEnumerator(ct) }
+  let wrapped = source |> AsyncSeq.withCancellation cts1.Token
+  // Enumerate with cts2's token - withCancellation should still pass cts1's token
+  let e = wrapped.GetAsyncEnumerator(cts2.Token)
+  e.MoveNextAsync().AsTask() |> Async.AwaitTask |> Async.RunSynchronously |> ignore
+  e.DisposeAsync() |> ignore
+  Assert.AreEqual(cts1.Token, receivedToken.Value)
+
+[<Test>]
+let ``AsyncSeq.withCancellation preserves sequence values`` () =
+  use cts = new System.Threading.CancellationTokenSource()
+  let result =
+    AsyncSeq.ofSeq [1; 2; 3; 4; 5]
+    |> AsyncSeq.withCancellation cts.Token
+    |> AsyncSeq.toArrayAsync
+    |> Async.RunSynchronously
+  Assert.AreEqual([| 1; 2; 3; 4; 5 |], result)
+
+[<Test>]
+let ``AsyncSeq.withCancellation with cancelled token raises OperationCanceledException`` () =
+  use cts = new System.Threading.CancellationTokenSource()
+  cts.Cancel()
+  Assert.Catch<System.OperationCanceledException>(fun () ->
+    AsyncSeq.ofSeq [1; 2; 3]
+    |> AsyncSeq.withCancellation cts.Token
+    |> AsyncSeq.toArrayAsync
+    |> Async.RunSynchronously
+    |> ignore)
+  |> ignore

@@ -824,6 +824,14 @@ module AsyncSeq =
     /// Transforms an async seq to a new one that fetches values ahead of time to improve throughput.
     val prefetch<'T> : numberToPrefetch: int -> source: AsyncSeq<'T> -> AsyncSeq<'T>
 
+    /// <summary>
+    /// Returns a new <c>AsyncSeq</c> that passes the given <c>CancellationToken</c> to
+    /// <c>GetAsyncEnumerator</c>, overriding whatever token would otherwise be used when iterating.
+    /// This is useful when consuming sequences from libraries such as Entity Framework that
+    /// accept a <c>CancellationToken</c> through <c>GetAsyncEnumerator</c>.
+    /// </summary>
+    val withCancellation<'T> : cancellationToken: System.Threading.CancellationToken -> source: AsyncSeq<'T> -> AsyncSeq<'T>
+
     #endif
 
 

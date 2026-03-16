@@ -2522,6 +2522,13 @@ module AsyncSeq =
             (emptyAsync fillChannelTask)
       }
 
+  /// Returns a new AsyncSeq that passes the given CancellationToken to GetAsyncEnumerator,
+  /// overriding whatever token would otherwise be used. Useful when consuming sequences from
+  /// libraries (such as Entity Framework) that accept a CancellationToken through GetAsyncEnumerator.
+  let withCancellation (cancellationToken: CancellationToken) (source: AsyncSeq<'T>) : AsyncSeq<'T> =
+    { new IAsyncEnumerable<'T> with
+        member _.GetAsyncEnumerator(_ct) = source.GetAsyncEnumerator(cancellationToken) }
+
   #endif
 
 
