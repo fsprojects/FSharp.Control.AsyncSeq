@@ -1,1 +1,15 @@
-{"last_run":"2026-03-16T01:14:45Z","run":61,"open_prs":{"takeskip":"#279","batch2":"design parity batch 2 (pending)"},"monthly_issue":263,"commented":["165","156","168","173","205","160","230","125","123","251","269","275","277"],"notes":["v=4.11.0 in branch","parity#277:batch2 done: tryTail,where/whereAsync,lengthBy/Async,compareWith/Async,takeWhileInclusiveAsync,skipWhileInclusive/Async,appendSeq,prependSeq,delay,collectAsync,partition/Async","parity#277:remaining:insertManyAt,removeManyAt,exceptOfSeq,lengthOrMax,box/unbox/cast","PR#278 merged"]}
+{
+  "last_run": "2026-03-16T01:32:00Z",
+  "run_id": "23123847237",
+  "comments_made": {
+    "277": ["2026-03-14T21:38:47Z", "2026-03-16T01:29:59Z", "2026-03-16T01:32:00Z"]
+  },
+  "open_prs": {
+    "279": "Perf: optimise take/skip with direct enumerators",
+    "281": "Design parity batch 2 (11 functions)",
+    "batch3": "Design parity batch 3 (insertManyAt, removeManyAt, box, unbox, cast, lengthOrMax)"
+  },
+  "notes": "Design parity with TaskSeq (#277) is now complete across 3 batches. Remaining: release 4.11.0 prep once PRs merged. Fix pre-existing Fable test errors (FS0039/FS0041).",
+  "monthly_summary_issue": 263,
+  "backlog_cursor": "277"
+}
