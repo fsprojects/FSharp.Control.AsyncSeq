@@ -492,8 +492,8 @@ module AsyncSeq =
                 | Some enum -> dispose enum
                 | None -> () }) :> AsyncSeq<'T>
 
-  let inline delay (f: unit -> AsyncSeq<'T>) : AsyncSeq<'T> =
-    AsyncGenerator.delay f
+  let delay (f: unit -> AsyncSeq<'T>) : AsyncSeq<'T> =
+    AsyncSeqImpl(fun () -> (f()).GetEnumerator()) :> AsyncSeq<'T>
 
   let bindAsync (f:'T -> AsyncSeq<'U>) (inp:Async<'T>) : AsyncSeq<'U> =
     AsyncSeqImpl(fun () ->
@@ -703,6 +703,9 @@ module AsyncSeq =
   let collect (f: 'T -> AsyncSeq<'U>) (inp: AsyncSeq<'T>) : AsyncSeq<'U> =
     AsyncSeqImpl(fun () -> new OptimizedCollectEnumerator<'T, 'U>(f, inp) :> IAsyncSeqEnumerator<'U>) :> AsyncSeq<'U>
 
+  let collectAsync (mapping: 'T -> Async<AsyncSeq<'U>>) (source: AsyncSeq<'T>) : AsyncSeq<'U> =
+    collect (fun x -> bindAsync id (mapping x)) source
+
 //  let collect (f: 'T -> AsyncSeq<'U>) (inp: AsyncSeq<'T>) : AsyncSeq<'U> =
 //    AsyncGenerator.collect f inp
 
@@ -786,6 +789,12 @@ module AsyncSeq =
                                 state := MapState.Finished
                                 dispose e
                             | _ -> () }) :> AsyncSeq<'T>
+
+  let appendSeq (seq2: seq<'T>) (source: AsyncSeq<'T>) : AsyncSeq<'T> =
+    append source (ofSeq seq2)
+
+  let prependSeq (seq1: seq<'T>) (source: AsyncSeq<'T>) : AsyncSeq<'T> =
+    append (ofSeq seq1) source
 
   // Optimized iterAsync implementation to reduce allocations
   type internal OptimizedIterAsyncEnumerator<'T>(enumerator: IAsyncSeqEnumerator<'T>, f: 'T -> Async<unit>) =
@@ -1311,6 +1320,33 @@ module AsyncSeq =
   let forallAsync f (source : AsyncSeq<'T>) =
     source |> existsAsync (fun v -> async { let! b = f v in return not b }) |> Async.map not
 
+  let compareWithAsync (comparer: 'T -> 'T -> Async<int>) (source1: AsyncSeq<'T>) (source2: AsyncSeq<'T>) : Async<int> = async {
+    use ie1 = source1.GetEnumerator()
+    use ie2 = source2.GetEnumerator()
+    let! m1 = ie1.MoveNext()
+    let! m2 = ie2.MoveNext()
+    let b1 = ref m1
+    let b2 = ref m2
+    let result = ref 0
+    let isDone = ref false
+    while not isDone.Value do
+        match b1.Value, b2.Value with
+        | None, None -> isDone := true
+        | None, Some _ -> result := -1; isDone := true
+        | Some _, None -> result := 1; isDone := true
+        | Some v1, Some v2 ->
+            let! c = comparer v1 v2
+            if c <> 0 then result := c; isDone := true
+            else
+                let! n1 = ie1.MoveNext()
+                let! n2 = ie2.MoveNext()
+                b1 := n1
+                b2 := n2
+    return result.Value }
+
+  let compareWith (comparer: 'T -> 'T -> int) (source1: AsyncSeq<'T>) (source2: AsyncSeq<'T>) : Async<int> =
+    compareWithAsync (fun a b -> comparer a b |> async.Return) source1 source2
+
   let foldAsync f (state:'State) (source : AsyncSeq<'T>) =
     match source with
     | :? AsyncSeqOp<'T> as source -> source.FoldAsync f state
@@ -1367,6 +1403,12 @@ module AsyncSeq =
 
   let length (source : AsyncSeq<'T>) =
     fold (fun st _ -> st + 1L) 0L source
+
+  let lengthByAsync (predicate: 'T -> Async<bool>) (source: AsyncSeq<'T>) : Async<int64> =
+    foldAsync (fun acc x -> async { let! ok = predicate x in return if ok then acc + 1L else acc }) 0L source
+
+  let lengthBy (predicate: 'T -> bool) (source: AsyncSeq<'T>) : Async<int64> =
+    lengthByAsync (predicate >> async.Return) source
 
   let inline sum (source : AsyncSeq<'T>) : Async<'T> =
     (LanguagePrimitives.GenericZero, source) ||> fold (+)
@@ -1497,6 +1539,12 @@ module AsyncSeq =
 
   let filter f (source : AsyncSeq<'T>) =
     filterAsync (f >> async.Return) source
+
+  let where (predicate: 'T -> bool) (source: AsyncSeq<'T>) : AsyncSeq<'T> =
+    filter predicate source
+
+  let whereAsync (predicate: 'T -> Async<bool>) (source: AsyncSeq<'T>) : AsyncSeq<'T> =
+    filterAsync predicate source
 
   let except (excluded : seq<'T>) (source : AsyncSeq<'T>) : AsyncSeq<'T> =
     let s = System.Collections.Generic.HashSet(excluded)
@@ -1848,6 +1896,24 @@ module AsyncSeq =
           interface System.IDisposable with
             member _.Dispose() = en.Dispose() }) :> AsyncSeq<'a>
 
+  let takeWhileInclusiveAsync (predicate: 'T -> Async<bool>) (source: AsyncSeq<'T>) : AsyncSeq<'T> =
+    AsyncSeqImpl(fun () ->
+        let en = source.GetEnumerator()
+        let fin = ref false
+        { new IAsyncSeqEnumerator<'T> with
+            member _.MoveNext() = async {
+                if !fin then return None
+                else
+                    let! next = en.MoveNext()
+                    match next with
+                    | None -> return None
+                    | Some a ->
+                        let! ok = predicate a
+                        if ok then return Some a
+                        else fin := true; return Some a }
+          interface System.IDisposable with
+            member _.Dispose() = en.Dispose() }) :> AsyncSeq<'T>
+
   let skipWhileAsync p (source : AsyncSeq<'T>) : AsyncSeq<_> = asyncSeq {
       use ie = source.GetEnumerator()
       let! move = ie.MoveNext()
@@ -1864,6 +1930,27 @@ module AsyncSeq =
                   doneSkipping := true
           let! moven = ie.MoveNext()
           b := moven }
+
+  let skipWhileInclusiveAsync (predicate: 'T -> Async<bool>) (source: AsyncSeq<'T>) : AsyncSeq<'T> = asyncSeq {
+      use ie = source.GetEnumerator()
+      let! move = ie.MoveNext()
+      let b = ref move
+      let doneSkipping = ref false
+      while b.Value.IsSome do
+          let v = b.Value.Value
+          if doneSkipping.Value then
+              yield v
+              let! moven = ie.MoveNext()
+              b := moven
+          else
+              let! test = predicate v
+              if not test then
+                  doneSkipping := true  // skip this boundary element; do not yield it
+              let! moven = ie.MoveNext()
+              b := moven }
+
+  let skipWhileInclusive (predicate: 'T -> bool) (source: AsyncSeq<'T>) : AsyncSeq<'T> =
+    skipWhileInclusiveAsync (predicate >> async.Return) source
 
   #if !FABLE_COMPILER
   let skipUntilSignal (signal:Async<unit>) (source:AsyncSeq<'T>) : AsyncSeq<'T> = asyncSeq {
@@ -1930,6 +2017,25 @@ module AsyncSeq =
 
   let tail (source : AsyncSeq<'T>) : AsyncSeq<'T> = skip 1 source
 
+  let tryTail (source: AsyncSeq<'T>) : Async<AsyncSeq<'T> option> = async {
+    let ie = source.GetEnumerator()
+    let! first = ie.MoveNext()
+    match first with
+    | None ->
+        ie.Dispose()
+        return None
+    | Some _ ->
+        return Some (asyncSeq {
+            try
+                let! next = ie.MoveNext()
+                let b = ref next
+                while b.Value.IsSome do
+                    yield b.Value.Value
+                    let! moven = ie.MoveNext()
+                    b := moven
+            finally
+                ie.Dispose() }) }
+
   /// Splits an async sequence at the given index, returning the first `count` elements as an array
   /// and the remaining elements as a new AsyncSeq. The source is enumerated once.
   let splitAt (count: int) (source: AsyncSeq<'T>) : Async<'T array * AsyncSeq<'T>> = async {
@@ -1975,6 +2081,17 @@ module AsyncSeq =
   let toListSynchronously (source:AsyncSeq<'T>) = toListAsync source |> Async.RunSynchronously
   let toArraySynchronously (source:AsyncSeq<'T>) = toArrayAsync source |> Async.RunSynchronously
   #endif
+
+  let partitionAsync (predicate: 'T -> Async<bool>) (source: AsyncSeq<'T>) : Async<'T[] * 'T[]> = async {
+    let trues = ResizeArray<'T>()
+    let falses = ResizeArray<'T>()
+    do! source |> iterAsync (fun x -> async {
+        let! ok = predicate x
+        (if ok then trues else falses).Add(x) })
+    return trues.ToArray(), falses.ToArray() }
+
+  let partition (predicate: 'T -> bool) (source: AsyncSeq<'T>) : Async<'T[] * 'T[]> =
+    partitionAsync (predicate >> async.Return) source
 
   let concatSeq (source:AsyncSeq<#seq<'T>>) : AsyncSeq<'T> = asyncSeq {
       use ie = source.GetEnumerator()
