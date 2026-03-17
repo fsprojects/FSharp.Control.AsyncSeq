@@ -1,15 +1,15 @@
 {
-  "last_run": "2026-03-16T01:32:00Z",
-  "run_id": "23123847237",
-  "comments_made": {
-    "277": ["2026-03-14T21:38:47Z", "2026-03-16T01:29:59Z", "2026-03-16T01:32:00Z"]
-  },
+  "last_run": "2026-03-17T00:07:47Z",
+  "run_id": "23171879855",
+  "comments_made": {"277": ["2026-03-14","2026-03-16","2026-03-16"]},
   "open_prs": {
-    "279": "Perf: optimise take/skip with direct enumerators",
-    "281": "Design parity batch 2 (11 functions)",
-    "batch3": "Design parity batch 3 (insertManyAt, removeManyAt, box, unbox, cast, lengthOrMax)"
+    "279": "Perf: take/skip enumerators",
+    "281": "Design parity batch 2 (11 fns)",
+    "282": "Design parity batch 3 (6 fns)",
+    "ci_upgrade": "CI: checkout v4, setup-node v4, Node 20",
+    "traverse_fix": "Fix traverseOptionAsync/traverseChoiceAsync MoveNext bug"
   },
-  "notes": "Design parity with TaskSeq (#277) is now complete across 3 batches. Remaining: release 4.11.0 prep once PRs merged. Fix pre-existing Fable test errors (FS0039/FS0041).",
+  "notes": "Design parity #277 complete (3 batches). Release 4.11.0 pending. CI upgraded. traverse over-enumeration bug fixed. Fable errors FS0039/FS0041 pre-existing.",
   "monthly_summary_issue": 263,
   "backlog_cursor": "277"
 }
