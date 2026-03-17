@@ -8,15 +8,15 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
     - name: Setup .NET
       uses: actions/setup-dotnet@v4.3.1
       with:
         dotnet-version: '8.0.x'
     - name: Setup Node.js environment
-      uses: actions/setup-node@v2.4.0
+      uses: actions/setup-node@v4
       with:
-        node-version: 14.17.*
+        node-version: '20'
     - name: Install tools
       run: dotnet tool restore
     - name: Build and Test
