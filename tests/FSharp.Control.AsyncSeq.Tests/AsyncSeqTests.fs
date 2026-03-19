@@ -3409,7 +3409,55 @@ let ``AsyncSeq.sortWith returns empty array for empty sequence`` () =
   let result = AsyncSeq.sortWith compare AsyncSeq.empty<int>
   Assert.AreEqual([||], result)
 
+// ── AsyncSeq.sortByAsync / sortByDescendingAsync ──────────────────────────────
+
+[<Test>]
+let ``AsyncSeq.sortByAsync sorts ascending by async projection`` () =
+  let source = asyncSeq { yield "banana"; yield "apple"; yield "cherry" }
+  let result =
+    source
+    |> AsyncSeq.sortByAsync (fun s -> async { return s.Length })
+    |> Async.RunSynchronously
+  Assert.AreEqual([| "apple"; "banana"; "cherry" |], result)
+
+[<Test>]
+let ``AsyncSeq.sortByAsync returns empty array for empty sequence`` () =
+  let result =
+    AsyncSeq.empty<int>
+    |> AsyncSeq.sortByAsync (fun x -> async { return x })
+    |> Async.RunSynchronously
+  Assert.AreEqual([||], result)
+
+[<Test>]
+let ``AsyncSeq.sortByAsync computes projection exactly once per element`` () =
+  let callCount = ref 0
+  let source = asyncSeq { yield 3; yield 1; yield 2 }
+  let result =
+    source
+    |> AsyncSeq.sortByAsync (fun x -> async { incr callCount; return x })
+    |> Async.RunSynchronously
+  Assert.AreEqual([| 1; 2; 3 |], result)
+  Assert.AreEqual(3, !callCount)
+
+[<Test>]
+let ``AsyncSeq.sortByDescendingAsync sorts descending by async projection`` () =
+  let source = asyncSeq { yield "hi"; yield "apple"; yield "cherry" }
+  let result =
+    source
+    |> AsyncSeq.sortByDescendingAsync (fun s -> async { return s.Length })
+    |> Async.RunSynchronously
+  Assert.AreEqual([| "cherry"; "apple"; "hi" |], result)
+
+[<Test>]
+let ``AsyncSeq.sortByDescendingAsync returns empty array for empty sequence`` () =
+  let result =
+    AsyncSeq.empty<int>
+    |> AsyncSeq.sortByDescendingAsync (fun x -> async { return x })
+    |> Async.RunSynchronously
+  Assert.AreEqual([||], result)
+
 // ── AsyncSeq.mapFold ──────────────────────────────────────────────────────────
+
 
 [<Test>]
 let ``AsyncSeq.mapFold maps elements and accumulates state`` () =

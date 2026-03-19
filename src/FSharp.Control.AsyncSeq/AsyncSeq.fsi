@@ -663,6 +663,18 @@ module AsyncSeq =
     /// large or infinite sequences.
     val sortByDescending : projection:('T -> 'Key) -> source:AsyncSeq<'T> -> array<'T> when 'Key : comparison
 
+    /// Applies an asynchronous key-generating function to each element of an AsyncSeq and returns
+    /// an array ordered by the computed keys. Each key is computed exactly once per element.
+    /// This function digests the whole initial sequence before returning. As a result this
+    /// function should not be used with large or infinite sequences.
+    val sortByAsync : projection:('T -> Async<'Key>) -> source:AsyncSeq<'T> -> Async<array<'T>> when 'Key : comparison
+
+    /// Applies an asynchronous key-generating function to each element of an AsyncSeq and returns
+    /// an array ordered descending by the computed keys. Each key is computed exactly once per element.
+    /// This function digests the whole initial sequence before returning. As a result this
+    /// function should not be used with large or infinite sequences.
+    val sortByDescendingAsync : projection:('T -> Async<'Key>) -> source:AsyncSeq<'T> -> Async<array<'T>> when 'Key : comparison
+
     /// Sorts the given async sequence using the given comparison function and returns an array.
     /// This function returns an array that digests the whole initial sequence as soon as
     /// that sequence is iterated. As a result this function should not be used with
