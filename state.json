@@ -1,16 +1,17 @@
 {
-  "last_run": "2026-03-19T00:07:58Z",
-  "run_id": "23273225862",
+  "last_run": "2026-03-21T00:13:00Z",
+  "run_id": "23367469488",
   "comments_made": {"277": ["2026-03-14","2026-03-16","2026-03-16"]},
   "open_prs": {
-    "279": "Perf: take/skip enumerators",
-    "281": "Design parity batch 2 (11 fns)",
-    "282": "Design parity batch 3 (6 fns)",
-    "283_issue": "CI upgrade issue (needs human, workflow permission)",
-    "284": "Fix traverseOptionAsync/traverseChoiceAsync MoveNext bug",
-    "sortByAsync_pr": "Add sortByAsync and sortByDescendingAsync (2026-03-19)"
+    "279": "Perf: take/skip",
+    "281": "Parity batch 2",
+    "282": "Parity batch 3",
+    "283": "CI upgrade (issue, needs human)",
+    "284": "Fix traverse MoveNext bug",
+    "285": "Add sortByAsync",
+    "286": "Tests: indexed/iteriAsync/tryLast/replicateUntilNoneAsync/reduceAsync"
   },
-  "notes": "Design parity #277 complete (3 batches). sortByAsync/sortByDescendingAsync added. Release 4.11.0 pending. CI upgrade needs human (issue #283). traverse over-enumeration bug fix in PR #284.",
+  "notes": "Parity #277 done (3 batches, PRs 281/282). sortByAsync in PR #285. Test gaps filled in PR #286. Release 4.11.0 pending merge. CI upgrade needs human (#283).",
   "monthly_summary_issue": 263,
   "backlog_cursor": "277"
 }
