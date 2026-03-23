@@ -1528,6 +1528,34 @@ module AsyncSeq =
     elif i.Value < index then
       invalidArg "index" "The index is outside the range of elements in the collection." }
 
+  let insertManyAt (index : int) (values : seq<'T>) (source : AsyncSeq<'T>) : AsyncSeq<'T> = asyncSeq {
+    if index < 0 then invalidArg "index" "must be non-negative"
+    let i = ref 0
+    for x in source do
+      if i.Value = index then yield! ofSeq values
+      yield x
+      i := i.Value + 1
+    if i.Value = index then yield! ofSeq values
+    elif i.Value < index then
+      invalidArg "index" "The index is outside the range of elements in the collection." }
+
+  let removeManyAt (index : int) (count : int) (source : AsyncSeq<'T>) : AsyncSeq<'T> = asyncSeq {
+    if index < 0 then invalidArg "index" "must be non-negative"
+    if count < 0 then invalidArg "count" "must be non-negative"
+    let i = ref 0
+    for x in source do
+      if i.Value < index || i.Value >= index + count then yield x
+      i := i.Value + 1 }
+
+  let box (source : AsyncSeq<'T>) : AsyncSeq<obj> =
+    map Microsoft.FSharp.Core.Operators.box source
+
+  let unbox<'T> (source : AsyncSeq<obj>) : AsyncSeq<'T> =
+    map Microsoft.FSharp.Core.Operators.unbox source
+
+  let cast<'T> (source : AsyncSeq<obj>) : AsyncSeq<'T> =
+    map Microsoft.FSharp.Core.Operators.unbox source
+
   #if !FABLE_COMPILER
   let iterAsyncParallel (f:'a -> Async<unit>) (s:AsyncSeq<'a>) : Async<unit> = async {
     use mb = MailboxProcessor.Start (ignore >> async.Return)
@@ -1913,6 +1941,12 @@ module AsyncSeq =
               else b := None }
 
   let truncate count source = take count source
+
+  let lengthOrMax (max : int) (source : AsyncSeq<'T>) : Async<int> =
+    async {
+      let! n = source |> take max |> length
+      return int n
+    }
 
   let skip count (source : AsyncSeq<'T>) : AsyncSeq<_> = asyncSeq {
       if (count < 0) then invalidArg "count" "must be non-negative"

@@ -3719,3 +3719,191 @@ let ``AsyncSeq.withCancellation with cancelled token raises OperationCanceledExc
     |> Async.RunSynchronously
     |> ignore)
   |> ignore
+
+// ===== insertManyAt =====
+
+[<Test>]
+let ``AsyncSeq.insertManyAt inserts values at middle index`` () =
+  let result =
+    AsyncSeq.ofSeq [ 1; 4; 5 ]
+    |> AsyncSeq.insertManyAt 1 [ 2; 3 ]
+    |> AsyncSeq.toArrayAsync
+    |> Async.RunSynchronously
+  Assert.AreEqual([| 1; 2; 3; 4; 5 |], result)
+
+[<Test>]
+let ``AsyncSeq.insertManyAt inserts at index 0 (prepend)`` () =
+  let result =
+    AsyncSeq.ofSeq [ 3; 4 ]
+    |> AsyncSeq.insertManyAt 0 [ 1; 2 ]
+    |> AsyncSeq.toArrayAsync
+    |> Async.RunSynchronously
+  Assert.AreEqual([| 1; 2; 3; 4 |], result)
+
+[<Test>]
+let ``AsyncSeq.insertManyAt appends when index equals sequence length`` () =
+  let result =
+    AsyncSeq.ofSeq [ 1; 2 ]
+    |> AsyncSeq.insertManyAt 2 [ 3; 4 ]
+    |> AsyncSeq.toArrayAsync
+    |> Async.RunSynchronously
+  Assert.AreEqual([| 1; 2; 3; 4 |], result)
+
+[<Test>]
+let ``AsyncSeq.insertManyAt with empty values is identity`` () =
+  let result =
+    AsyncSeq.ofSeq [ 1; 2; 3 ]
+    |> AsyncSeq.insertManyAt 1 []
+    |> AsyncSeq.toArrayAsync
+    |> Async.RunSynchronously
+  Assert.AreEqual([| 1; 2; 3 |], result)
+
+[<Test>]
+let ``AsyncSeq.insertManyAt raises ArgumentException for negative index`` () =
+  Assert.Throws<System.ArgumentException>(fun () ->
+    AsyncSeq.ofSeq [ 1; 2 ]
+    |> AsyncSeq.insertManyAt -1 [ 0 ]
+    |> AsyncSeq.toArrayAsync
+    |> Async.RunSynchronously |> ignore)
+  |> ignore
+
+// ===== removeManyAt =====
+
+[<Test>]
+let ``AsyncSeq.removeManyAt removes elements at middle index`` () =
+  let result =
+    AsyncSeq.ofSeq [ 1; 2; 3; 4; 5 ]
+    |> AsyncSeq.removeManyAt 1 3
+    |> AsyncSeq.toArrayAsync
+    |> Async.RunSynchronously
+  Assert.AreEqual([| 1; 5 |], result)
+
+[<Test>]
+let ``AsyncSeq.removeManyAt removes from start`` () =
+  let result =
+    AsyncSeq.ofSeq [ 1; 2; 3; 4 ]
+    |> AsyncSeq.removeManyAt 0 2
+    |> AsyncSeq.toArrayAsync
+    |> Async.RunSynchronously
+  Assert.AreEqual([| 3; 4 |], result)
+
+[<Test>]
+let ``AsyncSeq.removeManyAt count zero returns all elements`` () =
+  let result =
+    AsyncSeq.ofSeq [ 1; 2; 3 ]
+    |> AsyncSeq.removeManyAt 1 0
+    |> AsyncSeq.toArrayAsync
+    |> Async.RunSynchronously
+  Assert.AreEqual([| 1; 2; 3 |], result)
+
+[<Test>]
+let ``AsyncSeq.removeManyAt count greater than remaining removes to end`` () =
+  let result =
+    AsyncSeq.ofSeq [ 1; 2; 3 ]
+    |> AsyncSeq.removeManyAt 1 10
+    |> AsyncSeq.toArrayAsync
+    |> Async.RunSynchronously
+  Assert.AreEqual([| 1 |], result)
+
+[<Test>]
+let ``AsyncSeq.removeManyAt raises ArgumentException for negative index`` () =
+  Assert.Throws<System.ArgumentException>(fun () ->
+    AsyncSeq.ofSeq [ 1; 2; 3 ]
+    |> AsyncSeq.removeManyAt -1 1
+    |> AsyncSeq.toArrayAsync
+    |> Async.RunSynchronously |> ignore)
+  |> ignore
+
+[<Test>]
+let ``AsyncSeq.removeManyAt raises ArgumentException for negative count`` () =
+  Assert.Throws<System.ArgumentException>(fun () ->
+    AsyncSeq.ofSeq [ 1; 2; 3 ]
+    |> AsyncSeq.removeManyAt 0 -1
+    |> AsyncSeq.toArrayAsync
+    |> Async.RunSynchronously |> ignore)
+  |> ignore
+
+// ===== box / unbox / cast =====
+
+[<Test>]
+let ``AsyncSeq.box boxes each element to obj`` () =
+  let result =
+    AsyncSeq.ofSeq [ 1; 2; 3 ]
+    |> AsyncSeq.box
+    |> AsyncSeq.toArrayAsync
+    |> Async.RunSynchronously
+  Assert.AreEqual(3, result.Length)
+  Assert.AreEqual(box 1, result.[0])
+  Assert.AreEqual(box 2, result.[1])
+  Assert.AreEqual(box 3, result.[2])
+
+[<Test>]
+let ``AsyncSeq.unbox unboxes each element`` () =
+  let result =
+    AsyncSeq.ofSeq [ box 1; box 2; box 3 ]
+    |> AsyncSeq.unbox<int>
+    |> AsyncSeq.toArrayAsync
+    |> Async.RunSynchronously
+  Assert.AreEqual([| 1; 2; 3 |], result)
+
+[<Test>]
+let ``AsyncSeq.cast casts each element`` () =
+  let result =
+    AsyncSeq.ofSeq [ box 1; box 2; box 3 ]
+    |> AsyncSeq.cast<int>
+    |> AsyncSeq.toArrayAsync
+    |> Async.RunSynchronously
+  Assert.AreEqual([| 1; 2; 3 |], result)
+
+[<Test>]
+let ``AsyncSeq.box then unbox roundtrips`` () =
+  let original = [| 10; 20; 30 |]
+  let result =
+    AsyncSeq.ofSeq original
+    |> AsyncSeq.box
+    |> AsyncSeq.unbox<int>
+    |> AsyncSeq.toArrayAsync
+    |> Async.RunSynchronously
+  Assert.AreEqual(original, result)
+
+// ===== lengthOrMax =====
+
+[<Test>]
+let ``AsyncSeq.lengthOrMax returns length when sequence is shorter than max`` () =
+  let result =
+    AsyncSeq.ofSeq [ 1; 2; 3 ]
+    |> AsyncSeq.lengthOrMax 10
+    |> Async.RunSynchronously
+  Assert.AreEqual(3, result)
+
+[<Test>]
+let ``AsyncSeq.lengthOrMax returns max when sequence is longer`` () =
+  let result =
+    AsyncSeq.ofSeq [ 1 .. 100 ]
+    |> AsyncSeq.lengthOrMax 5
+    |> Async.RunSynchronously
+  Assert.AreEqual(5, result)
+
+[<Test>]
+let ``AsyncSeq.lengthOrMax returns 0 for empty sequence`` () =
+  let result =
+    AsyncSeq.empty<int>
+    |> AsyncSeq.lengthOrMax 5
+    |> Async.RunSynchronously
+  Assert.AreEqual(0, result)
+
+[<Test>]
+let ``AsyncSeq.lengthOrMax with max 0 returns 0`` () =
+  let result =
+    AsyncSeq.ofSeq [ 1; 2; 3 ]
+    |> AsyncSeq.lengthOrMax 0
+    |> Async.RunSynchronously
+  Assert.AreEqual(0, result)
+
+[<Test>]
+let ``AsyncSeq.lengthOrMax does not enumerate beyond max on infinite sequence`` () =
+  let result =
+    AsyncSeq.replicateInfinite 42
+    |> AsyncSeq.lengthOrMax 7
+    |> Async.RunSynchronously
+  Assert.AreEqual(7, result)
