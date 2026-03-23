@@ -924,6 +924,29 @@ module AsyncSeq =
           disposed <- true
           source.Dispose()
 
+  // Optimized mapiAsync enumerator: avoids asyncSeq builder + collect overhead by
+  // maintaining the index in a mutable field and iterating the source directly.
+  type private OptimizedMapiAsyncEnumerator<'T, 'TResult>(source: IAsyncSeqEnumerator<'T>, f: int64 -> 'T -> Async<'TResult>) =
+    let mutable disposed = false
+    let mutable index = 0L
+
+    interface IAsyncSeqEnumerator<'TResult> with
+      member _.MoveNext() = async {
+        let! moveResult = source.MoveNext()
+        match moveResult with
+        | None -> return None
+        | Some value ->
+            let i = index
+            index <- index + 1L
+            let! mapped = f i value
+            return Some mapped
+      }
+
+      member _.Dispose() =
+        if not disposed then
+          disposed <- true
+          source.Dispose()
+
   // Optimized filterAsync enumerator that avoids computation builder overhead
   type private OptimizedFilterAsyncEnumerator<'T>(source: IAsyncSeqEnumerator<'T>, f: 'T -> Async<bool>) =
     let mutable disposed = false
@@ -980,12 +1003,8 @@ module AsyncSeq =
     | _ ->
       AsyncSeqImpl(fun () -> new OptimizedMapAsyncEnumerator<'T, 'TResult>(source.GetEnumerator(), f) :> IAsyncSeqEnumerator<'TResult>) :> AsyncSeq<'TResult>
 
-  let mapiAsync f (source : AsyncSeq<'T>) : AsyncSeq<'TResult> = asyncSeq {
-    let i = ref 0L
-    for itm in source do
-      let! v = f i.Value itm
-      i := i.Value + 1L
-      yield v }
+  let mapiAsync f (source : AsyncSeq<'T>) : AsyncSeq<'TResult> =
+    AsyncSeqImpl(fun () -> new OptimizedMapiAsyncEnumerator<'T, 'TResult>(source.GetEnumerator(), f) :> IAsyncSeqEnumerator<'TResult>) :> AsyncSeq<'TResult>
 
   #if !FABLE_COMPILER
   let mapAsyncParallel (f:'a -> Async<'b>) (s:AsyncSeq<'a>) : AsyncSeq<'b> = asyncSeq {
