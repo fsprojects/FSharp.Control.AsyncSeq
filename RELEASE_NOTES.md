@@ -12,6 +12,8 @@
   * Added `AsyncSeq.delay` — defers sequence creation to enumeration time by calling a factory function each time `GetAsyncEnumerator` is called. Mirrors `TaskSeq.delay`.
   * Added `AsyncSeq.collectAsync` — like `collect` but the mapping function is asynchronous (`'T -> Async<AsyncSeq<'U>>`). Mirrors `TaskSeq.collectAsync`.
   * Added `AsyncSeq.partition` / `AsyncSeq.partitionAsync` — splits a sequence into two arrays using a (optionally async) predicate; the first array contains matching elements, the second non-matching. Mirrors `TaskSeq.partition` / `TaskSeq.partitionAsync`.
+* Added `AsyncSeq.tryFindBack` / `findBack` — returns the **last** element in a sequence for which the predicate returns `true`. Mirrors `Seq.tryFindBack` / `Seq.findBack`.
+* Added `AsyncSeq.tryFindBackAsync` / `findBackAsync` — async-predicate variants of the above.
 
 ### 4.10.0
 

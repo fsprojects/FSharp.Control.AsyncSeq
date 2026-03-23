@@ -1347,6 +1347,38 @@ module AsyncSeq =
   let compareWith (comparer: 'T -> 'T -> int) (source1: AsyncSeq<'T>) (source2: AsyncSeq<'T>) : Async<int> =
     compareWithAsync (fun a b -> comparer a b |> async.Return) source1 source2
 
+  /// Returns the last element for which the given async predicate returns true, or None if no
+  /// such element exists. The entire sequence is consumed.
+  let tryFindBackAsync (predicate: 'T -> Async<bool>) (source: AsyncSeq<'T>) : Async<'T option> = async {
+    use ie = source.GetEnumerator()
+    let! move = ie.MoveNext()
+    let mutable b = move
+    let mutable result = None
+    while b.IsSome do
+      let! ok = predicate b.Value
+      if ok then result <- b
+      let! next = ie.MoveNext()
+      b <- next
+    return result }
+
+  /// Returns the last element for which the given predicate returns true, or None if no
+  /// such element exists. The entire sequence is consumed.
+  let tryFindBack (predicate: 'T -> bool) (source: AsyncSeq<'T>) : Async<'T option> =
+    tryFindBackAsync (predicate >> async.Return) source
+
+  /// Returns the last element for which the given async predicate returns true.
+  /// Raises <c>KeyNotFoundException</c> if no such element exists.
+  let findBackAsync (predicate: 'T -> Async<bool>) (source: AsyncSeq<'T>) : Async<'T> = async {
+    let! result = tryFindBackAsync predicate source
+    match result with
+    | None -> return raise (System.Collections.Generic.KeyNotFoundException("An element satisfying the predicate was not found in the collection."))
+    | Some v -> return v }
+
+  /// Returns the last element for which the given predicate returns true.
+  /// Raises <c>KeyNotFoundException</c> if no such element exists.
+  let findBack (predicate: 'T -> bool) (source: AsyncSeq<'T>) : Async<'T> =
+    findBackAsync (predicate >> async.Return) source
+
   let foldAsync f (state:'State) (source : AsyncSeq<'T>) =
     match source with
     | :? AsyncSeqOp<'T> as source -> source.FoldAsync f state
