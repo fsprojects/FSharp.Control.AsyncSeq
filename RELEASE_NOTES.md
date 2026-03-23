@@ -1,3 +1,8 @@
+### 4.11.0
+
+* Added `AsyncSeq.tryFindBack` / `findBack` — returns the **last** element in a sequence for which the predicate returns `true`. Mirrors `Seq.tryFindBack` / `Seq.findBack`.
+* Added `AsyncSeq.tryFindBackAsync` / `findBackAsync` — async-predicate variants of the above.
+
 ### 4.10.0
 
 * Added `AsyncSeq.withCancellation` — returns a new `AsyncSeq` that passes the given `CancellationToken` to `GetAsyncEnumerator`, overriding whatever token would otherwise be supplied. Mirrors `TaskSeq.withCancellation` and is useful when consuming sequences from libraries (e.g. Entity Framework) that accept a cancellation token through `GetAsyncEnumerator`. Part of ongoing design-parity work with FSharp.Control.TaskSeq (see #277).
