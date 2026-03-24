@@ -1,5 +1,17 @@
-### 4.10.1
+### 4.11.0
 
+* Design parity with FSharp.Control.TaskSeq (#277, batch 2):
+  * Added `AsyncSeq.tryTail` — returns `None` if the sequence is empty; otherwise returns `Some` of the tail. Safe counterpart to `tail`. Mirrors `TaskSeq.tryTail`.
+  * Added `AsyncSeq.where` / `AsyncSeq.whereAsync` — aliases for `filter` / `filterAsync`, mirroring the naming convention in `TaskSeq` and F# 8 collection expressions.
+  * Added `AsyncSeq.lengthBy` / `AsyncSeq.lengthByAsync` — counts elements satisfying a predicate. Mirrors `TaskSeq.lengthBy` / `TaskSeq.lengthByAsync`.
+  * Added `AsyncSeq.compareWith` / `AsyncSeq.compareWithAsync` — lexicographically compares two async sequences using a comparison function. Mirrors `TaskSeq.compareWith` / `TaskSeq.compareWithAsync`.
+  * Added `AsyncSeq.takeWhileInclusiveAsync` — async variant of the existing `takeWhileInclusive`. Mirrors `TaskSeq.takeWhileInclusiveAsync`.
+  * Added `AsyncSeq.skipWhileInclusive` / `AsyncSeq.skipWhileInclusiveAsync` — skips elements while predicate holds and also skips the first non-matching boundary element. Mirrors `TaskSeq.skipWhileInclusive` / `TaskSeq.skipWhileInclusiveAsync`.
+  * Added `AsyncSeq.appendSeq` — appends a synchronous `seq<'T>` after an async sequence. Mirrors `TaskSeq.appendSeq`.
+  * Added `AsyncSeq.prependSeq` — prepends a synchronous `seq<'T>` before an async sequence. Mirrors `TaskSeq.prependSeq`.
+  * Added `AsyncSeq.delay` — defers sequence creation to enumeration time by calling a factory function each time `GetAsyncEnumerator` is called. Mirrors `TaskSeq.delay`.
+  * Added `AsyncSeq.collectAsync` — like `collect` but the mapping function is asynchronous (`'T -> Async<AsyncSeq<'U>>`). Mirrors `TaskSeq.collectAsync`.
+  * Added `AsyncSeq.partition` / `AsyncSeq.partitionAsync` — splits a sequence into two arrays using a (optionally async) predicate; the first array contains matching elements, the second non-matching. Mirrors `TaskSeq.partition` / `TaskSeq.partitionAsync`.
 * Tests: added 14 new unit tests covering previously untested functions — `AsyncSeq.indexed`, `AsyncSeq.iteriAsync`, `AsyncSeq.tryLast`, `AsyncSeq.replicateUntilNoneAsync`, and `AsyncSeq.reduceAsync` (empty-sequence edge case).
 
 ### 4.10.0
