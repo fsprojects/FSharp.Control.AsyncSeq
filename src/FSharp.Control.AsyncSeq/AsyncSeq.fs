@@ -983,6 +983,56 @@ module AsyncSeq =
           disposed <- true
           source.Dispose()
 
+  // Optimized take enumerator: stops after yielding `count` elements without asyncSeq builder overhead
+  type private OptimizedTakeEnumerator<'T>(source: IAsyncSeqEnumerator<'T>, count: int) =
+    let mutable disposed = false
+    let mutable remaining = count
+
+    interface IAsyncSeqEnumerator<'T> with
+      member _.MoveNext() = async {
+        if remaining <= 0 then return None
+        else
+          let! result = source.MoveNext()
+          match result with
+          | None -> return None
+          | Some value ->
+            remaining <- remaining - 1
+            return Some value }
+
+      member _.Dispose() =
+        if not disposed then
+          disposed <- true
+          source.Dispose()
+
+  // Optimized skip enumerator: discards the first `count` elements without asyncSeq builder overhead
+  type private OptimizedSkipEnumerator<'T>(source: IAsyncSeqEnumerator<'T>, count: int) =
+    let mutable disposed = false
+    let mutable toSkip = count
+    let mutable exhausted = false
+
+    interface IAsyncSeqEnumerator<'T> with
+      member _.MoveNext() = async {
+        if exhausted then return None
+        else
+          // Drain skipped elements on the first call (toSkip > 0 only initially)
+          let mutable doneSkipping = false
+          while toSkip > 0 && not doneSkipping do
+            let! result = source.MoveNext()
+            match result with
+            | None ->
+              toSkip <- 0
+              exhausted <- true
+              doneSkipping <- true
+            | Some _ ->
+              toSkip <- toSkip - 1
+          if exhausted then return None
+          else return! source.MoveNext() }
+
+      member _.Dispose() =
+        if not disposed then
+          disposed <- true
+          source.Dispose()
+
   let mapAsync f (source : AsyncSeq<'T>) : AsyncSeq<'TResult> =
     match source with
     | :? AsyncSeqOp<'T> as source -> source.MapAsync f
@@ -1984,36 +2034,15 @@ module AsyncSeq =
   let skipWhile p (source : AsyncSeq<'T>) =
       skipWhileAsync (p >> async.Return) source
 
-  let take count (source : AsyncSeq<'T>) : AsyncSeq<_> = asyncSeq {
-      if (count < 0) then invalidArg "count" "must be non-negative"
-      use ie = source.GetEnumerator()
-      let n = ref count
-      if n.Value > 0 then
-          let! move = ie.MoveNext()
-          let b = ref move
-          while b.Value.IsSome do
-              yield b.Value.Value
-              n := n.Value - 1
-              if n.Value > 0 then
-                  let! moven = ie.MoveNext()
-                  b := moven
-              else b := None }
+  let take count (source : AsyncSeq<'T>) : AsyncSeq<_> =
+    if count < 0 then invalidArg "count" "must be non-negative"
+    AsyncSeqImpl(fun () -> new OptimizedTakeEnumerator<'T>(source.GetEnumerator(), count) :> IAsyncSeqEnumerator<'T>) :> AsyncSeq<'T>
 
   let truncate count source = take count source
 
-  let skip count (source : AsyncSeq<'T>) : AsyncSeq<_> = asyncSeq {
-      if (count < 0) then invalidArg "count" "must be non-negative"
-      use ie = source.GetEnumerator()
-      let! move = ie.MoveNext()
-      let b = ref move
-      let n = ref count
-      while b.Value.IsSome do
-          if n.Value = 0 then
-              yield b.Value.Value
-          else
-              n := n.Value - 1
-          let! moven = ie.MoveNext()
-          b := moven }
+  let skip count (source : AsyncSeq<'T>) : AsyncSeq<_> =
+    if count < 0 then invalidArg "count" "must be non-negative"
+    AsyncSeqImpl(fun () -> new OptimizedSkipEnumerator<'T>(source.GetEnumerator(), count) :> IAsyncSeqEnumerator<'T>) :> AsyncSeq<'T>
 
   let tail (source : AsyncSeq<'T>) : AsyncSeq<'T> = skip 1 source
 
