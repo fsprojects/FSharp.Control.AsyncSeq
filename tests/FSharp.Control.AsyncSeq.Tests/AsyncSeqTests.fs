@@ -1211,6 +1211,53 @@ let ``AsyncSeq.traverseChoiceAsync``() =
     Assert.AreEqual("oh no", e)
     Assert.True(([1;2] = (seen |> List.ofSeq)))
 
+[<Test>]
+let ``AsyncSeq.traverseOptionAsync returns Some sequence when all elements succeed``() =
+  let s = [1;2;3] |> AsyncSeq.ofSeq
+  let f i = Some (i * 10) |> async.Return
+  let r = AsyncSeq.traverseOptionAsync f s |> Async.RunSynchronously
+  match r with
+  | None -> Assert.Fail("Expected Some")
+  | Some result ->
+    let values = result |> AsyncSeq.toListAsync |> Async.RunSynchronously
+    Assert.AreEqual([10;20;30], values)
+
+[<Test>]
+let ``AsyncSeq.traverseOptionAsync does not read past failing element``() =
+  let readCount = ref 0
+  let s = asyncSeq {
+    for i in 1..10 do
+      incr readCount
+      yield i
+  }
+  let f i = (if i <= 3 then Some i else None) |> async.Return
+  let _r = AsyncSeq.traverseOptionAsync f s |> Async.RunSynchronously
+  // f returns None on element 4; only elements 1..4 should be read from source
+  Assert.AreEqual(4, readCount.Value)
+
+[<Test>]
+let ``AsyncSeq.traverseChoiceAsync returns Choice1Of2 sequence when all elements succeed``() =
+  let s = [1;2;3] |> AsyncSeq.ofSeq
+  let f i = Choice1Of2 (i * 10) |> async.Return
+  let r = AsyncSeq.traverseChoiceAsync f s |> Async.RunSynchronously
+  match r with
+  | Choice2Of2 _ -> Assert.Fail("Expected Choice1Of2")
+  | Choice1Of2 result ->
+    let values = result |> AsyncSeq.toListAsync |> Async.RunSynchronously
+    Assert.AreEqual([10;20;30], values)
+
+[<Test>]
+let ``AsyncSeq.traverseChoiceAsync does not read past failing element``() =
+  let readCount = ref 0
+  let s = asyncSeq {
+    for i in 1..10 do
+      incr readCount
+      yield i
+  }
+  let f i = (if i <= 3 then Choice1Of2 i else Choice2Of2 "stop") |> async.Return
+  let _r = AsyncSeq.traverseChoiceAsync f s |> Async.RunSynchronously
+  // f returns Choice2Of2 on element 4; only elements 1..4 should be read from source
+  Assert.AreEqual(4, readCount.Value)
 
 [<Test>]
 let ``AsyncSeq.toBlockingSeq does not hung forever and rethrows exception``() =

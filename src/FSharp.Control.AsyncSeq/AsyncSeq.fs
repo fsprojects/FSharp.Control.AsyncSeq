@@ -2449,43 +2449,47 @@ module AsyncSeq =
 
   let traverseOptionAsync (f:'T -> Async<'U option>) (source:AsyncSeq<'T>) : Async<AsyncSeq<'U> option> = async {
       use ie = source.GetEnumerator()
-      let! move = ie.MoveNext()
-      let b = ref move
+      let! first = ie.MoveNext()
+      let mutable current = first
+      let mutable failed = false
       let buffer = ResizeArray<_>()
-      let fail = ref false
-      while b.Value.IsSome && not fail.Value do
-          let! vOpt = f b.Value.Value
-          match vOpt  with
-          | Some v -> buffer.Add v
-          | None -> b := None; fail := true
-          let! moven = ie.MoveNext()
-          b := moven
-      if fail.Value then
-         return None
+      while current.IsSome && not failed do
+          let! vOpt = f current.Value
+          match vOpt with
+          | Some v ->
+              buffer.Add v
+              let! next = ie.MoveNext()
+              current <- next
+          | None ->
+              failed <- true
+      if failed then
+          return None
       else
-         let res = buffer.ToArray()
-         return Some (asyncSeq { for v in res do yield v })
-       }
+          let res = buffer.ToArray()
+          return Some (asyncSeq { for v in res do yield v })
+      }
 
   let traverseChoiceAsync (f:'T -> Async<Choice<'U, 'e>>) (source:AsyncSeq<'T>) : Async<Choice<AsyncSeq<'U>, 'e>> = async {
       use ie = source.GetEnumerator()
-      let! move = ie.MoveNext()
-      let b = ref move
+      let! first = ie.MoveNext()
+      let mutable current = first
+      let mutable failWith = ValueNone
       let buffer = ResizeArray<_>()
-      let fail = ref None
-      while b.Value.IsSome && fail.Value.IsNone do
-          let! vOpt = f b.Value.Value
-          match vOpt  with
-          | Choice1Of2 v -> buffer.Add v
-          | Choice2Of2 err -> b := None; fail := Some err
-          let! moven = ie.MoveNext()
-          b := moven
-      match fail.Value with
-      | Some err -> return Choice2Of2 err
-      | None ->
-         let res = buffer.ToArray()
-         return Choice1Of2 (asyncSeq { for v in res do yield v })
-       }
+      while current.IsSome && failWith.IsNone do
+          let! vOpt = f current.Value
+          match vOpt with
+          | Choice1Of2 v ->
+              buffer.Add v
+              let! next = ie.MoveNext()
+              current <- next
+          | Choice2Of2 err ->
+              failWith <- ValueSome err
+      match failWith with
+      | ValueSome err -> return Choice2Of2 err
+      | ValueNone ->
+          let res = buffer.ToArray()
+          return Choice1Of2 (asyncSeq { for v in res do yield v })
+      }
 
   #if (NETSTANDARD || NET)
   #if !FABLE_COMPILER
