@@ -183,10 +183,6 @@ type AsyncSeqPipelineBenchmarks() =
 [<MemoryDiagnoser>]
 [<SimpleJob(RuntimeMoniker.Net80)>]
 type AsyncSeqSliceBenchmarks() =
-
-    [<Params(1000, 10000)>]
-    member val ElementCount = 0 with get, set
-
     /// Benchmark take: stops after N elements
     [<Benchmark(Baseline = true)>]
     member this.Take() =
@@ -211,6 +207,38 @@ type AsyncSeqSliceBenchmarks() =
         AsyncSeq.replicate this.ElementCount 1
         |> AsyncSeq.skip page
         |> AsyncSeq.take page
+        |> AsyncSeq.iterAsync (fun _ -> async.Return())
+        |> Async.RunSynchronously
+
+    [<Params(1000, 10000)>]
+    member val ElementCount = 0 with get, set
+
+/// Benchmarks for map and mapi variants — ensures the direct-enumerator optimisation
+/// for mapiAsync is visible and comparable against mapAsync.
+[<MemoryDiagnoser>]
+[<SimpleJob(RuntimeMoniker.Net80)>]
+type AsyncSeqMapiBenchmarks() =
+    /// Baseline: mapAsync (already uses direct enumerator)
+    [<Benchmark(Baseline = true)>]
+    member this.MapAsync() =
+        AsyncSeq.replicate this.ElementCount 1
+        |> AsyncSeq.mapAsync (fun x -> async.Return (x * 2))
+        |> AsyncSeq.iterAsync (fun _ -> async.Return())
+        |> Async.RunSynchronously
+
+    /// mapiAsync — now uses direct enumerator; should be close to mapAsync cost
+    [<Benchmark>]
+    member this.MapiAsync() =
+        AsyncSeq.replicate this.ElementCount 1
+        |> AsyncSeq.mapiAsync (fun i x -> async.Return (i, x * 2))
+        |> AsyncSeq.iterAsync (fun _ -> async.Return())
+        |> Async.RunSynchronously
+
+    /// mapi — synchronous projection variant; dispatches through mapiAsync
+    [<Benchmark>]
+    member this.Mapi() =
+        AsyncSeq.replicate this.ElementCount 1
+        |> AsyncSeq.mapi (fun i x -> (i, x * 2))
         |> AsyncSeq.iterAsync (fun _ -> async.Return())
         |> Async.RunSynchronously
 
