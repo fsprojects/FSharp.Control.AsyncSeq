@@ -3720,6 +3720,148 @@ let ``AsyncSeq.withCancellation with cancelled token raises OperationCanceledExc
     |> ignore)
   |> ignore
 
+// ===== indexed =====
+
+[<Test>]
+let ``AsyncSeq.indexed pairs elements with int64 indices`` () =
+  let result =
+    AsyncSeq.ofSeq [ "a"; "b"; "c" ]
+    |> AsyncSeq.indexed
+    |> AsyncSeq.toArrayAsync
+    |> Async.RunSynchronously
+  Assert.AreEqual([| (0L, "a"); (1L, "b"); (2L, "c") |], result)
+
+[<Test>]
+let ``AsyncSeq.indexed on empty sequence returns empty`` () =
+  let result =
+    AsyncSeq.empty<int>
+    |> AsyncSeq.indexed
+    |> AsyncSeq.toArrayAsync
+    |> Async.RunSynchronously
+  Assert.AreEqual([||], result)
+
+[<Test>]
+let ``AsyncSeq.indexed index starts at zero for singleton`` () =
+  let result =
+    AsyncSeq.singleton 42
+    |> AsyncSeq.indexed
+    |> AsyncSeq.toArrayAsync
+    |> Async.RunSynchronously
+  Assert.AreEqual([| (0L, 42) |], result)
+
+[<Test>]
+let ``AsyncSeq.indexed produces consecutive int64 indices`` () =
+  let n = 100
+  let result =
+    AsyncSeq.init (int64 n) id
+    |> AsyncSeq.indexed
+    |> AsyncSeq.toArrayAsync
+    |> Async.RunSynchronously
+  let indices = result |> Array.map fst
+  Assert.AreEqual(Array.init n int64, indices)
+
+// ===== iteriAsync =====
+
+[<Test>]
+let ``AsyncSeq.iteriAsync calls action with correct indices and values`` () =
+  let log = ResizeArray<int * int>()
+  AsyncSeq.ofSeq [ 10; 20; 30 ]
+  |> AsyncSeq.iteriAsync (fun i v -> async { log.Add(i, v) })
+  |> Async.RunSynchronously
+  Assert.AreEqual([ (0, 10); (1, 20); (2, 30) ], log |> Seq.toList)
+
+[<Test>]
+let ``AsyncSeq.iteriAsync on empty sequence does not call action`` () =
+  let mutable callCount = 0
+  AsyncSeq.empty<int>
+  |> AsyncSeq.iteriAsync (fun _ _ -> async { callCount <- callCount + 1 })
+  |> Async.RunSynchronously
+  Assert.AreEqual(0, callCount)
+
+[<Test>]
+let ``AsyncSeq.iteriAsync index is zero-based`` () =
+  let indices = ResizeArray<int>()
+  AsyncSeq.ofSeq [ "x"; "y"; "z" ]
+  |> AsyncSeq.iteriAsync (fun i _ -> async { indices.Add(i) })
+  |> Async.RunSynchronously
+  Assert.AreEqual([ 0; 1; 2 ], indices |> Seq.toList)
+
+// ===== tryLast =====
+
+[<Test>]
+let ``AsyncSeq.tryLast returns Some last element for non-empty sequence`` () =
+  let result =
+    AsyncSeq.ofSeq [ 1; 2; 3 ]
+    |> AsyncSeq.tryLast
+    |> Async.RunSynchronously
+  Assert.AreEqual(Some 3, result)
+
+[<Test>]
+let ``AsyncSeq.tryLast returns None for empty sequence`` () =
+  let result =
+    AsyncSeq.empty<int>
+    |> AsyncSeq.tryLast
+    |> Async.RunSynchronously
+  Assert.AreEqual(None, result)
+
+[<Test>]
+let ``AsyncSeq.tryLast returns Some for singleton sequence`` () =
+  let result =
+    AsyncSeq.singleton 99
+    |> AsyncSeq.tryLast
+    |> Async.RunSynchronously
+  Assert.AreEqual(Some 99, result)
+
+// ===== replicateUntilNoneAsync =====
+
+[<Test>]
+let ``AsyncSeq.replicateUntilNoneAsync generates elements until None`` () =
+  let mutable counter = 0
+  let gen = async {
+    counter <- counter + 1
+    if counter <= 3 then return Some counter
+    else return None
+  }
+  let result =
+    AsyncSeq.replicateUntilNoneAsync gen
+    |> AsyncSeq.toArrayAsync
+    |> Async.RunSynchronously
+  Assert.AreEqual([| 1; 2; 3 |], result)
+
+[<Test>]
+let ``AsyncSeq.replicateUntilNoneAsync returns empty for immediate None`` () =
+  let result =
+    AsyncSeq.replicateUntilNoneAsync (async { return None })
+    |> AsyncSeq.toArrayAsync
+    |> Async.RunSynchronously
+  Assert.AreEqual([||], result)
+
+[<Test>]
+let ``AsyncSeq.replicateUntilNoneAsync returns single element then stops`` () =
+  let mutable called = false
+  let gen = async {
+    if not called then
+      called <- true
+      return Some 42
+    else
+      return None
+  }
+  let result =
+    AsyncSeq.replicateUntilNoneAsync gen
+    |> AsyncSeq.toArrayAsync
+    |> Async.RunSynchronously
+  Assert.AreEqual([| 42 |], result)
+
+// ===== reduceAsync edge case =====
+
+[<Test>]
+let ``AsyncSeq.reduceAsync raises InvalidOperationException on empty sequence`` () =
+  Assert.Throws<System.InvalidOperationException>(fun () ->
+    AsyncSeq.empty<int>
+    |> AsyncSeq.reduceAsync (fun a b -> async { return a + b })
+    |> Async.RunSynchronously
+    |> ignore)
+  |> ignore
 // ── Design parity with FSharp.Control.TaskSeq (issue #277, batch 2) ─────────
 
 [<Test>]
