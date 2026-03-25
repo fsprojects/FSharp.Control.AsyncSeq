@@ -2074,20 +2074,6 @@ module AsyncSeq =
       return int n
     }
 
-  let skip count (source : AsyncSeq<'T>) : AsyncSeq<_> = asyncSeq {
-      if (count < 0) then invalidArg "count" "must be non-negative"
-      use ie = source.GetEnumerator()
-      let! move = ie.MoveNext()
-      let b = ref move
-      let n = ref count
-      while b.Value.IsSome do
-          if n.Value = 0 then
-              yield b.Value.Value
-          else
-              n := n.Value - 1
-          let! moven = ie.MoveNext()
-          b := moven }
-
   let skip count (source : AsyncSeq<'T>) : AsyncSeq<_> =
     if count < 0 then invalidArg "count" "must be non-negative"
     AsyncSeqImpl(fun () -> new OptimizedSkipEnumerator<'T>(source.GetEnumerator(), count) :> IAsyncSeqEnumerator<'T>) :> AsyncSeq<'T>
