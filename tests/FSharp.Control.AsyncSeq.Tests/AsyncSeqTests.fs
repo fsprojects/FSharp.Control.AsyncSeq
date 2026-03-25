@@ -1211,6 +1211,53 @@ let ``AsyncSeq.traverseChoiceAsync``() =
     Assert.AreEqual("oh no", e)
     Assert.True(([1;2] = (seen |> List.ofSeq)))
 
+[<Test>]
+let ``AsyncSeq.traverseOptionAsync returns Some sequence when all elements succeed``() =
+  let s = [1;2;3] |> AsyncSeq.ofSeq
+  let f i = Some (i * 10) |> async.Return
+  let r = AsyncSeq.traverseOptionAsync f s |> Async.RunSynchronously
+  match r with
+  | None -> Assert.Fail("Expected Some")
+  | Some result ->
+    let values = result |> AsyncSeq.toListAsync |> Async.RunSynchronously
+    Assert.AreEqual([10;20;30], values)
+
+[<Test>]
+let ``AsyncSeq.traverseOptionAsync does not read past failing element``() =
+  let readCount = ref 0
+  let s = asyncSeq {
+    for i in 1..10 do
+      incr readCount
+      yield i
+  }
+  let f i = (if i <= 3 then Some i else None) |> async.Return
+  let _r = AsyncSeq.traverseOptionAsync f s |> Async.RunSynchronously
+  // f returns None on element 4; only elements 1..4 should be read from source
+  Assert.AreEqual(4, readCount.Value)
+
+[<Test>]
+let ``AsyncSeq.traverseChoiceAsync returns Choice1Of2 sequence when all elements succeed``() =
+  let s = [1;2;3] |> AsyncSeq.ofSeq
+  let f i = Choice1Of2 (i * 10) |> async.Return
+  let r = AsyncSeq.traverseChoiceAsync f s |> Async.RunSynchronously
+  match r with
+  | Choice2Of2 _ -> Assert.Fail("Expected Choice1Of2")
+  | Choice1Of2 result ->
+    let values = result |> AsyncSeq.toListAsync |> Async.RunSynchronously
+    Assert.AreEqual([10;20;30], values)
+
+[<Test>]
+let ``AsyncSeq.traverseChoiceAsync does not read past failing element``() =
+  let readCount = ref 0
+  let s = asyncSeq {
+    for i in 1..10 do
+      incr readCount
+      yield i
+  }
+  let f i = (if i <= 3 then Choice1Of2 i else Choice2Of2 "stop") |> async.Return
+  let _r = AsyncSeq.traverseChoiceAsync f s |> Async.RunSynchronously
+  // f returns Choice2Of2 on element 4; only elements 1..4 should be read from source
+  Assert.AreEqual(4, readCount.Value)
 
 [<Test>]
 let ``AsyncSeq.toBlockingSeq does not hung forever and rethrows exception``() =
@@ -3663,6 +3710,62 @@ let ``AsyncSeq.insertAt raises ArgumentException when index exceeds length`` () 
     |> Async.RunSynchronously |> ignore)
   |> ignore
 
+[<Test>]
+let ``AsyncSeq.take more than length returns all elements`` () =
+  let result =
+    AsyncSeq.ofSeq [ 1; 2; 3 ]
+    |> AsyncSeq.take 10
+    |> AsyncSeq.toArrayAsync
+    |> Async.RunSynchronously
+  Assert.AreEqual([| 1; 2; 3 |], result)
+
+[<Test>]
+let ``AsyncSeq.take raises ArgumentException for negative count`` () =
+  Assert.Throws<System.ArgumentException>(fun () ->
+    AsyncSeq.ofSeq [ 1; 2; 3 ]
+    |> AsyncSeq.take -1
+    |> AsyncSeq.toArrayAsync
+    |> Async.RunSynchronously |> ignore)
+  |> ignore
+
+[<Test>]
+let ``AsyncSeq.take from infinite sequence`` () =
+  let result =
+    AsyncSeq.replicateInfinite 7
+    |> AsyncSeq.take 5
+    |> AsyncSeq.toArrayAsync
+    |> Async.RunSynchronously
+  Assert.AreEqual([| 7; 7; 7; 7; 7 |], result)
+
+[<Test>]
+let ``AsyncSeq.skip more than length returns empty`` () =
+  let result =
+    AsyncSeq.ofSeq [ 1; 2; 3 ]
+    |> AsyncSeq.skip 10
+    |> AsyncSeq.toArrayAsync
+    |> Async.RunSynchronously
+  Assert.AreEqual([||], result)
+
+[<Test>]
+let ``AsyncSeq.skip raises ArgumentException for negative count`` () =
+  Assert.Throws<System.ArgumentException>(fun () ->
+    AsyncSeq.ofSeq [ 1; 2; 3 ]
+    |> AsyncSeq.skip -1
+    |> AsyncSeq.toArrayAsync
+    |> Async.RunSynchronously |> ignore)
+  |> ignore
+
+[<Test>]
+let ``AsyncSeq.take then skip roundtrip`` () =
+  let source = [| 1..20 |]
+  let result =
+    AsyncSeq.ofSeq source
+    |> AsyncSeq.skip 5
+    |> AsyncSeq.take 10
+    |> AsyncSeq.toArrayAsync
+    |> Async.RunSynchronously
+  Assert.AreEqual([| 6..15 |], result)
+
 // ===== withCancellation =====
 
 [<Test>]
@@ -3719,3 +3822,360 @@ let ``AsyncSeq.withCancellation with cancelled token raises OperationCanceledExc
     |> Async.RunSynchronously
     |> ignore)
   |> ignore
+
+// ===== indexed =====
+
+[<Test>]
+let ``AsyncSeq.indexed pairs elements with int64 indices`` () =
+  let result =
+    AsyncSeq.ofSeq [ "a"; "b"; "c" ]
+    |> AsyncSeq.indexed
+    |> AsyncSeq.toArrayAsync
+    |> Async.RunSynchronously
+  Assert.AreEqual([| (0L, "a"); (1L, "b"); (2L, "c") |], result)
+
+[<Test>]
+let ``AsyncSeq.indexed on empty sequence returns empty`` () =
+  let result =
+    AsyncSeq.empty<int>
+    |> AsyncSeq.indexed
+    |> AsyncSeq.toArrayAsync
+    |> Async.RunSynchronously
+  Assert.AreEqual([||], result)
+
+[<Test>]
+let ``AsyncSeq.indexed index starts at zero for singleton`` () =
+  let result =
+    AsyncSeq.singleton 42
+    |> AsyncSeq.indexed
+    |> AsyncSeq.toArrayAsync
+    |> Async.RunSynchronously
+  Assert.AreEqual([| (0L, 42) |], result)
+
+[<Test>]
+let ``AsyncSeq.indexed produces consecutive int64 indices`` () =
+  let n = 100
+  let result =
+    AsyncSeq.init (int64 n) id
+    |> AsyncSeq.indexed
+    |> AsyncSeq.toArrayAsync
+    |> Async.RunSynchronously
+  let indices = result |> Array.map fst
+  Assert.AreEqual(Array.init n int64, indices)
+
+// ===== iteriAsync =====
+
+[<Test>]
+let ``AsyncSeq.iteriAsync calls action with correct indices and values`` () =
+  let log = ResizeArray<int * int>()
+  AsyncSeq.ofSeq [ 10; 20; 30 ]
+  |> AsyncSeq.iteriAsync (fun i v -> async { log.Add(i, v) })
+  |> Async.RunSynchronously
+  Assert.AreEqual([ (0, 10); (1, 20); (2, 30) ], log |> Seq.toList)
+
+[<Test>]
+let ``AsyncSeq.iteriAsync on empty sequence does not call action`` () =
+  let mutable callCount = 0
+  AsyncSeq.empty<int>
+  |> AsyncSeq.iteriAsync (fun _ _ -> async { callCount <- callCount + 1 })
+  |> Async.RunSynchronously
+  Assert.AreEqual(0, callCount)
+
+[<Test>]
+let ``AsyncSeq.iteriAsync index is zero-based`` () =
+  let indices = ResizeArray<int>()
+  AsyncSeq.ofSeq [ "x"; "y"; "z" ]
+  |> AsyncSeq.iteriAsync (fun i _ -> async { indices.Add(i) })
+  |> Async.RunSynchronously
+  Assert.AreEqual([ 0; 1; 2 ], indices |> Seq.toList)
+
+// ===== tryLast =====
+
+[<Test>]
+let ``AsyncSeq.tryLast returns Some last element for non-empty sequence`` () =
+  let result =
+    AsyncSeq.ofSeq [ 1; 2; 3 ]
+    |> AsyncSeq.tryLast
+    |> Async.RunSynchronously
+  Assert.AreEqual(Some 3, result)
+
+[<Test>]
+let ``AsyncSeq.tryLast returns None for empty sequence`` () =
+  let result =
+    AsyncSeq.empty<int>
+    |> AsyncSeq.tryLast
+    |> Async.RunSynchronously
+  Assert.AreEqual(None, result)
+
+[<Test>]
+let ``AsyncSeq.tryLast returns Some for singleton sequence`` () =
+  let result =
+    AsyncSeq.singleton 99
+    |> AsyncSeq.tryLast
+    |> Async.RunSynchronously
+  Assert.AreEqual(Some 99, result)
+
+// ===== replicateUntilNoneAsync =====
+
+[<Test>]
+let ``AsyncSeq.replicateUntilNoneAsync generates elements until None`` () =
+  let mutable counter = 0
+  let gen = async {
+    counter <- counter + 1
+    if counter <= 3 then return Some counter
+    else return None
+  }
+  let result =
+    AsyncSeq.replicateUntilNoneAsync gen
+    |> AsyncSeq.toArrayAsync
+    |> Async.RunSynchronously
+  Assert.AreEqual([| 1; 2; 3 |], result)
+
+[<Test>]
+let ``AsyncSeq.replicateUntilNoneAsync returns empty for immediate None`` () =
+  let result =
+    AsyncSeq.replicateUntilNoneAsync (async { return None })
+    |> AsyncSeq.toArrayAsync
+    |> Async.RunSynchronously
+  Assert.AreEqual([||], result)
+
+[<Test>]
+let ``AsyncSeq.replicateUntilNoneAsync returns single element then stops`` () =
+  let mutable called = false
+  let gen = async {
+    if not called then
+      called <- true
+      return Some 42
+    else
+      return None
+  }
+  let result =
+    AsyncSeq.replicateUntilNoneAsync gen
+    |> AsyncSeq.toArrayAsync
+    |> Async.RunSynchronously
+  Assert.AreEqual([| 42 |], result)
+
+// ===== reduceAsync edge case =====
+
+[<Test>]
+let ``AsyncSeq.reduceAsync raises InvalidOperationException on empty sequence`` () =
+  Assert.Throws<System.InvalidOperationException>(fun () ->
+    AsyncSeq.empty<int>
+    |> AsyncSeq.reduceAsync (fun a b -> async { return a + b })
+    |> Async.RunSynchronously
+    |> ignore)
+  |> ignore
+// ── Design parity with FSharp.Control.TaskSeq (issue #277, batch 2) ─────────
+
+[<Test>]
+let ``AsyncSeq.tryTail returns None for empty`` () =
+  let result = AsyncSeq.empty<int> |> AsyncSeq.tryTail |> Async.RunSynchronously
+  Assert.IsTrue(result.IsNone)
+
+[<Test>]
+let ``AsyncSeq.tryTail returns Some tail for singleton`` () =
+  let result = AsyncSeq.ofSeq [42] |> AsyncSeq.tryTail |> Async.RunSynchronously
+  Assert.IsTrue(result.IsSome)
+  let tail = result.Value |> AsyncSeq.toListAsync |> Async.RunSynchronously
+  Assert.AreEqual([], tail)
+
+[<Test>]
+let ``AsyncSeq.tryTail returns all-but-first elements`` () =
+  let result = AsyncSeq.ofSeq [1;2;3;4;5] |> AsyncSeq.tryTail |> Async.RunSynchronously
+  Assert.IsTrue(result.IsSome)
+  let tail = result.Value |> AsyncSeq.toListAsync |> Async.RunSynchronously
+  Assert.AreEqual([2;3;4;5], tail)
+
+[<Test>]
+let ``AsyncSeq.where is alias for filter`` () =
+  let result =
+    AsyncSeq.ofSeq [1..10]
+    |> AsyncSeq.where (fun x -> x % 2 = 0)
+    |> AsyncSeq.toListAsync
+    |> Async.RunSynchronously
+  Assert.AreEqual([2;4;6;8;10], result)
+
+[<Test>]
+let ``AsyncSeq.whereAsync is alias for filterAsync`` () =
+  let result =
+    AsyncSeq.ofSeq [1..10]
+    |> AsyncSeq.whereAsync (fun x -> async { return x % 2 = 0 })
+    |> AsyncSeq.toListAsync
+    |> Async.RunSynchronously
+  Assert.AreEqual([2;4;6;8;10], result)
+
+[<Test>]
+let ``AsyncSeq.lengthBy counts matching elements`` () =
+  let result =
+    AsyncSeq.ofSeq [1..10]
+    |> AsyncSeq.lengthBy (fun x -> x % 2 = 0)
+    |> Async.RunSynchronously
+  Assert.AreEqual(5L, result)
+
+[<Test>]
+let ``AsyncSeq.lengthByAsync counts matching elements`` () =
+  let result =
+    AsyncSeq.ofSeq [1..10]
+    |> AsyncSeq.lengthByAsync (fun x -> async { return x % 3 = 0 })
+    |> Async.RunSynchronously
+  Assert.AreEqual(3L, result)
+
+[<Test>]
+let ``AsyncSeq.lengthBy returns 0 for empty`` () =
+  let result =
+    AsyncSeq.empty<int>
+    |> AsyncSeq.lengthBy (fun _ -> true)
+    |> Async.RunSynchronously
+  Assert.AreEqual(0L, result)
+
+[<Test>]
+let ``AsyncSeq.compareWith equal sequences returns 0`` () =
+  let s = AsyncSeq.ofSeq [1;2;3]
+  let result = AsyncSeq.compareWith compare s (AsyncSeq.ofSeq [1;2;3]) |> Async.RunSynchronously
+  Assert.AreEqual(0, result)
+
+[<Test>]
+let ``AsyncSeq.compareWith shorter is less than longer`` () =
+  let result = AsyncSeq.compareWith compare (AsyncSeq.ofSeq [1;2]) (AsyncSeq.ofSeq [1;2;3]) |> Async.RunSynchronously
+  Assert.Less(result, 0)
+
+[<Test>]
+let ``AsyncSeq.compareWith longer is greater than shorter`` () =
+  let result = AsyncSeq.compareWith compare (AsyncSeq.ofSeq [1;2;3]) (AsyncSeq.ofSeq [1;2]) |> Async.RunSynchronously
+  Assert.Greater(result, 0)
+
+[<Test>]
+let ``AsyncSeq.compareWith lexicographic difference`` () =
+  let result = AsyncSeq.compareWith compare (AsyncSeq.ofSeq [1;3]) (AsyncSeq.ofSeq [1;2]) |> Async.RunSynchronously
+  Assert.Greater(result, 0)
+
+[<Test>]
+let ``AsyncSeq.compareWith two empty sequences returns 0`` () =
+  let result = AsyncSeq.compareWith compare AsyncSeq.empty<int> AsyncSeq.empty<int> |> Async.RunSynchronously
+  Assert.AreEqual(0, result)
+
+[<Test>]
+let ``AsyncSeq.takeWhileInclusiveAsync includes boundary element`` () =
+  let result =
+    AsyncSeq.ofSeq [1;2;3;4;5]
+    |> AsyncSeq.takeWhileInclusiveAsync (fun x -> async { return x < 3 })
+    |> AsyncSeq.toListAsync
+    |> Async.RunSynchronously
+  Assert.AreEqual([1;2;3], result)
+
+[<Test>]
+let ``AsyncSeq.takeWhileInclusiveAsync empty source returns empty`` () =
+  let result =
+    AsyncSeq.empty<int>
+    |> AsyncSeq.takeWhileInclusiveAsync (fun _ -> async { return true })
+    |> AsyncSeq.toListAsync
+    |> Async.RunSynchronously
+  Assert.AreEqual([], result)
+
+[<Test>]
+let ``AsyncSeq.skipWhileInclusive skips boundary element`` () =
+  let result =
+    AsyncSeq.ofSeq [1;2;3;4;5]
+    |> AsyncSeq.skipWhileInclusive (fun x -> x < 3)
+    |> AsyncSeq.toListAsync
+    |> Async.RunSynchronously
+  // Skips 1, 2 (while predicate holds), skips 3 (boundary, first non-match), yields 4, 5
+  Assert.AreEqual([4;5], result)
+
+[<Test>]
+let ``AsyncSeq.skipWhileInclusive all match returns empty`` () =
+  let result =
+    AsyncSeq.ofSeq [1;2;3]
+    |> AsyncSeq.skipWhileInclusive (fun _ -> true)
+    |> AsyncSeq.toListAsync
+    |> Async.RunSynchronously
+  Assert.AreEqual([], result)
+
+[<Test>]
+let ``AsyncSeq.skipWhileInclusiveAsync skips boundary element`` () =
+  let result =
+    AsyncSeq.ofSeq [1;2;3;4;5]
+    |> AsyncSeq.skipWhileInclusiveAsync (fun x -> async { return x < 3 })
+    |> AsyncSeq.toListAsync
+    |> Async.RunSynchronously
+  Assert.AreEqual([4;5], result)
+
+[<Test>]
+let ``AsyncSeq.appendSeq appends sync sequence after async sequence`` () =
+  let result =
+    AsyncSeq.ofSeq [1;2;3]
+    |> AsyncSeq.appendSeq [4;5;6]
+    |> AsyncSeq.toListAsync
+    |> Async.RunSynchronously
+  Assert.AreEqual([1;2;3;4;5;6], result)
+
+[<Test>]
+let ``AsyncSeq.prependSeq prepends sync sequence before async sequence`` () =
+  let result =
+    AsyncSeq.ofSeq [4;5;6]
+    |> AsyncSeq.prependSeq [1;2;3]
+    |> AsyncSeq.toListAsync
+    |> Async.RunSynchronously
+  Assert.AreEqual([1;2;3;4;5;6], result)
+
+[<Test>]
+let ``AsyncSeq.delay defers creation until enumeration`` () =
+  let created = ref false
+  let s = AsyncSeq.delay (fun () -> created.Value <- true; AsyncSeq.ofSeq [1;2;3])
+  Assert.IsFalse(created.Value)  // not created yet
+  let result = s |> AsyncSeq.toListAsync |> Async.RunSynchronously
+  Assert.IsTrue(created.Value)
+  Assert.AreEqual([1;2;3], result)
+
+[<Test>]
+let ``AsyncSeq.delay is re-entrant`` () =
+  let count = ref 0
+  let s = AsyncSeq.delay (fun () -> incr count; AsyncSeq.ofSeq [1;2])
+  s |> AsyncSeq.toListAsync |> Async.RunSynchronously |> ignore
+  s |> AsyncSeq.toListAsync |> Async.RunSynchronously |> ignore
+  Assert.AreEqual(2, count.Value)
+
+[<Test>]
+let ``AsyncSeq.collectAsync flattens async-bound inner sequences`` () =
+  let result =
+    AsyncSeq.ofSeq [1;2;3]
+    |> AsyncSeq.collectAsync (fun x -> async { return AsyncSeq.ofSeq [x; x*10] })
+    |> AsyncSeq.toListAsync
+    |> Async.RunSynchronously
+  Assert.AreEqual([1;10;2;20;3;30], result)
+
+[<Test>]
+let ``AsyncSeq.collectAsync on empty returns empty`` () =
+  let result =
+    AsyncSeq.empty<int>
+    |> AsyncSeq.collectAsync (fun x -> async { return AsyncSeq.singleton x })
+    |> AsyncSeq.toListAsync
+    |> Async.RunSynchronously
+  Assert.AreEqual([], result)
+
+[<Test>]
+let ``AsyncSeq.partition splits by predicate`` () =
+  let trues, falses =
+    AsyncSeq.ofSeq [1..10]
+    |> AsyncSeq.partition (fun x -> x % 2 = 0)
+    |> Async.RunSynchronously
+  Assert.AreEqual([|2;4;6;8;10|], trues)
+  Assert.AreEqual([|1;3;5;7;9|], falses)
+
+[<Test>]
+let ``AsyncSeq.partition empty returns two empty arrays`` () =
+  let trues, falses =
+    AsyncSeq.empty<int>
+    |> AsyncSeq.partition (fun _ -> true)
+    |> Async.RunSynchronously
+  Assert.AreEqual([||], trues)
+  Assert.AreEqual([||], falses)
+
+[<Test>]
+let ``AsyncSeq.partitionAsync splits by async predicate`` () =
+  let trues, falses =
+    AsyncSeq.ofSeq [1..6]
+    |> AsyncSeq.partitionAsync (fun x -> async { return x % 2 = 0 })
+    |> Async.RunSynchronously
+  Assert.AreEqual([|2;4;6|], trues)
+  Assert.AreEqual([|1;3;5|], falses)

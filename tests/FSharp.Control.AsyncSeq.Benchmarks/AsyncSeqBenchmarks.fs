@@ -179,15 +179,45 @@ type AsyncSeqPipelineBenchmarks() =
         |> Async.RunSynchronously
         |> ignore
 
+/// Benchmarks for take and skip — common slicing operations
+[<MemoryDiagnoser>]
+[<SimpleJob(RuntimeMoniker.Net80)>]
+type AsyncSeqSliceBenchmarks() =
+    /// Benchmark take: stops after N elements
+    [<Benchmark(Baseline = true)>]
+    member this.Take() =
+        AsyncSeq.replicateInfinite 1
+        |> AsyncSeq.take this.ElementCount
+        |> AsyncSeq.iterAsync (fun _ -> async.Return())
+        |> Async.RunSynchronously
+
+    /// Benchmark skip then iterate remaining elements
+    [<Benchmark>]
+    member this.Skip() =
+        let skipCount = this.ElementCount / 2
+        AsyncSeq.replicate this.ElementCount 1
+        |> AsyncSeq.skip skipCount
+        |> AsyncSeq.iterAsync (fun _ -> async.Return())
+        |> Async.RunSynchronously
+
+    /// Benchmark skip then take (common pagination pattern)
+    [<Benchmark>]
+    member this.SkipThenTake() =
+        let page = this.ElementCount / 10
+        AsyncSeq.replicate this.ElementCount 1
+        |> AsyncSeq.skip page
+        |> AsyncSeq.take page
+        |> AsyncSeq.iterAsync (fun _ -> async.Return())
+        |> Async.RunSynchronously
+
+    [<Params(1000, 10000)>]
+    member val ElementCount = 0 with get, set
+
 /// Benchmarks for map and mapi variants — ensures the direct-enumerator optimisation
 /// for mapiAsync is visible and comparable against mapAsync.
 [<MemoryDiagnoser>]
 [<SimpleJob(RuntimeMoniker.Net80)>]
 type AsyncSeqMapiBenchmarks() =
-
-    [<Params(1000, 10000)>]
-    member val ElementCount = 0 with get, set
-
     /// Baseline: mapAsync (already uses direct enumerator)
     [<Benchmark(Baseline = true)>]
     member this.MapAsync() =
