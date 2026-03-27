@@ -13,6 +13,13 @@
   * Added `AsyncSeq.delay` — defers sequence creation to enumeration time by calling a factory function each time `GetAsyncEnumerator` is called. Mirrors `TaskSeq.delay`.
   * Added `AsyncSeq.collectAsync` — like `collect` but the mapping function is asynchronous (`'T -> Async<AsyncSeq<'U>>`). Mirrors `TaskSeq.collectAsync`.
   * Added `AsyncSeq.partition` / `AsyncSeq.partitionAsync` — splits a sequence into two arrays using a (optionally async) predicate; the first array contains matching elements, the second non-matching. Mirrors `TaskSeq.partition` / `TaskSeq.partitionAsync`.
+  * Added `AsyncSeq.insertManyAt` — inserts multiple values before the element at the given index. Mirrors `Seq.insertManyAt` and `TaskSeq.insertManyAt`.
+  * Added `AsyncSeq.removeManyAt` — removes a run of elements starting at the given index. Mirrors `Seq.removeManyAt` and `TaskSeq.removeManyAt`.
+  * Added `AsyncSeq.box` — boxes each element to `obj`. Mirrors `TaskSeq.box`.
+  * Added `AsyncSeq.unbox<'T>` — unboxes each `obj` element to `'T`. Mirrors `TaskSeq.unbox`.
+  * Added `AsyncSeq.cast<'T>` — dynamically casts each `obj` element to `'T`. Mirrors `TaskSeq.cast`.
+  * Added `AsyncSeq.lengthOrMax` — counts elements up to a maximum, avoiding full enumeration of long or infinite sequences. Mirrors `TaskSeq.lengthOrMax`.
+  * Note: `AsyncSeq.except` already accepts `seq<'T>` for the excluded collection, so no separate `exceptOfSeq` is needed.
 * Tests: added 14 new unit tests covering previously untested functions — `AsyncSeq.indexed`, `AsyncSeq.iteriAsync`, `AsyncSeq.tryLast`, `AsyncSeq.replicateUntilNoneAsync`, and `AsyncSeq.reduceAsync` (empty-sequence edge case).
 
 ### 4.10.0
