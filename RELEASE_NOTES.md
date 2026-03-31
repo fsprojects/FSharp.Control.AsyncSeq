@@ -1,5 +1,7 @@
 ### 4.11.0
 
+* Added `AsyncSeq.tryFindBack` / `AsyncSeq.tryFindBackAsync` — return the last element in the sequence satisfying a (sync or async) predicate, or `None` if no such element exists. The entire sequence is consumed.
+* Added `AsyncSeq.findBack` / `AsyncSeq.findBackAsync` — like `tryFindBack`/`tryFindBackAsync` but raise `KeyNotFoundException` when no matching element is found. Mirrors `Array.findBack` and `List.findBack`.
 * Performance: `mapiAsync` — replaced `asyncSeq`-builder + `collect` implementation with a direct optimised enumerator (`OptimizedMapiAsyncEnumerator`), eliminating `collect` overhead and bringing per-element cost in line with `mapAsync`. Benchmarks added in `AsyncSeqMapiBenchmarks`.
 * Design parity with FSharp.Control.TaskSeq (#277, batch 2):
   * Added `AsyncSeq.tryTail` — returns `None` if the sequence is empty; otherwise returns `Some` of the tail. Safe counterpart to `tail`. Mirrors `TaskSeq.tryTail`.

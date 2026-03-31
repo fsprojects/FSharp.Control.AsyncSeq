@@ -1337,6 +1337,30 @@ module AsyncSeq =
   let findAsync f (source : AsyncSeq<'T>) =
     source |> pickAsync (fun v -> async { let! b = f v in return if b then Some v else None })
 
+  let tryFindBackAsync (predicate: 'T -> Async<bool>) (source: AsyncSeq<'T>) : Async<'T option> = async {
+    use ie = source.GetEnumerator()
+    let! move = ie.MoveNext()
+    let mutable b = move
+    let mutable result = None
+    while b.IsSome do
+      let! ok = predicate b.Value
+      if ok then result <- b
+      let! next = ie.MoveNext()
+      b <- next
+    return result }
+
+  let tryFindBack (predicate: 'T -> bool) (source: AsyncSeq<'T>) : Async<'T option> =
+    tryFindBackAsync (predicate >> async.Return) source
+
+  let findBackAsync (predicate: 'T -> Async<bool>) (source: AsyncSeq<'T>) : Async<'T> = async {
+    let! result = tryFindBackAsync predicate source
+    match result with
+    | None -> return raise (System.Collections.Generic.KeyNotFoundException("An element satisfying the predicate was not found in the collection."))
+    | Some v -> return v }
+
+  let findBack (predicate: 'T -> bool) (source: AsyncSeq<'T>) : Async<'T> =
+    findBackAsync (predicate >> async.Return) source
+
   let tryFindIndex f (source : AsyncSeq<'T>) = async {
     use ie = source.GetEnumerator()
     let! first = ie.MoveNext()
