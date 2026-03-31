@@ -1,8 +1,11 @@
 {
-  "last_run": "2026-03-25T00:07:47Z",
-  "run_id": "23518281457",
-  "open_prs": {"279":"take/skip","282":"batch3-conflicts","284":"traverse-fix","286":"tests","287":"mapiAsync-perf","pending-findback-v2":"findBack rebased","pending-bcl":"BCL 10.0.5 fix"},
-  "notes": "#282 has conflicts. CI#283 needs human. findBack and BCL-fix PRs pushed this run.",
+  "last_run": "2026-03-31T00:09:55Z",
+  "run_id": "23773912637",
+  "open_prs": {
+    "282": "batch3-conflicts",
+    "pending-findback-v3": "Add tryFindBack/findBack — branch repo-assist/add-findback-2026-03-31, 382/382 tests"
+  },
+  "notes": "#282 still has merge conflicts. FindBack PR created this run (no PR number yet). Issue #277 closed. Issue #283 closed (CI upgrade done via #291). Issues #279/#284/#286/#287/#290/#291 all merged.",
   "monthly_summary_issue": 263,
   "backlog_cursor": "277"
 }
