@@ -1,11 +1,12 @@
 {
-  "last_run": "2026-03-31T00:09:55Z",
-  "run_id": "23773912637",
+  "last_run": "2026-04-01T00:10:28Z",
+  "run_id": "23825329819",
   "open_prs": {
     "282": "batch3-conflicts",
-    "pending-findback-v3": "Add tryFindBack/findBack — branch repo-assist/add-findback-2026-03-31, 382/382 tests"
+    "294": "Add tryFindBack/findBack — 10 new tests, 382/382 tests pass"
   },
-  "notes": "#282 still has merge conflicts. FindBack PR created this run (no PR number yet). Issue #277 closed. Issue #283 closed (CI upgrade done via #291). Issues #279/#284/#286/#287/#290/#291 all merged.",
+  "notes": "#282 still has merge conflicts. #294 (findBack) open. Modernize-ref-to-mutable PR created this run. Issue #292 workflow failure open.",
   "monthly_summary_issue": 263,
-  "backlog_cursor": "277"
+  "backlog_cursor": "277",
+  "pending_pr_branch": "repo-assist/modernize-ref-to-mutable-2026-04-01"
 }
