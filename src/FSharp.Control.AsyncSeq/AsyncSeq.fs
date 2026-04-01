@@ -2277,7 +2277,10 @@ module AsyncSeq =
             buffer.Clear()
             yield! loop None timeoutMs
           else
-            yield! loop None (rt - delta)
+            // When the first item arrives into an empty buffer, start a fresh window.
+            // Otherwise, track remaining time in the current window.
+            let nextRt = if buffer.Count = 1 then timeoutMs else rt - delta
+            yield! loop None nextRt
         | Choice2Of2 (_, rest) ->
           if buffer.Count > 0 then
             yield buffer.ToArray()
