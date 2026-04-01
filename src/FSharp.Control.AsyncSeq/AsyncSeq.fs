@@ -531,11 +531,11 @@ module AsyncSeq =
 
   let emitEnumerator (ie: IAsyncSeqEnumerator<'T>) = asyncSeq {
       let! moven = ie.MoveNext()
-      let b = ref moven
-      while b.Value.IsSome do
-          yield b.Value.Value
+      let mutable b = moven
+      while b.IsSome do
+          yield b.Value
           let! moven = ie.MoveNext()
-          b := moven }
+          b <- moven }
 
   [<RequireQualifiedAccess>]
   type TryWithState<'T> =
@@ -1151,13 +1151,13 @@ module AsyncSeq =
   let tryLast (source : AsyncSeq<'T>) = async {
       use ie = source.GetEnumerator()
       let! v = ie.MoveNext()
-      let b = ref v
-      let res = ref None
-      while b.Value.IsSome do
-          res := b.Value
+      let mutable b = v
+      let mutable res = None
+      while b.IsSome do
+          res <- b
           let! moven = ie.MoveNext()
-          b := moven
-      return res.Value }
+          b <- moven
+      return res }
 
   let lastOrDefault def (source : AsyncSeq<'T>) = async {
       let! v = tryLast source
@@ -1169,11 +1169,7 @@ module AsyncSeq =
   let tryFirst (source : AsyncSeq<'T>) = async {
       use ie = source.GetEnumerator()
       let! v = ie.MoveNext()
-      let b = ref v
-      if b.Value.IsSome then
-          return b.Value
-      else
-         return None }
+      return v }
 
   let firstOrDefault def (source : AsyncSeq<'T>) = async {
       let! v = tryFirst source
@@ -1205,13 +1201,13 @@ module AsyncSeq =
       else
           use ie = source.GetEnumerator()
           let! first = ie.MoveNext()
-          let b = ref first
-          let i = ref 0
-          while b.Value.IsSome && !i < index do
+          let mutable b = first
+          let mutable i = 0
+          while b.IsSome && i < index do
               let! next = ie.MoveNext()
-              b := next
-              i := !i + 1
-          if !i = index then return b.Value
+              b <- next
+              i <- i + 1
+          if i = index then return b
           else return None }
 
   let item (index : int) (source : AsyncSeq<'T>) = async {
@@ -1244,30 +1240,30 @@ module AsyncSeq =
 
   let scanAsync f (state:'TState) (source : AsyncSeq<'T>) = asyncSeq {
         yield state
-        let z = ref state
+        let mutable z = state
         use ie = source.GetEnumerator()
         let! moveRes0 = ie.MoveNext()
-        let b = ref moveRes0
-        while b.Value.IsSome do
-          let! zNext = f z.Value b.Value.Value
-          z := zNext
-          yield z.Value
+        let mutable b = moveRes0
+        while b.IsSome do
+          let! zNext = f z b.Value
+          z <- zNext
+          yield z
           let! moveResNext = ie.MoveNext()
-          b := moveResNext }
+          b <- moveResNext }
 
   let pairwise (source : AsyncSeq<'T>) = asyncSeq {
       use ie = source.GetEnumerator()
       let! v = ie.MoveNext()
-      let b = ref v
-      let prev = ref None
-      while b.Value.IsSome do
-          let v = b.Value.Value
-          match prev.Value with
+      let mutable b = v
+      let mutable prev = None
+      while b.IsSome do
+          let v = b.Value
+          match prev with
           | None -> ()
           | Some p -> yield (p, v)
-          prev := Some v
+          prev <- Some v
           let! moven = ie.MoveNext()
-          b := moven }
+          b <- moven }
 
   let windowed (windowSize:int) (source:AsyncSeq<'T>) : AsyncSeq<'T[]> =
     if windowSize < 1 then invalidArg (nameof windowSize) "must be positive"
@@ -1275,30 +1271,30 @@ module AsyncSeq =
       let window = System.Collections.Generic.Queue<'T>(windowSize)
       use ie = source.GetEnumerator()
       let! move = ie.MoveNext()
-      let b = ref move
-      while b.Value.IsSome do
-          window.Enqueue(b.Value.Value)
+      let mutable b = move
+      while b.IsSome do
+          window.Enqueue(b.Value)
           if window.Count = windowSize then
               yield window.ToArray()
               window.Dequeue() |> ignore
           let! moven = ie.MoveNext()
-          b := moven }
+          b <- moven }
 
   let pickAsync (f:'T -> Async<'U option>) (source:AsyncSeq<'T>) = async {
       use ie = source.GetEnumerator()
       let! v = ie.MoveNext()
-      let b = ref v
-      let res = ref None
-      while b.Value.IsSome && not res.Value.IsSome do
-          let! fv = f b.Value.Value
+      let mutable b = v
+      let mutable res = None
+      while b.IsSome && res.IsNone do
+          let! fv = f b.Value
           match fv with
           | None ->
               let! moven = ie.MoveNext()
-              b := moven
+              b <- moven
           | Some _ as r ->
-              res := r
-      match res.Value with
-      | Some _ -> return res.Value.Value
+              res <- r
+      match res with
+      | Some _ -> return res.Value
       | None -> return raise(KeyNotFoundException()) }
 
   let pick f (source:AsyncSeq<'T>) =
@@ -1307,17 +1303,17 @@ module AsyncSeq =
   let tryPickAsync f (source : AsyncSeq<'T>) = async {
       use ie = source.GetEnumerator()
       let! v = ie.MoveNext()
-      let b = ref v
-      let res = ref None
-      while b.Value.IsSome && not res.Value.IsSome do
-          let! fv = f b.Value.Value
+      let mutable b = v
+      let mutable res = None
+      while b.IsSome && res.IsNone do
+          let! fv = f b.Value
           match fv with
           | None ->
               let! moven = ie.MoveNext()
-              b := moven
+              b <- moven
           | Some _ as r ->
-              res := r
-      return res.Value }
+              res <- r
+      return res }
 
   let tryPick f (source : AsyncSeq<'T>) =
     tryPickAsync (f >> async.Return) source
@@ -1340,30 +1336,30 @@ module AsyncSeq =
   let tryFindIndex f (source : AsyncSeq<'T>) = async {
     use ie = source.GetEnumerator()
     let! first = ie.MoveNext()
-    let b = ref first
-    let i = ref 0
-    while b.Value.IsSome && not (f b.Value.Value) do
+    let mutable b = first
+    let mutable i = 0
+    while b.IsSome && not (f b.Value) do
         let! next = ie.MoveNext()
-        b := next
-        i := !i + 1
-    return if b.Value.IsSome then Some !i else None }
+        b <- next
+        i <- i + 1
+    return if b.IsSome then Some i else None }
 
   let tryFindIndexAsync f (source : AsyncSeq<'T>) = async {
     use ie = source.GetEnumerator()
     let! first = ie.MoveNext()
-    let b = ref first
-    let i = ref 0
-    let mutable keepGoing = b.Value.IsSome
+    let mutable b = first
+    let mutable i = 0
+    let mutable keepGoing = b.IsSome
     while keepGoing do
-        let! matches = f b.Value.Value
+        let! matches = f b.Value
         if matches then
             keepGoing <- false
         else
             let! next = ie.MoveNext()
-            b := next
-            if b.Value.IsSome then i := !i + 1
+            b <- next
+            if b.IsSome then i <- i + 1
             else keepGoing <- false
-    return if b.Value.IsSome then Some !i else None }
+    return if b.IsSome then Some i else None }
 
   let findIndex f (source : AsyncSeq<'T>) = async {
     let! result = tryFindIndex f source
@@ -1394,24 +1390,24 @@ module AsyncSeq =
     use ie2 = source2.GetEnumerator()
     let! m1 = ie1.MoveNext()
     let! m2 = ie2.MoveNext()
-    let b1 = ref m1
-    let b2 = ref m2
-    let result = ref 0
-    let isDone = ref false
-    while not isDone.Value do
-        match b1.Value, b2.Value with
-        | None, None -> isDone := true
-        | None, Some _ -> result := -1; isDone := true
-        | Some _, None -> result := 1; isDone := true
+    let mutable b1 = m1
+    let mutable b2 = m2
+    let mutable result = 0
+    let mutable isDone = false
+    while not isDone do
+        match b1, b2 with
+        | None, None -> isDone <- true
+        | None, Some _ -> result <- -1; isDone <- true
+        | Some _, None -> result <- 1; isDone <- true
         | Some v1, Some v2 ->
             let! c = comparer v1 v2
-            if c <> 0 then result := c; isDone := true
+            if c <> 0 then result <- c; isDone <- true
             else
                 let! n1 = ie1.MoveNext()
                 let! n2 = ie2.MoveNext()
-                b1 := n1
-                b2 := n2
-    return result.Value }
+                b1 <- n1
+                b2 <- n2
+    return result }
 
   let compareWith (comparer: 'T -> 'T -> int) (source1: AsyncSeq<'T>) (source2: AsyncSeq<'T>) : Async<int> =
     compareWithAsync (fun a b -> comparer a b |> async.Return) source1 source2
@@ -1440,15 +1436,15 @@ module AsyncSeq =
       match first with
       | None -> return raise (InvalidOperationException("The input sequence was empty."))
       | Some v ->
-          let acc = ref v
+          let mutable acc = v
           let! next = ie.MoveNext()
-          let b = ref next
-          while b.Value.IsSome do
-              let! newAcc = f acc.Value b.Value.Value
-              acc := newAcc
+          let mutable b = next
+          while b.IsSome do
+              let! newAcc = f acc b.Value
+              acc <- newAcc
               let! more = ie.MoveNext()
-              b := more
-          return acc.Value }
+              b <- more
+          return acc }
 
   let reduce (f: 'T -> 'T -> 'T) (source: AsyncSeq<'T>) : Async<'T> =
       reduceAsync (fun a b -> f a b |> async.Return) source
@@ -1458,13 +1454,13 @@ module AsyncSeq =
       let mutable st = state
       use ie = source.GetEnumerator()
       let! move = ie.MoveNext()
-      let b = ref move
-      while b.Value.IsSome do
-          let! (r, st') = folder st b.Value.Value
+      let mutable b = move
+      while b.IsSome do
+          let! (r, st') = folder st b.Value
           results.Add(r)
           st <- st'
           let! next = ie.MoveNext()
-          b := next
+          b <- next
       return (results.ToArray(), st) }
 
   let mapFold (folder: 'State -> 'T -> 'Result * 'State) (state: 'State) (source: AsyncSeq<'T>) : Async<'Result array * 'State> =
@@ -1621,28 +1617,28 @@ module AsyncSeq =
 
   let removeAt (index : int) (source : AsyncSeq<'T>) : AsyncSeq<'T> = asyncSeq {
     if index < 0 then invalidArg "index" "must be non-negative"
-    let i = ref 0
+    let mutable i = 0
     for x in source do
-      if i.Value <> index then yield x
-      i := i.Value + 1 }
+      if i <> index then yield x
+      i <- i + 1 }
 
   let updateAt (index : int) (value : 'T) (source : AsyncSeq<'T>) : AsyncSeq<'T> = asyncSeq {
     if index < 0 then invalidArg "index" "must be non-negative"
-    let i = ref 0
+    let mutable i = 0
     for x in source do
-      if i.Value = index then yield value
+      if i = index then yield value
       else yield x
-      i := i.Value + 1 }
+      i <- i + 1 }
 
   let insertAt (index : int) (value : 'T) (source : AsyncSeq<'T>) : AsyncSeq<'T> = asyncSeq {
     if index < 0 then invalidArg "index" "must be non-negative"
-    let i = ref 0
+    let mutable i = 0
     for x in source do
-      if i.Value = index then yield value
+      if i = index then yield value
       yield x
-      i := i.Value + 1
-    if i.Value = index then yield value
-    elif i.Value < index then
+      i <- i + 1
+    if i = index then yield value
+    elif i < index then
       invalidArg "index" "The index is outside the range of elements in the collection." }
 
   #if !FABLE_COMPILER
@@ -1692,12 +1688,12 @@ module AsyncSeq =
         // if we don't pass it in then the default cancellation token will be used, so we pass one in for completeness.
         use agent = MailboxProcessor<_>.Start((fun inbox -> async.Return() ), cancellationToken = cts.Token)
         use d = source |> Observable.asUpdates |> Observable.subscribe agent.Post
-        let fin = ref false
-        while not fin.Value do
+        let mutable fin = false
+        while not fin do
           let! msg = agent.Receive()
           match msg with
           | Observable.ObservableUpdate.Error e -> e.Throw()
-          | Observable.Completed -> fin := true
+          | Observable.Completed -> fin <- true
           | Observable.Next v -> yield v
       finally
          // Cancel on early exit
@@ -1804,30 +1800,30 @@ module AsyncSeq =
   let rec threadStateAsync (f:'State -> 'T -> Async<'U * 'State>) (state:'State) (source:AsyncSeq<'T>) : AsyncSeq<'U> = asyncSeq {
       use ie = source.GetEnumerator()
       let! v = ie.MoveNext()
-      let b = ref v
-      let z = ref state
-      while b.Value.IsSome do
-          let v = b.Value.Value
-          let! v2,z2 = f z.Value v
+      let mutable b = v
+      let mutable z = state
+      while b.IsSome do
+          let v = b.Value
+          let! v2,z2 = f z v
           yield v2
           let! moven = ie.MoveNext()
-          b := moven
-          z := z2 }
+          b <- moven
+          z <- z2 }
 
   let zipWithAsync (f:'T1 -> 'T2 -> Async<'U>) (source1:AsyncSeq<'T1>) (source2:AsyncSeq<'T2>) : AsyncSeq<'U> = asyncSeq {
       use ie1 = source1.GetEnumerator()
       use ie2 = source2.GetEnumerator()
       let! move1 = ie1.MoveNext()
       let! move2 = ie2.MoveNext()
-      let b1 = ref move1
-      let b2 = ref move2
-      while b1.Value.IsSome && b2.Value.IsSome do
-          let! res = f b1.Value.Value b2.Value.Value
+      let mutable b1 = move1
+      let mutable b2 = move2
+      while b1.IsSome && b2.IsSome do
+          let! res = f b1.Value b2.Value
           yield res
           let! move1n = ie1.MoveNext()
           let! move2n = ie2.MoveNext()
-          b1 := move1n
-          b2 := move2n }
+          b1 <- move1n
+          b2 <- move2n }
 
   let zipWithAsyncParallel (f:'T1 -> 'T2 -> Async<'U>) (source1:AsyncSeq<'T1>) (source2:AsyncSeq<'T2>) : AsyncSeq<'U> = asyncSeq {
       use ie1 = source1.GetEnumerator()
@@ -1836,17 +1832,17 @@ module AsyncSeq =
       let! move2 = ie2.MoveNext() |> Async.StartChild
       let! move1 = move1
       let! move2 = move2
-      let b1 = ref move1
-      let b2 = ref move2
-      while b1.Value.IsSome && b2.Value.IsSome do
-          let! res = f b1.Value.Value b2.Value.Value
+      let mutable b1 = move1
+      let mutable b2 = move2
+      while b1.IsSome && b2.IsSome do
+          let! res = f b1.Value b2.Value
           yield res
           let! move1n = ie1.MoveNext() |> Async.StartChild
           let! move2n = ie2.MoveNext() |> Async.StartChild
           let! move1n = move1n
           let! move2n = move2n
-          b1 := move1n
-          b2 := move2n }
+          b1 <- move1n
+          b2 <- move2n }
 
   let zip (source1 : AsyncSeq<'T1>) (source2 : AsyncSeq<'T2>) : AsyncSeq<_> =
       zipWithAsync (fun a b -> async.Return (a,b)) source1 source2
@@ -1870,18 +1866,18 @@ module AsyncSeq =
       let! move1 = ie1.MoveNext()
       let! move2 = ie2.MoveNext()
       let! move3 = ie3.MoveNext()
-      let b1 = ref move1
-      let b2 = ref move2
-      let b3 = ref move3
-      while b1.Value.IsSome && b2.Value.IsSome && b3.Value.IsSome do
-          let! res = f b1.Value.Value b2.Value.Value b3.Value.Value
+      let mutable b1 = move1
+      let mutable b2 = move2
+      let mutable b3 = move3
+      while b1.IsSome && b2.IsSome && b3.IsSome do
+          let! res = f b1.Value b2.Value b3.Value
           yield res
           let! move1n = ie1.MoveNext()
           let! move2n = ie2.MoveNext()
           let! move3n = ie3.MoveNext()
-          b1 := move1n
-          b2 := move2n
-          b3 := move3n }
+          b1 <- move1n
+          b2 <- move2n
+          b3 <- move3n }
 
   let zip3 (source1:AsyncSeq<'T1>) (source2:AsyncSeq<'T2>) (source3:AsyncSeq<'T3>) : AsyncSeq<'T1 * 'T2 * 'T3> =
       zipWithAsync3 (fun a b c -> async.Return (a, b, c)) source1 source2 source3
@@ -1893,20 +1889,20 @@ module AsyncSeq =
       let buf = System.Collections.Generic.List<'T2>()
       use ie2 = source2.GetEnumerator()
       let! move2 = ie2.MoveNext()
-      let b2 = ref move2
-      while b2.Value.IsSome do
-          buf.Add(b2.Value.Value)
+      let mutable b2 = move2
+      while b2.IsSome do
+          buf.Add(b2.Value)
           let! next2 = ie2.MoveNext()
-          b2 := next2
+          b2 <- next2
       use ie1 = source1.GetEnumerator()
       let! move1 = ie1.MoveNext()
-      let b1 = ref move1
-      while b1.Value.IsSome do
-          let x = b1.Value.Value
+      let mutable b1 = move1
+      while b1.IsSome do
+          let x = b1.Value
           for y in buf do
               yield (x, y)
           let! next1 = ie1.MoveNext()
-          b1 := next1 }
+          b1 <- next1 }
 
   let zappAsync (fs:AsyncSeq<'T -> Async<'U>>) (s:AsyncSeq<'T>) : AsyncSeq<'U> =
       zipWithAsync (|>) s fs
@@ -1917,16 +1913,16 @@ module AsyncSeq =
   let takeWhileAsync p (source : AsyncSeq<'T>) : AsyncSeq<_> = asyncSeq {
       use ie = source.GetEnumerator()
       let! move = ie.MoveNext()
-      let b = ref move
-      while b.Value.IsSome do
-          let v = b.Value.Value
+      let mutable b = move
+      while b.IsSome do
+          let v = b.Value
           let! res = p v
           if res then
               yield v
               let! moven = ie.MoveNext()
-              b := moven
+              b <- moven
           else
-              b := None }
+              b <- None }
 
   let takeWhile p (source : AsyncSeq<'T>) =
       takeWhileAsync (p >> async.Return) source
@@ -1937,13 +1933,13 @@ module AsyncSeq =
       let! signalT = Async.StartChildAsTask signal
       let! moveT = Async.StartChildAsTask (ie.MoveNext())
       let! move = Async.chooseTasks signalT moveT
-      let b = ref move
-      while (match b.Value with Choice2Of2 (Some _,_) -> true | _ -> false) do
-          let v,sg = (match b.Value with Choice2Of2 (Some v,sg) -> v,sg | _ -> failwith "unreachable")
+      let mutable b = move
+      while (match b with Choice2Of2 (Some _,_) -> true | _ -> false) do
+          let v,sg = (match b with Choice2Of2 (Some v,sg) -> v,sg | _ -> failwith "unreachable")
           yield v
           let! moveT = Async.StartChildAsTask (ie.MoveNext())
           let! move = Async.chooseTasks sg moveT
-          b := move }
+          b <- move }
 
   let takeUntil signal source = takeUntilSignal signal source
   #endif
@@ -1986,37 +1982,37 @@ module AsyncSeq =
   let skipWhileAsync p (source : AsyncSeq<'T>) : AsyncSeq<_> = asyncSeq {
       use ie = source.GetEnumerator()
       let! move = ie.MoveNext()
-      let b = ref move
-      let doneSkipping = ref false
-      while b.Value.IsSome do
-          let v = b.Value.Value
-          if doneSkipping.Value then
+      let mutable b = move
+      let mutable doneSkipping = false
+      while b.IsSome do
+          let v = b.Value
+          if doneSkipping then
               yield v
           else
               let! test = p v
               if not test then
                   yield v
-                  doneSkipping := true
+                  doneSkipping <- true
           let! moven = ie.MoveNext()
-          b := moven }
+          b <- moven }
 
   let skipWhileInclusiveAsync (predicate: 'T -> Async<bool>) (source: AsyncSeq<'T>) : AsyncSeq<'T> = asyncSeq {
       use ie = source.GetEnumerator()
       let! move = ie.MoveNext()
-      let b = ref move
-      let doneSkipping = ref false
-      while b.Value.IsSome do
-          let v = b.Value.Value
-          if doneSkipping.Value then
+      let mutable b = move
+      let mutable doneSkipping = false
+      while b.IsSome do
+          let v = b.Value
+          if doneSkipping then
               yield v
               let! moven = ie.MoveNext()
-              b := moven
+              b <- moven
           else
               let! test = predicate v
               if not test then
-                  doneSkipping := true  // skip this boundary element; do not yield it
+                  doneSkipping <- true  // skip this boundary element; do not yield it
               let! moven = ie.MoveNext()
-              b := moven }
+              b <- moven }
 
   let skipWhileInclusive (predicate: 'T -> bool) (source: AsyncSeq<'T>) : AsyncSeq<'T> =
     skipWhileInclusiveAsync (predicate >> async.Return) source
@@ -2027,24 +2023,23 @@ module AsyncSeq =
       let! signalT = Async.StartChildAsTask signal
       let! moveT = Async.StartChildAsTask (ie.MoveNext())
       let! move = Async.chooseTasks signalT moveT
-      let b = ref move
-      while (match b.Value with Choice2Of2 (Some _,_) -> true | _ -> false) do
-          let v,sg = (match b.Value with Choice2Of2 (Some v,sg) -> v,sg | _ -> failwith "unreachable")
+      let mutable b = move
+      while (match b with Choice2Of2 (Some _,_) -> true | _ -> false) do
+          let _,sg = (match b with Choice2Of2 (Some v,sg) -> v,sg | _ -> failwith "unreachable")
           let! moveT = Async.StartChildAsTask (ie.MoveNext())
           let! move = Async.chooseTasks sg moveT
-          b := move
-      match b.Value with
+          b <- move
+      match b with
       | Choice2Of2 (None,_) ->
           ()
       | Choice1Of2 (_,rest) ->
           let! move = Async.AwaitTask rest
-          let b2 = ref move
+          let mutable b2 = move
           // Yield the rest of the sequence
-          while b2.Value.IsSome do
-              let v = b2.Value.Value
-              yield v
+          while b2.IsSome do
+              yield b2.Value
               let! moven = ie.MoveNext()
-              b2 := moven
+              b2 <- moven
       | Choice2Of2 (Some _,_) -> failwith "unreachable" }
 
   let skipUntil signal source = skipUntilSignal signal source
@@ -2076,11 +2071,11 @@ module AsyncSeq =
         return Some (asyncSeq {
             try
                 let! next = ie.MoveNext()
-                let b = ref next
-                while b.Value.IsSome do
-                    yield b.Value.Value
+                let mutable b = next
+                while b.IsSome do
+                    yield b.Value
                     let! moven = ie.MoveNext()
-                    b := moven
+                    b <- moven
             finally
                 ie.Dispose() }) }
 
@@ -2091,18 +2086,18 @@ module AsyncSeq =
       let ie = source.GetEnumerator()
       let ra = ResizeArray<'T>()
       let! m = ie.MoveNext()
-      let b = ref m
-      while b.Value.IsSome && ra.Count < count do
-          ra.Add b.Value.Value
+      let mutable b = m
+      while b.IsSome && ra.Count < count do
+          ra.Add b.Value
           let! next = ie.MoveNext()
-          b := next
+          b <- next
       let first = ra.ToArray()
       let rest =
-          if b.Value.IsNone then
+          if b.IsNone then
               ie.Dispose()
               empty<'T>
           else
-              let cur = ref b.Value
+              let cur = ref b
               asyncSeq {
                   try
                       while cur.Value.IsSome do
@@ -2117,11 +2112,11 @@ module AsyncSeq =
       let ra = (new ResizeArray<_>())
       use ie = source.GetEnumerator()
       let! move = ie.MoveNext()
-      let b = ref move
-      while b.Value.IsSome do
-          ra.Add b.Value.Value
+      let mutable b = move
+      while b.IsSome do
+          ra.Add b.Value
           let! moven = ie.MoveNext()
-          b := moven
+          b <- moven
       return ra.ToArray() }
 
   let toListAsync (source:AsyncSeq<'T>) : Async<'T list> = toArrayAsync source |> Async.map Array.toList
@@ -2144,12 +2139,12 @@ module AsyncSeq =
   let concatSeq (source:AsyncSeq<#seq<'T>>) : AsyncSeq<'T> = asyncSeq {
       use ie = source.GetEnumerator()
       let! move = ie.MoveNext()
-      let b = ref move
-      while b.Value.IsSome do
-          for x in (b.Value.Value :> seq<'T>)  do
+      let mutable b = move
+      while b.IsSome do
+          for x in (b.Value :> seq<'T>)  do
               yield x
           let! moven = ie.MoveNext()
-          b := moven }
+          b <- moven }
 
   let concat (source:AsyncSeq<AsyncSeq<'T>>) : AsyncSeq<'T> =
       asyncSeq {
@@ -2162,15 +2157,15 @@ module AsyncSeq =
       use ie1 = (source1 |> map Choice1Of2).GetEnumerator()
       use ie2 = (source2 |> map Choice2Of2).GetEnumerator()
       let! move = ie1.MoveNext()
-      let is1 = ref true
-      let b = ref move
-      while b.Value.IsSome do
-          yield b.Value.Value
-          is1 := not is1.Value
-          let! moven = (if is1.Value then ie1.MoveNext() else ie2.MoveNext())
-          b := moven
+      let mutable is1 = true
+      let mutable b = move
+      while b.IsSome do
+          yield b.Value
+          is1 <- not is1
+          let! moven = (if is1 then ie1.MoveNext() else ie2.MoveNext())
+          b <- moven
       // emit the rest
-      yield! emitEnumerator (if is1.Value then ie2 else ie1)
+      yield! emitEnumerator (if is1 then ie2 else ie1)
       }
 
   let interleave (source1:AsyncSeq<'T>) (source2:AsyncSeq<'T>) : AsyncSeq<'T> =
@@ -2188,14 +2183,14 @@ module AsyncSeq =
       let buffer = new ResizeArray<_>()
       use ie = source.GetEnumerator()
       let! move = ie.MoveNext()
-      let b = ref move
-      while b.Value.IsSome do
-          buffer.Add b.Value.Value
+      let mutable b = move
+      while b.IsSome do
+          buffer.Add b.Value
           if buffer.Count = chunkSize then
               yield buffer.ToArray()
               buffer.Clear()
           let! moven = ie.MoveNext()
-          b := moven
+          b <- moven
       if (buffer.Count > 0) then
           yield buffer.ToArray() }
 
@@ -2206,25 +2201,25 @@ module AsyncSeq =
   let chunkByAsync (projection:'T -> Async<'Key>) (source:AsyncSeq<'T>) : AsyncSeq<'Key * 'T list> = asyncSeq {
     use ie = source.GetEnumerator()
     let! move = ie.MoveNext()
-    let b = ref move
-    if b.Value.IsSome then
-      let! key0 = projection b.Value.Value
+    let mutable b = move
+    if b.IsSome then
+      let! key0 = projection b.Value
       let mutable currentKey = key0
       let buffer = ResizeArray<'T>()
-      buffer.Add b.Value.Value
+      buffer.Add b.Value
       let! moveNext = ie.MoveNext()
-      b := moveNext
-      while b.Value.IsSome do
-        let! key = projection b.Value.Value
+      b <- moveNext
+      while b.IsSome do
+        let! key = projection b.Value
         if key = currentKey then
-          buffer.Add b.Value.Value
+          buffer.Add b.Value
         else
           yield (currentKey, buffer |> Seq.toList)
           currentKey <- key
           buffer.Clear()
-          buffer.Add b.Value.Value
+          buffer.Add b.Value
         let! moveNext = ie.MoveNext()
-        b := moveNext
+        b <- moveNext
       yield (currentKey, buffer |> Seq.toList) }
 
   let chunkBy (projection:'T -> 'Key) (source:AsyncSeq<'T>) : AsyncSeq<'Key * 'T list> =
@@ -2282,7 +2277,10 @@ module AsyncSeq =
             buffer.Clear()
             yield! loop None timeoutMs
           else
-            yield! loop None (rt - delta)
+            // When the first item arrives into an empty buffer, start a fresh window.
+            // Otherwise, track remaining time in the current window.
+            let nextRt = if buffer.Count = 1 then timeoutMs else rt - delta
+            yield! loop None nextRt
         | Choice2Of2 (_, rest) ->
           if buffer.Count > 0 then
             yield buffer.ToArray()
@@ -2327,37 +2325,35 @@ module AsyncSeq =
       let! move1T = Async.StartChildAsTask (ie1.MoveNext())
       let! move2T = Async.StartChildAsTask (ie2.MoveNext())
       let! move = Async.chooseTasks move1T move2T
-      let b = ref move
-      while (match b.Value with Choice1Of2 (Some _,_) | Choice2Of2 (Some _,_) -> true | _ -> false) do
-          match b.Value with
+      let mutable b = move
+      while (match b with Choice1Of2 (Some _,_) | Choice2Of2 (Some _,_) -> true | _ -> false) do
+          match b with
           | Choice1Of2 (Some v1, rest2) ->
               yield Choice1Of2 v1
               let! move1T = Async.StartChildAsTask (ie1.MoveNext())
               let! move = Async.chooseTasks move1T rest2
-              b := move
+              b <- move
           | Choice2Of2 (Some v2, rest1) ->
               yield Choice2Of2 v2
               let! move2T = Async.StartChildAsTask (ie2.MoveNext())
               let! move = Async.chooseTasks rest1 move2T
-              b := move
+              b <- move
           | _ -> failwith "unreachable"
-      match b.Value with
+      match b with
       | Choice1Of2 (None, rest2) ->
           let! move2 = Async.AwaitTask rest2
-          let b2 = ref move2
-          while b2.Value.IsSome do
-              let v2 = b2.Value.Value
-              yield Choice2Of2 v2
+          let mutable b2 = move2
+          while b2.IsSome do
+              yield Choice2Of2 b2.Value
               let! move2n = ie2.MoveNext()
-              b2 := move2n
+              b2 <- move2n
       | Choice2Of2 (None, rest1) ->
           let! move1 = Async.AwaitTask rest1
-          let b1 = ref move1
-          while b1.Value.IsSome do
-              let v1 = b1.Value.Value
-              yield Choice1Of2 v1
+          let mutable b1 = move1
+          while b1.IsSome do
+              yield Choice1Of2 b1.Value
               let! move1n = ie1.MoveNext()
-              b1 := move1n
+              b1 <- move1n
       | _ -> failwith "unreachable" }
 
   let mergeChoice (source1:AsyncSeq<'T1>) (source2:AsyncSeq<'T2>) : AsyncSeq<Choice<'T1,'T2>> = asyncSeq {
@@ -2371,10 +2367,10 @@ module AsyncSeq =
   type Disposables<'T when 'T :> IDisposable> (ss: 'T[]) =
       interface System.IDisposable with
        member x.Dispose() =
-        let err = ref None
+        let mutable err = None
         for i in ss.Length - 1 .. -1 ..  0 do
-            try dispose ss.[i] with e -> err := Some (ExceptionDispatchInfo.Capture e)
-        match !err with
+            try dispose ss.[i] with e -> err <- Some (ExceptionDispatchInfo.Capture e)
+        match err with
         | Some e -> e.Throw()
         | None -> ()
 
@@ -2458,19 +2454,19 @@ module AsyncSeq =
   let distinctUntilChangedWithAsync (f:'T -> 'T -> Async<bool>) (source:AsyncSeq<'T>) : AsyncSeq<'T> = asyncSeq {
       use ie = source.GetEnumerator()
       let! move = ie.MoveNext()
-      let b = ref move
-      let prev = ref None
-      while b.Value.IsSome do
-          let v = b.Value.Value
-          match prev.Value with
+      let mutable b = move
+      let mutable prev = None
+      while b.IsSome do
+          let v = b.Value
+          match prev with
           | None ->
               yield v
           | Some p ->
-              let! b = f p v
-              if not b then yield v
-          prev := Some v
+              let! changed = f p v
+              if not changed then yield v
+          prev <- Some v
           let! moven = ie.MoveNext()
-          b := moven }
+          b <- moven }
 
   let distinctUntilChangedWith (f:'T -> 'T -> bool) (s:AsyncSeq<'T>) : AsyncSeq<'T> =
     distinctUntilChangedWithAsync (fun a b -> f a b |> async.Return) s
