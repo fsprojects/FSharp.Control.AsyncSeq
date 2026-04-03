@@ -746,6 +746,26 @@ module AsyncSeq =
     /// large or infinite sequences.
     val sortWith : comparer:('T -> 'T -> int) -> source:AsyncSeq<'T> -> array<'T>
 
+    /// Asynchronously sorts the given async sequence and returns an Async<array<'T>>.
+    /// Prefer this over sortAsync when composing async workflows.
+    val sortAsync : source:AsyncSeq<'T> -> Async<array<'T>> when 'T : comparison
+
+    /// Asynchronously applies a key-generating function to each element of an AsyncSeq and returns
+    /// an Async<array<'T>> ordered by keys. Prefer this over sortBy when composing async workflows.
+    val sortByAsync : projection:('T -> 'Key) -> source:AsyncSeq<'T> -> Async<array<'T>> when 'Key : comparison
+
+    /// Asynchronously sorts the given async sequence in descending order and returns an Async<array<'T>>.
+    /// Prefer this over sortDescending when composing async workflows.
+    val sortDescendingAsync : source:AsyncSeq<'T> -> Async<array<'T>> when 'T : comparison
+
+    /// Asynchronously applies a key-generating function to each element of an AsyncSeq and returns
+    /// an Async<array<'T>> ordered descending by keys. Prefer this over sortByDescending when composing async workflows.
+    val sortByDescendingAsync : projection:('T -> 'Key) -> source:AsyncSeq<'T> -> Async<array<'T>> when 'Key : comparison
+
+    /// Asynchronously sorts the given async sequence using the given comparison function and returns
+    /// an Async<array<'T>>. Prefer this over sortWith when composing async workflows.
+    val sortWithAsync : comparer:('T -> 'T -> int) -> source:AsyncSeq<'T> -> Async<array<'T>>
+
     /// Returns a new async sequence with the elements in reverse order. The entire source
     /// sequence is buffered before yielding any elements, mirroring Seq.rev.
     /// This function should not be used with large or infinite sequences.
