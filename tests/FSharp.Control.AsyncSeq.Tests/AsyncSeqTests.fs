@@ -3456,6 +3456,47 @@ let ``AsyncSeq.sortWith returns empty array for empty sequence`` () =
   let result = AsyncSeq.sortWith compare AsyncSeq.empty<int>
   Assert.AreEqual([||], result)
 
+// ===== sortAsync / sortByAsync / sortDescendingAsync / sortByDescendingAsync / sortWithAsync =====
+
+[<Test>]
+let ``AsyncSeq.sortAsync sorts in ascending order`` () =
+  let result = AsyncSeq.ofSeq [ 3; 1; 4; 1; 5; 9 ] |> AsyncSeq.sortAsync |> Async.RunSynchronously
+  Assert.AreEqual([| 1; 1; 3; 4; 5; 9 |], result)
+
+[<Test>]
+let ``AsyncSeq.sortAsync returns empty array for empty sequence`` () =
+  let result = AsyncSeq.empty<int> |> AsyncSeq.sortAsync |> Async.RunSynchronously
+  Assert.AreEqual([||], result)
+
+[<Test>]
+let ``AsyncSeq.sortByAsync sorts by projected key`` () =
+  let result =
+    AsyncSeq.ofSeq [ "banana"; "apple"; "cherry" ]
+    |> AsyncSeq.sortByAsync (fun s -> s.Length)
+    |> Async.RunSynchronously
+  Assert.AreEqual([| "apple"; "banana"; "cherry" |], result)
+
+[<Test>]
+let ``AsyncSeq.sortDescendingAsync sorts in descending order`` () =
+  let result = AsyncSeq.ofSeq [ 3; 1; 4; 1; 5 ] |> AsyncSeq.sortDescendingAsync |> Async.RunSynchronously
+  Assert.AreEqual([| 5; 4; 3; 1; 1 |], result)
+
+[<Test>]
+let ``AsyncSeq.sortByDescendingAsync sorts by projected key descending`` () =
+  let result =
+    AsyncSeq.ofSeq [ "apple"; "banana"; "fig" ]
+    |> AsyncSeq.sortByDescendingAsync (fun s -> s.Length)
+    |> Async.RunSynchronously
+  Assert.AreEqual([| "banana"; "apple"; "fig" |], result)
+
+[<Test>]
+let ``AsyncSeq.sortWithAsync sorts using custom comparer`` () =
+  let result =
+    AsyncSeq.ofSeq [ 3; 1; 4; 1; 5 ]
+    |> AsyncSeq.sortWithAsync (fun a b -> compare b a)
+    |> Async.RunSynchronously
+  Assert.AreEqual([| 5; 4; 3; 1; 1 |], result)
+
 // ── AsyncSeq.mapFold ──────────────────────────────────────────────────────────
 
 [<Test>]
