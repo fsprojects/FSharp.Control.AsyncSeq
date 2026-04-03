@@ -5,10 +5,9 @@
 * Added `AsyncSeq.sortDescendingAsync` — asynchronous variant of `sortDescending` returning `Async<'T[]>`.
 * Added `AsyncSeq.sortByDescendingAsync` — asynchronous variant of `sortByDescending` returning `Async<'T[]>`.
 * Added `AsyncSeq.sortWithAsync` — asynchronous variant of `sortWith` returning `Async<'T[]>`.
+* Updated `fsdocs-tool` to 22.0.0-alpha.3 (FSharp.Formatting 22.0.0-alpha.3) and updated SDK to .NET 10.0 (issue #300).
 
 ### 4.11.0
-
-* Updated `fsdocs-tool` to 22.0.0-alpha.3 (FSharp.Formatting 22.0.0-alpha.3) and updated SDK to .NET 10.0 (issue #300).
 
 * Code/Performance: Modernised ~30 API functions to use `mutable` local variables instead of `ref` cells (`!`/`:=` operators). Affected: `tryLast`, `tryFirst`, `tryItem`, `compareWithAsync`, `reduceAsync`, `scanAsync`, `pairwise`, `windowed`, `pickAsync`, `tryPickAsync`, `tryFindIndex`, `tryFindIndexAsync`, `threadStateAsync`, `zipWithAsync`, `zipWithAsyncParallel`, `zipWithAsync3`, `allPairs`, `takeWhileAsync`, `takeUntilSignal`, `skipWhileAsync`, `skipWhileInclusiveAsync`, `skipUntilSignal`, `tryTail`, `splitAt`, `toArrayAsync`, `concatSeq`, `interleaveChoice`, `chunkBySize`, `chunkByAsync`, `mergeChoiceEnum`, `distinctUntilChangedWithAsync`, `emitEnumerator`, `removeAt`, `updateAt`, `insertAt`. This eliminates heap-allocated `ref`-cell objects for these variables, reducing GC pressure in hot paths, and modernises the code style to idiomatic F#.
 * Performance: `mapiAsync` — replaced `asyncSeq`-builder + `collect` implementation with a direct optimised enumerator (`OptimizedMapiAsyncEnumerator`), eliminating `collect` overhead and bringing per-element cost in line with `mapAsync`. Benchmarks added in `AsyncSeqMapiBenchmarks`.
