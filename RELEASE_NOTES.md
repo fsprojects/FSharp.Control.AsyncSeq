@@ -1,3 +1,10 @@
+### 4.12.0
+
+* Added `AsyncSeq.tryFindBack` — returns the last element for which the predicate returns true, or `None` if no match. Mirrors `Array.tryFindBack` / `List.tryFindBack`.
+* Added `AsyncSeq.tryFindBackAsync` — async-predicate variant of `tryFindBack`.
+* Added `AsyncSeq.findBack` — returns the last element for which the predicate returns true; raises `KeyNotFoundException` if no match. Mirrors `Array.findBack` / `List.findBack`.
+* Added `AsyncSeq.findBackAsync` — async-predicate variant of `findBack`.
+
 ### 4.11.0
 
 * Code/Performance: Modernised ~30 API functions to use `mutable` local variables instead of `ref` cells (`!`/`:=` operators). Affected: `tryLast`, `tryFirst`, `tryItem`, `compareWithAsync`, `reduceAsync`, `scanAsync`, `pairwise`, `windowed`, `pickAsync`, `tryPickAsync`, `tryFindIndex`, `tryFindIndexAsync`, `threadStateAsync`, `zipWithAsync`, `zipWithAsyncParallel`, `zipWithAsync3`, `allPairs`, `takeWhileAsync`, `takeUntilSignal`, `skipWhileAsync`, `skipWhileInclusiveAsync`, `skipUntilSignal`, `tryTail`, `splitAt`, `toArrayAsync`, `concatSeq`, `interleaveChoice`, `chunkBySize`, `chunkByAsync`, `mergeChoiceEnum`, `distinctUntilChangedWithAsync`, `emitEnumerator`, `removeAt`, `updateAt`, `insertAt`. This eliminates heap-allocated `ref`-cell objects for these variables, reducing GC pressure in hot paths, and modernises the code style to idiomatic F#.
