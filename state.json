@@ -1,12 +1,11 @@
 {
-  "last_run": "2026-04-01T00:10:28Z",
-  "run_id": "23825329819",
+  "last_run": "2026-04-03T00:09:35Z",
+  "run_id": "23927770152",
   "open_prs": {
-    "282": "batch3-conflicts",
-    "294": "Add tryFindBack/findBack — 10 new tests, 382/382 tests pass"
+    "findback": "repo-assist/findback-2026-04-03 — tryFindBack/findBack/tryFindBackAsync/findBackAsync",
+    "sort-async": "repo-assist/improve-sort-async-2026-04-03 — sortAsync/sortByAsync/sortDescendingAsync/sortByDescendingAsync/sortWithAsync"
   },
-  "notes": "#282 still has merge conflicts. #294 (findBack) open. Modernize-ref-to-mutable PR created this run. Issue #292 workflow failure open.",
-  "monthly_summary_issue": 263,
-  "backlog_cursor": "277",
-  "pending_pr_branch": "repo-assist/modernize-ref-to-mutable-2026-04-01"
+  "notes": "Two new PRs created this run. March activity issue #263 closed; April 2026 activity issue created (#aw_apr2026). PR numbers not yet assigned (pushed via safeoutputs). Check next run for actual PR numbers.",
+  "monthly_summary_issue": "aw_apr2026",
+  "backlog_cursor": "277"
 }
