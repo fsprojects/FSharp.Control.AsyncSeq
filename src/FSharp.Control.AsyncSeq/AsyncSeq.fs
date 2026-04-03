@@ -2244,6 +2244,21 @@ module AsyncSeq =
   let sortWith (comparer:'T -> 'T -> int) (source:AsyncSeq<'T>) : array<'T> =
     toSortedSeq (Array.sortWith comparer) source
 
+  let sortAsync (source:AsyncSeq<'T>) : Async<array<'T>> when 'T : comparison =
+    toArrayAsync source |> Async.map Array.sort
+
+  let sortByAsync (projection:'T -> 'Key) (source:AsyncSeq<'T>) : Async<array<'T>> when 'Key : comparison =
+    toArrayAsync source |> Async.map (Array.sortBy projection)
+
+  let sortDescendingAsync (source:AsyncSeq<'T>) : Async<array<'T>> when 'T : comparison =
+    toArrayAsync source |> Async.map Array.sortDescending
+
+  let sortByDescendingAsync (projection:'T -> 'Key) (source:AsyncSeq<'T>) : Async<array<'T>> when 'Key : comparison =
+    toArrayAsync source |> Async.map (Array.sortByDescending projection)
+
+  let sortWithAsync (comparer:'T -> 'T -> int) (source:AsyncSeq<'T>) : Async<array<'T>> =
+    toArrayAsync source |> Async.map (Array.sortWith comparer)
+
   let rev (source: AsyncSeq<'T>) : AsyncSeq<'T> = asyncSeq {
       let! arr = toArrayAsync source
       for i in arr.Length - 1 .. -1 .. 0 do

@@ -1,3 +1,11 @@
+### 4.12.0
+
+* Added `AsyncSeq.sortAsync` — asynchronous variant of `sort` returning `Async<'T[]>`, avoiding `Async.RunSynchronously` in async workflows.
+* Added `AsyncSeq.sortByAsync` — asynchronous variant of `sortBy` returning `Async<'T[]>`.
+* Added `AsyncSeq.sortDescendingAsync` — asynchronous variant of `sortDescending` returning `Async<'T[]>`.
+* Added `AsyncSeq.sortByDescendingAsync` — asynchronous variant of `sortByDescending` returning `Async<'T[]>`.
+* Added `AsyncSeq.sortWithAsync` — asynchronous variant of `sortWith` returning `Async<'T[]>`.
+
 ### 4.11.0
 
 * Code/Performance: Modernised ~30 API functions to use `mutable` local variables instead of `ref` cells (`!`/`:=` operators). Affected: `tryLast`, `tryFirst`, `tryItem`, `compareWithAsync`, `reduceAsync`, `scanAsync`, `pairwise`, `windowed`, `pickAsync`, `tryPickAsync`, `tryFindIndex`, `tryFindIndexAsync`, `threadStateAsync`, `zipWithAsync`, `zipWithAsyncParallel`, `zipWithAsync3`, `allPairs`, `takeWhileAsync`, `takeUntilSignal`, `skipWhileAsync`, `skipWhileInclusiveAsync`, `skipUntilSignal`, `tryTail`, `splitAt`, `toArrayAsync`, `concatSeq`, `interleaveChoice`, `chunkBySize`, `chunkByAsync`, `mergeChoiceEnum`, `distinctUntilChangedWithAsync`, `emitEnumerator`, `removeAt`, `updateAt`, `insertAt`. This eliminates heap-allocated `ref`-cell objects for these variables, reducing GC pressure in hot paths, and modernises the code style to idiomatic F#.
