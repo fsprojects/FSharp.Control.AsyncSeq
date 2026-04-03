@@ -377,6 +377,22 @@ module AsyncSeq =
     /// Raises KeyNotFoundException if no matching element is found.
     val findAsync : predicate:('T -> Async<bool>) -> source:AsyncSeq<'T> -> Async<'T>
 
+    /// Asynchronously find the last value in a sequence for which the predicate returns true.
+    /// Returns None if no matching element is found.
+    val tryFindBack : predicate:('T -> bool) -> source:AsyncSeq<'T> -> Async<'T option>
+
+    /// Asynchronously find the last value in a sequence for which the async predicate returns true.
+    /// Returns None if no matching element is found.
+    val tryFindBackAsync : predicate:('T -> Async<bool>) -> source:AsyncSeq<'T> -> Async<'T option>
+
+    /// Asynchronously find the last value in a sequence for which the predicate returns true.
+    /// Raises KeyNotFoundException if no matching element is found.
+    val findBack : predicate:('T -> bool) -> source:AsyncSeq<'T> -> Async<'T>
+
+    /// Asynchronously find the last value in a sequence for which the async predicate returns true.
+    /// Raises KeyNotFoundException if no matching element is found.
+    val findBackAsync : predicate:('T -> Async<bool>) -> source:AsyncSeq<'T> -> Async<'T>
+
     /// Asynchronously find the index of the first value in a sequence for which the predicate returns true.
     /// Returns None if no matching element is found.
     val tryFindIndex : predicate:('T -> bool) -> source:AsyncSeq<'T> -> Async<int option>

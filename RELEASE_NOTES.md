@@ -1,5 +1,9 @@
 ### 4.12.0
 
+* Added `AsyncSeq.tryFindBack` — returns the last element for which the predicate returns true, or `None` if no match. Mirrors `Array.tryFindBack` / `List.tryFindBack`.
+* Added `AsyncSeq.tryFindBackAsync` — async-predicate variant of `tryFindBack`.
+* Added `AsyncSeq.findBack` — returns the last element for which the predicate returns true; raises `KeyNotFoundException` if no match. Mirrors `Array.findBack` / `List.findBack`.
+* Added `AsyncSeq.findBackAsync` — async-predicate variant of `findBack`.
 * Added `AsyncSeq.sortAsync` — asynchronous variant of `sort` returning `Async<'T[]>`, avoiding `Async.RunSynchronously` in async workflows.
 * Added `AsyncSeq.sortByAsync` — asynchronous variant of `sortBy` returning `Async<'T[]>`.
 * Added `AsyncSeq.sortDescendingAsync` — asynchronous variant of `sortDescending` returning `Async<'T[]>`.
