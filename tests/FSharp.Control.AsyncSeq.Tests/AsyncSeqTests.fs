@@ -4300,3 +4300,139 @@ let ``AsyncSeq.partitionAsync splits by async predicate`` () =
     |> Async.RunSynchronously
   Assert.AreEqual([|2;4;6|], trues)
   Assert.AreEqual([|1;3;5|], falses)
+
+// ===== mapiAsync =====
+
+[<Test>]
+let ``AsyncSeq.mapiAsync maps elements with their int64 index`` () =
+  let result =
+    AsyncSeq.ofSeq ["a"; "b"; "c"]
+    |> AsyncSeq.mapiAsync (fun i x -> async { return sprintf "%d:%s" i x })
+    |> AsyncSeq.toArrayAsync
+    |> Async.RunSynchronously
+  Assert.AreEqual([| "0:a"; "1:b"; "2:c" |], result)
+
+[<Test>]
+let ``AsyncSeq.mapiAsync on empty sequence returns empty`` () =
+  let result =
+    AsyncSeq.empty<string>
+    |> AsyncSeq.mapiAsync (fun i x -> async { return sprintf "%d:%s" i x })
+    |> AsyncSeq.toArrayAsync
+    |> Async.RunSynchronously
+  Assert.AreEqual([||], result)
+
+[<Test>]
+let ``AsyncSeq.mapiAsync index is int64 and starts at zero`` () =
+  let indices = ResizeArray<int64>()
+  AsyncSeq.ofSeq [10; 20; 30]
+  |> AsyncSeq.mapiAsync (fun i x -> async { indices.Add(i); return x })
+  |> AsyncSeq.toArrayAsync
+  |> Async.RunSynchronously
+  |> ignore
+  Assert.AreEqual([| 0L; 1L; 2L |], indices.ToArray())
+
+[<Test>]
+let ``AsyncSeq.mapiAsync matches mapi for pure function`` () =
+  for n in 0..20 do
+    let ls = List.init n (fun x -> x + 1)
+    let expected = ls |> List.mapi (fun i x -> i * x) |> List.toArray
+    let actual =
+      AsyncSeq.ofSeq ls
+      |> AsyncSeq.mapiAsync (fun i x -> async { return int i * x })
+      |> AsyncSeq.toArrayAsync
+      |> Async.RunSynchronously
+    Assert.AreEqual(expected, actual)
+
+// ===== tryPickAsync / pickAsync =====
+
+[<Test>]
+let ``AsyncSeq.tryPickAsync returns Some for first matching element`` () =
+  let result =
+    AsyncSeq.ofSeq [1; 2; 3; 4; 5]
+    |> AsyncSeq.tryPickAsync (fun x -> async { return if x > 3 then Some (x * 10) else None })
+    |> Async.RunSynchronously
+  Assert.AreEqual(Some 40, result)
+
+[<Test>]
+let ``AsyncSeq.tryPickAsync returns None when no element matches`` () =
+  let result =
+    AsyncSeq.ofSeq [1; 2; 3]
+    |> AsyncSeq.tryPickAsync (fun x -> async { return if x > 99 then Some x else None })
+    |> Async.RunSynchronously
+  Assert.AreEqual(None, result)
+
+[<Test>]
+let ``AsyncSeq.tryPickAsync returns None for empty sequence`` () =
+  let result =
+    AsyncSeq.empty<int>
+    |> AsyncSeq.tryPickAsync (fun x -> async { return Some x })
+    |> Async.RunSynchronously
+  Assert.AreEqual(None, result)
+
+[<Test>]
+let ``AsyncSeq.tryPickAsync returns first match not last`` () =
+  let result =
+    AsyncSeq.ofSeq [10; 20; 30]
+    |> AsyncSeq.tryPickAsync (fun x -> async { return if x % 10 = 0 then Some x else None })
+    |> Async.RunSynchronously
+  Assert.AreEqual(Some 10, result)
+
+[<Test>]
+let ``AsyncSeq.pickAsync returns value for first matching element`` () =
+  let result =
+    AsyncSeq.ofSeq [1; 2; 3; 4; 5]
+    |> AsyncSeq.pickAsync (fun x -> async { return if x = 3 then Some "three" else None })
+    |> Async.RunSynchronously
+  Assert.AreEqual("three", result)
+
+[<Test>]
+let ``AsyncSeq.pickAsync raises KeyNotFoundException when no match`` () =
+  Assert.Throws<System.Collections.Generic.KeyNotFoundException>(fun () ->
+    AsyncSeq.ofSeq [1; 2; 3]
+    |> AsyncSeq.pickAsync (fun x -> async { return if x > 99 then Some x else None })
+    |> Async.RunSynchronously
+    |> ignore) |> ignore
+
+[<Test>]
+let ``AsyncSeq.pickAsync raises KeyNotFoundException for empty sequence`` () =
+  Assert.Throws<System.Collections.Generic.KeyNotFoundException>(fun () ->
+    AsyncSeq.empty<int>
+    |> AsyncSeq.pickAsync (fun x -> async { return Some x })
+    |> Async.RunSynchronously
+    |> ignore) |> ignore
+
+// ===== groupByAsync =====
+
+[<Test>]
+let ``AsyncSeq.groupByAsync groups elements by async projection`` () =
+  let result =
+    AsyncSeq.ofSeq [1..6]
+    |> AsyncSeq.groupByAsync (fun x -> async { return x % 2 })
+    |> AsyncSeq.mapAsyncParallel (fun (key, grp) -> async {
+        let! items = AsyncSeq.toArrayAsync grp
+        return key, Array.sort items })
+    |> AsyncSeq.toArrayAsync
+    |> Async.RunSynchronously
+    |> Array.sortBy fst
+  Assert.AreEqual([| (0, [|2;4;6|]); (1, [|1;3;5|]) |], result)
+
+[<Test>]
+let ``AsyncSeq.groupByAsync on empty sequence returns empty`` () =
+  let result =
+    AsyncSeq.empty<int>
+    |> AsyncSeq.groupByAsync (fun x -> async { return x % 2 })
+    |> AsyncSeq.toArrayAsync
+    |> Async.RunSynchronously
+  Assert.AreEqual([||], result)
+
+[<Test>]
+let ``AsyncSeq.groupByAsync with all-same key produces single group`` () =
+  let result =
+    AsyncSeq.ofSeq [1; 2; 3]
+    |> AsyncSeq.groupByAsync (fun _ -> async { return "same" })
+    |> AsyncSeq.mapAsyncParallel (fun (key, grp) -> async {
+        let! items = AsyncSeq.toArrayAsync grp
+        return key, Array.sort items })
+    |> AsyncSeq.toArrayAsync
+    |> Async.RunSynchronously
+  Assert.AreEqual([| ("same", [|1;2;3|]) |], result)
