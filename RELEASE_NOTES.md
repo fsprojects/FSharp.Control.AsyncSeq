@@ -1,5 +1,6 @@
 ### 4.12.0
 
+* Tests: Added tests for `mapiAsync`, `tryPickAsync`, `pickAsync`, and `groupByAsync` — these four async functions previously had no test coverage.
 * Added `AsyncSeq.tryFindBack` — returns the last element for which the predicate returns true, or `None` if no match. Mirrors `Array.tryFindBack` / `List.tryFindBack`.
 * Added `AsyncSeq.tryFindBackAsync` — async-predicate variant of `tryFindBack`.
 * Added `AsyncSeq.findBack` — returns the last element for which the predicate returns true; raises `KeyNotFoundException` if no match. Mirrors `Array.findBack` / `List.findBack`.
