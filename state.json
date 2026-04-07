@@ -1,11 +1,11 @@
 {
-  "last_run": "2026-04-05T00:08:53Z",
-  "run_id": "23990424868",
+  "last_run": "2026-04-07T00:10:36Z",
+  "run_id": "24057538384",
   "open_prs": {
-    "fsdocs-update": "repo-assist/eng-update-fsdocs-22alpha3-20260403-596ea5adde75c6f0 — PR #302: Update fsdocs-tool to 22.0.0-alpha.3 and SDK to .NET 10.0 (closes #300)",
-    "test-async-variants": "repo-assist/test-async-variants-2026-04-05 — tests for mapiAsync, tryPickAsync, pickAsync, groupByAsync (new PR, number TBD)"
+    "fsdocs-update": "repo-assist/eng-update-fsdocs-22alpha3-20260403-596ea5adde75c6f0 — PR #302: Update fsdocs-tool to 22.0.0-alpha.3 and SDK to .NET 10.0 (updated: fable 4.25→4.29, CI .NET 10, caching, merged main)",
+    "perf-mutable": "repo-assist/perf-mutable-ref-cells-modernize — PR #304: Performance: replace ref cells with mutable in singleton, collectSeq, takeWhileInclusive, takeWhileInclusiveAsync"
   },
-  "notes": "PRs #297 (findBack) and #298 (sortAsync) were merged by dsyme on 2026-04-03. Issue #300 closed. PR #302 (fsdocs update) is open. New PR created this run for testing improvements. Monthly activity issue is #299.",
+  "notes": "PRs #297 (findBack), #298 (sortAsync), #303 (test variants) merged. PR #302 updated with fable/CI fixes. PR #304 is new perf improvement. Monthly activity issue is #299. Fable 5 migration is complex (test framework: Fable.Jester not compatible, need Fable.Mocha). fable tool goes to 5.0.0-rc.6 but requires net10.0 and test framework migration.",
   "monthly_summary_issue": 299,
   "backlog_cursor": "299"
 }
