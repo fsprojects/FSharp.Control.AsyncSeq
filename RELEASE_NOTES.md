@@ -1,3 +1,9 @@
+### 4.12.1
+
+* CI: Upgrade Fable from 4.25.0 to 5.0.0-rc.7 and .NET SDK from 8.0.19 to 10.0.100 to fix a CI hang where the Fable build step ran for 6+ hours with .NET 10. Fable 5 + .NET 10 compiles in ~20 seconds.
+* CI: Conditionally disable SourceLink for Fable builds to fix a compilation error where AssemblyInfo.fs was being embedded by SourceLink and passed to the Fable compiler.
+* Tests: Update 4 Fable tests that used `rejects.toThrow()` to use `Async.Catch` with a `Choice2Of2` pattern match instead, since Fable 5's `failwith` throws a custom `Exception` type that is not a JavaScript `Error` instance.
+
 ### 4.12.0
 
 * Tests: Added tests for `mapiAsync`, `tryPickAsync`, `pickAsync`, and `groupByAsync` — these four async functions previously had no test coverage.

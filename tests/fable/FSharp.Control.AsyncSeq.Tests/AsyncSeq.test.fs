@@ -400,7 +400,8 @@ Jest.describe("AsyncSeq.interleave", fun () ->
                     return! AsyncSeq.interleave s1 s2 |> AsyncSeq.toArrayAsync
                 }
 
-            do! Jest.expect(f |> Async.StartAsPromise).rejects.toThrow()
+            let! result = f |> Async.Catch
+            Jest.expect(result |> (function Choice2Of2 _ -> true | _ -> false)).toBe(true)
     })
 )
 
@@ -481,11 +482,13 @@ Jest.describe("AsyncSeq.try", fun () ->
 
         Jest.expect(x.Value).toBe(0)
 
-        do! Jest.expect(s |> AsyncSeq.toListAsync |> Async.StartAsPromise).rejects.toThrow()
+        let! result1 = s |> AsyncSeq.toListAsync |> Async.Catch
+        Jest.expect(result1 |> (function Choice2Of2 _ -> true | _ -> false)).toBe(true)
 
         Jest.expect(x.Value).toBe(3)
 
-        do! Jest.expect(s |> AsyncSeq.toListAsync |> Async.StartAsPromise).rejects.toThrow()
+        let! result2 = s |> AsyncSeq.toListAsync |> Async.Catch
+        Jest.expect(result2 |> (function Choice2Of2 _ -> true | _ -> false)).toBe(true)
 
         Jest.expect(x.Value).toBe(6)
     })
@@ -991,7 +994,8 @@ Jest.describe("AsyncSeq.ofObservableBuffered", fun () ->
         let src, discarded = observe [] true
         let actual = src |> AsyncSeq.ofObservableBuffered |> AsyncSeq.toArrayAsync
 
-        do! Jest.expect(actual |> Async.StartAsPromise).rejects.toThrow()
+        let! result = actual |> Async.Catch
+        Jest.expect(result |> (function Choice2Of2 _ -> true | _ -> false)).toBe(true)
         Jest.expect(discarded()).toBe(true)
     })
 
@@ -999,7 +1003,8 @@ Jest.describe("AsyncSeq.ofObservableBuffered", fun () ->
         let src, discarded = observe [1] true
         let actual = src |> AsyncSeq.ofObservableBuffered |> AsyncSeq.toArrayAsync
 
-        do! Jest.expect(actual |> Async.StartAsPromise).rejects.toThrow()
+        let! result = actual |> Async.Catch
+        Jest.expect(result |> (function Choice2Of2 _ -> true | _ -> false)).toBe(true)
         Jest.expect(discarded()).toBe(true)
     })
 
