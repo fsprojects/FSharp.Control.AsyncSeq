@@ -1,0 +1,175 @@
+diff --git a/RELEASE_NOTES.md b/RELEASE_NOTES.md
+index 868f254..bb4172b 100644
+--- a/RELEASE_NOTES.md
++++ b/RELEASE_NOTES.md
+@@ -1,3 +1,9 @@
++### 4.13.0
++
++* Added `AsyncSeq.ofList` — creates an async sequence from an F# list with an optimised direct-enumerator implementation (avoids `IEnumerator<T>` boxing).
++* Added `AsyncSeq.ofArray` — creates an async sequence from an array with an optimised index-based enumerator (avoids `IEnumerator<T>` boxing).
++* Added `AsyncSeq.cycle` — infinitely cycles through all elements of a source async sequence; returns empty if the source is empty.
++
+ ### 4.12.0
+ 
+ * Tests: Added tests for `mapiAsync`, `tryPickAsync`, `pickAsync`, and `groupByAsync` — these four async functions previously had no test coverage.
+diff --git a/src/FSharp.Control.AsyncSeq/AsyncSeq.fs b/src/FSharp.Control.AsyncSeq/AsyncSeq.fs
+index 8839dbc..ad89262 100644
+--- a/src/FSharp.Control.AsyncSeq/AsyncSeq.fs
++++ b/src/FSharp.Control.AsyncSeq/AsyncSeq.fs
+@@ -790,6 +790,35 @@ member x.Dispose() =
+                                 dispose e
+                             | _ -> () }) :> AsyncSeq<'T>
+ 
++  let ofList (source: 'T list) : AsyncSeq<'T> =
++    AsyncSeqImpl(fun () ->
++        let mutable remaining = source
++        { new IAsyncSeqEnumerator<'T> with
++              member _.MoveNext() =
++                  async {
++                      match remaining with
++                      | [] -> return None
++                      | h :: t ->
++                          remaining <- t
++                          return Some h
++                  }
++              member _.Dispose() = () }) :> AsyncSeq<'T>
++
++  let ofArray (source: 'T []) : AsyncSeq<'T> =
++    AsyncSeqImpl(fun () ->
++        let mutable i = 0
++        { new IAsyncSeqEnumerator<'T> with
++              member _.MoveNext() =
++                  async {
++                      if i < source.Length then
++                          let v = source.[i]
++                          i <- i + 1
++                          return Some v
++                      else
++                          return None
++                  }
++              member _.Dispose() = () }) :> AsyncSeq<'T>
++
+   let appendSeq (seq2: seq<'T>) (source: AsyncSeq<'T>) : AsyncSeq<'T> =
+     append source (ofSeq seq2)
+ 
+@@ -2160,6 +2189,15 @@ let toListSynchronously (source:AsyncSeq<'T>) = toListAsync source |> Async.RunS
+   let toArraySynchronously (source:AsyncSeq<'T>) = toArrayAsync source |> Async.RunSynchronously
+   #endif
+ 
++  let cycle (source: AsyncSeq<'T>) : AsyncSeq<'T> =
++    asyncSeq {
++        let! arr = source |> toArrayAsync
++        if arr.Length > 0 then
++            while true do
++                for x in arr do
++                    yield x
++    }
++
+   let partitionAsync (predicate: 'T -> Async<bool>) (source: AsyncSeq<'T>) : Async<'T[] * 'T[]> = async {
+     let trues = ResizeArray<'T>()
+     let falses = ResizeArray<'T>()
+diff --git a/src/FSharp.Control.AsyncSeq/AsyncSeq.fsi b/src/FSharp.Control.AsyncSeq/AsyncSeq.fsi
+index 08ce4ad..a8ecd49 100644
+--- a/src/FSharp.Control.AsyncSeq/AsyncSeq.fsi
++++ b/src/FSharp.Control.AsyncSeq/AsyncSeq.fsi
+@@ -60,6 +60,11 @@ inherit IDisposable
+     /// Creates an async sequence given by evaluating the specified async computation until it returns None.
+     val replicateUntilNoneAsync : Async<'T option> -> AsyncSeq<'T>
+ 
++    /// Returns an async sequence which infinitely cycles through all elements of the source sequence.
++    /// The source is materialised into an array on first enumeration. Returns an empty sequence if
++    /// the source is empty.
++    val cycle : source:AsyncSeq<'T> -> AsyncSeq<'T>
++
+     /// Returns an async sequence which emits an element on a specified period.
+     val intervalMs : periodMs:int -> AsyncSeq<DateTime>
+ 
+@@ -488,6 +493,14 @@ inherit IDisposable
+     /// input synchronous sequence and returns them one-by-one.
+     val ofSeq : source:seq<'T> -> AsyncSeq<'T>
+ 
++    /// Creates an asynchronous sequence that lazily takes elements from an
++    /// F# list and returns them one-by-one.
++    val ofList : source:'T list -> AsyncSeq<'T>
++
++    /// Creates an asynchronous sequence that lazily takes elements from an
++    /// array and returns them one-by-one.
++    val ofArray : source:'T [] -> AsyncSeq<'T>
++
+     /// Creates an asynchronous sequence that lazily takes element from an
+     /// input synchronous sequence of asynchronous computation and returns them one-by-one.
+     val ofSeqAsync : seq<Async<'T>> -> AsyncSeq<'T>
+diff --git a/tests/FSharp.Control.AsyncSeq.Tests/AsyncSeqTests.fs b/tests/FSharp.Control.AsyncSeq.Tests/AsyncSeqTests.fs
+index 3d636b0..1f7a34c 100644
+--- a/tests/FSharp.Control.AsyncSeq.Tests/AsyncSeqTests.fs
++++ b/tests/FSharp.Control.AsyncSeq.Tests/AsyncSeqTests.fs
+@@ -4436,3 +4436,69 @@ AsyncSeq.ofSeq [1..6]
+     |> AsyncSeq.toArrayAsync
+     |> Async.RunSynchronously
+   Assert.AreEqual([| ("same", [|1;2;3|]) |], result)
++
++// ===== ofList =====
++
++[<Test>]
++let ``AsyncSeq.ofList returns elements in order`` () =
++  let result = AsyncSeq.ofList [1; 2; 3; 4; 5] |> AsyncSeq.toArrayAsync |> Async.RunSynchronously
++  Assert.AreEqual([| 1; 2; 3; 4; 5 |], result)
++
++[<Test>]
++let ``AsyncSeq.ofList on empty list returns empty`` () =
++  let result = AsyncSeq.ofList ([] : int list) |> AsyncSeq.toArrayAsync |> Async.RunSynchronously
++  Assert.AreEqual([||], result)
++
++[<Test>]
++let ``AsyncSeq.ofList produces same result as ofSeq`` () =
++  let xs = [10; 20; 30]
++  let fromList = AsyncSeq.ofList xs |> AsyncSeq.toArrayAsync |> Async.RunSynchronously
++  let fromSeq  = AsyncSeq.ofSeq xs  |> AsyncSeq.toArrayAsync |> Async.RunSynchronously
++  Assert.AreEqual(fromSeq, fromList)
++
++// ===== ofArray =====
++
++[<Test>]
++let ``AsyncSeq.ofArray returns elements in order`` () =
++  let result = AsyncSeq.ofArray [| 10; 20; 30 |] |> AsyncSeq.toArrayAsync |> Async.RunSynchronously
++  Assert.AreEqual([| 10; 20; 30 |], result)
++
++[<Test>]
++let ``AsyncSeq.ofArray on empty array returns empty`` () =
++  let result = AsyncSeq.ofArray ([||] : int []) |> AsyncSeq.toArrayAsync |> Async.RunSynchronously
++  Assert.AreEqual([||], result)
++
++[<Test>]
++let ``AsyncSeq.ofArray produces same result as ofSeq`` () =
++  let xs = [| 1; 2; 3; 4 |]
++  let fromArray = AsyncSeq.ofArray xs |> AsyncSeq.toArrayAsync |> Async.RunSynchronously
++  let fromSeq   = AsyncSeq.ofSeq   xs |> AsyncSeq.toArrayAsync |> Async.RunSynchronously
++  Assert.AreEqual(fromSeq, fromArray)
++
++// ===== cycle =====
++
++[<Test>]
++let ``AsyncSeq.cycle repeats elements indefinitely`` () =
++  let result =
++    AsyncSeq.cycle (AsyncSeq.ofList [1; 2; 3])
++    |> AsyncSeq.take 7
++    |> AsyncSeq.toArrayAsync
++    |> Async.RunSynchronously
++  Assert.AreEqual([| 1; 2; 3; 1; 2; 3; 1 |], result)
++
++[<Test>]
++let ``AsyncSeq.cycle on empty sequence returns empty`` () =
++  let result =
++    AsyncSeq.cycle AsyncSeq.empty<int>
++    |> AsyncSeq.toArrayAsync
++    |> Async.RunSynchronously
++  Assert.AreEqual([||], result)
++
++[<Test>]
++let ``AsyncSeq.cycle on singleton repeats single element`` () =
++  let result =
++    AsyncSeq.cycle (AsyncSeq.singleton 42)
++    |> AsyncSeq.take 5
++    |> AsyncSeq.toArrayAsync
++    |> Async.RunSynchronously
++  Assert.AreEqual([| 42; 42; 42; 42; 42 |], result)

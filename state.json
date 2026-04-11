@@ -1,12 +1,29 @@
 {
-  "last_run": "2026-04-09T00:00:00Z",
-  "run_id": "24165242494",
+  "last_run": "2026-04-11T00:09:43Z",
+  "run_id": "24269825666",
+  "safeoutputs_unavailable": true,
   "open_prs": {
-    "fsdocs-update": "repo-assist/eng-update-fsdocs-22alpha3-20260403-596ea5adde75c6f0 — PR #302: Update fsdocs-tool to 22.0.0-alpha.3 and SDK to .NET 10.0",
-    "perf-mutable": "repo-assist/perf-mutable-ref-cells-modernize — PR #304: Performance: replace ref cells with mutable",
-    "fable5-upgrade": "repo-assist/eng-fable5-upgrade-20260409 — PR pending: Upgrade fable 4.25.0→5.0.0-rc.7 and SDK to .NET 10.0.100"
+    "fsdocs-update": "repo-assist/eng-update-fsdocs-22alpha3-20260403-596ea5adde75c6f0 — PR #302: Update fsdocs-tool to 22.0.0-alpha.3 and SDK to .NET 10.0"
   },
-  "notes": "PRs #297, #298, #303 merged. PR #302 still open (fsdocs update). PR #304 still open (perf). Created new fable5 upgrade PR (fable 4.x hangs indefinitely with .NET 10 SDK; fable 5.0.0-rc.7 + .NET 10 works in ~20s). Fixed 4 fable tests using Async.Catch instead of rejects.toThrow() (Fable 5 failwith throws Exception not Error). SourceLink fix: added Condition to EnableSourceLink. rc.12 not on NuGet; rc.7 is latest. Monthly activity issue is #299.",
+  "pending_prs_to_create": {
+    "fable5-upgrade": {
+      "branch": "repo-assist/eng-fable5-upgrade-20260409-373da99b57781aea",
+      "title": "[Repo Assist] Upgrade Fable to 5.0.0-rc.7 and .NET SDK to 10.0.100 (fixes 6+ hour CI hang)",
+      "status": "branch-exists-on-remote-needs-pr-URGENT",
+      "tests": "402/402 .NET tests pass",
+      "note": "rc.7 is latest on NuGet as of 2026-04-11; maintainer requested rc.12 but not yet available. Issue #306 exists as fallback. PR STILL NEEDS TO BE CREATED via create_pull_request tool. Comment on issue #306 linking the PR after creation."
+    },
+    "oflist-ofarray-cycle": {
+      "branch": "repo-assist/improve-oflist-ofarray-cycle-20260411",
+      "title": "[Repo Assist] Add AsyncSeq.ofList, AsyncSeq.ofArray, and AsyncSeq.cycle",
+      "status": "patch-saved-needs-apply-push-pr",
+      "tests": "411/411 .NET tests pass (9 new tests)",
+      "patch_file": "oflist-ofarray-cycle-patch.txt",
+      "note": "Branch was local only and could not be pushed. Patch saved to repo memory. Next run: apply patch to a new branch off main, push, create PR."
+    }
+  },
+  "notes": "safeoutputs MCP tools NOT AVAILABLE in run 24269825666 (could not create PRs, update issues, or leave comments). PRs #303, #305 merged. PR #302 still open. Two new PRs need creation next run. Monthly activity issue #299 NOT UPDATED this run - needs updating next run.",
   "monthly_summary_issue": 299,
-  "backlog_cursor": "299"
+  "backlog_cursor": "306",
+  "checked_off_items": ["PR #303 merged", "PR #305 merged (was #304)"]
 }
