@@ -551,31 +551,31 @@ module AsyncSeq =
             let state = ref (TryWithState.NotStarted inp)
             { new IAsyncSeqEnumerator<'T> with
                         member x.MoveNext() =
-                            async { match !state with
+                            async { match state.Value with
                                     | TryWithState.NotStarted inp ->
                                         let res = ref Unchecked.defaultof<_>
                                         try
-                                            res := Choice1Of2 (inp.GetEnumerator())
+                                            res.Value <- Choice1Of2 (inp.GetEnumerator())
                                         with exn ->
-                                            res := Choice2Of2 exn
+                                            res.Value <- Choice2Of2 exn
                                         match res.Value with
                                         | Choice1Of2 r ->
                                             return!
-                                              (state := TryWithState.HaveBodyEnumerator r
+                                              (state.Value <- TryWithState.HaveBodyEnumerator r
                                                x.MoveNext())
                                         | Choice2Of2 exn ->
                                             return!
                                                (x.Dispose()
                                                 let enum = (handler exn).GetEnumerator()
-                                                state := TryWithState.HaveHandlerEnumerator enum
+                                                state.Value <- TryWithState.HaveHandlerEnumerator enum
                                                 x.MoveNext())
                                     | TryWithState.HaveBodyEnumerator e ->
                                         let res = ref Unchecked.defaultof<_>
                                         try
                                             let! r = e.MoveNext()
-                                            res := Choice1Of2 r
+                                            res.Value <- Choice1Of2 r
                                         with exn ->
-                                            res := Choice2Of2 exn
+                                            res.Value <- Choice2Of2 exn
                                         match res.Value with
                                         | Choice1Of2 res ->
                                             return
@@ -587,7 +587,7 @@ module AsyncSeq =
                                             return!
                                               (x.Dispose()
                                                let e = (handler exn).GetEnumerator()
-                                               state := TryWithState.HaveHandlerEnumerator e
+                                               state.Value <- TryWithState.HaveHandlerEnumerator e
                                                x.MoveNext())
                                     | TryWithState.HaveHandlerEnumerator e ->
                                         let! res = e.MoveNext()
@@ -597,9 +597,9 @@ module AsyncSeq =
                                     | _ ->
                                         return None }
                         member x.Dispose() =
-                            match !state with
+                            match state.Value with
                             | TryWithState.HaveBodyEnumerator e | TryWithState.HaveHandlerEnumerator e ->
-                                state := TryWithState.Finished
+                                state.Value <- TryWithState.Finished
                                 dispose e
                             | _ -> () }) :> AsyncSeq<'T>
 
@@ -617,11 +617,11 @@ module AsyncSeq =
             let state = ref (TryFinallyState.NotStarted inp)
             { new IAsyncSeqEnumerator<'T> with
                         member x.MoveNext() =
-                            async { match !state with
+                            async { match state.Value with
                                     | TryFinallyState.NotStarted inp ->
                                         return!
                                            (let e = inp.GetEnumerator()
-                                            state := TryFinallyState.HaveBodyEnumerator e
+                                            state.Value <- TryFinallyState.HaveBodyEnumerator e
                                             x.MoveNext())
                                     | TryFinallyState.HaveBodyEnumerator e ->
                                         let! res = e.MoveNext()
@@ -633,9 +633,9 @@ module AsyncSeq =
                                     | _ ->
                                         return None }
                         member x.Dispose() =
-                            match !state with
+                            match state.Value with
                             | TryFinallyState.HaveBodyEnumerator e->
-                                state := TryFinallyState.Finished
+                                state.Value <- TryFinallyState.Finished
                                 dispose e
                                 compensation()
                             | _ -> () }) :> AsyncSeq<'T>
@@ -770,10 +770,10 @@ module AsyncSeq =
             let state = ref (MapState.NotStarted inp)
             { new IAsyncSeqEnumerator<'T> with
                         member x.MoveNext() =
-                            async { match !state with
+                            async { match state.Value with
                                     | MapState.NotStarted inp ->
                                         let e = inp.GetEnumerator()
-                                        state := MapState.HaveEnumerator e
+                                        state.Value <- MapState.HaveEnumerator e
                                         return! x.MoveNext()
                                     | MapState.HaveEnumerator e ->
                                         return
@@ -784,9 +784,9 @@ module AsyncSeq =
                                                  None)
                                     | _ -> return None }
                         member x.Dispose() =
-                            match !state with
+                            match state.Value with
                             | MapState.HaveEnumerator e ->
-                                state := MapState.Finished
+                                state.Value <- MapState.Finished
                                 dispose e
                             | _ -> () }) :> AsyncSeq<'T>
 
@@ -2167,7 +2167,7 @@ module AsyncSeq =
                       while cur.Value.IsSome do
                           yield cur.Value.Value
                           let! next = ie.MoveNext()
-                          cur := next
+                          cur.Value <- next
                   finally
                       ie.Dispose() }
       return first, rest }
@@ -2500,7 +2500,7 @@ module AsyncSeq =
             | None ->
                 let t = System.Threading.Tasks.TaskCompletionSource()
                 tasks.[i] <- t.Task // result never gets set
-                fin := fin.Value - 1
+                fin.Value <- fin.Value - 1
     }
 
   let combineLatestWithAsync (f:'a -> 'b -> Async<'c>) (source1:AsyncSeq<'a>) (source2:AsyncSeq<'b>) : AsyncSeq<'c> =

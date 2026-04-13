@@ -454,7 +454,7 @@ Jest.describe("AsyncSeq.try", fun () ->
         let s =
             asyncSeq {
                 try yield 1
-                finally x := x.Value + 3
+                finally x.Value <- x.Value + 3
             }
 
         Jest.expect(x.Value).toBe(0)
@@ -476,8 +476,8 @@ Jest.describe("AsyncSeq.try", fun () ->
                     try
                         yield 1
                         failwith "fffail"
-                    finally x := x.Value + 1
-                finally x := x.Value + 2
+                    finally x.Value <- x.Value + 1
+                finally x.Value <- x.Value + 2
             }
 
         Jest.expect(x.Value).toBe(0)
@@ -498,7 +498,7 @@ Jest.describe("AsyncSeq.try", fun () ->
         let s =
             asyncSeq {
                 try failwith "ffail"
-                with _ -> x := x.Value + 3
+                with _ -> x.Value <- x.Value + 3
             }
 
         Jest.expect(x.Value).toBe(0)
@@ -517,7 +517,7 @@ Jest.describe("AsyncSeq.try", fun () ->
         let s =
             asyncSeq {
                 try yield 1
-                with _ -> x := x.Value + 3
+                with _ -> x.Value <- x.Value + 3
             }
 
         Jest.expect(x.Value).toBe(0)
@@ -857,7 +857,7 @@ Jest.test("AsyncSeq.while should allow do at end", async {
         asyncSeq {
             while false do
                 yield 1
-            do! async { x := x.Value + 3 }
+            do! async { x.Value <- x.Value + 3 }
         }
         |> AsyncSeq.toArrayAsync
 
@@ -915,7 +915,7 @@ Jest.describe("AsyncSeq.intervalMs", fun () ->
             while actual.Value.Length < 10 do
                 do! Async.Sleep 10
                 let! timestamp = interval |> AsyncSeq.take 1 |> AsyncSeq.toArrayAsync
-                actual := (timestamp |> Array.map (fun d -> d.Ticks)) |> Array.append actual.Value
+                actual.Value <- (timestamp |> Array.map (fun d -> d.Ticks)) |> Array.append actual.Value
         }
         |> Async.StartImmediate
 
@@ -962,7 +962,7 @@ let observe vs err =
                 if err then
                    observer.OnError (Failure "fail")
                 observer.OnCompleted()
-                { new IDisposable with member __.Dispose() = discarded := true }  },
+                { new IDisposable with member __.Dispose() = discarded.Value <- true }  },
     (fun _ -> discarded.Value)
 
 Jest.describe("AsyncSeq.ofObservableBuffered", fun () ->
