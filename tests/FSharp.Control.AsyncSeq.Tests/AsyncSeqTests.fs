@@ -4436,3 +4436,69 @@ let ``AsyncSeq.groupByAsync with all-same key produces single group`` () =
     |> AsyncSeq.toArrayAsync
     |> Async.RunSynchronously
   Assert.AreEqual([| ("same", [|1;2;3|]) |], result)
+
+// ===== ofList =====
+
+[<Test>]
+let ``AsyncSeq.ofList returns elements in order`` () =
+  let result = AsyncSeq.ofList [1; 2; 3; 4; 5] |> AsyncSeq.toArrayAsync |> Async.RunSynchronously
+  Assert.AreEqual([| 1; 2; 3; 4; 5 |], result)
+
+[<Test>]
+let ``AsyncSeq.ofList on empty list returns empty`` () =
+  let result = AsyncSeq.ofList ([] : int list) |> AsyncSeq.toArrayAsync |> Async.RunSynchronously
+  Assert.AreEqual([||], result)
+
+[<Test>]
+let ``AsyncSeq.ofList produces same result as ofSeq`` () =
+  let xs = [10; 20; 30]
+  let fromList = AsyncSeq.ofList xs |> AsyncSeq.toArrayAsync |> Async.RunSynchronously
+  let fromSeq  = AsyncSeq.ofSeq xs  |> AsyncSeq.toArrayAsync |> Async.RunSynchronously
+  Assert.AreEqual(fromSeq, fromList)
+
+// ===== ofArray =====
+
+[<Test>]
+let ``AsyncSeq.ofArray returns elements in order`` () =
+  let result = AsyncSeq.ofArray [| 10; 20; 30 |] |> AsyncSeq.toArrayAsync |> Async.RunSynchronously
+  Assert.AreEqual([| 10; 20; 30 |], result)
+
+[<Test>]
+let ``AsyncSeq.ofArray on empty array returns empty`` () =
+  let result = AsyncSeq.ofArray ([||] : int []) |> AsyncSeq.toArrayAsync |> Async.RunSynchronously
+  Assert.AreEqual([||], result)
+
+[<Test>]
+let ``AsyncSeq.ofArray produces same result as ofSeq`` () =
+  let xs = [| 1; 2; 3; 4 |]
+  let fromArray = AsyncSeq.ofArray xs |> AsyncSeq.toArrayAsync |> Async.RunSynchronously
+  let fromSeq   = AsyncSeq.ofSeq   xs |> AsyncSeq.toArrayAsync |> Async.RunSynchronously
+  Assert.AreEqual(fromSeq, fromArray)
+
+// ===== cycle =====
+
+[<Test>]
+let ``AsyncSeq.cycle repeats elements indefinitely`` () =
+  let result =
+    AsyncSeq.cycle (AsyncSeq.ofList [1; 2; 3])
+    |> AsyncSeq.take 7
+    |> AsyncSeq.toArrayAsync
+    |> Async.RunSynchronously
+  Assert.AreEqual([| 1; 2; 3; 1; 2; 3; 1 |], result)
+
+[<Test>]
+let ``AsyncSeq.cycle on empty sequence returns empty`` () =
+  let result =
+    AsyncSeq.cycle AsyncSeq.empty<int>
+    |> AsyncSeq.toArrayAsync
+    |> Async.RunSynchronously
+  Assert.AreEqual([||], result)
+
+[<Test>]
+let ``AsyncSeq.cycle on singleton repeats single element`` () =
+  let result =
+    AsyncSeq.cycle (AsyncSeq.singleton 42)
+    |> AsyncSeq.take 5
+    |> AsyncSeq.toArrayAsync
+    |> Async.RunSynchronously
+  Assert.AreEqual([| 42; 42; 42; 42; 42 |], result)

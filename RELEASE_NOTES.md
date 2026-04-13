@@ -1,3 +1,9 @@
+### 4.13.0
+
+* Added `AsyncSeq.ofList` — creates an async sequence from an F# list with an optimised direct-enumerator implementation (avoids `IEnumerator<T>` boxing).
+* Added `AsyncSeq.ofArray` — creates an async sequence from an array with an optimised index-based enumerator (avoids `IEnumerator<T>` boxing).
+* Added `AsyncSeq.cycle` — infinitely cycles through all elements of a source async sequence; returns empty if the source is empty.
+
 ### 4.12.0
 
 * Tests: Added tests for `mapiAsync`, `tryPickAsync`, `pickAsync`, and `groupByAsync` — these four async functions previously had no test coverage.
