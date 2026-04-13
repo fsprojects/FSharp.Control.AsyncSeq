@@ -16,7 +16,7 @@
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <RepositoryType>git</RepositoryType>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <EnableSourceLink>true</EnableSourceLink>
+    <EnableSourceLink Condition="'$(FABLE_COMPILER)' != 'True'">true</EnableSourceLink>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="AsyncSeq.fsi" />

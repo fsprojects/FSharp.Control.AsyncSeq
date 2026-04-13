@@ -450,11 +450,11 @@ module AsyncSeq =
 
   let singleton (v:'T) : AsyncSeq<'T> =
     AsyncSeqImpl(fun () ->
-        let state = ref 0
+        let mutable state = 0
         { new IAsyncSeqEnumerator<'T> with
             member _.MoveNext() = async {
-                let res = state.Value = 0
-                incr state
+                let res = state = 0
+                state <- state + 1
                 return (if res then Some v else None) }
           interface System.IDisposable with
             member _.Dispose() = () }) :> AsyncSeq<'T>
@@ -719,20 +719,20 @@ module AsyncSeq =
   // Like collect, but the input is a sequence, where no bind is required on each step of the enumeration
   let collectSeq (f: 'T -> AsyncSeq<'U>) (inp: seq<'T>) : AsyncSeq<'U> =
         AsyncSeqImpl(fun () ->
-            let state = ref (CollectSeqState.NotStarted inp)
+            let mutable state = CollectSeqState.NotStarted inp
             { new IAsyncSeqEnumerator<'U> with
                         member x.MoveNext() =
-                            async { match !state with
+                            async { match state with
                                     | CollectSeqState.NotStarted inp ->
                                         return!
                                            (let e1 = inp.GetEnumerator()
-                                            state := CollectSeqState.HaveInputEnumerator e1
+                                            state <- CollectSeqState.HaveInputEnumerator e1
                                             x.MoveNext())
                                     | CollectSeqState.HaveInputEnumerator e1 ->
                                         return!
                                           (if e1.MoveNext()  then
                                                let e2 = (f e1.Current).GetEnumerator()
-                                               state := CollectSeqState.HaveInnerEnumerator (e1, e2)
+                                               state <- CollectSeqState.HaveInnerEnumerator (e1, e2)
                                            else
                                                x.Dispose()
                                            x.MoveNext())
@@ -741,19 +741,19 @@ module AsyncSeq =
                                         match res2 with
                                         | None ->
                                             return!
-                                              (state := CollectSeqState.HaveInputEnumerator e1
+                                              (state <- CollectSeqState.HaveInputEnumerator e1
                                                dispose e2
                                                x.MoveNext())
                                         | Some _ ->
                                             return res2
                                     | _ -> return None}
                         member x.Dispose() =
-                            match !state with
+                            match state with
                             | CollectSeqState.HaveInputEnumerator e1 ->
-                                state := CollectSeqState.Finished
+                                state <- CollectSeqState.Finished
                                 dispose e1
                             | CollectSeqState.HaveInnerEnumerator (e1, e2) ->
-                                state := CollectSeqState.Finished
+                                state <- CollectSeqState.Finished
                                 dispose e2
                                 dispose e1
                                 x.Dispose()
@@ -789,6 +789,35 @@ module AsyncSeq =
                                 state := MapState.Finished
                                 dispose e
                             | _ -> () }) :> AsyncSeq<'T>
+
+  let ofList (source: 'T list) : AsyncSeq<'T> =
+    AsyncSeqImpl(fun () ->
+        let mutable remaining = source
+        { new IAsyncSeqEnumerator<'T> with
+              member _.MoveNext() =
+                  async {
+                      match remaining with
+                      | [] -> return None
+                      | h :: t ->
+                          remaining <- t
+                          return Some h
+                  }
+              member _.Dispose() = () }) :> AsyncSeq<'T>
+
+  let ofArray (source: 'T []) : AsyncSeq<'T> =
+    AsyncSeqImpl(fun () ->
+        let mutable i = 0
+        { new IAsyncSeqEnumerator<'T> with
+              member _.MoveNext() =
+                  async {
+                      if i < source.Length then
+                          let v = source.[i]
+                          i <- i + 1
+                          return Some v
+                      else
+                          return None
+                  }
+              member _.Dispose() = () }) :> AsyncSeq<'T>
 
   let appendSeq (seq2: seq<'T>) (source: AsyncSeq<'T>) : AsyncSeq<'T> =
     append source (ofSeq seq2)
@@ -1982,27 +2011,27 @@ module AsyncSeq =
   let takeWhileInclusive (f : 'a -> bool) (s : AsyncSeq<'a>) : AsyncSeq<'a> =
     AsyncSeqImpl(fun () ->
         let en = s.GetEnumerator()
-        let fin = ref false
+        let mutable fin = false
         { new IAsyncSeqEnumerator<'a> with
             member _.MoveNext() = async {
-                if !fin then return None
+                if fin then return None
                 else
                     let! next = en.MoveNext()
                     match next with
                     | None -> return None
                     | Some a ->
                         if f a then return Some a
-                        else fin := true; return Some a }
+                        else fin <- true; return Some a }
           interface System.IDisposable with
             member _.Dispose() = en.Dispose() }) :> AsyncSeq<'a>
 
   let takeWhileInclusiveAsync (predicate: 'T -> Async<bool>) (source: AsyncSeq<'T>) : AsyncSeq<'T> =
     AsyncSeqImpl(fun () ->
         let en = source.GetEnumerator()
-        let fin = ref false
+        let mutable fin = false
         { new IAsyncSeqEnumerator<'T> with
             member _.MoveNext() = async {
-                if !fin then return None
+                if fin then return None
                 else
                     let! next = en.MoveNext()
                     match next with
@@ -2010,7 +2039,7 @@ module AsyncSeq =
                     | Some a ->
                         let! ok = predicate a
                         if ok then return Some a
-                        else fin := true; return Some a }
+                        else fin <- true; return Some a }
           interface System.IDisposable with
             member _.Dispose() = en.Dispose() }) :> AsyncSeq<'T>
 
@@ -2159,6 +2188,15 @@ module AsyncSeq =
   let toListSynchronously (source:AsyncSeq<'T>) = toListAsync source |> Async.RunSynchronously
   let toArraySynchronously (source:AsyncSeq<'T>) = toArrayAsync source |> Async.RunSynchronously
   #endif
+
+  let cycle (source: AsyncSeq<'T>) : AsyncSeq<'T> =
+    asyncSeq {
+        let! arr = source |> toArrayAsync
+        if arr.Length > 0 then
+            while true do
+                for x in arr do
+                    yield x
+    }
 
   let partitionAsync (predicate: 'T -> Async<bool>) (source: AsyncSeq<'T>) : Async<'T[] * 'T[]> = async {
     let trues = ResizeArray<'T>()
