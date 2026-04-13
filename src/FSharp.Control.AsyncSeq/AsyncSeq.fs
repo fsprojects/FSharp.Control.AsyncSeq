@@ -790,6 +790,35 @@ module AsyncSeq =
                                 dispose e
                             | _ -> () }) :> AsyncSeq<'T>
 
+  let ofList (source: 'T list) : AsyncSeq<'T> =
+    AsyncSeqImpl(fun () ->
+        let mutable remaining = source
+        { new IAsyncSeqEnumerator<'T> with
+              member _.MoveNext() =
+                  async {
+                      match remaining with
+                      | [] -> return None
+                      | h :: t ->
+                          remaining <- t
+                          return Some h
+                  }
+              member _.Dispose() = () }) :> AsyncSeq<'T>
+
+  let ofArray (source: 'T []) : AsyncSeq<'T> =
+    AsyncSeqImpl(fun () ->
+        let mutable i = 0
+        { new IAsyncSeqEnumerator<'T> with
+              member _.MoveNext() =
+                  async {
+                      if i < source.Length then
+                          let v = source.[i]
+                          i <- i + 1
+                          return Some v
+                      else
+                          return None
+                  }
+              member _.Dispose() = () }) :> AsyncSeq<'T>
+
   let appendSeq (seq2: seq<'T>) (source: AsyncSeq<'T>) : AsyncSeq<'T> =
     append source (ofSeq seq2)
 
@@ -2159,6 +2188,15 @@ module AsyncSeq =
   let toListSynchronously (source:AsyncSeq<'T>) = toListAsync source |> Async.RunSynchronously
   let toArraySynchronously (source:AsyncSeq<'T>) = toArrayAsync source |> Async.RunSynchronously
   #endif
+
+  let cycle (source: AsyncSeq<'T>) : AsyncSeq<'T> =
+    asyncSeq {
+        let! arr = source |> toArrayAsync
+        if arr.Length > 0 then
+            while true do
+                for x in arr do
+                    yield x
+    }
 
   let partitionAsync (predicate: 'T -> Async<bool>) (source: AsyncSeq<'T>) : Async<'T[] * 'T[]> = async {
     let trues = ResizeArray<'T>()

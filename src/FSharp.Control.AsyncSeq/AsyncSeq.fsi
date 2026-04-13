@@ -60,6 +60,11 @@ module AsyncSeq =
     /// Creates an async sequence given by evaluating the specified async computation until it returns None.
     val replicateUntilNoneAsync : Async<'T option> -> AsyncSeq<'T>
 
+    /// Returns an async sequence which infinitely cycles through all elements of the source sequence.
+    /// The source is materialised into an array on first enumeration. Returns an empty sequence if
+    /// the source is empty.
+    val cycle : source:AsyncSeq<'T> -> AsyncSeq<'T>
+
     /// Returns an async sequence which emits an element on a specified period.
     val intervalMs : periodMs:int -> AsyncSeq<DateTime>
 
@@ -487,6 +492,14 @@ module AsyncSeq =
     /// Creates an asynchronous sequence that lazily takes element from an
     /// input synchronous sequence and returns them one-by-one.
     val ofSeq : source:seq<'T> -> AsyncSeq<'T>
+
+    /// Creates an asynchronous sequence that lazily takes elements from an
+    /// F# list and returns them one-by-one.
+    val ofList : source:'T list -> AsyncSeq<'T>
+
+    /// Creates an asynchronous sequence that lazily takes elements from an
+    /// array and returns them one-by-one.
+    val ofArray : source:'T [] -> AsyncSeq<'T>
 
     /// Creates an asynchronous sequence that lazily takes element from an
     /// input synchronous sequence of asynchronous computation and returns them one-by-one.
