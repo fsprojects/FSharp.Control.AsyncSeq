@@ -20,6 +20,7 @@
 * Added `AsyncSeq.sortDescendingAsync` — asynchronous variant of `sortDescending` returning `Async<'T[]>`.
 * Added `AsyncSeq.sortByDescendingAsync` — asynchronous variant of `sortByDescending` returning `Async<'T[]>`.
 * Added `AsyncSeq.sortWithAsync` — asynchronous variant of `sortWith` returning `Async<'T[]>`.
+* Updated `fsdocs-tool` to 22.0.0-alpha.3 (FSharp.Formatting 22.0.0-alpha.3) and updated SDK to .NET 10.0 (issue #300).
 
 ### 4.11.0
 
