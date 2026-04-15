@@ -1,12 +1,13 @@
 {
-  "last_run": "2026-04-13T02:12:38Z",
-  "run_id": "24322453463",
+  "last_run": "2026-04-15T00:14:50Z",
+  "run_id": "24429490032",
   "open_prs": {
-    "fix-310-refcell": "repo-assist/fix-issue-310-deprecated-refcell-ops — PR for issue #310: Fix deprecated refcell ops"
+    "improve-map-async-parallel-throttled": "repo-assist/improve-map-async-parallel-throttled-20260415 — PR for mapAsyncParallelThrottled"
   },
-  "notes": "PR created for #310 (fix deprecated refcell ops). Monthly activity #299 needs update. Issue #307 still open.",
+  "notes": "PR created for mapAsyncParallelThrottled. Monthly activity #299 updated. Issues #306, #307 closed by dsyme. PRs #308, #311 merged.",
   "monthly_summary_issue": 299,
-  "backlog_cursor": "310",
-  "checked_off_items": ["PR #303 merged", "PR #305 merged (was #304)"],
-  "comments_made": {}
+  "backlog_cursor": "299",
+  "checked_off_items": ["PR #303 merged", "PR #305 merged (was #304)", "PR #302 merged", "PR #308 merged", "PR #311 merged", "Issue #306 closed", "Issue #307 closed"],
+  "comments_made": {},
+  "previous_ideas_proposed": ["transpose (rejected twice)", "ofList/ofArray/cycle", "findBack variants", "sort variants", "refcell ops fix", "mapAsyncParallelThrottled"]
 }
