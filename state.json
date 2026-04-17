@@ -1,12 +1,12 @@
 {
-  "last_run": "2026-04-17T00:13:42Z",
-  "run_id": "24540750025",
+  "last_run": "2026-04-17T07:53:33Z",
+  "run_id": "24554239972",
   "open_prs": {
-    "improve-map-async-parallel-throttled": "PR #312 — Add AsyncSeq.mapAsyncParallelThrottled",
+    "improve-map-async-parallel-throttled": "PR #312 — Add AsyncSeq.mapAsyncParallelThrottled (Fable CI fix pushed)",
     "release-4.13.0": "PR ~#313 — Release 4.13.0 (version bump)",
     "eng-ci-dotnet10": "PR ~#314 — CI: update dotnet-version to 10.0.x"
   },
-  "notes": "Created release 4.13.0 PR (version bump) and CI dotnet10 PR. PR #312 still open. Monthly activity #299 updated.",
+  "notes": "Fixed Fable CI NU1605 failure on PR #312 by bumping Microsoft.Bcl.AsyncInterfaces from 10.0.5 to 10.0.6. Monthly activity #299 should be updated.",
   "monthly_summary_issue": 299,
   "backlog_cursor": "299",
   "checked_off_items": ["PR #303 merged", "PR #305 merged (was #304)", "PR #302 merged", "PR #308 merged", "PR #311 merged", "Issue #306 closed", "Issue #307 closed"],
