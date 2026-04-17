@@ -1985,6 +1985,53 @@ let ``AsyncSeq.mapAsyncUnorderedParallelThrottled should throttle`` () =
 
   Assert.AreEqual(50, result.Length)
 
+[<Test>]
+let ``AsyncSeq.mapAsyncParallelThrottled should maintain order`` () =
+  let ls = List.init 100 id
+  let result =
+    ls
+    |> AsyncSeq.ofList
+    |> AsyncSeq.mapAsyncParallelThrottled 5 (fun i -> async {
+      do! Async.Sleep (100 - i)
+      return i * 2 })
+    |> AsyncSeq.toListAsync
+    |> Async.RunSynchronously
+  Assert.AreEqual(ls |> List.map ((*) 2), result)
+
+[<Test>]
+let ``AsyncSeq.mapAsyncParallelThrottled should propagate exception`` () =
+  let result =
+    AsyncSeq.init 50L id
+    |> AsyncSeq.mapAsyncParallelThrottled 5 (fun i -> async {
+      if i = 25L then return failwith "test error"
+      return i })
+    |> AsyncSeq.toListAsync
+    |> Async.Catch
+    |> Async.RunSynchronously
+  match result with
+  | Choice2Of2 _ -> ()
+  | Choice1Of2 _ -> Assert.Fail("Expected exception")
+
+[<Test>]
+let ``AsyncSeq.mapAsyncParallelThrottled should throttle`` () =
+  let count = ref 0
+  let parallelism = 5
+
+  let result =
+    AsyncSeq.init 50L id
+    |> AsyncSeq.mapAsyncParallelThrottled parallelism (fun i -> async {
+      let c = Interlocked.Increment count
+      if c > parallelism then
+        return failwith (sprintf "concurrency exceeded: %d > %d" c parallelism)
+      do! Async.Sleep 5
+      Interlocked.Decrement count |> ignore
+      return i * 2L })
+    |> AsyncSeq.toListAsync
+    |> Async.RunSynchronously
+
+  Assert.AreEqual(50, result.Length)
+  Assert.AreEqual([ 0L..49L ] |> List.map ((*) 2L), result)
+
 //[<Test>]
 //let ``AsyncSeq.mapParallelAsyncBounded should maintain order`` () =
 //  let ls = List.init 500 id
