@@ -3784,6 +3784,24 @@ let ``AsyncSeq.removeAt raises ArgumentException for negative index`` () =
     |> Async.RunSynchronously |> ignore)
   |> ignore
 
+[<Test>]
+let ``AsyncSeq.removeAt raises ArgumentException when index is out of range`` () =
+  Assert.Throws<System.ArgumentException>(fun () ->
+    AsyncSeq.ofSeq [ 1; 2; 3 ]
+    |> AsyncSeq.removeAt 10
+    |> AsyncSeq.toArrayAsync
+    |> Async.RunSynchronously |> ignore)
+  |> ignore
+
+[<Test>]
+let ``AsyncSeq.removeAt raises ArgumentException when index equals sequence length`` () =
+  Assert.Throws<System.ArgumentException>(fun () ->
+    AsyncSeq.ofSeq [ 1; 2; 3 ]
+    |> AsyncSeq.removeAt 3
+    |> AsyncSeq.toArrayAsync
+    |> Async.RunSynchronously |> ignore)
+  |> ignore
+
 // ===== updateAt =====
 
 [<Test>]
@@ -3818,6 +3836,24 @@ let ``AsyncSeq.updateAt raises ArgumentException for negative index`` () =
   Assert.Throws<System.ArgumentException>(fun () ->
     AsyncSeq.ofSeq [ 1; 2; 3 ]
     |> AsyncSeq.updateAt -1 0
+    |> AsyncSeq.toArrayAsync
+    |> Async.RunSynchronously |> ignore)
+  |> ignore
+
+[<Test>]
+let ``AsyncSeq.updateAt raises ArgumentException when index is out of range`` () =
+  Assert.Throws<System.ArgumentException>(fun () ->
+    AsyncSeq.ofSeq [ 1; 2; 3 ]
+    |> AsyncSeq.updateAt 10 99
+    |> AsyncSeq.toArrayAsync
+    |> Async.RunSynchronously |> ignore)
+  |> ignore
+
+[<Test>]
+let ``AsyncSeq.updateAt raises ArgumentException when index equals sequence length`` () =
+  Assert.Throws<System.ArgumentException>(fun () ->
+    AsyncSeq.ofSeq [ 1; 2; 3 ]
+    |> AsyncSeq.updateAt 3 99
     |> AsyncSeq.toArrayAsync
     |> Async.RunSynchronously |> ignore)
   |> ignore

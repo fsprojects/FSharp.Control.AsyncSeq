@@ -1706,7 +1706,9 @@ module AsyncSeq =
     let mutable i = 0
     for x in source do
       if i <> index then yield x
-      i <- i + 1 }
+      i <- i + 1
+    if i <= index then
+      invalidArg "index" "The index is outside the range of elements in the collection." }
 
   let updateAt (index : int) (value : 'T) (source : AsyncSeq<'T>) : AsyncSeq<'T> = asyncSeq {
     if index < 0 then invalidArg "index" "must be non-negative"
@@ -1714,7 +1716,9 @@ module AsyncSeq =
     for x in source do
       if i = index then yield value
       else yield x
-      i <- i + 1 }
+      i <- i + 1
+    if i <= index then
+      invalidArg "index" "The index is outside the range of elements in the collection." }
 
   let insertAt (index : int) (value : 'T) (source : AsyncSeq<'T>) : AsyncSeq<'T> = asyncSeq {
     if index < 0 then invalidArg "index" "must be non-negative"
