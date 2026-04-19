@@ -1,15 +1,14 @@
 {
-  "last_run": "2026-04-17T07:53:33Z",
-  "run_id": "24554239972",
+  "last_run": "2026-04-19T00:11:01Z",
+  "run_id": "24616947693",
   "open_prs": {
-    "improve-map-async-parallel-throttled": "PR #312 — Add AsyncSeq.mapAsyncParallelThrottled (Fable CI fix pushed)",
-    "release-4.13.0": "PR ~#313 — Release 4.13.0 (version bump)",
-    "eng-ci-dotnet10": "PR ~#314 — CI: update dotnet-version to 10.0.x"
+    "fix-removeat-updateat-bounds-check": "PR pending — Fix removeAt/updateAt to raise ArgumentException for out-of-range index; 418/418 pass",
+    "eng-update-test-packages-20260419": "PR pending — eng: update Microsoft.NET.Test.Sdk 17.12.0 → 18.4.0; 414/414 pass"
   },
-  "notes": "Fixed Fable CI NU1605 failure on PR #312 by bumping Microsoft.Bcl.AsyncInterfaces from 10.0.5 to 10.0.6. Monthly activity #299 should be updated.",
+  "notes": "Issue #313 is the CI workaround issue (protected files for dotnet-version update). Previous run PRs #312 (mapAsyncParallelThrottled) merged into 4.14.0. Monthly activity #299 updated.",
   "monthly_summary_issue": 299,
   "backlog_cursor": "299",
-  "checked_off_items": ["PR #303 merged", "PR #305 merged (was #304)", "PR #302 merged", "PR #308 merged", "PR #311 merged", "Issue #306 closed", "Issue #307 closed"],
+  "checked_off_items": ["PR #303 merged", "PR #305 merged (was #304)", "PR #302 merged", "PR #308 merged", "PR #311 merged", "PR #312 merged", "Issue #306 closed", "Issue #307 closed"],
   "comments_made": {},
-  "previous_ideas_proposed": ["transpose (rejected twice)", "ofList/ofArray/cycle", "findBack variants", "sort variants", "refcell ops fix", "mapAsyncParallelThrottled", "release-4.13.0", "ci-dotnet10"]
+  "previous_ideas_proposed": ["transpose (rejected twice)", "ofList/ofArray/cycle", "findBack variants", "sort variants", "refcell ops fix", "mapAsyncParallelThrottled", "release-4.13.0", "ci-dotnet10", "fix-removeat-updateat-bounds-check", "eng-update-test-sdk"]
 }
