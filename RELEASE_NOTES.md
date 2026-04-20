@@ -1,3 +1,7 @@
+### 4.15.0
+
+* Bug fix: `AsyncSeq.removeAt` and `AsyncSeq.updateAt` now raise `ArgumentException` when the index is greater than or equal to the sequence length, consistent with `List.removeAt`, `Array.removeAt`, and `AsyncSeq.insertAt`. Previously they silently returned the sequence unchanged.
+
 ### 4.14.0
 
 * Added `AsyncSeq.mapAsyncParallelThrottled` — ordered, bounded-concurrency parallel map. Like `mapAsyncParallel` but limits the number of in-flight operations to `parallelism`, preventing unbounded resource use on large or infinite sequences.
