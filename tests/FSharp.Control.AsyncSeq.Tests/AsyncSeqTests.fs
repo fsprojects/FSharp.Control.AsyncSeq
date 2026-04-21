@@ -4585,3 +4585,40 @@ let ``AsyncSeq.cycle on singleton repeats single element`` () =
     |> AsyncSeq.toArrayAsync
     |> Async.RunSynchronously
   Assert.AreEqual([| 42; 42; 42; 42; 42 |], result)
+
+// ===== ofSeq: re-enumeration and empty-sequence edge cases =====
+
+[<Test>]
+let ``AsyncSeq.ofSeq empty returns empty`` () =
+  let result = AsyncSeq.ofSeq Seq.empty<int> |> AsyncSeq.toArrayAsync |> Async.RunSynchronously
+  Assert.AreEqual([||], result)
+
+[<Test>]
+let ``AsyncSeq.ofSeq can be enumerated multiple times`` () =
+  let s = AsyncSeq.ofSeq [1; 2; 3]
+  let r1 = s |> AsyncSeq.toArrayAsync |> Async.RunSynchronously
+  let r2 = s |> AsyncSeq.toArrayAsync |> Async.RunSynchronously
+  Assert.AreEqual([| 1; 2; 3 |], r1)
+  Assert.AreEqual([| 1; 2; 3 |], r2)
+
+// ===== tryFinally: compensation runs even when downstream stops early =====
+
+[<Test>]
+let ``asyncSeq use releases resource on early termination`` () =
+  let disposed = ref false
+  let resource = { new System.IDisposable with member _.Dispose() = disposed := true }
+  let s = asyncSeq {
+    use _r = resource
+    yield 1; yield 2; yield 3 }
+  s |> AsyncSeq.take 1 |> AsyncSeq.toArrayAsync |> Async.RunSynchronously |> ignore
+  Assert.IsTrue(disposed.Value)
+
+// ===== tryWith: handler receives exception and yields elements =====
+
+[<Test>]
+let ``asyncSeq try-with handler can yield elements`` () =
+  let s = asyncSeq {
+    try failwith "boom"
+    with _ -> yield 42 }
+  let result = s |> AsyncSeq.toArrayAsync |> Async.RunSynchronously
+  Assert.AreEqual([| 42 |], result)
