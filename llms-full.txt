@@ -1,0 +1,2825 @@
+# FSharp.Control.AsyncSeq
+
+## Docs
+
+### [FSharp.Control.AsyncSeq](https://fsprojects.github.io/FSharp.Control.AsyncSeq/index.md)
+
+FSharp.Control.AsyncSeq
+FSharp.Control.AsyncSeq is an implementation of functional-first programming over asynchronous sequences for F#.
+An asynchronous sequence is a sequence in which individual elements are awaited, so the next element of the sequence is not necessarily available immediately. This allows for efficient composition of asynchronous workflows which involve sequences of data.
+Quick Start
+To use, reference the NuGet package FSharp.Control.AsyncSeq in your project and open the FSharp.Control namespace:
+open FSharp.Control
+
+An AsyncSeq<_> can be generated using computation expression syntax:
+let oneThenTwo = asyncSeq {
+    yield 1
+    do! Async.Sleep 1000 // non-blocking sleep
+    yield 2
+}
+
+Asynchronous sequences must be started, usually by some consuming operation. When started, the above asynchronous sequence oneThenTwo will yield the value 1 immediately, but the value 2 will only be available after a delay of 1 second and any consumer must await the second value.
+There are many ways to consume an AsyncSeq<'a>, for example using AsyncSeq.iter:
+oneThenTwo |> AsyncSeq.iter (printfn "Got %d") |> Async.RunSynchronously
+
+or an async computation expression:
+async {
+    for x in oneThenTwo do
+        printfn "Got %d" x
+} |> Async.RunSynchronously
+
+Learning
+
+Generating sequences
+Transforming sequences
+Combining sequences
+Consuming sequences
+Advanced topics
+
+History
+This was one of the world's first implementations of langauge integrated asynchronous sequences - that is, asynchronous sequences with integrated language support through computation expressions. It is a mature library used in production for many years and is widely used in the F# community.
+Related Libraries
+FSharp.Control.TaskSeq
+FSharp.Control.TaskSeq provides a similar API, oriented towards Task<'T> instead of Async<'T>. The choice between them is mostly a matter of preference or performance. The AsyncSeq library integrates well with the F# Async<_> type, while the TaskSeq library is more performant and integrates well with the .NET Task<_> type.
+Both libraries implement that .NET standard IAsyncEnumerable<'T> interface, so they can be used interchangeably in most scenarios.
+FSharp.Collections.Seq
+The central difference between seq<'T> and AsyncSeq<'T> is the notion of time. Suppose that generating subsequent elements of a sequence requires an IO-bound operation. Invoking long  running IO-bound operations from within a seq<'T> will block the thread which calls MoveNext on the corresponding IEnumerator. An AsyncSeq on the other hand can use facilities provided by the F# Async type to make more efficient use of system resources.
+Related Articles
+
+Programming with F# asynchronous sequences
+
+### [Generating Asynchronous Sequences](https://fsprojects.github.io/FSharp.Control.AsyncSeq/AsyncSeqGenerating.md)
+
+Generating Asynchronous Sequences
+This document covers the two main ways to create AsyncSeq<'T> values: the asyncSeq
+computation expression and the AsyncSeq.unfoldAsync factory function.
+open System
+open FSharp.Control
+
+Computation Expression Syntax
+asyncSeq { ... } is a computation expression that lets you write asynchronous sequences
+using familiar F# constructs. The following sections show each supported form.
+Conditionals
+Use if/then/else to emit elements conditionally:
+let evenNumbers = asyncSeq {
+    for i in 1 .. 10 do
+        if i % 2 = 0 then
+            yield i
+}
+
+You can also yield different values in each branch:
+let labelledNumbers = asyncSeq {
+    for i in 1 .. 5 do
+        if i % 2 = 0 then
+            yield sprintf "%d is even" i
+        else
+            yield sprintf "%d is odd" i
+}
+
+Match Expressions
+match works exactly as it does in ordinary F# code:
+type Shape =
+    | Circle of radius: float
+    | Rectangle of width: float * height: float
+
+let areas = asyncSeq {
+    for shape in [ Circle 3.0; Rectangle (4.0, 5.0); Circle 1.5 ] do
+        match shape with
+        | Circle r       -> yield Math.PI * r * r
+        | Rectangle(w,h) -> yield w * h
+}
+
+For Loops
+for iterates over any seq<'T> or IEnumerable<'T> synchronously, or over an AsyncSeq<'T> asynchronously:
+// Iterating a plain sequence
+let squaresOfList = asyncSeq {
+    for n in [ 1; 2; 3; 4; 5 ] do
+        yield n * n
+}
+
+// Iterating another AsyncSeq
+let doubled = asyncSeq {
+    for n in squaresOfList do
+        yield n * 2
+}
+
+While Loops
+while lets you emit elements until a condition becomes false.  Async operations can appear
+inside the loop body:
+let countdown = asyncSeq {
+    let mutable i = 5
+    while i > 0 do
+        yield i
+        i <- i - 1
+}
+
+// Polling a resource until it is ready
+let pollUntilReady (checkReady: unit -> Async<bool>) = asyncSeq {
+    let mutable ready = false
+    while not ready do
+        do! Async.Sleep 500
+        let! r = checkReady ()
+        ready <- r
+        if r then yield "ready"
+}
+
+Use Bindings
+use disposes the resource when the sequence is no longer consumed, making it easy to work with
+IDisposable objects such as file streams or database connections:
+open System.IO
+
+let readLines (path: string) = asyncSeq {
+    use reader = new StreamReader(path)
+    let mutable line = reader.ReadLine()
+    while line <> null do
+        yield line
+        line <- reader.ReadLine()
+}
+
+Try / With
+try/with lets you catch exceptions that occur while producing elements and decide how to proceed:
+let safeParseInts (inputs: string list) = asyncSeq {
+    for s in inputs do
+        try
+            yield int s
+        with
+        | :? FormatException -> () // skip values that can't be parsed
+}
+
+try/finally is also supported and guarantees clean-up even if the consumer cancels early:
+let withCleanup = asyncSeq {
+    try
+        for i in 1 .. 5 do
+            yield i
+    finally
+        printfn "sequence finished or cancelled"
+}
+
+Generating with unfoldAsync
+AsyncSeq.unfoldAsync builds a sequence from a seed state. The supplied function receives
+the current state and returns an Async of Some (element, nextState) to emit an element
+and continue, or None to end the sequence.
+As a concrete example, suppose you are writing a program that reads batches of tweets from
+an API and stores those that pass a filter into a database. Each step is asynchronous:
+fetching a batch, deciding whether a tweet is relevant, and writing to the database.
+Given a getTweetBatch function of type int -> Async<(Tweet[] * int) option> — where the
+int is a stream offset — the sequence of all batches is:
+type Tweet = {
+    user    : string
+    message : string
+}
+
+let getTweetBatch (offset: int) : Async<(Tweet[] * int) option> =
+    async { return failwith "TODO: call Twitter API" }
+
+let tweetBatches : AsyncSeq<Tweet[]> =
+    AsyncSeq.unfoldAsync getTweetBatch 0
+
+When iterated, tweetBatches incrementally pages through the entire tweet stream.
+Next, a filtering function that calls a web service has type Tweet -> Async<bool>. We
+flatten the batches and filter the individual tweets:
+let filterTweet (t: Tweet) : Async<bool> =
+    failwith "TODO: call web service"
+
+let filteredTweets : AsyncSeq<Tweet> =
+    tweetBatches
+    |> AsyncSeq.concatSeq       // flatten batches to individual tweets
+    |> AsyncSeq.filterAsync filterTweet
+
+Finally, a storeTweet function of type Tweet -> Async<unit> writes each tweet to the
+database. We can compose the entire pipeline and run it:
+let storeTweet (t: Tweet) : Async<unit> =
+    failwith "TODO: call database"
+
+AsyncSeq.unfoldAsync getTweetBatch 0
+|> AsyncSeq.concatSeq
+|> AsyncSeq.filterAsync filterTweet
+|> AsyncSeq.iterAsync storeTweet
+|> Async.RunSynchronously
+
+This pipeline is a representation of the workflow — nothing executes until Async.RunSynchronously
+is called. When it runs, it pages through tweets, filters them asynchronously, and stores
+matches, all without blocking any threads.
+
+### [Consuming Asynchronous Sequences](https://fsprojects.github.io/FSharp.Control.AsyncSeq/AsyncSeqConsuming.md)
+
+Consuming Asynchronous Sequences
+All AsyncSeq<'T> values are lazy — they only produce elements when actively consumed. This
+document covers the full range of consumption patterns, from iterating with a side effect to
+collecting into an array, searching for an element and computing aggregate values.
+open FSharp.Control
+
+let oneThenTwo = asyncSeq {
+    yield 1
+    do! Async.Sleep 1000
+    yield 2
+}
+
+Iterating with a For Loop
+Inside any async { ... } computation, you can iterate an AsyncSeq with a plain for loop.
+The loop body may contain let! and do! bindings just like the rest of the async block:
+async {
+    for x in oneThenTwo do
+        printfn "Got %d" x
+} |> Async.RunSynchronously
+
+This is the most natural way to consume a sequence when you already have an async context,
+such as an application entry point or an async test.
+
+iter and iterAsync
+AsyncSeq.iter applies a synchronous action to every element and returns Async<unit>:
+let numbers = asyncSeq { yield! [ 1 .. 5 ] }
+
+let printAll : Async<unit> =
+    numbers |> AsyncSeq.iter (printfn "item: %d")
+
+AsyncSeq.iterAsync does the same but the action returns Async<unit>, which is awaited before
+the next element is consumed. This makes it ideal for actions that themselves do IO — such as
+writing to a database or calling an API:
+let processItem (n: int) : Async<unit> =
+    async { printfn "processing %d" n }
+
+let processAll : Async<unit> =
+    numbers |> AsyncSeq.iterAsync processItem
+
+iteri and iteriAsync
+AsyncSeq.iteri and AsyncSeq.iteriAsync are the same but also pass a zero-based integer
+index to the action, useful for logging progress or tagging elements:
+let printIndexed : Async<unit> =
+    numbers |> AsyncSeq.iteri (fun i n -> printfn "[%d] %d" i n)
+
+iterAsyncParallel
+AsyncSeq.iterAsyncParallel processes elements concurrently — the action for each element is
+started as soon as the element is available, without waiting for the previous action to finish.
+Use this when the actions are independent and you want maximum throughput:
+let processAllParallel : Async<unit> =
+    numbers |> AsyncSeq.iterAsyncParallel processItem
+
+AsyncSeq.iterAsyncParallelThrottled is the same but limits the number of concurrent actions:
+let processThrottled : Async<unit> =
+    numbers |> AsyncSeq.iterAsyncParallelThrottled 4 processItem
+
+Folding
+AsyncSeq.fold accumulates a state over all elements using a synchronous folder function. It
+is the most general consumption primitive — all other aggregations can be implemented with it:
+let sum : Async<int> =
+    numbers |> AsyncSeq.fold (fun acc n -> acc + n) 0
+
+AsyncSeq.foldAsync is the same but the folder returns Async<'State>, for cases where
+accumulating a value requires async work:
+let asyncSum : Async<int> =
+    numbers |> AsyncSeq.foldAsync (fun acc n -> async { return acc + n }) 0
+
+reduceAsync
+AsyncSeq.reduceAsync is a fold without an explicit seed — it uses the first element as the
+initial state. It raises InvalidOperationException on an empty sequence:
+let words = asyncSeq { yield! [ "F#"; "is"; "great" ] }
+
+let sentence : Async<string> =
+    words |> AsyncSeq.reduceAsync (fun acc w -> async { return acc + " " + w })
+
+Searching
+pick and tryPick
+AsyncSeq.pick applies a chooser function to each element and returns the first Some result,
+raising KeyNotFoundException if the sequence is exhausted without a match:
+let firstEven : Async<int> =
+    numbers |> AsyncSeq.pick (fun n -> if n % 2 = 0 then Some n else None)
+
+AsyncSeq.tryPick is the safe variant — it returns Async<'T option> and returns None
+instead of raising when there is no match:
+let maybeFirstOver100 : Async<int option> =
+    numbers |> AsyncSeq.tryPick (fun n -> if n > 100 then Some n else None)
+
+AsyncSeq.pickAsync and AsyncSeq.tryPickAsync accept choosers that return Async<_ option>,
+for cases where the matching decision requires async IO.
+exists and forall
+AsyncSeq.exists returns true as soon as it finds an element satisfying the predicate, and
+short-circuits consumption at that point. AsyncSeq.forall returns false as soon as it finds
+an element that does not satisfy the predicate:
+let hasEven  : Async<bool> = numbers |> AsyncSeq.exists (fun n -> n % 2 = 0)
+let allSmall : Async<bool> = numbers |> AsyncSeq.forall (fun n -> n < 100)
+
+AsyncSeq.existsAsync and AsyncSeq.forallAsync accept async predicates.
+head, last and firstOrDefault
+AsyncSeq.head returns the first element, raising if the sequence is empty.
+AsyncSeq.firstOrDefault returns a default value for empty sequences.
+AsyncSeq.last and AsyncSeq.lastOrDefault do the same for the final element:
+let strings = asyncSeq { yield! [ "hello"; "world" ] }
+
+let firstWord : Async<string> = AsyncSeq.head strings
+let lastWord  : Async<string> = AsyncSeq.last strings
+let safeFirst : Async<string> = AsyncSeq.firstOrDefault "none" strings
+
+Collecting to a Collection
+The toArrayAsync and toListAsync functions consume the entire sequence and materialise it
+into an F# array or list. These are useful when you need random access or must pass the results
+to code that expects a concrete collection:
+let asArray : Async<int[]>   = numbers |> AsyncSeq.toArrayAsync
+let asList  : Async<int list> = numbers |> AsyncSeq.toListAsync
+
+toArraySynchronously and toListSynchronously do the same without wrapping in Async — they
+block the calling thread until the sequence is exhausted. Only use these outside of async
+contexts, e.g. in test code or scripts:
+let syncArray : int[] = numbers |> AsyncSeq.toArraySynchronously
+
+Aggregation
+length
+AsyncSeq.length counts the elements, returning Async<int64>:
+let count : Async<int64> = numbers |> AsyncSeq.length
+
+sumBy and sumByAsync
+AsyncSeq.sumBy projects each element to a numeric type and sums the results:
+let sumOfSquares : Async<int> =
+    numbers |> AsyncSeq.sumBy (fun n -> n * n)
+
+AsyncSeq.sumByAsync is the same when the projection needs to perform async work:
+let fetchScore (n: int) : Async<float> =
+    async { return float n * 0.5 } // placeholder
+
+let totalScore : Async<float> =
+    numbers |> AsyncSeq.sumByAsync fetchScore
+
+averageBy and averageByAsync
+AsyncSeq.averageBy computes the arithmetic mean of a projected value:
+let meanSquare : Async<float> =
+    numbers |> AsyncSeq.averageBy (fun n -> float (n * n))
+
+AsyncSeq.averageByAsync accepts an async projection:
+let meanScore : Async<float> =
+    numbers |> AsyncSeq.averageByAsync fetchScore
+
+countBy
+AsyncSeq.countBy counts how many elements share each key, returning an array of
+(key, count) pairs:
+let digitParity : Async<(string * int) array> =
+    numbers |> AsyncSeq.countBy (fun n -> if n % 2 = 0 then "even" else "odd")
+
+AsyncSeq.countByAsync accepts an async projection when computing the key requires IO.
+
+### [Advanced AsyncSeq Operations](https://fsprojects.github.io/FSharp.Control.AsyncSeq/AsyncSeqAdvanced.md)
+
+Advanced AsyncSeq Operations
+This document covers advanced AsyncSeq<'T> operations: partitioning a sequence into keyed
+sub-streams with groupBy, deduplication with distinctUntilChanged, and accumulating
+elements into time-or-count-bounded batches with bufferByCountAndTime.
+open System
+open FSharp.Control
+
+Group By
+AsyncSeq.groupBy partitions a sequence into sub-sequences based on a key, analogous to
+Seq.groupBy. Each key appears at most once in the output, paired with an AsyncSeq of the
+elements that share that key.
+
+Important: the sub-sequences must be consumed in parallel. Sequential consumption will
+deadlock because no sub-sequence can complete until all others are also being consumed.
+
+--------------------------------------------------
+| source  | e1 | e2 | e3 | e4 |                  |
+| key     | k1 | k2 | k1 | k2 |                  |
+| result  | k1 
+--------------------------------------------------
+
+A common use case is processing a stream of domain events where events for the same entity must
+be handled in order, but events for different entities are independent and can be handled in
+parallel:
+type Event = {
+    entityId : int64
+    data     : string
+}
+
+let stream : AsyncSeq<Event> = failwith "TODO: connect to message bus"
+
+let action (e: Event) : Async<unit> = failwith "TODO: process event"
+
+// Process each entity's events sequentially, but different entities in parallel.
+stream
+|> AsyncSeq.groupBy (fun e -> int e.entityId % 4)  // hash into 4 buckets
+|> AsyncSeq.mapAsyncParallel (snd >> AsyncSeq.iterAsync action)
+|> AsyncSeq.iter ignore
+
+We can combine this with batching for higher throughput. For example, when writing events to a
+full-text search index, batching writes improves performance while the groupBy ensures ordering
+within each entity:
+let batchStream : AsyncSeq<Event[]> = failwith "TODO: connect to batched source"
+
+let batchAction (es: Event[]) : Async<unit> = failwith "TODO: bulk index"
+
+batchStream
+|> AsyncSeq.concatSeq                              // flatten batches to individual events
+|> AsyncSeq.groupBy (fun e -> int e.entityId % 4) // partition into 4 groups
+|> AsyncSeq.mapAsyncParallel (snd
+    >> AsyncSeq.bufferByCountAndTime 500 1000      // re-batch per sub-sequence
+    >> AsyncSeq.iterAsync batchAction)             // bulk index each batch
+|> AsyncSeq.iter ignore
+
+The above workflow: (1) reads events in batches, (2) flattens them, (3) partitions by entity into
+mutually-exclusive sub-sequences, (4) re-batches each sub-sequence by size/time, and (5) processes
+the batches in parallel while preserving per-entity ordering.
+Distinct Until Changed
+AsyncSeq.distinctUntilChanged passes through every element of the source sequence but drops
+consecutive duplicates, so downstream consumers only see values that are genuinely new.
+-----------------------------------
+| source  | a | a | b | b | b | a |
+| result  | a |   | b |   |   | a |
+-----------------------------------
+
+A natural use case is polling a resource on a fixed schedule and reacting only when its state
+actually changes. Consider a background job whose progress is exposed via a getStatus call:
+type Status = {
+    completed : int
+    finished  : bool
+    result    : string
+}
+
+let getStatus : Async<Status> = failwith "TODO: call job API"
+
+/// Poll every second and emit each status reading.
+let statuses : AsyncSeq<Status> = asyncSeq {
+    while true do
+        let! s = getStatus
+        yield s
+        do! Async.Sleep 1000
+}
+
+/// Only emit when the status has actually changed.
+let distinctStatuses : AsyncSeq<Status> =
+    statuses |> AsyncSeq.distinctUntilChanged
+
+We can now build a workflow that logs every status change and stops as soon as the job finishes:
+let jobResult : Async<string> =
+    distinctStatuses
+    |> AsyncSeq.pick (fun st ->
+        printfn "status=%A" st
+        if st.finished then Some st.result else None)
+
+Buffer by Count and Time
+AsyncSeq.bufferByCountAndTime accumulates incoming elements and emits a batch whenever
+either the buffer reaches a given size or a timeout elapses — whichever comes first. If the
+buffer is empty when the timeout fires, nothing is emitted.
+-------------------------------------------------------
+| source   |  a1 | a2 | a3         | a4      |        |
+| result   |     |    | [a1,a2,a3] |         |  [a4]  |
+-------------------------------------------------------
+           
+
+This is useful for services that write events to a bulk API (e.g. a search index). Fixed-size
+batching with AsyncSeq.bufferByCount can stall when the source slows down and a partial buffer
+never fills. bufferByCountAndTime avoids that by guaranteeing forward progress:
+let events : AsyncSeq<Event> = failwith "TODO: connect to event source"
+
+let bufferSize    = 100
+let bufferTimeout = 1000 // milliseconds
+
+let bufferedEvents : AsyncSeq<Event[]> =
+    events |> AsyncSeq.bufferByCountAndTime bufferSize bufferTimeout
+
+### [Transforming and Reducing Sequences](https://fsprojects.github.io/FSharp.Control.AsyncSeq/AsyncSeqTransforming.md)
+
+Transforming and Filtering Sequences
+This document covers the core operations for transforming and filtering AsyncSeq<'T> values:
+map, mapAsync, filter, filterAsync, and mapFoldAsync.
+For operations that consume a sequence into a single result, see Consuming Sequences.
+open FSharp.Control
+
+Transforming Sequences with computation expressions
+The most general and simplest way to transform asynchronous sequences is to write a function that accepts an AsyncSeq<_> and returns an AsyncSeq<_> and is implemented using an asyncSeq { ... } computation expression. For example, the following function transforms a sequence of integers into a sequence of strings that labels each integer as even or odd:
+let transform (input: AsyncSeq<int>) : AsyncSeq<string> =
+    asyncSeq {
+        for n in input do
+            if n % 2 = 0 then
+                do! Async.Sleep 100 // simulate some async work
+                yield sprintf "Even: %d" n
+            else
+                yield sprintf "Odd: %d" n
+    }
+
+Here the for loop is an asynchronous loop that iterates over the input sequence, awaiting each element. On even numbers, it simulates some asynchronous work before yielding a result. On odd numbers, it yields immediately.
+Inside asyncSeq { ... }, you can use any F# constructs such as loops, conditionals. You can also use let! or do! to await individual Async<_> values:
+let transformWithAsync (input: AsyncSeq<int>) : AsyncSeq<string> =
+    asyncSeq {
+        for n in input do
+            let! isEven = async { return n % 2 = 0 } // simulate async check
+            if isEven then
+                yield sprintf "Even: %d" n
+            else
+                yield sprintf "Odd: %d" n
+    }
+
+Using map and mapAsync
+Instead of writing a full computation expression, you can use AsyncSeq.map to transform each element of a sequence synchronously:
+let strings = asyncSeq { yield! [ "hello"; "world"; "asyncseq" ] }
+
+let upperCased : AsyncSeq<string> =
+    strings |> AsyncSeq.map (fun s -> s.ToUpperInvariant())
+
+AsyncSeq.mapAsync is the same but the projection returns Async<'U>, so it can perform asynchronous work per element — for example, fetching metadata for each item:
+let fetchLength (url: string) : Async<int> =
+    async { return url.Length } // placeholder for a real HTTP call
+
+let lengths : AsyncSeq<int> =
+    strings |> AsyncSeq.mapAsync fetchLength
+
+Using filter and filterAsync
+AsyncSeq.filter keeps only elements satisfying a synchronous predicate:
+let longStrings : AsyncSeq<string> =
+    strings |> AsyncSeq.filter (fun s -> s.Length > 4)
+
+AsyncSeq.filterAsync does the same with an asynchronous predicate — useful when the
+keep/discard decision requires an async lookup:
+let isInteresting (s: string) : Async<bool> =
+    async { return s.Contains('o') } // placeholder for a real async check
+
+let interesting : AsyncSeq<string> =
+    strings |> AsyncSeq.filterAsync isInteresting
+
+### [Combining Asynchronous Sequences](https://fsprojects.github.io/FSharp.Control.AsyncSeq/AsyncSeqCombining.md)
+
+Combining Asynchronous Sequences
+This document covers the operations that combine two or more AsyncSeq<'T> values into one.
+The operations differ in when they wait for input and how they interleave elements:
+
+Operation
+Timing
+Result
+
+append
+sequential
+all of seq1 then all of seq2
+
+zip / zipWith
+lock-step
+waits for one element from each source
+
+interleave
+lock-step
+alternates strictly between sources
+
+merge
+non-deterministic
+emits whenever any source produces
+
+combineLatestWith
+non-deterministic
+emits the latest pair whenever any source advances
+
+open System
+open FSharp.Control
+
+Append
+AsyncSeq.append produces all elements of the first sequence followed by all elements of the
+second. The second sequence does not start until the first is exhausted — it is strictly
+sequential:
+let first  = asyncSeq { yield! [ 1; 2; 3 ] }
+let second = asyncSeq { yield! [ 4; 5; 6 ] }
+
+let appended : AsyncSeq<int> = AsyncSeq.append first second
+// emits: 1, 2, 3, 4, 5, 6
+
+yield! inside asyncSeq { ... } is equivalent to append and is the idiomatic choice when
+concatenating inline:
+let combined = asyncSeq {
+    yield! first
+    yield! second
+}
+
+Zip
+AsyncSeq.zip combines two sequences element-wise into a sequence of pairs, consuming one
+element from each source before producing output. The result terminates as soon as either source
+is exhausted.
+---------------------------------------------
+| source1  |    a1    |    a2    |           |
+| source2  |    b1    |    b2    |    b3     |
+| result   |  a1 * b1 |  a2 * b2 |           |
+---------------------------------------------
+
+let letters = asyncSeq { yield! [ 'a'; 'b'; 'c' ] }
+let numbers = asyncSeq { yield! [ 1; 2; 3; 4 ] }
+
+let pairs : AsyncSeq<char * int> = AsyncSeq.zip letters numbers
+// emits: ('a',1), ('b',2), ('c',3)  — stops when letters runs out
+
+zipWith and zipWithAsync
+AsyncSeq.zipWith applies a combining function instead of producing tuples:
+let sums : AsyncSeq<int> =
+    AsyncSeq.zipWith (fun a b -> a + b) numbers numbers
+// emits: 2, 4, 6, 8
+
+AsyncSeq.zipWithAsync is the same but the combining function returns Async<'U>, useful when
+the combination itself requires IO:
+let combine (a: int) (b: int) : Async<string> =
+    async { return sprintf "%d+%d=%d" a b (a+b) }
+
+let asyncSums : AsyncSeq<string> =
+    AsyncSeq.zipWithAsync combine numbers numbers
+
+zipParallel
+AsyncSeq.zipParallel is identical to zip but fetches the next element from both sources
+simultaneously rather than sequentially. Use this when the two sources are independent and
+fetching each element involves latency:
+let parallelPairs : AsyncSeq<char * int> = AsyncSeq.zipParallel letters numbers
+
+zip3 and zipWith3
+For three sources at once:
+let triples =
+    AsyncSeq.zip3
+        (asyncSeq { yield! [ 1; 2; 3 ] })
+        (asyncSeq { yield! [ 'a'; 'b'; 'c' ] })
+        (asyncSeq { yield! [ true; false; true ] })
+// emits: (1,'a',true), (2,'b',false), (3,'c',true)
+
+Rate-limiting with zipWith
+A practical pattern for zipWith is rate-limiting: pair each element of a fast source with a
+minimum delay so that the consumer never runs faster than one element per interval:
+type Event = { entityId: int64; data: string }
+
+let events : AsyncSeq<Event> = failwith "TODO: connect to event source"
+
+/// Emit at most one event per second.
+let eventsAtLeastOneSec : AsyncSeq<Event> =
+    AsyncSeq.zipWith
+        (fun evt _ -> evt)
+        events
+        (AsyncSeq.replicateInfiniteAsync (Async.Sleep 1000))
+
+The delay sequence is infinite so it never causes zipWith to terminate early; the resulting
+sequence ends only when events runs out.
+
+Interleave
+AsyncSeq.interleave alternates strictly between two sources in lock-step: one element from
+source1, one from source2, one from source1, and so on. It terminates when either source is
+exhausted. Unlike merge, the ordering is deterministic.
+----------------------------------------------
+| source1 | a1 |    | a2 |    | a3 |         |
+| source2 |    | b1 |    | b2 |    |         |
+| result  | a1 | b1 | a2 | b2 | a3 |         |
+----------------------------------------------
+
+let odds  = asyncSeq { yield! [ 1; 3; 5 ] }
+let evens = asyncSeq { yield! [ 2; 4; 6 ] }
+
+let interleaved : AsyncSeq<int> = AsyncSeq.interleave odds evens
+// emits: 1, 2, 3, 4, 5, 6
+
+interleaveMany
+AsyncSeq.interleaveMany generalises this to an arbitrary number of sequences, cycling through
+them in order:
+let a = asyncSeq { yield! [ 1; 4; 7 ] }
+let b = asyncSeq { yield! [ 2; 5; 8 ] }
+let c = asyncSeq { yield! [ 3; 6; 9 ] }
+
+let roundRobin : AsyncSeq<int> = AsyncSeq.interleaveMany [ a; b; c ]
+// emits: 1, 2, 3, 4, 5, 6, 7, 8, 9
+
+interleaveChoice
+AsyncSeq.interleaveChoice interleaves two sequences of different types, wrapping each
+element in Choice<'T1,'T2> so you can tell which source it came from:
+let intSeq  = asyncSeq { yield! [ 1; 2; 3 ] }
+let strSeq  = asyncSeq { yield! [ "a"; "b"; "c" ] }
+
+let tagged : AsyncSeq<Choice<int,string>> =
+    AsyncSeq.interleaveChoice intSeq strSeq
+// Choice1Of2 1, Choice2Of2 "a", Choice1Of2 2, Choice2Of2 "b", ...
+
+Merge
+AsyncSeq.merge interleaves two sequences non-deterministically, emitting values as soon as
+either source produces one. There is no lock-step coordination — whichever source is ready first
+wins. The result continues until both sources are exhausted.
+-----------------------------------------
+| source1 | t0 |    | t1 |    |    | t2 |
+| source2 |    | u0 |    |    | u1 |    |
+| result  | t0 | u0 | t1 |    | u1 | t2 |
+-----------------------------------------
+
+This is different from append (sequential) and interleave (strict lock-step).
+A handy building block is an infinite ticker:
+/// Emits `DateTime.UtcNow` immediately, then every `periodMs` milliseconds.
+let intervalMs (periodMs: int) = asyncSeq {
+    yield DateTime.UtcNow
+    while true do
+        do! Async.Sleep periodMs
+        yield DateTime.UtcNow
+}
+
+// React to whichever of the two timers fires first.
+let either : AsyncSeq<DateTime> =
+    AsyncSeq.merge (intervalMs 20) (intervalMs 30)
+
+mergeAll
+AsyncSeq.mergeAll merges an arbitrary number of sequences non-deterministically:
+let sources : AsyncSeq<DateTime> =
+    AsyncSeq.mergeAll [ intervalMs 100; intervalMs 250; intervalMs 500 ]
+
+mergeChoice
+AsyncSeq.mergeChoice merges two sequences of different types non-deterministically, tagging
+each element with Choice<'T1,'T2> so you can distinguish the source:
+type Heartbeat = Heartbeat
+type ConfigChange = ConfigChange of string
+
+let heartbeats : AsyncSeq<Heartbeat> = AsyncSeq.replicateInfiniteAsync (async { 
+    do! Async.Sleep 5000
+    return Heartbeat 
+})
+let configChanges : AsyncSeq<ConfigChange>  = failwith "TODO: long-poll config store"
+
+let merged : AsyncSeq<Choice<Heartbeat, ConfigChange>> =
+    AsyncSeq.mergeChoice heartbeats configChanges
+
+Combine Latest
+AsyncSeq.combineLatestWith merges two sequences non-deterministically and applies a combining
+function to the latest value from each side whenever either source advances. The output only
+starts once both sources have each produced at least one element.
+----------------------------------------
+| source1 | a0 |    |    | a1 |   | a2 |
+| source2 |    | b0 | b1 |    |   |    |
+| result  |    | c0 | c1 | c2 |   | c3 |
+----------------------------------------
+
+where  c0 = f a0 b0 | c1 = f a0 b1 | c2 = f a1 b1 | c3 = f a2 b1
+
+Unlike zip, the two sources do not have to produce elements at the same rate. A fast source
+will simply keep updating the "latest" value used in future combinations.
+Consider a service that watches a configuration key in Consul using
+HTTP long-polling. Each response carries the new value and a modify-index used in the next
+request. We can model the stream of changes as an AsyncSeq:
+type Key         = string
+type Value       = string
+type ModifyIndex = int64
+
+let longPollKey (key: Key, mi: ModifyIndex) : Async<Value * ModifyIndex> =
+    failwith "TODO: call Consul HTTP API"
+
+/// Emits a new value every time the Consul key changes.
+let changes (key: Key, mi: ModifyIndex) : AsyncSeq<Value> =
+    AsyncSeq.unfoldAsync
+        (fun (mi: ModifyIndex) -> async {
+            let! value, mi' = longPollKey (key, mi)
+            return Some (value, mi') })
+        mi
+
+We combine the change stream with a periodic heartbeat so that downstream logic is re-triggered
+at least once per minute even when the key is stable:
+let changesOrInterval : AsyncSeq<Value> =
+    AsyncSeq.combineLatestWith
+        (fun v _ -> v)
+        (changes ("myKey", 0L))
+        (intervalMs (1000 * 60))
+
+Consumers of changesOrInterval see the latest config value whenever the key changes or at
+least once per minute.
+
+## API Reference
+
+### [FSharp.Control](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control.html)
+
+AsyncSeq 
+AsyncSeqExtensions 
+AsyncSeqSrc 
+Seq 
+AsyncSeq<'T> 
+AsyncSeqSrc<'T>
+
+### [AsyncSeq](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html)
+
+AsyncSeq 
+ 
+AsyncSeq.AsyncSeqBuilder 
+AsyncSeqBuilder 
+AsyncSeq.empty 
+empty 
+AsyncSeq.singleton 
+singleton 
+AsyncSeq.initAsync 
+initAsync 
+AsyncSeq.init 
+init 
+AsyncSeq.initInfiniteAsync 
+initInfiniteAsync 
+AsyncSeq.initInfinite 
+initInfinite 
+AsyncSeq.unfoldAsync 
+unfoldAsync 
+AsyncSeq.unfold 
+unfold 
+AsyncSeq.replicate 
+replicate 
+AsyncSeq.replicateInfinite 
+replicateInfinite 
+AsyncSeq.replicateInfiniteAsync 
+replicateInfiniteAsync 
+AsyncSeq.replicateUntilNoneAsync 
+replicateUntilNoneAsync 
+AsyncSeq.cycle 
+cycle 
+AsyncSeq.intervalMs 
+intervalMs 
+AsyncSeq.append 
+append 
+AsyncSeq.appendSeq 
+appendSeq 
+AsyncSeq.prependSeq 
+prependSeq 
+AsyncSeq.delay 
+delay 
+AsyncSeq.collect 
+collect 
+AsyncSeq.collectAsync 
+collectAsync 
+AsyncSeq.mapAsync 
+mapAsync 
+AsyncSeq.chooseAsync 
+chooseAsync 
+AsyncSeq.filterAsync 
+filterAsync 
+AsyncSeq.lastOrDefault 
+lastOrDefault 
+AsyncSeq.tryLast 
+tryLast 
+AsyncSeq.last 
+last 
+AsyncSeq.item 
+item 
+AsyncSeq.tryItem 
+tryItem 
+AsyncSeq.firstOrDefault 
+firstOrDefault 
+AsyncSeq.tryFirst 
+tryFirst 
+AsyncSeq.head 
+head 
+AsyncSeq.tryHead 
+tryHead 
+AsyncSeq.isEmpty 
+isEmpty 
+AsyncSeq.exactlyOne 
+exactlyOne 
+AsyncSeq.tryExactlyOne 
+tryExactlyOne 
+AsyncSeq.scanAsync 
+scanAsync 
+AsyncSeq.iterAsync 
+iterAsync 
+AsyncSeq.iteriAsync 
+iteriAsync 
+AsyncSeq.iteri 
+iteri 
+AsyncSeq.iterAsyncParallel 
+iterAsyncParallel 
+AsyncSeq.iterAsyncParallelThrottled 
+iterAsyncParallelThrottled 
+AsyncSeq.pairwise 
+pairwise 
+AsyncSeq.windowed 
+windowed 
+AsyncSeq.foldAsync 
+foldAsync 
+AsyncSeq.fold 
+fold 
+AsyncSeq.reduceAsync 
+reduceAsync 
+AsyncSeq.reduce 
+reduce 
+AsyncSeq.mapFoldAsync 
+mapFoldAsync 
+AsyncSeq.mapFold 
+mapFold 
+AsyncSeq.sum 
+sum 
+AsyncSeq.minByAsync 
+minByAsync 
+AsyncSeq.minBy 
+minBy 
+AsyncSeq.maxByAsync 
+maxByAsync 
+AsyncSeq.maxBy 
+maxBy 
+AsyncSeq.min 
+min 
+AsyncSeq.max 
+max 
+AsyncSeq.sumBy 
+sumBy 
+AsyncSeq.sumByAsync 
+sumByAsync 
+AsyncSeq.average 
+average 
+AsyncSeq.averageBy 
+averageBy 
+AsyncSeq.averageByAsync 
+averageByAsync 
+AsyncSeq.countByAsync 
+countByAsync 
+AsyncSeq.countBy 
+countBy 
+AsyncSeq.contains 
+contains 
+AsyncSeq.tryPickAsync 
+tryPickAsync 
+AsyncSeq.tryPick 
+tryPick 
+AsyncSeq.pickAsync 
+pickAsync 
+AsyncSeq.pick 
+pick 
+AsyncSeq.tryFind 
+tryFind 
+AsyncSeq.tryFindAsync 
+tryFindAsync 
+AsyncSeq.find 
+find 
+AsyncSeq.findAsync 
+findAsync 
+AsyncSeq.tryFindBack 
+tryFindBack 
+AsyncSeq.tryFindBackAsync 
+tryFindBackAsync 
+AsyncSeq.findBack 
+findBack 
+AsyncSeq.findBackAsync 
+findBackAsync 
+AsyncSeq.tryFindIndex 
+tryFindIndex 
+AsyncSeq.tryFindIndexAsync 
+tryFindIndexAsync 
+AsyncSeq.findIndex 
+findIndex 
+AsyncSeq.findIndexAsync 
+findIndexAsync 
+AsyncSeq.exists 
+exists 
+AsyncSeq.existsAsync 
+existsAsync 
+AsyncSeq.forall 
+forall 
+AsyncSeq.forallAsync 
+forallAsync 
+AsyncSeq.compareWith 
+compareWith 
+AsyncSeq.compareWithAsync 
+compareWithAsync 
+AsyncSeq.indexed 
+indexed 
+AsyncSeq.length 
+length 
+AsyncSeq.lengthBy 
+lengthBy 
+AsyncSeq.lengthByAsync 
+lengthByAsync 
+AsyncSeq.scan 
+scan 
+AsyncSeq.map 
+map 
+AsyncSeq.iter 
+iter 
+AsyncSeq.choose 
+choose 
+AsyncSeq.filter 
+filter 
+AsyncSeq.where 
+where 
+AsyncSeq.whereAsync 
+whereAsync 
+AsyncSeq.except 
+except 
+AsyncSeq.removeAt 
+removeAt 
+AsyncSeq.updateAt 
+updateAt 
+AsyncSeq.insertAt 
+insertAt 
+AsyncSeq.ofSeq 
+ofSeq 
+AsyncSeq.ofList 
+ofList 
+AsyncSeq.ofArray 
+ofArray 
+AsyncSeq.ofSeqAsync 
+ofSeqAsync 
+AsyncSeq.ofObservableBuffered 
+ofObservableBuffered 
+AsyncSeq.ofObservable 
+ofObservable 
+AsyncSeq.toObservable 
+toObservable 
+AsyncSeq.toBlockingSeq 
+toBlockingSeq 
+AsyncSeq.cache 
+cache 
+AsyncSeq.threadStateAsync 
+threadStateAsync 
+AsyncSeq.zipWithAsync 
+zipWithAsync 
+AsyncSeq.zipWithAsyncParallel 
+zipWithAsyncParallel 
+AsyncSeq.zip 
+zip 
+AsyncSeq.zipParallel 
+zipParallel 
+AsyncSeq.zipWith 
+zipWith 
+AsyncSeq.zipWithParallel 
+zipWithParallel 
+AsyncSeq.zipWithAsync3 
+zipWithAsync3 
+AsyncSeq.zip3 
+zip3 
+AsyncSeq.zipWith3 
+zipWith3 
+AsyncSeq.allPairs 
+allPairs 
+AsyncSeq.mapiAsync 
+mapiAsync 
+AsyncSeq.mapi 
+mapi 
+AsyncSeq.zipWithIndexAsync 
+zipWithIndexAsync 
+AsyncSeq.zappAsync 
+zappAsync 
+AsyncSeq.zapp 
+zapp 
+AsyncSeq.combineLatestWithAsync 
+combineLatestWithAsync 
+AsyncSeq.combineLatestWith 
+combineLatestWith 
+AsyncSeq.combineLatest 
+combineLatest 
+AsyncSeq.traverseOptionAsync 
+traverseOptionAsync 
+AsyncSeq.traverseChoiceAsync 
+traverseChoiceAsync 
+AsyncSeq.takeWhileAsync 
+takeWhileAsync 
+AsyncSeq.takeUntilSignal 
+takeUntilSignal 
+AsyncSeq.takeUntil 
+takeUntil 
+AsyncSeq.skipWhileAsync 
+skipWhileAsync 
+AsyncSeq.skipUntilSignal 
+skipUntilSignal 
+AsyncSeq.skipUntil 
+skipUntil 
+AsyncSeq.takeWhile 
+takeWhile 
+AsyncSeq.takeWhileInclusive 
+takeWhileInclusive 
+AsyncSeq.takeWhileInclusiveAsync 
+takeWhileInclusiveAsync 
+AsyncSeq.skipWhile 
+skipWhile 
+AsyncSeq.skipWhileInclusive 
+skipWhileInclusive 
+AsyncSeq.skipWhileInclusiveAsync 
+skipWhileInclusiveAsync 
+AsyncSeq.take 
+take 
+AsyncSeq.truncate 
+truncate 
+AsyncSeq.skip 
+skip 
+AsyncSeq.tail 
+tail 
+AsyncSeq.tryTail 
+tryTail 
+AsyncSeq.splitAt 
+splitAt 
+AsyncSeq.toArrayAsync 
+toArrayAsync 
+AsyncSeq.toListAsync 
+toListAsync 
+AsyncSeq.toListSynchronously 
+toListSynchronously 
+AsyncSeq.toArraySynchronously 
+toArraySynchronously 
+AsyncSeq.partition 
+partition 
+AsyncSeq.partitionAsync 
+partitionAsync 
+AsyncSeq.concatSeq 
+concatSeq 
+AsyncSeq.concat 
+concat 
+AsyncSeq.sort 
+sort 
+AsyncSeq.sortBy 
+sortBy 
+AsyncSeq.sortDescending 
+sortDescending 
+AsyncSeq.sortByDescending 
+sortByDescending 
+AsyncSeq.sortWith 
+sortWith 
+AsyncSeq.sortAsync 
+sortAsync 
+AsyncSeq.sortByAsync 
+sortByAsync 
+AsyncSeq.sortDescendingAsync 
+sortDescendingAsync 
+AsyncSeq.sortByDescendingAsync 
+sortByDescendingAsync 
+AsyncSeq.sortWithAsync 
+sortWithAsync 
+AsyncSeq.rev 
+rev 
+AsyncSeq.interleave 
+interleave 
+AsyncSeq.interleaveMany 
+interleaveMany 
+AsyncSeq.interleaveChoice 
+interleaveChoice 
+AsyncSeq.chunkBySize 
+chunkBySize 
+AsyncSeq.bufferByCount 
+bufferByCount 
+AsyncSeq.chunkByAsync 
+chunkByAsync 
+AsyncSeq.chunkBy 
+chunkBy 
+AsyncSeq.bufferByCountAndTime 
+bufferByCountAndTime 
+AsyncSeq.bufferByTime 
+bufferByTime 
+AsyncSeq.mergeChoice 
+mergeChoice 
+AsyncSeq.merge 
+merge 
+AsyncSeq.mergeAll 
+mergeAll 
+AsyncSeq.distinctUntilChangedWithAsync 
+distinctUntilChangedWithAsync 
+AsyncSeq.distinctUntilChangedWith 
+distinctUntilChangedWith 
+AsyncSeq.distinctUntilChanged 
+distinctUntilChanged 
+AsyncSeq.distinctByAsync 
+distinctByAsync 
+AsyncSeq.distinctBy 
+distinctBy 
+AsyncSeq.distinct 
+distinct 
+AsyncSeq.getIterator 
+getIterator 
+AsyncSeq.mapAsyncParallel 
+mapAsyncParallel 
+AsyncSeq.mapAsyncUnorderedParallel 
+mapAsyncUnorderedParallel 
+AsyncSeq.mapAsyncUnorderedParallelThrottled 
+mapAsyncUnorderedParallelThrottled 
+AsyncSeq.mapAsyncParallelThrottled 
+mapAsyncParallelThrottled 
+AsyncSeq.groupByAsync 
+groupByAsync 
+AsyncSeq.groupBy 
+groupBy 
+AsyncSeq.ofAsyncEnum 
+ofAsyncEnum 
+AsyncSeq.toAsyncEnum 
+toAsyncEnum 
+AsyncSeq.ofIQueryable 
+ofIQueryable 
+AsyncSeq.toChannel 
+toChannel 
+AsyncSeq.fromChannel 
+fromChannel 
+AsyncSeq.prefetch 
+prefetch 
+AsyncSeq.withCancellation 
+withCancellation
+
+### [AsyncSeq.empty](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#empty)
+
+AsyncSeq.empty 
+empty 
+ Creates an empty asynchronous sequence that immediately ends.
+
+### [AsyncSeq.singleton](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#singleton)
+
+AsyncSeq.singleton 
+singleton 
+ Creates an asynchronous sequence that generates a single element and then ends.
+
+### [AsyncSeq.initAsync](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#initAsync)
+
+AsyncSeq.initAsync 
+initAsync 
+ Generates a finite async sequence using the specified asynchronous initialization function.
+
+### [AsyncSeq.init](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#init)
+
+AsyncSeq.init 
+init 
+ Generates a finite async sequence using the specified initialization function.
+
+### [AsyncSeq.initInfiniteAsync](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#initInfiniteAsync)
+
+AsyncSeq.initInfiniteAsync 
+initInfiniteAsync 
+ Generates an infinite async sequence using the specified asynchronous initialization function.
+
+### [AsyncSeq.initInfinite](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#initInfinite)
+
+AsyncSeq.initInfinite 
+initInfinite 
+ Generates an infinite async sequence using the specified initialization function.
+
+### [AsyncSeq.unfoldAsync](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#unfoldAsync)
+
+AsyncSeq.unfoldAsync 
+unfoldAsync 
+ Generates an async sequence using the specified asynchronous generator function.
+
+### [AsyncSeq.unfold](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#unfold)
+
+AsyncSeq.unfold 
+unfold 
+ Generates an async sequence using the specified generator function.
+
+### [AsyncSeq.replicate](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#replicate)
+
+AsyncSeq.replicate 
+replicate 
+ Creates an async sequence which repeats the specified value the indicated number of times.
+
+### [AsyncSeq.replicateInfinite](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#replicateInfinite)
+
+AsyncSeq.replicateInfinite 
+replicateInfinite 
+ Creates an infinite async sequence which repeats the specified value.
+
+### [AsyncSeq.replicateInfiniteAsync](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#replicateInfiniteAsync)
+
+AsyncSeq.replicateInfiniteAsync 
+replicateInfiniteAsync 
+ Creates an infinite async sequence which repeatedly evaluates and emits the specified async value.
+
+### [AsyncSeq.replicateUntilNoneAsync](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#replicateUntilNoneAsync)
+
+AsyncSeq.replicateUntilNoneAsync 
+replicateUntilNoneAsync 
+ Creates an async sequence given by evaluating the specified async computation until it returns None.
+
+### [AsyncSeq.cycle](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#cycle)
+
+AsyncSeq.cycle 
+cycle 
+ Returns an async sequence which infinitely cycles through all elements of the source sequence.
+ The source is materialised into an array on first enumeration. Returns an empty sequence if
+ the source is empty.
+
+### [AsyncSeq.intervalMs](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#intervalMs)
+
+AsyncSeq.intervalMs 
+intervalMs 
+ Returns an async sequence which emits an element on a specified period.
+
+### [AsyncSeq.append](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#append)
+
+AsyncSeq.append 
+append 
+ Yields all elements of the first asynchronous sequence and then
+ all elements of the second asynchronous sequence.
+
+### [AsyncSeq.appendSeq](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#appendSeq)
+
+AsyncSeq.appendSeq 
+appendSeq 
+ Yields all elements of the source asynchronous sequence and then all elements of the
+ synchronous sequence appended at the end.
+
+### [AsyncSeq.prependSeq](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#prependSeq)
+
+AsyncSeq.prependSeq 
+prependSeq 
+ Yields all elements of the synchronous sequence first and then all elements of the
+ source asynchronous sequence.
+
+### [AsyncSeq.delay](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#delay)
+
+AsyncSeq.delay 
+delay 
+ Returns a new async sequence whose enumeration calls the factory function each time
+ it is enumerated. Useful for deferring the creation of a sequence until enumeration begins.
+
+### [AsyncSeq.collect](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#collect)
+
+AsyncSeq.collect 
+collect 
+ Creates an asynchronous sequence that iterates over the given input sequence.
+ For every input element, it calls the the specified function and iterates
+ over all elements generated by that asynchronous sequence.
+ This is the 'bind' operation of the computation expression (exposed using
+ the 'for' keyword in asyncSeq computation).
+
+### [AsyncSeq.collectAsync](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#collectAsync)
+
+AsyncSeq.collectAsync 
+collectAsync 
+ Like AsyncSeq.collect but the mapping function is asynchronous. For every input element
+ it calls the specified async function and iterates over all elements of the returned sequence.
+
+### [AsyncSeq.mapAsync](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#mapAsync)
+
+AsyncSeq.mapAsync 
+mapAsync 
+ Builds a new asynchronous sequence whose elements are generated by
+ applying the specified function to all elements of the input sequence.
+
+ The specified function is asynchronous (and the input sequence will
+ be asked for the next element after the processing of an element completes).
+
+### [AsyncSeq.chooseAsync](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#chooseAsync)
+
+AsyncSeq.chooseAsync 
+chooseAsync 
+ Asynchronously iterates over the input sequence and generates 'x' for
+ every input element for which the specified asynchronous function
+ returned 'Some(x)'
+
+ The specified function is asynchronous (and the input sequence will
+ be asked for the next element after the processing of an element completes).
+
+### [AsyncSeq.filterAsync](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#filterAsync)
+
+AsyncSeq.filterAsync 
+filterAsync 
+ Builds a new asynchronous sequence whose elements are those from the
+ input sequence for which the specified function returned true.
+
+ The specified function is asynchronous (and the input sequence will
+ be asked for the next element after the processing of an element completes).
+
+### [AsyncSeq.lastOrDefault](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#lastOrDefault)
+
+AsyncSeq.lastOrDefault 
+lastOrDefault 
+ Asynchronously returns the last element that was generated by the
+ given asynchronous sequence (or the specified default value).
+
+### [AsyncSeq.tryLast](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#tryLast)
+
+AsyncSeq.tryLast 
+tryLast 
+ Asynchronously returns the last element that was generated by the
+ given asynchronous sequence (or None if the sequence is empty).
+
+### [AsyncSeq.last](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#last)
+
+AsyncSeq.last 
+last 
+ Asynchronously returns the last element of the asynchronous sequence.
+ Raises InvalidOperationException if the sequence is empty, mirroring Seq.last.
+
+### [AsyncSeq.item](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#item)
+
+AsyncSeq.item 
+item 
+ Asynchronously returns the element at the specified index in the asynchronous sequence.
+ Raises ArgumentException if the index is out of bounds, mirroring Seq.item.
+
+### [AsyncSeq.tryItem](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#tryItem)
+
+AsyncSeq.tryItem 
+tryItem 
+ Asynchronously returns the element at the specified index in the asynchronous sequence,
+ or None if the index is out of bounds, mirroring Seq.tryItem.
+
+### [AsyncSeq.firstOrDefault](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#firstOrDefault)
+
+AsyncSeq.firstOrDefault 
+firstOrDefault 
+ Asynchronously returns the first element that was generated by the
+ given asynchronous sequence (or the specified default value).
+
+### [AsyncSeq.tryFirst](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#tryFirst)
+
+AsyncSeq.tryFirst 
+tryFirst 
+ Asynchronously returns the first element that was generated by the
+ given asynchronous sequence (or None if the sequence is empty).
+
+### [AsyncSeq.head](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#head)
+
+AsyncSeq.head 
+head 
+ Asynchronously returns the first element of the asynchronous sequence.
+ Raises InvalidOperationException if the sequence is empty.
+
+### [AsyncSeq.tryHead](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#tryHead)
+
+AsyncSeq.tryHead 
+tryHead 
+ Asynchronously returns the first element of the asynchronous sequence as an option,
+ or None if the sequence is empty. Mirrors Seq.tryHead.
+
+### [AsyncSeq.isEmpty](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#isEmpty)
+
+AsyncSeq.isEmpty 
+isEmpty 
+ Asynchronously returns true if the asynchronous sequence contains no elements, false otherwise.
+ Short-circuits after the first element. Mirrors Seq.isEmpty.
+
+### [AsyncSeq.exactlyOne](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#exactlyOne)
+
+AsyncSeq.exactlyOne 
+exactlyOne 
+ Asynchronously returns the only element of the asynchronous sequence.
+ Raises InvalidOperationException if the sequence is empty or contains more than one element.
+
+### [AsyncSeq.tryExactlyOne](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#tryExactlyOne)
+
+AsyncSeq.tryExactlyOne 
+tryExactlyOne 
+ Asynchronously returns the only element of the asynchronous sequence, or None if the
+ sequence is empty or contains more than one element.
+
+### [AsyncSeq.scanAsync](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#scanAsync)
+
+AsyncSeq.scanAsync 
+scanAsync 
+ Aggregates the elements of the input asynchronous sequence using the
+ specified 'aggregation' function. The result is an asynchronous
+ sequence of intermediate aggregation result.
+
+ The aggregation function is asynchronous (and the input sequence will
+ be asked for the next element after the processing of an element completes).
+
+### [AsyncSeq.iterAsync](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#iterAsync)
+
+AsyncSeq.iterAsync 
+iterAsync 
+ Iterates over the input sequence and calls the specified asynchronous function for
+ every value. The input sequence will be asked for the next element after
+ the processing of an element completes.
+
+### [AsyncSeq.iteriAsync](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#iteriAsync)
+
+AsyncSeq.iteriAsync 
+iteriAsync 
+ Iterates over the input sequence and calls the specified asynchronous function for
+ every value, passing along the index of that element.
+ The input sequence will be asked for the next element after the processing of an element completes.
+
+### [AsyncSeq.iteri](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#iteri)
+
+AsyncSeq.iteri 
+iteri 
+ Iterates over the input sequence and calls the specified function for
+ every value, passing along the index of that element.
+
+### [AsyncSeq.iterAsyncParallel](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#iterAsyncParallel)
+
+AsyncSeq.iterAsyncParallel 
+iterAsyncParallel 
+ Iterates over the input sequence and calls the specified asynchronous function for
+ every value. Each action computation is started but not awaited before consuming
+ the next item from the sequence, thereby iterating in parallel.
+
+### [AsyncSeq.iterAsyncParallelThrottled](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#iterAsyncParallelThrottled)
+
+AsyncSeq.iterAsyncParallelThrottled 
+iterAsyncParallelThrottled 
+ Iterates over the input sequence and calls the specified asynchronous function for
+ every value. Each action computation is started but not awaited before consuming
+ the next item from the sequence, thereby iterating in parallel with a specified degree of parallelism.
+
+### [AsyncSeq.pairwise](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#pairwise)
+
+AsyncSeq.pairwise 
+pairwise 
+ Returns an asynchronous sequence that returns pairs containing an element
+ from the input sequence and its predecessor. Empty sequence is returned for
+ singleton input sequence.
+
+### [AsyncSeq.windowed](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#windowed)
+
+AsyncSeq.windowed 
+windowed 
+ Returns an asynchronous sequence that yields sliding windows of the given size
+ over the source sequence, each yielded as an array. The first window is emitted
+ once <c>windowSize</c> elements have been consumed; subsequent windows slide one
+ element at a time. The sequence is empty when the source has fewer than
+ <c>windowSize</c> elements. Raises <c>System.ArgumentException</c> if
+ <c>windowSize</c> is less than 1.
+
+### [AsyncSeq.foldAsync](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#foldAsync)
+
+AsyncSeq.foldAsync 
+foldAsync 
+ Asynchronously aggregate the elements of the input asynchronous sequence using the
+ specified asynchronous 'aggregation' function.
+
+### [AsyncSeq.fold](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#fold)
+
+AsyncSeq.fold 
+fold 
+ Asynchronously aggregate the elements of the input asynchronous sequence using the
+ specified 'aggregation' function.
+
+### [AsyncSeq.reduceAsync](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#reduceAsync)
+
+AsyncSeq.reduceAsync 
+reduceAsync 
+ Asynchronously reduce the elements of the input asynchronous sequence using the
+ specified asynchronous 'reduction' function. Raises InvalidOperationException if the sequence is empty.
+
+### [AsyncSeq.reduce](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#reduce)
+
+AsyncSeq.reduce 
+reduce 
+ Asynchronously reduce the elements of the input asynchronous sequence using the
+ specified 'reduction' function. Raises InvalidOperationException if the sequence is empty.
+
+### [AsyncSeq.mapFoldAsync](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#mapFoldAsync)
+
+AsyncSeq.mapFoldAsync 
+mapFoldAsync 
+ Asynchronously maps each element of the async sequence with an asynchronous folder function that
+ also threads an accumulator state through the computation. Returns the array of results and the
+ final state, mirroring Seq.mapFold.
+
+### [AsyncSeq.mapFold](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#mapFold)
+
+AsyncSeq.mapFold 
+mapFold 
+ Maps each element of the async sequence with a folder function that also threads an accumulator
+ state through the computation. Returns the array of results and the final state,
+ mirroring Seq.mapFold.
+
+### [AsyncSeq.sum](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#sum)
+
+AsyncSeq.sum 
+sum 
+ Asynchronously sum the elements of the input asynchronous sequence using the specified function.
+
+### [AsyncSeq.minByAsync](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#minByAsync)
+
+AsyncSeq.minByAsync 
+minByAsync 
+ Asynchronously find the element with the minimum projected value. Raises InvalidOperationException if the sequence is empty.
+
+### [AsyncSeq.minBy](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#minBy)
+
+AsyncSeq.minBy 
+minBy 
+ Asynchronously find the element with the minimum projected value. Raises InvalidOperationException if the sequence is empty.
+
+### [AsyncSeq.maxByAsync](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#maxByAsync)
+
+AsyncSeq.maxByAsync 
+maxByAsync 
+ Asynchronously find the element with the maximum projected value. Raises InvalidOperationException if the sequence is empty.
+
+### [AsyncSeq.maxBy](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#maxBy)
+
+AsyncSeq.maxBy 
+maxBy 
+ Asynchronously find the element with the maximum projected value. Raises InvalidOperationException if the sequence is empty.
+
+### [AsyncSeq.min](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#min)
+
+AsyncSeq.min 
+min 
+ Asynchronously find the minimum element. Raises InvalidOperationException if the sequence is empty.
+
+### [AsyncSeq.max](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#max)
+
+AsyncSeq.max 
+max 
+ Asynchronously find the maximum element. Raises InvalidOperationException if the sequence is empty.
+
+### [AsyncSeq.sumBy](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#sumBy)
+
+AsyncSeq.sumBy 
+sumBy 
+ Asynchronously sum the mapped elements of an asynchronous sequence using a synchronous projection.
+
+### [AsyncSeq.sumByAsync](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#sumByAsync)
+
+AsyncSeq.sumByAsync 
+sumByAsync 
+ Asynchronously sum the mapped elements of an asynchronous sequence using an asynchronous projection.
+
+### [AsyncSeq.average](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#average)
+
+AsyncSeq.average 
+average 
+ Asynchronously compute the average of the elements of the input asynchronous sequence.
+ Raises InvalidArgumentException if the sequence is empty.
+
+### [AsyncSeq.averageBy](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#averageBy)
+
+AsyncSeq.averageBy 
+averageBy 
+ Asynchronously compute the average of the mapped elements of an asynchronous sequence using a synchronous projection.
+ Raises InvalidArgumentException if the sequence is empty.
+
+### [AsyncSeq.averageByAsync](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#averageByAsync)
+
+AsyncSeq.averageByAsync 
+averageByAsync 
+ Asynchronously compute the average of the mapped elements of an asynchronous sequence using an asynchronous projection.
+ Raises InvalidArgumentException if the sequence is empty.
+
+### [AsyncSeq.countByAsync](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#countByAsync)
+
+AsyncSeq.countByAsync 
+countByAsync 
+ Asynchronously count the elements of the input asynchronous sequence grouped by the result of the given asynchronous key projection.
+ Returns an array of (key, count) pairs.
+
+### [AsyncSeq.countBy](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#countBy)
+
+AsyncSeq.countBy 
+countBy 
+ Asynchronously count the elements of the input asynchronous sequence grouped by the result of the given key projection.
+ Returns an array of (key, count) pairs.
+
+### [AsyncSeq.contains](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#contains)
+
+AsyncSeq.contains 
+contains 
+ Asynchronously determine if the sequence contains the given value
+
+### [AsyncSeq.tryPickAsync](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#tryPickAsync)
+
+AsyncSeq.tryPickAsync 
+tryPickAsync 
+ Asynchronously pick a value from a sequence based on the specified chooser function.
+
+### [AsyncSeq.tryPick](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#tryPick)
+
+AsyncSeq.tryPick 
+tryPick 
+ Asynchronously pick a value from a sequence based on the specified chooser function.
+
+### [AsyncSeq.pickAsync](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#pickAsync)
+
+AsyncSeq.pickAsync 
+pickAsync 
+ Asynchronously pick a value from a sequence based on the specified chooser function.
+ Raises KeyNotFoundException if the chooser function can't find a matching key.
+
+### [AsyncSeq.pick](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#pick)
+
+AsyncSeq.pick 
+pick 
+ Asynchronously pick a value from a sequence based on the specified chooser function.
+ Raises KeyNotFoundException if the chooser function can't find a matching key.
+
+### [AsyncSeq.tryFind](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#tryFind)
+
+AsyncSeq.tryFind 
+tryFind 
+ Asynchronously find the first value in a sequence for which the predicate returns true
+
+### [AsyncSeq.tryFindAsync](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#tryFindAsync)
+
+AsyncSeq.tryFindAsync 
+tryFindAsync 
+ Asynchronously find the first value in a sequence for which the async predicate returns true
+
+### [AsyncSeq.find](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#find)
+
+AsyncSeq.find 
+find 
+ Asynchronously find the first value in a sequence for which the predicate returns true.
+ Raises KeyNotFoundException if no matching element is found.
+
+### [AsyncSeq.findAsync](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#findAsync)
+
+AsyncSeq.findAsync 
+findAsync 
+ Asynchronously find the first value in a sequence for which the async predicate returns true.
+ Raises KeyNotFoundException if no matching element is found.
+
+### [AsyncSeq.tryFindBack](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#tryFindBack)
+
+AsyncSeq.tryFindBack 
+tryFindBack 
+ Asynchronously find the last value in a sequence for which the predicate returns true.
+ Returns None if no matching element is found.
+
+### [AsyncSeq.tryFindBackAsync](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#tryFindBackAsync)
+
+AsyncSeq.tryFindBackAsync 
+tryFindBackAsync 
+ Asynchronously find the last value in a sequence for which the async predicate returns true.
+ Returns None if no matching element is found.
+
+### [AsyncSeq.findBack](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#findBack)
+
+AsyncSeq.findBack 
+findBack 
+ Asynchronously find the last value in a sequence for which the predicate returns true.
+ Raises KeyNotFoundException if no matching element is found.
+
+### [AsyncSeq.findBackAsync](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#findBackAsync)
+
+AsyncSeq.findBackAsync 
+findBackAsync 
+ Asynchronously find the last value in a sequence for which the async predicate returns true.
+ Raises KeyNotFoundException if no matching element is found.
+
+### [AsyncSeq.tryFindIndex](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#tryFindIndex)
+
+AsyncSeq.tryFindIndex 
+tryFindIndex 
+ Asynchronously find the index of the first value in a sequence for which the predicate returns true.
+ Returns None if no matching element is found.
+
+### [AsyncSeq.tryFindIndexAsync](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#tryFindIndexAsync)
+
+AsyncSeq.tryFindIndexAsync 
+tryFindIndexAsync 
+ Asynchronously find the index of the first value in a sequence for which the async predicate returns true.
+ Returns None if no matching element is found.
+
+### [AsyncSeq.findIndex](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#findIndex)
+
+AsyncSeq.findIndex 
+findIndex 
+ Asynchronously find the index of the first value in a sequence for which the predicate returns true.
+ Raises KeyNotFoundException if no matching element is found.
+
+### [AsyncSeq.findIndexAsync](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#findIndexAsync)
+
+AsyncSeq.findIndexAsync 
+findIndexAsync 
+ Asynchronously find the index of the first value in a sequence for which the async predicate returns true.
+ Raises KeyNotFoundException if no matching element is found.
+
+### [AsyncSeq.exists](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#exists)
+
+AsyncSeq.exists 
+exists 
+ Asynchronously determine if there is a value in the sequence for which the predicate returns true
+
+### [AsyncSeq.existsAsync](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#existsAsync)
+
+AsyncSeq.existsAsync 
+existsAsync 
+ Asynchronously determine if there is a value in the sequence for which the async predicate returns true
+
+### [AsyncSeq.forall](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#forall)
+
+AsyncSeq.forall 
+forall 
+ Asynchronously determine if the predicate returns true for all values in the sequence
+
+### [AsyncSeq.forallAsync](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#forallAsync)
+
+AsyncSeq.forallAsync 
+forallAsync 
+ Asynchronously determine if the async predicate returns true for all values in the sequence
+
+### [AsyncSeq.compareWith](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#compareWith)
+
+AsyncSeq.compareWith 
+compareWith 
+ Compares two async sequences lexicographically using the given synchronous comparison function.
+ Returns a negative integer if source1 < source2, 0 if equal, and a positive integer if source1 > source2.
+
+### [AsyncSeq.compareWithAsync](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#compareWithAsync)
+
+AsyncSeq.compareWithAsync 
+compareWithAsync 
+ Compares two async sequences lexicographically using the given asynchronous comparison function.
+ Returns a negative integer if source1 < source2, 0 if equal, and a positive integer if source1 > source2.
+
+### [AsyncSeq.indexed](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#indexed)
+
+AsyncSeq.indexed 
+indexed 
+ Return an asynchronous sequence which, when iterated, includes an integer indicating the index of each element in the sequence.
+
+### [AsyncSeq.length](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#length)
+
+AsyncSeq.length 
+length 
+ Asynchronously determine the number of elements in the sequence
+
+### [AsyncSeq.lengthBy](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#lengthBy)
+
+AsyncSeq.lengthBy 
+lengthBy 
+ Asynchronously returns the number of elements in the sequence for which the predicate returns true.
+
+### [AsyncSeq.lengthByAsync](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#lengthByAsync)
+
+AsyncSeq.lengthByAsync 
+lengthByAsync 
+ Asynchronously returns the number of elements in the sequence for which the async predicate returns true.
+
+### [AsyncSeq.scan](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#scan)
+
+AsyncSeq.scan 
+scan 
+ Same as AsyncSeq.scanAsync, but the specified function is synchronous.
+
+### [AsyncSeq.map](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#map)
+
+AsyncSeq.map 
+map 
+ Same as AsyncSeq.mapAsync, but the specified function is synchronous.
+
+### [AsyncSeq.iter](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#iter)
+
+AsyncSeq.iter 
+iter 
+ Iterates over the input sequence and calls the specified function for
+ every value.
+
+### [AsyncSeq.choose](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#choose)
+
+AsyncSeq.choose 
+choose 
+ Asynchronously iterates over the input sequence and generates 'x' for
+ every input element for which the specified function
+ returned 'Some(x)'
+
+### [AsyncSeq.filter](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#filter)
+
+AsyncSeq.filter 
+filter 
+ Same as AsyncSeq.filterAsync, but the specified predicate is synchronous
+ and processes the input element immediately.
+
+### [AsyncSeq.where](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#where)
+
+AsyncSeq.where 
+where 
+ Alias for AsyncSeq.filter. Returns elements for which the predicate returns true.
+ Mirrors the naming convention in TaskSeq and FSharp.Core.
+
+### [AsyncSeq.whereAsync](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#whereAsync)
+
+AsyncSeq.whereAsync 
+whereAsync 
+ Alias for AsyncSeq.filterAsync. Returns elements for which the async predicate returns true.
+
+### [AsyncSeq.except](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#except)
+
+AsyncSeq.except 
+except 
+ Returns a new asynchronous sequence containing only elements that are not present
+ in the given excluded collection. Uses a HashSet for O(1) lookup. Mirrors Seq.except.
+
+### [AsyncSeq.removeAt](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#removeAt)
+
+AsyncSeq.removeAt 
+removeAt 
+ Returns a new asynchronous sequence with the element at the specified index removed.
+ Raises ArgumentException if index is negative. Mirrors Seq.removeAt.
+
+### [AsyncSeq.updateAt](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#updateAt)
+
+AsyncSeq.updateAt 
+updateAt 
+ Returns a new asynchronous sequence with the element at the specified index replaced by the given value.
+ Raises ArgumentException if index is negative. Mirrors Seq.updateAt.
+
+### [AsyncSeq.insertAt](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#insertAt)
+
+AsyncSeq.insertAt 
+insertAt 
+ Returns a new asynchronous sequence with the given value inserted before the element at the specified index.
+ An index equal to the length of the sequence appends the value at the end.
+ Raises ArgumentException if index is negative or greater than the sequence length. Mirrors Seq.insertAt.
+
+### [AsyncSeq.ofSeq](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#ofSeq)
+
+AsyncSeq.ofSeq 
+ofSeq 
+ Creates an asynchronous sequence that lazily takes element from an
+ input synchronous sequence and returns them one-by-one.
+
+### [AsyncSeq.ofList](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#ofList)
+
+AsyncSeq.ofList 
+ofList 
+ Creates an asynchronous sequence that lazily takes elements from an
+ F# list and returns them one-by-one.
+
+### [AsyncSeq.ofArray](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#ofArray)
+
+AsyncSeq.ofArray 
+ofArray 
+ Creates an asynchronous sequence that lazily takes elements from an
+ array and returns them one-by-one.
+
+### [AsyncSeq.ofSeqAsync](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#ofSeqAsync)
+
+AsyncSeq.ofSeqAsync 
+ofSeqAsync 
+ Creates an asynchronous sequence that lazily takes element from an
+ input synchronous sequence of asynchronous computation and returns them one-by-one.
+
+### [AsyncSeq.ofObservableBuffered](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#ofObservableBuffered)
+
+AsyncSeq.ofObservableBuffered 
+ofObservableBuffered 
+ Converts observable to an asynchronous sequence. Values that are produced
+ by the observable while the asynchronous sequence is blocked are stored to
+ an unbounded buffer and are returned as next elements of the async sequence.
+
+### [AsyncSeq.ofObservable](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#ofObservable)
+
+AsyncSeq.ofObservable 
+ofObservable
+
+### [AsyncSeq.toObservable](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#toObservable)
+
+AsyncSeq.toObservable 
+toObservable 
+ Converts asynchronous sequence to an IObservable<_>. When the client subscribes
+ to the observable, a new copy of asynchronous sequence is started and is
+ sequentially iterated over (at the maximal possible speed). Disposing of the
+ observer cancels the iteration over asynchronous sequence.
+
+### [AsyncSeq.toBlockingSeq](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#toBlockingSeq)
+
+AsyncSeq.toBlockingSeq 
+toBlockingSeq 
+ Converts asynchronous sequence to a synchronous blocking sequence.
+ The elements of the asynchronous sequence are consumed lazily.
+
+### [AsyncSeq.cache](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#cache)
+
+AsyncSeq.cache 
+cache 
+ Create a new asynchronous sequence that caches all elements of the
+ sequence specified as the input. When accessing the resulting sequence
+ multiple times, the input will still be evaluated only once
+
+### [AsyncSeq.threadStateAsync](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#threadStateAsync)
+
+AsyncSeq.threadStateAsync 
+threadStateAsync 
+ Threads a state through the mapping over an async sequence using an async function.
+
+### [AsyncSeq.zipWithAsync](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#zipWithAsync)
+
+AsyncSeq.zipWithAsync 
+zipWithAsync 
+ Combines two asynchronous sequences using the specified function.
+ The resulting sequence stops when either of the argument sequences stop.
+
+### [AsyncSeq.zipWithAsyncParallel](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#zipWithAsyncParallel)
+
+AsyncSeq.zipWithAsyncParallel 
+zipWithAsyncParallel 
+ Combines two asynchronous sequences using the specified function.
+ The values from sequences are retrieved in parallel.
+ The resulting sequence stops when either of the argument sequences stop.
+
+### [AsyncSeq.zip](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#zip)
+
+AsyncSeq.zip 
+zip 
+ Combines two asynchronous sequences into a sequence of pairs.
+ The resulting sequence stops when either of the argument sequences stop.
+
+### [AsyncSeq.zipParallel](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#zipParallel)
+
+AsyncSeq.zipParallel 
+zipParallel 
+ Combines two asynchronous sequences into a sequence of pairs.
+ The values from sequences are retrieved in parallel.
+ The resulting sequence stops when either of the argument sequences stop.
+
+### [AsyncSeq.zipWith](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#zipWith)
+
+AsyncSeq.zipWith 
+zipWith 
+ Combines two asynchronous sequences using the specified function.
+ The resulting sequence stops when either of the argument sequences stop.
+
+### [AsyncSeq.zipWithParallel](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#zipWithParallel)
+
+AsyncSeq.zipWithParallel 
+zipWithParallel 
+ Combines two asynchronous sequences using the specified function.
+ The values from sequences are retrieved in parallel.
+ The resulting sequence stops when either of the argument sequences stop.
+
+### [AsyncSeq.zipWithAsync3](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#zipWithAsync3)
+
+AsyncSeq.zipWithAsync3 
+zipWithAsync3 
+ Combines three asynchronous sequences using the specified asynchronous function.
+ The resulting sequence stops when any of the argument sequences stop.
+
+### [AsyncSeq.zip3](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#zip3)
+
+AsyncSeq.zip3 
+zip3 
+ Combines three asynchronous sequences into a sequence of triples.
+ The resulting sequence stops when any of the argument sequences stop.
+
+### [AsyncSeq.zipWith3](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#zipWith3)
+
+AsyncSeq.zipWith3 
+zipWith3 
+ Combines three asynchronous sequences using the specified function.
+ The resulting sequence stops when any of the argument sequences stop.
+
+### [AsyncSeq.allPairs](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#allPairs)
+
+AsyncSeq.allPairs 
+allPairs 
+ Returns an async sequence of all pairs of elements from the two input sequences.
+ The second sequence is fully buffered before iteration begins, mirroring Seq.allPairs.
+
+### [AsyncSeq.mapiAsync](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#mapiAsync)
+
+AsyncSeq.mapiAsync 
+mapiAsync 
+ Builds a new asynchronous sequence whose elements are generated by
+ applying the specified function to all elements of the input sequence.
+
+ The specified function is asynchronous (and the input sequence will
+ be asked for the next element after the processing of an element completes).
+
+### [AsyncSeq.mapi](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#mapi)
+
+AsyncSeq.mapi 
+mapi 
+ Builds a new asynchronous sequence whose elements are generated by
+ applying the specified function to all elements of the input sequence.
+
+ The specified function is synchronous (and the input sequence will
+ be asked for the next element after the processing of an element completes).
+
+### [AsyncSeq.zipWithIndexAsync](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#zipWithIndexAsync)
+
+AsyncSeq.zipWithIndexAsync 
+zipWithIndexAsync
+
+### [AsyncSeq.zappAsync](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#zappAsync)
+
+AsyncSeq.zappAsync 
+zappAsync 
+ Feeds an async sequence of values into an async sequence of async functions.
+
+### [AsyncSeq.zapp](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#zapp)
+
+AsyncSeq.zapp 
+zapp 
+ Feeds an async sequence of values into an async sequence of functions.
+
+### [AsyncSeq.combineLatestWithAsync](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#combineLatestWithAsync)
+
+AsyncSeq.combineLatestWithAsync 
+combineLatestWithAsync 
+ Merges two async sequences using the specified combine function. The resulting async sequence produces an element when either
+ input sequence produces an element, passing the new element from the emitting sequence and the previously emitted element from the other sequence.
+ If either of the input sequences is empty, the resulting sequence is empty.
+
+### [AsyncSeq.combineLatestWith](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#combineLatestWith)
+
+AsyncSeq.combineLatestWith 
+combineLatestWith 
+ Merges two async sequences using the specified combine function. The resulting async sequence produces an element when either
+ input sequence produces an element, passing the new element from the emitting sequence and the previously emitted element from the other sequence.
+ If either of the input sequences is empty, the resulting sequence is empty.
+
+### [AsyncSeq.combineLatest](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#combineLatest)
+
+AsyncSeq.combineLatest 
+combineLatest 
+ Merges two async sequences. The resulting async sequence produces an element when either
+ input sequence produces an element, passing the new element from the emitting sequence and the previously emitted element from the other sequence.
+ If either of the input sequences is empty, the resulting sequence is empty.
+
+### [AsyncSeq.traverseOptionAsync](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#traverseOptionAsync)
+
+AsyncSeq.traverseOptionAsync 
+traverseOptionAsync 
+ Traverses an async sequence an applies to specified function such that if None is returned the traversal short-circuits
+ and None is returned as the result. Otherwise, the entire sequence is traversed and the result returned as Some.
+
+### [AsyncSeq.traverseChoiceAsync](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#traverseChoiceAsync)
+
+AsyncSeq.traverseChoiceAsync 
+traverseChoiceAsync 
+ Traverses an async sequence an applies to specified function such that if Choice2Of2 is returned the traversal short-circuits
+ and Choice2Of2 is returned as the result. Otherwise, the entire sequence is traversed and the result returned as Choice1Of2.
+
+### [AsyncSeq.takeWhileAsync](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#takeWhileAsync)
+
+AsyncSeq.takeWhileAsync 
+takeWhileAsync 
+ Returns elements from an asynchronous sequence while the specified
+ predicate holds. The predicate is evaluated asynchronously.
+
+### [AsyncSeq.takeUntilSignal](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#takeUntilSignal)
+
+AsyncSeq.takeUntilSignal 
+takeUntilSignal 
+ Returns elements from the argument async sequence until the specified signal completes or
+ the sequences completes.
+
+### [AsyncSeq.takeUntil](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#takeUntil)
+
+AsyncSeq.takeUntil 
+takeUntil
+
+### [AsyncSeq.skipWhileAsync](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#skipWhileAsync)
+
+AsyncSeq.skipWhileAsync 
+skipWhileAsync 
+ Skips elements from an asynchronous sequence while the specified
+ predicate holds and then returns the rest of the sequence. The
+ predicate is evaluated asynchronously.
+
+### [AsyncSeq.skipUntilSignal](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#skipUntilSignal)
+
+AsyncSeq.skipUntilSignal 
+skipUntilSignal 
+ Skips elements from an async sequence until the specified signal completes.
+
+### [AsyncSeq.skipUntil](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#skipUntil)
+
+AsyncSeq.skipUntil 
+skipUntil
+
+### [AsyncSeq.takeWhile](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#takeWhile)
+
+AsyncSeq.takeWhile 
+takeWhile 
+ Returns elements from an asynchronous sequence while the specified
+ predicate holds. The predicate is evaluated synchronously.
+
+### [AsyncSeq.takeWhileInclusive](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#takeWhileInclusive)
+
+AsyncSeq.takeWhileInclusive 
+takeWhileInclusive 
+ Returns elements from an asynchronous sequence while the specified
+ predicate holds. The predicate is evaluated synchronously.
+ Does return the first element that predicate fails
+
+### [AsyncSeq.takeWhileInclusiveAsync](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#takeWhileInclusiveAsync)
+
+AsyncSeq.takeWhileInclusiveAsync 
+takeWhileInclusiveAsync 
+ Returns elements from an asynchronous sequence while the specified async predicate holds,
+ and also returns the first element for which the predicate returns false (inclusive).
+
+### [AsyncSeq.skipWhile](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#skipWhile)
+
+AsyncSeq.skipWhile 
+skipWhile 
+ Skips elements from an asynchronous sequence while the specified
+ predicate holds and then returns the rest of the sequence. The
+ predicate is evaluated asynchronously.
+
+### [AsyncSeq.skipWhileInclusive](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#skipWhileInclusive)
+
+AsyncSeq.skipWhileInclusive 
+skipWhileInclusive 
+ Skips elements from an asynchronous sequence while the predicate holds AND also skips the
+ first element for which the predicate returns false (the boundary element), then returns the rest.
+
+### [AsyncSeq.skipWhileInclusiveAsync](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#skipWhileInclusiveAsync)
+
+AsyncSeq.skipWhileInclusiveAsync 
+skipWhileInclusiveAsync 
+ Skips elements from an asynchronous sequence while the async predicate holds AND also skips the
+ first element for which the predicate returns false (the boundary element), then returns the rest.
+
+### [AsyncSeq.take](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#take)
+
+AsyncSeq.take 
+take 
+ Returns the first N elements of an asynchronous sequence
+ does not cast an exception if count is larger than the sequence length.
+
+### [AsyncSeq.truncate](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#truncate)
+
+AsyncSeq.truncate 
+truncate 
+ Alias for take
+
+### [AsyncSeq.skip](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#skip)
+
+AsyncSeq.skip 
+skip 
+ Skips the first N elements of an asynchronous sequence and
+ then returns the rest of the sequence unmodified.
+
+### [AsyncSeq.tail](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#tail)
+
+AsyncSeq.tail 
+tail 
+ Returns an asynchronous sequence that skips the first element of the input sequence.
+ Returns an empty sequence if the source is empty.
+
+### [AsyncSeq.tryTail](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#tryTail)
+
+AsyncSeq.tryTail 
+tryTail 
+ Returns None if the source sequence is empty; otherwise returns Some of an async sequence
+ containing all elements except the first. The source is enumerated once.
+
+### [AsyncSeq.splitAt](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#splitAt)
+
+AsyncSeq.splitAt 
+splitAt 
+ Splits an async sequence at the given index. Returns an async computation that yields
+ the first `count` elements as an array and the remaining elements as a new AsyncSeq.
+ The source is enumerated once; the returned AsyncSeq lazily produces the remainder.
+
+### [AsyncSeq.toArrayAsync](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#toArrayAsync)
+
+AsyncSeq.toArrayAsync 
+toArrayAsync 
+ Creates an async computation which iterates the AsyncSeq and collects the output into an array.
+
+### [AsyncSeq.toListAsync](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#toListAsync)
+
+AsyncSeq.toListAsync 
+toListAsync 
+ Creates an async computation which iterates the AsyncSeq and collects the output into a list.
+
+### [AsyncSeq.toListSynchronously](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#toListSynchronously)
+
+AsyncSeq.toListSynchronously 
+toListSynchronously 
+ Synchronously iterates the AsyncSeq and collects the output into a list.
+
+### [AsyncSeq.toArraySynchronously](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#toArraySynchronously)
+
+AsyncSeq.toArraySynchronously 
+toArraySynchronously 
+ Synchronously iterates the AsyncSeq and collects the output into an array.
+
+### [AsyncSeq.partition](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#partition)
+
+AsyncSeq.partition 
+partition 
+ Splits the sequence into two arrays: the first contains elements for which the predicate
+ returns true, the second contains elements for which it returns false. Mirrors Seq.partition.
+
+### [AsyncSeq.partitionAsync](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#partitionAsync)
+
+AsyncSeq.partitionAsync 
+partitionAsync 
+ Splits the sequence into two arrays using an async predicate: the first contains elements
+ for which the predicate returns true, the second contains elements for which it returns false.
+
+### [AsyncSeq.concatSeq](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#concatSeq)
+
+AsyncSeq.concatSeq 
+concatSeq 
+ Flattens an AsyncSeq of synchronous sequences.
+
+### [AsyncSeq.concat](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#concat)
+
+AsyncSeq.concat 
+concat 
+ Flattens an AsyncSeq of asynchronous sequences.
+
+### [AsyncSeq.sort](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#sort)
+
+AsyncSeq.sort 
+sort 
+ Yields a sequence ordered by keys.
+ This function returns a sequence that digests the whole initial sequence as soon as
+ that sequence is iterated. As a result this function should not be used with
+ large or infinite sequences.
+
+### [AsyncSeq.sortBy](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#sortBy)
+
+AsyncSeq.sortBy 
+sortBy 
+ Applies a key-generating function to each element of an AsyncSeq and yield an array ordered by keys.
+ This function returns an array that digests the whole initial sequence as soon as
+ that sequence is iterated. As a result this function should not be used with
+ large or infinite sequences.
+
+### [AsyncSeq.sortDescending](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#sortDescending)
+
+AsyncSeq.sortDescending 
+sortDescending 
+ Yields an array ordered descending by keys.
+ This function returns an array that digests the whole initial sequence as soon as
+ that sequence is iterated. As a result this function should not be used with
+ large or infinite sequences.
+
+### [AsyncSeq.sortByDescending](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#sortByDescending)
+
+AsyncSeq.sortByDescending 
+sortByDescending 
+ Applies a key-generating function to each element of an AsyncSeq and yield an array ordered descending by keys.
+ This function returns an array that digests the whole initial sequence as soon as
+ that sequence is iterated. As a result this function should not be used with
+ large or infinite sequences.
+
+### [AsyncSeq.sortWith](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#sortWith)
+
+AsyncSeq.sortWith 
+sortWith 
+ Sorts the given async sequence using the given comparison function and returns an array.
+ This function returns an array that digests the whole initial sequence as soon as
+ that sequence is iterated. As a result this function should not be used with
+ large or infinite sequences.
+
+### [AsyncSeq.sortAsync](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#sortAsync)
+
+AsyncSeq.sortAsync 
+sortAsync 
+ Asynchronously sorts the given async sequence and returns an Async<array<'T>>.
+ Prefer this over sortAsync when composing async workflows.
+
+### [AsyncSeq.sortByAsync](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#sortByAsync)
+
+AsyncSeq.sortByAsync 
+sortByAsync 
+ Asynchronously applies a key-generating function to each element of an AsyncSeq and returns
+ an Async<array<'T>> ordered by keys. Prefer this over sortBy when composing async workflows.
+
+### [AsyncSeq.sortDescendingAsync](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#sortDescendingAsync)
+
+AsyncSeq.sortDescendingAsync 
+sortDescendingAsync 
+ Asynchronously sorts the given async sequence in descending order and returns an Async<array<'T>>.
+ Prefer this over sortDescending when composing async workflows.
+
+### [AsyncSeq.sortByDescendingAsync](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#sortByDescendingAsync)
+
+AsyncSeq.sortByDescendingAsync 
+sortByDescendingAsync 
+ Asynchronously applies a key-generating function to each element of an AsyncSeq and returns
+ an Async<array<'T>> ordered descending by keys. Prefer this over sortByDescending when composing async workflows.
+
+### [AsyncSeq.sortWithAsync](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#sortWithAsync)
+
+AsyncSeq.sortWithAsync 
+sortWithAsync 
+ Asynchronously sorts the given async sequence using the given comparison function and returns
+ an Async<array<'T>>. Prefer this over sortWith when composing async workflows.
+
+### [AsyncSeq.rev](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#rev)
+
+AsyncSeq.rev 
+rev 
+ Returns a new async sequence with the elements in reverse order. The entire source
+ sequence is buffered before yielding any elements, mirroring Seq.rev.
+ This function should not be used with large or infinite sequences.
+
+### [AsyncSeq.interleave](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#interleave)
+
+AsyncSeq.interleave 
+interleave 
+ Interleaves two async sequences of the same type into a resulting sequence. The provided
+ sequences are consumed in lock-step.
+
+### [AsyncSeq.interleaveMany](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#interleaveMany)
+
+AsyncSeq.interleaveMany 
+interleaveMany 
+ Interleaves a sequence of async sequences into a resulting async sequence. The provided
+ sequences are consumed in lock-step.
+
+### [AsyncSeq.interleaveChoice](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#interleaveChoice)
+
+AsyncSeq.interleaveChoice 
+interleaveChoice 
+ Interleaves two async sequences into a resulting sequence. The provided
+ sequences are consumed in lock-step.
+
+### [AsyncSeq.chunkBySize](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#chunkBySize)
+
+AsyncSeq.chunkBySize 
+chunkBySize 
+ Buffer items from the async sequence into buffers of a specified size.
+ The last buffer returned may be less than the specified buffer size.
+
+### [AsyncSeq.bufferByCount](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#bufferByCount)
+
+AsyncSeq.bufferByCount 
+bufferByCount 
+ Buffer items from the async sequence into buffers of a specified size.
+ The last buffer returned may be less than the specified buffer size.
+
+### [AsyncSeq.chunkByAsync](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#chunkByAsync)
+
+AsyncSeq.chunkByAsync 
+chunkByAsync 
+ Groups consecutive elements of the async sequence that share the same key (as computed by an async projection)
+ and yields each group as a pair of the key and a list of elements.
+
+### [AsyncSeq.chunkBy](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#chunkBy)
+
+AsyncSeq.chunkBy 
+chunkBy 
+ Groups consecutive elements of the async sequence that share the same key (as computed by a projection)
+ and yields each group as a pair of the key and a list of elements.
+
+### [AsyncSeq.bufferByCountAndTime](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#bufferByCountAndTime)
+
+AsyncSeq.bufferByCountAndTime 
+bufferByCountAndTime 
+ Buffer items from the async sequence until a specified buffer size is reached or a specified amount of time is elapsed.
+
+### [AsyncSeq.bufferByTime](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#bufferByTime)
+
+AsyncSeq.bufferByTime 
+bufferByTime 
+ Buffers items from the async sequence by the specified time interval.
+ If no items are received in an intervel and empty array is emitted.
+
+### [AsyncSeq.mergeChoice](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#mergeChoice)
+
+AsyncSeq.mergeChoice 
+mergeChoice 
+ Merges two async sequences into an async sequence non-deterministically.
+ The resulting async sequence produces elements when any argument sequence produces an element.
+
+### [AsyncSeq.merge](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#merge)
+
+AsyncSeq.merge 
+merge 
+ Merges two async sequences of the same type into an async sequence non-deterministically.
+ The resulting async sequence produces elements when any argument sequence produces an element.
+
+### [AsyncSeq.mergeAll](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#mergeAll)
+
+AsyncSeq.mergeAll 
+mergeAll 
+ Merges all specified async sequences into an async sequence non-deterministically.
+ The resulting async sequence produces elements when any argument sequence produces an element.
+
+### [AsyncSeq.distinctUntilChangedWithAsync](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#distinctUntilChangedWithAsync)
+
+AsyncSeq.distinctUntilChangedWithAsync 
+distinctUntilChangedWithAsync 
+ Returns an async sequence which contains no contiguous duplicate elements based on the specified comparison function.
+
+### [AsyncSeq.distinctUntilChangedWith](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#distinctUntilChangedWith)
+
+AsyncSeq.distinctUntilChangedWith 
+distinctUntilChangedWith 
+ Returns an async sequence which contains no contiguous duplicate elements based on the specified comparison function.
+
+### [AsyncSeq.distinctUntilChanged](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#distinctUntilChanged)
+
+AsyncSeq.distinctUntilChanged 
+distinctUntilChanged 
+ Returns an async sequence which contains no contiguous duplicate elements.
+
+### [AsyncSeq.distinctByAsync](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#distinctByAsync)
+
+AsyncSeq.distinctByAsync 
+distinctByAsync 
+ Returns an async sequence containing only distinct elements, determined by the given asynchronous key projection.
+ Elements are compared using structural equality on the projected key.
+
+### [AsyncSeq.distinctBy](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#distinctBy)
+
+AsyncSeq.distinctBy 
+distinctBy 
+ Returns an async sequence containing only distinct elements, determined by the given key projection.
+ Elements are compared using structural equality on the projected key.
+
+### [AsyncSeq.distinct](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#distinct)
+
+AsyncSeq.distinct 
+distinct 
+ Returns an async sequence containing only distinct elements.
+ Elements are compared using structural equality.
+
+### [AsyncSeq.getIterator](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#getIterator)
+
+AsyncSeq.getIterator 
+getIterator
+
+### [AsyncSeq.mapAsyncParallel](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#mapAsyncParallel)
+
+AsyncSeq.mapAsyncParallel 
+mapAsyncParallel 
+ Builds a new asynchronous sequence whose elements are generated by
+ applying the specified function to all elements of the input sequence.
+
+ The function is applied to elements in order and results are emitted in order,
+ but in parallel, without waiting for a prior mapping operation to complete.
+ Parallelism is bound by the ThreadPool.
+
+### [AsyncSeq.mapAsyncUnorderedParallel](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#mapAsyncUnorderedParallel)
+
+AsyncSeq.mapAsyncUnorderedParallel 
+mapAsyncUnorderedParallel 
+ Builds a new asynchronous sequence whose elements are generated by
+ applying the specified function to all elements of the input sequence.
+
+ The function is applied to elements in parallel, and results are emitted
+ in the order they complete (unordered), without preserving the original order.
+ This can provide better performance than mapAsyncParallel when order doesn't matter.
+ Parallelism is bound by the ThreadPool.
+
+### [AsyncSeq.mapAsyncUnorderedParallelThrottled](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#mapAsyncUnorderedParallelThrottled)
+
+AsyncSeq.mapAsyncUnorderedParallelThrottled 
+mapAsyncUnorderedParallelThrottled 
+ Builds a new asynchronous sequence whose elements are generated by
+ applying the specified function to all elements of the input sequence,
+ with at most <c>parallelism</c> mapping operations running concurrently.
+
+ The function is applied to elements in parallel (throttled), and results are emitted
+ in the order they complete (unordered), without preserving the original order.
+
+### [AsyncSeq.mapAsyncParallelThrottled](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#mapAsyncParallelThrottled)
+
+AsyncSeq.mapAsyncParallelThrottled 
+mapAsyncParallelThrottled 
+ Builds a new asynchronous sequence whose elements are generated by
+ applying the specified function to all elements of the input sequence,
+ with at most <c>parallelism</c> mapping operations running concurrently.
+
+ The function is applied to elements in order and results are emitted in order,
+ but in parallel, with at most <c>parallelism</c> operations running concurrently.
+ This is the throttled counterpart to <c>mapAsyncParallel</c>.
+
+### [AsyncSeq.groupByAsync](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#groupByAsync)
+
+AsyncSeq.groupByAsync 
+groupByAsync 
+ Applies a key-generating function to each element and returns an async sequence containing unique keys
+ and async sequences containing elements corresponding to the key.
+
+ Note that the resulting async sequence has to be processed in parallel (e.g AsyncSeq.mapAsyncParallel) becaused
+ completion of sub-sequences depends on completion of other sub-sequences.
+
+### [AsyncSeq.groupBy](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#groupBy)
+
+AsyncSeq.groupBy 
+groupBy 
+ Applies a key-generating function to each element and returns an async sequence containing unique keys
+ and async sequences containing elements corresponding to the key.
+
+ Note that the resulting async sequence has to be processed in parallel (e.g AsyncSeq.mapAsyncParallel) becaused
+ completion of sub-sequences depends on completion of other sub-sequences.
+
+### [AsyncSeq.ofAsyncEnum](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#ofAsyncEnum)
+
+AsyncSeq.ofAsyncEnum 
+ofAsyncEnum 
+ Returns the input AsyncSeq as a BCL IAsyncEnumerable<'T>. Identity since AsyncSeq<'T> IS IAsyncEnumerable<'T> in v4.
+
+### [AsyncSeq.toAsyncEnum](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#toAsyncEnum)
+
+AsyncSeq.toAsyncEnum 
+toAsyncEnum 
+ Returns the input AsyncSeq as a BCL IAsyncEnumerable<'T>. Identity since AsyncSeq<'T> IS IAsyncEnumerable<'T> in v4.
+
+### [AsyncSeq.ofIQueryable](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#ofIQueryable)
+
+AsyncSeq.ofIQueryable 
+ofIQueryable
+
+### [AsyncSeq.toChannel](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#toChannel)
+
+AsyncSeq.toChannel 
+toChannel 
+ Fills a channel writer with the values from an async seq.
+ The writer will be closed when the async seq completes or raises an error.
+
+### [AsyncSeq.fromChannel](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#fromChannel)
+
+AsyncSeq.fromChannel 
+fromChannel 
+ Creates an async seq from a channel reader.
+ The async seq will read values from the channel reader until it is closed.
+ If the reader raises an error than the sequence will raise it.
+
+### [AsyncSeq.prefetch](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#prefetch)
+
+AsyncSeq.prefetch 
+prefetch 
+ Transforms an async seq to a new one that fetches values ahead of time to improve throughput.
+
+### [AsyncSeq.withCancellation](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq.html#withCancellation)
+
+AsyncSeq.withCancellation 
+withCancellation 
+
+ Returns a new <code>AsyncSeq</code> that passes the given <code>CancellationToken</code> to
+ <code>GetAsyncEnumerator</code>, overriding whatever token would otherwise be used when iterating.
+ This is useful when consuming sequences from libraries such as Entity Framework that
+ accept a <code>CancellationToken</code> through <code>GetAsyncEnumerator</code>.
+
+### [AsyncSeqBuilder](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq-asyncseqbuilder.html)
+
+AsyncSeqBuilder 
+ Computation builder that allows creating of asynchronous
+ sequences using the 'asyncSeq { ... }' syntax 
+AsyncSeqBuilder.``.ctor`` 
+``.ctor`` 
+AsyncSeqBuilder.Bind 
+Bind 
+AsyncSeqBuilder.Combine 
+Combine 
+AsyncSeqBuilder.Delay 
+Delay 
+AsyncSeqBuilder.For 
+For 
+AsyncSeqBuilder.For 
+For 
+AsyncSeqBuilder.TryFinally 
+TryFinally 
+AsyncSeqBuilder.TryWith 
+TryWith 
+AsyncSeqBuilder.Using 
+Using 
+AsyncSeqBuilder.While 
+While 
+AsyncSeqBuilder.Yield 
+Yield 
+AsyncSeqBuilder.YieldFrom 
+YieldFrom 
+AsyncSeqBuilder.YieldFrom 
+YieldFrom 
+AsyncSeqBuilder.Zero 
+Zero
+
+### [AsyncSeqBuilder.``.ctor``](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq-asyncseqbuilder.html#``.ctor``)
+
+AsyncSeqBuilder.``.ctor`` 
+``.ctor`` 
+ Internal use only
+
+### [AsyncSeqBuilder.Bind](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq-asyncseqbuilder.html#Bind)
+
+AsyncSeqBuilder.Bind 
+Bind 
+ Implements binding for the asyncSeq computation builder.
+
+### [AsyncSeqBuilder.Combine](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq-asyncseqbuilder.html#Combine)
+
+AsyncSeqBuilder.Combine 
+Combine 
+ Implements sequential composition for the asyncSeq computation builder.
+
+### [AsyncSeqBuilder.Delay](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq-asyncseqbuilder.html#Delay)
+
+AsyncSeqBuilder.Delay 
+Delay 
+ Implements delay for the asyncSeq computation builder.
+
+### [AsyncSeqBuilder.For](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq-asyncseqbuilder.html#For)
+
+AsyncSeqBuilder.For 
+For 
+ Implements "for" loops for the asyncSeq computation builder.
+
+ Asynchronous for loop - for all elements from the input sequence,
+ generate all elements produced by the body (asynchronously). See
+ also the AsyncSeq.collect function.
+
+### [AsyncSeqBuilder.For](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq-asyncseqbuilder.html#For)
+
+AsyncSeqBuilder.For 
+For 
+ For loop that iterates over a synchronous sequence (and generates
+ all elements generated by the asynchronous body)
+
+### [AsyncSeqBuilder.TryFinally](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq-asyncseqbuilder.html#TryFinally)
+
+AsyncSeqBuilder.TryFinally 
+TryFinally 
+ Implements "try-finally" for the asyncSeq computation builder.
+
+### [AsyncSeqBuilder.TryWith](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq-asyncseqbuilder.html#TryWith)
+
+AsyncSeqBuilder.TryWith 
+TryWith 
+ Implements "try-with" for the asyncSeq computation builder.
+
+### [AsyncSeqBuilder.Using](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq-asyncseqbuilder.html#Using)
+
+AsyncSeqBuilder.Using 
+Using 
+ Implements "use" for the asyncSeq computation builder.
+
+### [AsyncSeqBuilder.While](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq-asyncseqbuilder.html#While)
+
+AsyncSeqBuilder.While 
+While 
+ Implements "while" for the asyncSeq computation builder.
+
+### [AsyncSeqBuilder.Yield](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq-asyncseqbuilder.html#Yield)
+
+AsyncSeqBuilder.Yield 
+Yield 
+ Implements "yield" for the asyncSeq computation builder.
+
+### [AsyncSeqBuilder.YieldFrom](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq-asyncseqbuilder.html#YieldFrom)
+
+AsyncSeqBuilder.YieldFrom 
+YieldFrom 
+ Implements "yield!" for a synchronous sequence in the asyncSeq computation builder.
+
+### [AsyncSeqBuilder.YieldFrom](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq-asyncseqbuilder.html#YieldFrom)
+
+AsyncSeqBuilder.YieldFrom 
+YieldFrom 
+ Implements "yield!" for the asyncSeq computation builder.
+
+### [AsyncSeqBuilder.Zero](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq-asyncseqbuilder.html#Zero)
+
+AsyncSeqBuilder.Zero 
+Zero 
+ Implements empty for the asyncSeq computation builder.
+
+### [AsyncSeqExtensions](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseqextensions.html)
+
+AsyncSeqExtensions 
+ An automatically-opened module that contains the `asyncSeq` builder and an extension method 
+AsyncSeqExtensions.asyncSeq 
+asyncSeq 
+AsyncSeqExtensions.For 
+For
+
+### [AsyncSeqExtensions.asyncSeq](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseqextensions.html#asyncSeq)
+
+AsyncSeqExtensions.asyncSeq 
+asyncSeq 
+ Builds an asynchronous sequence using the computation builder syntax
+
+### [AsyncSeqExtensions.For](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseqextensions.html#For)
+
+AsyncSeqExtensions.For 
+For
+
+### [AsyncSeqSrc](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseqsrc.html)
+
+AsyncSeqSrc 
+ Operations on async sequence sources. 
+AsyncSeqSrc.create 
+create 
+AsyncSeqSrc.put 
+put 
+AsyncSeqSrc.close 
+close 
+AsyncSeqSrc.error 
+error 
+AsyncSeqSrc.toAsyncSeq 
+toAsyncSeq
+
+### [AsyncSeqSrc.create](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseqsrc.html#create)
+
+AsyncSeqSrc.create 
+create 
+ Creates a new async sequence source.
+
+### [AsyncSeqSrc.put](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseqsrc.html#put)
+
+AsyncSeqSrc.put 
+put 
+ Causes any async sequences created before the call to yield the item.
+
+### [AsyncSeqSrc.close](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseqsrc.html#close)
+
+AsyncSeqSrc.close 
+close 
+ Closes the async sequence source casuing any created async sequences to complete.
+
+### [AsyncSeqSrc.error](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseqsrc.html#error)
+
+AsyncSeqSrc.error 
+error 
+ Causes async sequence created before the call to raise an exception.
+
+### [AsyncSeqSrc.toAsyncSeq](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseqsrc.html#toAsyncSeq)
+
+AsyncSeqSrc.toAsyncSeq 
+toAsyncSeq 
+ Creates an async sequence which yields values as they are put into the source and terminates
+ when the source is closed. This sequence will yield items starting with the next put.
+ Many async sequences can be created from once source.
+
+### [Seq](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-seq.html)
+
+Seq 
+ 
+Seq.ofAsyncSeq 
+ofAsyncSeq
+
+### [Seq.ofAsyncSeq](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-seq.html#ofAsyncSeq)
+
+Seq.ofAsyncSeq 
+ofAsyncSeq 
+ Converts asynchronous sequence to a synchronous blocking sequence.
+ The elements of the asynchronous sequence are consumed lazily.
+
+### [AsyncSeq<'T>](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseq-1.html)
+
+AsyncSeq<'T> 
+ An asynchronous sequence; equivalent to System.Collections.Generic.IAsyncEnumerable<'T>.
+ Use the asyncSeq { ... } computation expression to create values, and the AsyncSeq module
+ for combinators.
+
+### [AsyncSeqSrc<'T>](https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/fsharp-control-asyncseqsrc-1.html)
+
+AsyncSeqSrc<'T> 
+ An async sequence source produces async sequences.
+
