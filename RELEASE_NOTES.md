@@ -1,6 +1,10 @@
 ### 4.16.0
 
 * Performance: Replaced `ref` cells with `mutable` locals in the `ofSeq`, `tryWith`, and `tryFinally` enumerator state machines. Each call to `ofSeq` (or any async CE block using `try...with` / `try...finally` / `use`) previously heap-allocated a `Ref<T>` wrapper object per enumerator; it now uses a direct mutable field in the generated class, reducing GC pressure. The change is equivalent to the `mutable`-for-`ref` improvement introduced in 4.11.0 for other enumerators.
+* Added `AsyncSeq.unzip` — splits an async sequence of pairs into two arrays. Mirrors `List.unzip`.
+* Added `AsyncSeq.unzip3` — splits an async sequence of triples into three arrays. Mirrors `List.unzip3`.
+* Added `AsyncSeq.map2` — applies a function to corresponding elements of two async sequences; stops when either is exhausted. Mirrors `Seq.map2`.
+* Added `AsyncSeq.map3` — applies a function to corresponding elements of three async sequences; stops when any is exhausted. Mirrors `List.map3`.
 
 ### 4.15.0
 

@@ -1994,6 +1994,42 @@ module AsyncSeq =
           let! next1 = ie1.MoveNext()
           b1 <- next1 }
 
+  let unzip (source: AsyncSeq<'T1 * 'T2>) : Async<'T1[] * 'T2[]> = async {
+      let as1 = System.Collections.Generic.List<'T1>()
+      let as2 = System.Collections.Generic.List<'T2>()
+      use ie = source.GetEnumerator()
+      let! move = ie.MoveNext()
+      let mutable cur = move
+      while cur.IsSome do
+          let (a, b) = cur.Value
+          as1.Add(a)
+          as2.Add(b)
+          let! next = ie.MoveNext()
+          cur <- next
+      return (as1.ToArray(), as2.ToArray()) }
+
+  let unzip3 (source: AsyncSeq<'T1 * 'T2 * 'T3>) : Async<'T1[] * 'T2[] * 'T3[]> = async {
+      let as1 = System.Collections.Generic.List<'T1>()
+      let as2 = System.Collections.Generic.List<'T2>()
+      let as3 = System.Collections.Generic.List<'T3>()
+      use ie = source.GetEnumerator()
+      let! move = ie.MoveNext()
+      let mutable cur = move
+      while cur.IsSome do
+          let (a, b, c) = cur.Value
+          as1.Add(a)
+          as2.Add(b)
+          as3.Add(c)
+          let! next = ie.MoveNext()
+          cur <- next
+      return (as1.ToArray(), as2.ToArray(), as3.ToArray()) }
+
+  let map2 (mapping: 'T1 -> 'T2 -> 'U) (source1: AsyncSeq<'T1>) (source2: AsyncSeq<'T2>) : AsyncSeq<'U> =
+      zipWith mapping source1 source2
+
+  let map3 (mapping: 'T1 -> 'T2 -> 'T3 -> 'U) (source1: AsyncSeq<'T1>) (source2: AsyncSeq<'T2>) (source3: AsyncSeq<'T3>) : AsyncSeq<'U> =
+      zipWith3 mapping source1 source2 source3
+
   let zappAsync (fs:AsyncSeq<'T -> Async<'U>>) (s:AsyncSeq<'T>) : AsyncSeq<'U> =
       zipWithAsync (|>) s fs
 
