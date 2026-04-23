@@ -1,13 +1,14 @@
 {
-  "last_run": "2026-04-21T00:14:06Z",
-  "run_id": "24697051861",
+  "last_run": "2026-04-23T00:16:17Z",
+  "run_id": "24809417066",
   "open_prs": {
-    "perf-mutable-enumerator-state-20260421": "PR pending — perf: replace ref cells with mutable in ofSeq, tryWith, tryFinally; 422/422 pass"
+    "improve-unzip-map2-map3-20260423": "PR pending — add unzip, unzip3, map2, map3; 431/431 pass",
+    "release-4.16.0-20260423": "PR pending — bump version.props to 4.16.0"
   },
-  "notes": "Issue #313 is the CI workaround issue (protected files for dotnet-version update). PR #315 (fix-removeat-updateat) and PR #316 (eng-update-test-packages) were merged since last run. Monthly activity #299 updated.",
+  "notes": "Issue #313 is the CI workaround issue (protected files for dotnet-version update). Monthly activity #299 updated.",
   "monthly_summary_issue": 299,
   "backlog_cursor": "299",
-  "checked_off_items": ["PR #303 merged", "PR #305 merged (was #304)", "PR #302 merged", "PR #308 merged", "PR #311 merged", "PR #312 merged", "Issue #306 closed", "Issue #307 closed", "PR #315 merged", "PR #316 merged"],
+  "checked_off_items": ["PR #303 merged", "PR #305 merged (was #304)", "PR #302 merged", "PR #308 merged", "PR #311 merged", "PR #312 merged", "Issue #306 closed", "Issue #307 closed", "PR #315 merged", "PR #316 merged", "PR #317 merged"],
   "comments_made": {},
-  "previous_ideas_proposed": ["transpose (rejected twice)", "ofList/ofArray/cycle", "findBack variants", "sort variants", "refcell ops fix", "mapAsyncParallelThrottled", "release-4.13.0", "ci-dotnet10", "fix-removeat-updateat-bounds-check", "eng-update-test-sdk", "perf-mutable-enumerator-state"]
+  "previous_ideas_proposed": ["transpose (rejected twice)", "ofList/ofArray/cycle", "findBack variants", "sort variants", "refcell ops fix", "mapAsyncParallelThrottled", "release-4.13.0", "ci-dotnet10", "fix-removeat-updateat-bounds-check", "eng-update-test-sdk", "perf-mutable-enumerator-state", "unzip-unzip3-map2-map3", "release-4.16.0"]
 }
