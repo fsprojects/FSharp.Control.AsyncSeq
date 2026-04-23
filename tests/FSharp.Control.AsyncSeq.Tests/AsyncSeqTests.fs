@@ -3684,7 +3684,79 @@ let ``AsyncSeq.allPairs returns empty when second source is empty`` () =
     |> AsyncSeq.toArrayAsync |> Async.RunSynchronously
   Assert.AreEqual([||], result)
 
-// ── AsyncSeq.rev ─────────────────────────────────────────────────────────────
+// ── AsyncSeq.unzip ───────────────────────────────────────────────────────────
+
+[<Test>]
+let ``AsyncSeq.unzip splits pairs into two arrays`` () =
+  let source = asyncSeq { yield (1, 'a'); yield (2, 'b'); yield (3, 'c') }
+  let (lefts, rights) = AsyncSeq.unzip source |> Async.RunSynchronously
+  Assert.AreEqual([| 1; 2; 3 |], lefts)
+  Assert.AreEqual([| 'a'; 'b'; 'c' |], rights)
+
+[<Test>]
+let ``AsyncSeq.unzip empty source returns two empty arrays`` () =
+  let (lefts, rights) = AsyncSeq.unzip AsyncSeq.empty<int * string> |> Async.RunSynchronously
+  Assert.AreEqual([||], lefts)
+  Assert.AreEqual([||], rights)
+
+[<Test>]
+let ``AsyncSeq.unzip mirrors List.unzip`` () =
+  let pairs = [ (1, 'x'); (2, 'y'); (3, 'z') ]
+  let (expL, expR) = List.unzip pairs
+  let (actL, actR) = AsyncSeq.unzip (AsyncSeq.ofList pairs) |> Async.RunSynchronously
+  Assert.AreEqual(expL |> Array.ofList, actL)
+  Assert.AreEqual(expR |> Array.ofList, actR)
+
+// ── AsyncSeq.unzip3 ──────────────────────────────────────────────────────────
+
+[<Test>]
+let ``AsyncSeq.unzip3 splits triples into three arrays`` () =
+  let source = asyncSeq { yield (1, 'a', true); yield (2, 'b', false); yield (3, 'c', true) }
+  let (as1, as2, as3) = AsyncSeq.unzip3 source |> Async.RunSynchronously
+  Assert.AreEqual([| 1; 2; 3 |], as1)
+  Assert.AreEqual([| 'a'; 'b'; 'c' |], as2)
+  Assert.AreEqual([| true; false; true |], as3)
+
+[<Test>]
+let ``AsyncSeq.unzip3 empty source returns three empty arrays`` () =
+  let (as1, as2, as3) = AsyncSeq.unzip3 AsyncSeq.empty<int * string * bool> |> Async.RunSynchronously
+  Assert.AreEqual([||], as1)
+  Assert.AreEqual([||], as2)
+  Assert.AreEqual([||], as3)
+
+// ── AsyncSeq.map2 ────────────────────────────────────────────────────────────
+
+[<Test>]
+let ``AsyncSeq.map2 applies function pairwise`` () =
+  let s1 = asyncSeq { yield 1; yield 2; yield 3 }
+  let s2 = asyncSeq { yield 10; yield 20; yield 30 }
+  let result = AsyncSeq.map2 (+) s1 s2 |> AsyncSeq.toArrayAsync |> Async.RunSynchronously
+  Assert.AreEqual([| 11; 22; 33 |], result)
+
+[<Test>]
+let ``AsyncSeq.map2 stops at shorter sequence`` () =
+  let s1 = asyncSeq { yield 1; yield 2; yield 3 }
+  let s2 = asyncSeq { yield 10; yield 20 }
+  let result = AsyncSeq.map2 (+) s1 s2 |> AsyncSeq.toArrayAsync |> Async.RunSynchronously
+  Assert.AreEqual([| 11; 22 |], result)
+
+// ── AsyncSeq.map3 ────────────────────────────────────────────────────────────
+
+[<Test>]
+let ``AsyncSeq.map3 applies function to three sequences`` () =
+  let s1 = asyncSeq { yield 1; yield 2; yield 3 }
+  let s2 = asyncSeq { yield 10; yield 20; yield 30 }
+  let s3 = asyncSeq { yield 100; yield 200; yield 300 }
+  let result = AsyncSeq.map3 (fun a b c -> a + b + c) s1 s2 s3 |> AsyncSeq.toArrayAsync |> Async.RunSynchronously
+  Assert.AreEqual([| 111; 222; 333 |], result)
+
+[<Test>]
+let ``AsyncSeq.map3 stops at shortest sequence`` () =
+  let s1 = asyncSeq { yield 1; yield 2; yield 3 }
+  let s2 = asyncSeq { yield 10; yield 20; yield 30 }
+  let s3 = asyncSeq { yield 100 }
+  let result = AsyncSeq.map3 (fun a b c -> a + b + c) s1 s2 s3 |> AsyncSeq.toArrayAsync |> Async.RunSynchronously
+  Assert.AreEqual([| 111 |], result)
 
 [<Test>]
 let ``AsyncSeq.rev reverses a sequence`` () =
