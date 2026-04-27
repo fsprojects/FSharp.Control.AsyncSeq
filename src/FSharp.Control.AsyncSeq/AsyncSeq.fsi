@@ -489,6 +489,20 @@ module AsyncSeq =
     /// Raises ArgumentException if index is negative or greater than the sequence length. Mirrors Seq.insertAt.
     val insertAt : index:int -> value:'T -> source:AsyncSeq<'T> -> AsyncSeq<'T>
 
+    /// Returns a new asynchronous sequence with the given values inserted before the element at the specified index.
+    /// An index equal to the length of the sequence appends the values at the end.
+    /// Raises ArgumentException if index is negative or greater than the sequence length. Mirrors Seq.insertManyAt.
+    val insertManyAt : index:int -> values:seq<'T> -> source:AsyncSeq<'T> -> AsyncSeq<'T>
+
+    /// Returns a new asynchronous sequence with the given number of elements removed starting at the specified index.
+    /// Raises ArgumentException if index is negative, count is negative, or index + count exceeds the sequence length. Mirrors Seq.removeManyAt.
+    val removeManyAt : index:int -> count:int -> source:AsyncSeq<'T> -> AsyncSeq<'T>
+
+    /// Splits the input asynchronous sequence into at most <c>count</c> chunks of as-equal-as-possible size.
+    /// The first (length mod count) chunks have one extra element. Materialises the source sequence into memory.
+    /// Raises ArgumentException if count is not positive. Mirrors Seq.splitInto.
+    val splitInto : count:int -> source:AsyncSeq<'T> -> Async<'T[] array>
+
     /// Creates an asynchronous sequence that lazily takes element from an
     /// input synchronous sequence and returns them one-by-one.
     val ofSeq : source:seq<'T> -> AsyncSeq<'T>
