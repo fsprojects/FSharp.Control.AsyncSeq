@@ -1,15 +1,16 @@
 {
-  "last_run": "2026-04-25T00:13:23Z",
-  "run_id": "24917611405",
+  "last_run": "2026-04-27T00:13:51Z",
+  "run_id": "24970606510",
   "open_prs": {
     "improve-unzip-map2-map3-20260423": "PR #318 pending — add unzip, unzip3, map2, map3; 431/431 pass",
     "release-4.16.0-20260423": "PR #319 pending — bump version.props to 4.16.0",
-    "perf-fix-pairwise-splitat-20260425": "PR pending (patch submitted) — optimize pairwise, fix splitAt/tryTail disposal; 425/425 pass"
+    "perf-fix-pairwise-splitat-20260425": "PR #320 pending — optimize pairwise, fix splitAt/tryTail disposal; 425/425 pass",
+    "improve-insert-remove-splitinto-20260427": "PR pending — add insertManyAt, removeManyAt, splitInto; 442/442 pass"
   },
-  "notes": "Issue #313 is the CI workaround issue (protected files for dotnet-version update). Monthly activity #299 updated.",
+  "notes": "Issue #313 is the CI workaround issue (protected files for dotnet-version update). Monthly activity #299 updated. No open user issues to comment on.",
   "monthly_summary_issue": 299,
   "backlog_cursor": "299",
   "checked_off_items": ["PR #303 merged", "PR #305 merged (was #304)", "PR #302 merged", "PR #308 merged", "PR #311 merged", "PR #312 merged", "Issue #306 closed", "Issue #307 closed", "PR #315 merged", "PR #316 merged", "PR #317 merged"],
   "comments_made": {},
-  "previous_ideas_proposed": ["transpose (rejected twice)", "ofList/ofArray/cycle", "findBack variants", "sort variants", "refcell ops fix", "mapAsyncParallelThrottled", "release-4.13.0", "ci-dotnet10", "fix-removeat-updateat-bounds-check", "eng-update-test-sdk", "perf-mutable-enumerator-state", "unzip-unzip3-map2-map3", "release-4.16.0", "perf-pairwise-no-option-boxing", "fix-splitat-trytail-disposal"]
+  "previous_ideas_proposed": ["transpose (rejected twice)", "ofList/ofArray/cycle", "findBack variants", "sort variants", "refcell ops fix", "mapAsyncParallelThrottled", "release-4.13.0", "ci-dotnet10", "fix-removeat-updateat-bounds-check", "eng-update-test-sdk", "perf-mutable-enumerator-state", "unzip-unzip3-map2-map3", "release-4.16.0", "perf-pairwise-no-option-boxing", "fix-splitat-trytail-disposal", "insertManyAt-removeManyAt-splitInto"]
 }
