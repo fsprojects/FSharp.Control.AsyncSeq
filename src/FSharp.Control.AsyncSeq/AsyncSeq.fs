@@ -1731,6 +1731,27 @@ module AsyncSeq =
     elif i < index then
       invalidArg "index" "The index is outside the range of elements in the collection." }
 
+  let insertManyAt (index : int) (values : seq<'T>) (source : AsyncSeq<'T>) : AsyncSeq<'T> = asyncSeq {
+    if index < 0 then invalidArg "index" "must be non-negative"
+    let mutable i = 0
+    for x in source do
+      if i = index then yield! values
+      yield x
+      i <- i + 1
+    if i = index then yield! values
+    elif i < index then
+      invalidArg "index" "The index is outside the range of elements in the collection." }
+
+  let removeManyAt (index : int) (count : int) (source : AsyncSeq<'T>) : AsyncSeq<'T> = asyncSeq {
+    if index < 0 then invalidArg "index" "must be non-negative"
+    if count < 0 then invalidArg "count" "must be non-negative"
+    let mutable i = 0
+    for x in source do
+      if i < index || i >= index + count then yield x
+      i <- i + 1
+    if count > 0 && i < index + count then
+      invalidArg "index" "The index or count is outside the range of elements in the collection." }
+
   #if !FABLE_COMPILER
   let iterAsyncParallel (f:'a -> Async<unit>) (s:AsyncSeq<'a>) : Async<unit> = async {
     use mb = MailboxProcessor.Start (ignore >> async.Return)
@@ -2214,6 +2235,22 @@ module AsyncSeq =
   let toListSynchronously (source:AsyncSeq<'T>) = toListAsync source |> Async.RunSynchronously
   let toArraySynchronously (source:AsyncSeq<'T>) = toArrayAsync source |> Async.RunSynchronously
   #endif
+
+  let splitInto (count : int) (source : AsyncSeq<'T>) : Async<'T[] array> = async {
+    if count < 1 then invalidArg "count" "must be positive"
+    let! arr = toArrayAsync source
+    let total = arr.Length
+    let result =
+      if total = 0 then [||]
+      else
+        let n = Operators.min count total
+        let minSize = total / n
+        let extras = total % n
+        Array.init n (fun i ->
+          let chunkStart = i * minSize + Operators.min i extras
+          let chunkSize  = minSize + (if i < extras then 1 else 0)
+          Array.sub arr chunkStart chunkSize)
+    return result }
 
   let cycle (source: AsyncSeq<'T>) : AsyncSeq<'T> =
     asyncSeq {

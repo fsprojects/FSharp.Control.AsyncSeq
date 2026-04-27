@@ -1,6 +1,9 @@
 ### 4.16.0
 
 * Performance: Replaced `ref` cells with `mutable` locals in the `ofSeq`, `tryWith`, and `tryFinally` enumerator state machines. Each call to `ofSeq` (or any async CE block using `try...with` / `try...finally` / `use`) previously heap-allocated a `Ref<T>` wrapper object per enumerator; it now uses a direct mutable field in the generated class, reducing GC pressure. The change is equivalent to the `mutable`-for-`ref` improvement introduced in 4.11.0 for other enumerators.
+* Added `AsyncSeq.insertManyAt` — inserts multiple values before the element at the specified index; mirrors `Seq.insertManyAt` / `List.insertManyAt`.
+* Added `AsyncSeq.removeManyAt` — removes a range of elements starting at the specified index; mirrors `Seq.removeManyAt` / `List.removeManyAt`.
+* Added `AsyncSeq.splitInto` — splits the sequence into at most N chunks of as-equal-as-possible size; mirrors `Seq.splitInto` / `Array.splitInto`.
 
 ### 4.15.0
 
