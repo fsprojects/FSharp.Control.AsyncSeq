@@ -426,6 +426,24 @@ module AsyncSeq =
     /// Asynchronously determine if the async predicate returns true for all values in the sequence
     val forallAsync : predicate:('T -> Async<bool>) -> source:AsyncSeq<'T> -> Async<bool>
 
+    /// Asynchronously determine if any corresponding pair of elements in two async sequences satisfies
+    /// the predicate. Evaluates pairwise up to the shorter of the two sequences; short-circuits on first match.
+    /// Mirrors <c>Seq.exists2</c>.
+    val exists2 : predicate:('T1 -> 'T2 -> bool) -> source1:AsyncSeq<'T1> -> source2:AsyncSeq<'T2> -> Async<bool>
+
+    /// Asynchronously determine if any corresponding pair of elements in two async sequences satisfies
+    /// the async predicate. Evaluates pairwise up to the shorter of the two sequences; short-circuits on first match.
+    val exists2Async : predicate:('T1 -> 'T2 -> Async<bool>) -> source1:AsyncSeq<'T1> -> source2:AsyncSeq<'T2> -> Async<bool>
+
+    /// Asynchronously determine if all corresponding pairs of elements in two async sequences satisfy
+    /// the predicate. Evaluates pairwise up to the shorter of the two sequences; short-circuits on first failure.
+    /// Mirrors <c>Seq.forall2</c>.
+    val forall2 : predicate:('T1 -> 'T2 -> bool) -> source1:AsyncSeq<'T1> -> source2:AsyncSeq<'T2> -> Async<bool>
+
+    /// Asynchronously determine if all corresponding pairs of elements in two async sequences satisfy
+    /// the async predicate. Evaluates pairwise up to the shorter of the two sequences; short-circuits on first failure.
+    val forall2Async : predicate:('T1 -> 'T2 -> Async<bool>) -> source1:AsyncSeq<'T1> -> source2:AsyncSeq<'T2> -> Async<bool>
+
     /// Compares two async sequences lexicographically using the given synchronous comparison function.
     /// Returns a negative integer if source1 < source2, 0 if equal, and a positive integer if source1 > source2.
     val compareWith : comparer:('T -> 'T -> int) -> source1:AsyncSeq<'T> -> source2:AsyncSeq<'T> -> Async<int>

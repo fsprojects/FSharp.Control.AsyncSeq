@@ -4622,3 +4622,107 @@ let ``asyncSeq try-with handler can yield elements`` () =
     with _ -> yield 42 }
   let result = s |> AsyncSeq.toArrayAsync |> Async.RunSynchronously
   Assert.AreEqual([| 42 |], result)
+
+// ===== exists2 / exists2Async =====
+
+[<Test>]
+let ``AsyncSeq.exists2 returns true when a matching pair exists`` () =
+  let result =
+    AsyncSeq.exists2 (=) (AsyncSeq.ofSeq [1;2;3]) (AsyncSeq.ofSeq [0;2;0])
+    |> Async.RunSynchronously
+  Assert.IsTrue(result)
+
+[<Test>]
+let ``AsyncSeq.exists2 returns false when no matching pair exists`` () =
+  let result =
+    AsyncSeq.exists2 (=) (AsyncSeq.ofSeq [1;2;3]) (AsyncSeq.ofSeq [4;5;6])
+    |> Async.RunSynchronously
+  Assert.IsFalse(result)
+
+[<Test>]
+let ``AsyncSeq.exists2 on empty sequences returns false`` () =
+  let result =
+    AsyncSeq.exists2 (=) AsyncSeq.empty<int> AsyncSeq.empty<int>
+    |> Async.RunSynchronously
+  Assert.IsFalse(result)
+
+[<Test>]
+let ``AsyncSeq.exists2 short-circuits on first match`` () =
+  let count = ref 0
+  let result =
+    AsyncSeq.exists2
+      (fun a b -> incr count; a = b)
+      (AsyncSeq.ofSeq [1;2;3;4;5])
+      (AsyncSeq.ofSeq [0;2;0;0;0])
+    |> Async.RunSynchronously
+  Assert.IsTrue(result)
+  Assert.AreEqual(2, count.Value)  // stopped after second pair
+
+[<Test>]
+let ``AsyncSeq.exists2 stops at shorter sequence`` () =
+  let result =
+    AsyncSeq.exists2 (=) (AsyncSeq.ofSeq [1;2]) (AsyncSeq.ofSeq [3;4;1])
+    |> Async.RunSynchronously
+  Assert.IsFalse(result)  // shorter seq ends before (1,1) can match
+
+[<Test>]
+let ``AsyncSeq.exists2Async returns true with async predicate`` () =
+  let result =
+    AsyncSeq.exists2Async
+      (fun a b -> async { return a = b })
+      (AsyncSeq.ofSeq [1;2;3])
+      (AsyncSeq.ofSeq [0;2;0])
+    |> Async.RunSynchronously
+  Assert.IsTrue(result)
+
+// ===== forall2 / forall2Async =====
+
+[<Test>]
+let ``AsyncSeq.forall2 returns true when all pairs satisfy the predicate`` () =
+  let result =
+    AsyncSeq.forall2 (=) (AsyncSeq.ofSeq [1;2;3]) (AsyncSeq.ofSeq [1;2;3])
+    |> Async.RunSynchronously
+  Assert.IsTrue(result)
+
+[<Test>]
+let ``AsyncSeq.forall2 returns false when a pair fails`` () =
+  let result =
+    AsyncSeq.forall2 (=) (AsyncSeq.ofSeq [1;2;3]) (AsyncSeq.ofSeq [1;9;3])
+    |> Async.RunSynchronously
+  Assert.IsFalse(result)
+
+[<Test>]
+let ``AsyncSeq.forall2 on empty sequences returns true`` () =
+  let result =
+    AsyncSeq.forall2 (=) AsyncSeq.empty<int> AsyncSeq.empty<int>
+    |> Async.RunSynchronously
+  Assert.IsTrue(result)
+
+[<Test>]
+let ``AsyncSeq.forall2 short-circuits on first failure`` () =
+  let count = ref 0
+  let result =
+    AsyncSeq.forall2
+      (fun a b -> incr count; a = b)
+      (AsyncSeq.ofSeq [1;9;3;4;5])
+      (AsyncSeq.ofSeq [1;2;3;4;5])
+    |> Async.RunSynchronously
+  Assert.IsFalse(result)
+  Assert.AreEqual(2, count.Value)  // stopped after second pair
+
+[<Test>]
+let ``AsyncSeq.forall2 stops at shorter sequence`` () =
+  let result =
+    AsyncSeq.forall2 (=) (AsyncSeq.ofSeq [1;2]) (AsyncSeq.ofSeq [1;2;99])
+    |> Async.RunSynchronously
+  Assert.IsTrue(result)  // stops when shorter seq ends; all checked pairs passed
+
+[<Test>]
+let ``AsyncSeq.forall2Async returns true with async predicate`` () =
+  let result =
+    AsyncSeq.forall2Async
+      (fun a b -> async { return a = b })
+      (AsyncSeq.ofSeq [1;2;3])
+      (AsyncSeq.ofSeq [1;2;3])
+    |> Async.RunSynchronously
+  Assert.IsTrue(result)

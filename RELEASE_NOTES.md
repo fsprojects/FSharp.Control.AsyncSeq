@@ -1,3 +1,10 @@
+### 4.17.0
+
+* Added `AsyncSeq.exists2` — asynchronously tests whether any corresponding pair of elements in two async sequences satisfies the predicate. Evaluates pairwise up to the shorter sequence; short-circuits on first match. Mirrors `Seq.exists2`.
+* Added `AsyncSeq.exists2Async` — asynchronous-predicate variant of `exists2`.
+* Added `AsyncSeq.forall2` — asynchronously tests whether all corresponding pairs of elements in two async sequences satisfy the predicate. Evaluates pairwise up to the shorter sequence; short-circuits on first failure. Mirrors `Seq.forall2`.
+* Added `AsyncSeq.forall2Async` — asynchronous-predicate variant of `forall2`.
+
 ### 4.16.0
 
 * Performance: Replaced `ref` cells with `mutable` locals in the `ofSeq`, `tryWith`, and `tryFinally` enumerator state machines. Each call to `ofSeq` (or any async CE block using `try...with` / `try...finally` / `use`) previously heap-allocated a `Ref<T>` wrapper object per enumerator; it now uses a direct mutable field in the generated class, reducing GC pressure. The change is equivalent to the `mutable`-for-`ref` improvement introduced in 4.11.0 for other enumerators.

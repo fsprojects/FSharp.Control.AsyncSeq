@@ -1471,6 +1471,56 @@ module AsyncSeq =
   let forallAsync f (source : AsyncSeq<'T>) =
     source |> existsAsync (fun v -> async { let! b = f v in return not b }) |> Async.map not
 
+  let exists2Async (predicate: 'T1 -> 'T2 -> Async<bool>) (source1: AsyncSeq<'T1>) (source2: AsyncSeq<'T2>) : Async<bool> = async {
+    use ie1 = source1.GetEnumerator()
+    use ie2 = source2.GetEnumerator()
+    let! m1 = ie1.MoveNext()
+    let! m2 = ie2.MoveNext()
+    let mutable b1 = m1
+    let mutable b2 = m2
+    let mutable result = false
+    let mutable isDone = false
+    while not isDone do
+        match b1, b2 with
+        | None, _ | _, None -> isDone <- true
+        | Some v1, Some v2 ->
+            let! ok = predicate v1 v2
+            if ok then result <- true; isDone <- true
+            else
+                let! n1 = ie1.MoveNext()
+                let! n2 = ie2.MoveNext()
+                b1 <- n1
+                b2 <- n2
+    return result }
+
+  let exists2 (predicate: 'T1 -> 'T2 -> bool) (source1: AsyncSeq<'T1>) (source2: AsyncSeq<'T2>) : Async<bool> =
+    exists2Async (fun a b -> async.Return (predicate a b)) source1 source2
+
+  let forall2Async (predicate: 'T1 -> 'T2 -> Async<bool>) (source1: AsyncSeq<'T1>) (source2: AsyncSeq<'T2>) : Async<bool> = async {
+    use ie1 = source1.GetEnumerator()
+    use ie2 = source2.GetEnumerator()
+    let! m1 = ie1.MoveNext()
+    let! m2 = ie2.MoveNext()
+    let mutable b1 = m1
+    let mutable b2 = m2
+    let mutable result = true
+    let mutable isDone = false
+    while not isDone do
+        match b1, b2 with
+        | None, _ | _, None -> isDone <- true
+        | Some v1, Some v2 ->
+            let! ok = predicate v1 v2
+            if not ok then result <- false; isDone <- true
+            else
+                let! n1 = ie1.MoveNext()
+                let! n2 = ie2.MoveNext()
+                b1 <- n1
+                b2 <- n2
+    return result }
+
+  let forall2 (predicate: 'T1 -> 'T2 -> bool) (source1: AsyncSeq<'T1>) (source2: AsyncSeq<'T2>) : Async<bool> =
+    forall2Async (fun a b -> async.Return (predicate a b)) source1 source2
+
   let compareWithAsync (comparer: 'T -> 'T -> Async<int>) (source1: AsyncSeq<'T>) (source2: AsyncSeq<'T>) : Async<int> = async {
     use ie1 = source1.GetEnumerator()
     use ie2 = source2.GetEnumerator()
