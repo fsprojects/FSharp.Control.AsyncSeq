@@ -2817,6 +2817,13 @@ let ``AsyncSeq.pairwise with three elements should produce two pairs`` () =
   Assert.AreEqual([(1, 2); (2, 3)], result)
 
 [<Test>]
+let ``AsyncSeq.pairwise with many elements produces correct pairs`` () =
+  let source = AsyncSeq.ofSeq [1..10]
+  let result = AsyncSeq.pairwise source |> AsyncSeq.toListSynchronously
+  let expected = [(1,2); (2,3); (3,4); (4,5); (5,6); (6,7); (7,8); (8,9); (9,10)]
+  Assert.AreEqual(expected, result)
+
+[<Test>]
 let ``AsyncSeq.windowed empty sequence returns empty`` () =
   let result = AsyncSeq.windowed 3 AsyncSeq.empty<int> |> AsyncSeq.toListSynchronously
   Assert.AreEqual([], result)
@@ -3746,6 +3753,19 @@ let ``AsyncSeq.splitAt with negative count throws ArgumentException`` () =
   Assert.Throws<System.ArgumentException>(fun () ->
     AsyncSeq.splitAt -1 AsyncSeq.empty<int> |> Async.RunSynchronously |> ignore) |> ignore
 
+[<Test>]
+let ``AsyncSeq.splitAt disposes enumerator when source throws during collection`` () =
+  let mutable disposed = false
+  let source = asyncSeq {
+    use _ = { new System.IDisposable with member _.Dispose() = disposed <- true }
+    yield 1
+    yield 2
+    failwith "source error"
+  }
+  try AsyncSeq.splitAt 10 source |> Async.RunSynchronously |> ignore
+  with _ -> ()
+  Assert.IsTrue(disposed, "enumerator should be disposed after exception during collection")
+
 // ===== removeAt =====
 
 [<Test>]
@@ -4189,6 +4209,20 @@ let ``AsyncSeq.tryTail returns all-but-first elements`` () =
   Assert.IsTrue(result.IsSome)
   let tail = result.Value |> AsyncSeq.toListAsync |> Async.RunSynchronously
   Assert.AreEqual([2;3;4;5], tail)
+
+[<Test>]
+let ``AsyncSeq.tryTail disposes enumerator when source throws on first MoveNext`` () =
+  let mutable disposed = false
+  // Use a pre-failed task so the exception occurs during MoveNext() (async), not during GetEnumerator()
+  let failedTask = System.Threading.Tasks.Task.FromException<unit>(System.Exception("source error"))
+  let source = asyncSeq {
+    use _ = { new System.IDisposable with member _.Dispose() = disposed <- true }
+    let! _ = failedTask |> Async.AwaitTask
+    yield 1
+  }
+  try AsyncSeq.tryTail source |> Async.RunSynchronously |> ignore
+  with _ -> ()
+  Assert.IsTrue(disposed, "enumerator should be disposed after exception on first MoveNext")
 
 [<Test>]
 let ``AsyncSeq.where is alias for filter`` () =

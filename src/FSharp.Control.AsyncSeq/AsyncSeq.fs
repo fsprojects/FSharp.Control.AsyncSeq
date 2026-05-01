@@ -1306,13 +1306,14 @@ module AsyncSeq =
       use ie = source.GetEnumerator()
       let! v = ie.MoveNext()
       let mutable b = v
-      let mutable prev = None
+      // Use a flag + mutable field instead of Option to avoid per-element heap allocation
+      let mutable hasPrev = false
+      let mutable prev = Unchecked.defaultof<'T>
       while b.IsSome do
           let v = b.Value
-          match prev with
-          | None -> ()
-          | Some p -> yield (p, v)
-          prev <- Some v
+          if hasPrev then yield (prev, v)
+          hasPrev <- true
+          prev <- v
           let! moven = ie.MoveNext()
           b <- moven }
 
@@ -2152,51 +2153,59 @@ module AsyncSeq =
 
   let tryTail (source: AsyncSeq<'T>) : Async<AsyncSeq<'T> option> = async {
     let ie = source.GetEnumerator()
-    let! first = ie.MoveNext()
-    match first with
-    | None ->
+    try
+        let! first = ie.MoveNext()
+        match first with
+        | None ->
+            ie.Dispose()
+            return None
+        | Some _ ->
+            return Some (asyncSeq {
+                try
+                    let! next = ie.MoveNext()
+                    let mutable b = next
+                    while b.IsSome do
+                        yield b.Value
+                        let! moven = ie.MoveNext()
+                        b <- moven
+                finally
+                    ie.Dispose() })
+    with ex ->
         ie.Dispose()
-        return None
-    | Some _ ->
-        return Some (asyncSeq {
-            try
-                let! next = ie.MoveNext()
-                let mutable b = next
-                while b.IsSome do
-                    yield b.Value
-                    let! moven = ie.MoveNext()
-                    b <- moven
-            finally
-                ie.Dispose() }) }
+        return raise ex }
 
   /// Splits an async sequence at the given index, returning the first `count` elements as an array
   /// and the remaining elements as a new AsyncSeq. The source is enumerated once.
   let splitAt (count: int) (source: AsyncSeq<'T>) : Async<'T array * AsyncSeq<'T>> = async {
       if count < 0 then invalidArg "count" "must be non-negative"
       let ie = source.GetEnumerator()
-      let ra = ResizeArray<'T>()
-      let! m = ie.MoveNext()
-      let mutable b = m
-      while b.IsSome && ra.Count < count do
-          ra.Add b.Value
-          let! next = ie.MoveNext()
-          b <- next
-      let first = ra.ToArray()
-      let rest =
-          if b.IsNone then
-              ie.Dispose()
-              empty<'T>
-          else
-              let cur = ref b
-              asyncSeq {
-                  try
-                      while cur.Value.IsSome do
-                          yield cur.Value.Value
-                          let! next = ie.MoveNext()
-                          cur.Value <- next
-                  finally
-                      ie.Dispose() }
-      return first, rest }
+      try
+          let ra = ResizeArray<'T>()
+          let! m = ie.MoveNext()
+          let mutable b = m
+          while b.IsSome && ra.Count < count do
+              ra.Add b.Value
+              let! next = ie.MoveNext()
+              b <- next
+          let first = ra.ToArray()
+          let rest =
+              if b.IsNone then
+                  ie.Dispose()
+                  empty<'T>
+              else
+                  let mutable cur = b
+                  asyncSeq {
+                      try
+                          while cur.IsSome do
+                              yield cur.Value
+                              let! next = ie.MoveNext()
+                              cur <- next
+                      finally
+                          ie.Dispose() }
+          return first, rest
+      with ex ->
+          ie.Dispose()
+          return raise ex }
 
   let toArrayAsync (source : AsyncSeq<'T>) : Async<'T[]> = async {
       let ra = (new ResizeArray<_>())
