@@ -1,17 +1,17 @@
 {
-  "last_run": "2026-04-29T00:19:27Z",
-  "run_id": "25084453841",
+  "last_run": "2026-05-01T00:18:45Z",
+  "run_id": "25195882464",
   "open_prs": {
-    "improve-unzip-map2-map3-20260423": "PR #318 pending — add unzip, unzip3, map2, map3; 431/431 pass",
-    "release-4.16.0-20260423": "PR #319 pending — bump version.props to 4.16.0",
-    "perf-fix-pairwise-splitat-20260425": "PR #320 pending — optimize pairwise, fix splitAt/tryTail disposal; 425/425 pass",
-    "improve-insert-remove-splitinto-20260427": "PR #321 pending — add insertManyAt, removeManyAt, splitInto; 442/442 pass",
-    "improve-forall2-exists2-20260429": "PR pending — add exists2, exists2Async, forall2, forall2Async; 434/434 pass",
-    "eng-fix-bcl-asyncinterfaces-version-20260429": "PR pending — fix NU1605 bump Microsoft.Bcl.AsyncInterfaces 10.0.6→10.0.7; 422/422 pass"
+    "improve-unzip-map2-map3-20260423": "PR #318 pending — add unzip, unzip3, map2, map3; BCL fix applied, CI should now pass",
+    "release-4.16.0-20260423": "PR #319 pending — bump version.props to 4.16.0; BCL fix NOT yet applied (hit 4-push limit)",
+    "perf-fix-pairwise-splitat-20260425": "PR #320 pending — optimize pairwise, fix splitAt/tryTail disposal; BCL fix applied, CI should now pass",
+    "improve-insert-remove-splitinto-20260427": "PR #321 pending — add insertManyAt, removeManyAt, splitInto; BCL fix applied, CI should now pass",
+    "improve-forall2-exists2-20260429": "PR #322 pending — add exists2, exists2Async, forall2, forall2Async; BCL fix applied, CI should now pass",
+    "eng-fix-bcl-asyncinterfaces-version-20260429": "PR #323 pending — fix NU1605 bump Microsoft.Bcl.AsyncInterfaces 10.0.6→10.0.7; 422/422 pass"
   },
-  "notes": "Issue #313 is the CI workaround issue (protected files for dotnet-version update). Monthly activity #299 updated. 6 open Repo Assist PRs. No user issues to comment on.",
-  "monthly_summary_issue": 299,
-  "backlog_cursor": "299",
+  "notes": "Issue #313 is the CI workaround issue (protected files for dotnet-version update). Monthly activity #299 closed (April). New May monthly issue created. PR #319 still needs BCL fix pushed (prioritise next run). All other PRs had BCL fix applied.",
+  "monthly_summary_issue": "aw_may26",
+  "backlog_cursor": "313",
   "checked_off_items": ["PR #303 merged", "PR #305 merged (was #304)", "PR #302 merged", "PR #308 merged", "PR #311 merged", "PR #312 merged", "Issue #306 closed", "Issue #307 closed", "PR #315 merged", "PR #316 merged", "PR #317 merged"],
   "comments_made": {},
   "previous_ideas_proposed": ["transpose (rejected twice)", "ofList/ofArray/cycle", "findBack variants", "sort variants", "refcell ops fix", "mapAsyncParallelThrottled", "release-4.13.0", "ci-dotnet10", "fix-removeat-updateat-bounds-check", "eng-update-test-sdk", "perf-mutable-enumerator-state", "unzip-unzip3-map2-map3", "release-4.16.0", "perf-pairwise-no-option-boxing", "fix-splitat-trytail-disposal", "insertManyAt-removeManyAt-splitInto", "forall2-exists2", "fix-NU1605-bcl-asyncinterfaces"]
