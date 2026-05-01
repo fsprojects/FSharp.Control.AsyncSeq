@@ -2817,6 +2817,13 @@ let ``AsyncSeq.pairwise with three elements should produce two pairs`` () =
   Assert.AreEqual([(1, 2); (2, 3)], result)
 
 [<Test>]
+let ``AsyncSeq.pairwise with many elements produces correct pairs`` () =
+  let source = AsyncSeq.ofSeq [1..10]
+  let result = AsyncSeq.pairwise source |> AsyncSeq.toListSynchronously
+  let expected = [(1,2); (2,3); (3,4); (4,5); (5,6); (6,7); (7,8); (8,9); (9,10)]
+  Assert.AreEqual(expected, result)
+
+[<Test>]
 let ``AsyncSeq.windowed empty sequence returns empty`` () =
   let result = AsyncSeq.windowed 3 AsyncSeq.empty<int> |> AsyncSeq.toListSynchronously
   Assert.AreEqual([], result)
@@ -3684,7 +3691,79 @@ let ``AsyncSeq.allPairs returns empty when second source is empty`` () =
     |> AsyncSeq.toArrayAsync |> Async.RunSynchronously
   Assert.AreEqual([||], result)
 
-// ── AsyncSeq.rev ─────────────────────────────────────────────────────────────
+// ── AsyncSeq.unzip ───────────────────────────────────────────────────────────
+
+[<Test>]
+let ``AsyncSeq.unzip splits pairs into two arrays`` () =
+  let source = asyncSeq { yield (1, 'a'); yield (2, 'b'); yield (3, 'c') }
+  let (lefts, rights) = AsyncSeq.unzip source |> Async.RunSynchronously
+  Assert.AreEqual([| 1; 2; 3 |], lefts)
+  Assert.AreEqual([| 'a'; 'b'; 'c' |], rights)
+
+[<Test>]
+let ``AsyncSeq.unzip empty source returns two empty arrays`` () =
+  let (lefts, rights) = AsyncSeq.unzip AsyncSeq.empty<int * string> |> Async.RunSynchronously
+  Assert.AreEqual([||], lefts)
+  Assert.AreEqual([||], rights)
+
+[<Test>]
+let ``AsyncSeq.unzip mirrors List.unzip`` () =
+  let pairs = [ (1, 'x'); (2, 'y'); (3, 'z') ]
+  let (expL, expR) = List.unzip pairs
+  let (actL, actR) = AsyncSeq.unzip (AsyncSeq.ofList pairs) |> Async.RunSynchronously
+  Assert.AreEqual(expL |> Array.ofList, actL)
+  Assert.AreEqual(expR |> Array.ofList, actR)
+
+// ── AsyncSeq.unzip3 ──────────────────────────────────────────────────────────
+
+[<Test>]
+let ``AsyncSeq.unzip3 splits triples into three arrays`` () =
+  let source = asyncSeq { yield (1, 'a', true); yield (2, 'b', false); yield (3, 'c', true) }
+  let (as1, as2, as3) = AsyncSeq.unzip3 source |> Async.RunSynchronously
+  Assert.AreEqual([| 1; 2; 3 |], as1)
+  Assert.AreEqual([| 'a'; 'b'; 'c' |], as2)
+  Assert.AreEqual([| true; false; true |], as3)
+
+[<Test>]
+let ``AsyncSeq.unzip3 empty source returns three empty arrays`` () =
+  let (as1, as2, as3) = AsyncSeq.unzip3 AsyncSeq.empty<int * string * bool> |> Async.RunSynchronously
+  Assert.AreEqual([||], as1)
+  Assert.AreEqual([||], as2)
+  Assert.AreEqual([||], as3)
+
+// ── AsyncSeq.map2 ────────────────────────────────────────────────────────────
+
+[<Test>]
+let ``AsyncSeq.map2 applies function pairwise`` () =
+  let s1 = asyncSeq { yield 1; yield 2; yield 3 }
+  let s2 = asyncSeq { yield 10; yield 20; yield 30 }
+  let result = AsyncSeq.map2 (+) s1 s2 |> AsyncSeq.toArrayAsync |> Async.RunSynchronously
+  Assert.AreEqual([| 11; 22; 33 |], result)
+
+[<Test>]
+let ``AsyncSeq.map2 stops at shorter sequence`` () =
+  let s1 = asyncSeq { yield 1; yield 2; yield 3 }
+  let s2 = asyncSeq { yield 10; yield 20 }
+  let result = AsyncSeq.map2 (+) s1 s2 |> AsyncSeq.toArrayAsync |> Async.RunSynchronously
+  Assert.AreEqual([| 11; 22 |], result)
+
+// ── AsyncSeq.map3 ────────────────────────────────────────────────────────────
+
+[<Test>]
+let ``AsyncSeq.map3 applies function to three sequences`` () =
+  let s1 = asyncSeq { yield 1; yield 2; yield 3 }
+  let s2 = asyncSeq { yield 10; yield 20; yield 30 }
+  let s3 = asyncSeq { yield 100; yield 200; yield 300 }
+  let result = AsyncSeq.map3 (fun a b c -> a + b + c) s1 s2 s3 |> AsyncSeq.toArrayAsync |> Async.RunSynchronously
+  Assert.AreEqual([| 111; 222; 333 |], result)
+
+[<Test>]
+let ``AsyncSeq.map3 stops at shortest sequence`` () =
+  let s1 = asyncSeq { yield 1; yield 2; yield 3 }
+  let s2 = asyncSeq { yield 10; yield 20; yield 30 }
+  let s3 = asyncSeq { yield 100 }
+  let result = AsyncSeq.map3 (fun a b c -> a + b + c) s1 s2 s3 |> AsyncSeq.toArrayAsync |> Async.RunSynchronously
+  Assert.AreEqual([| 111 |], result)
 
 [<Test>]
 let ``AsyncSeq.rev reverses a sequence`` () =
@@ -3745,6 +3824,19 @@ let ``AsyncSeq.splitAt with count equal to length returns all in first and empty
 let ``AsyncSeq.splitAt with negative count throws ArgumentException`` () =
   Assert.Throws<System.ArgumentException>(fun () ->
     AsyncSeq.splitAt -1 AsyncSeq.empty<int> |> Async.RunSynchronously |> ignore) |> ignore
+
+[<Test>]
+let ``AsyncSeq.splitAt disposes enumerator when source throws during collection`` () =
+  let mutable disposed = false
+  let source = asyncSeq {
+    use _ = { new System.IDisposable with member _.Dispose() = disposed <- true }
+    yield 1
+    yield 2
+    failwith "source error"
+  }
+  try AsyncSeq.splitAt 10 source |> Async.RunSynchronously |> ignore
+  with _ -> ()
+  Assert.IsTrue(disposed, "enumerator should be disposed after exception during collection")
 
 // ===== removeAt =====
 
@@ -4379,6 +4471,20 @@ let ``AsyncSeq.tryTail returns all-but-first elements`` () =
   Assert.IsTrue(result.IsSome)
   let tail = result.Value |> AsyncSeq.toListAsync |> Async.RunSynchronously
   Assert.AreEqual([2;3;4;5], tail)
+
+[<Test>]
+let ``AsyncSeq.tryTail disposes enumerator when source throws on first MoveNext`` () =
+  let mutable disposed = false
+  // Use a pre-failed task so the exception occurs during MoveNext() (async), not during GetEnumerator()
+  let failedTask = System.Threading.Tasks.Task.FromException<unit>(System.Exception("source error"))
+  let source = asyncSeq {
+    use _ = { new System.IDisposable with member _.Dispose() = disposed <- true }
+    let! _ = failedTask |> Async.AwaitTask
+    yield 1
+  }
+  try AsyncSeq.tryTail source |> Async.RunSynchronously |> ignore
+  with _ -> ()
+  Assert.IsTrue(disposed, "enumerator should be disposed after exception on first MoveNext")
 
 [<Test>]
 let ``AsyncSeq.where is alias for filter`` () =

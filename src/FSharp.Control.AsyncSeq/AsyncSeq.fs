@@ -1306,13 +1306,14 @@ module AsyncSeq =
       use ie = source.GetEnumerator()
       let! v = ie.MoveNext()
       let mutable b = v
-      let mutable prev = None
+      // Use a flag + mutable field instead of Option to avoid per-element heap allocation
+      let mutable hasPrev = false
+      let mutable prev = Unchecked.defaultof<'T>
       while b.IsSome do
           let v = b.Value
-          match prev with
-          | None -> ()
-          | Some p -> yield (p, v)
-          prev <- Some v
+          if hasPrev then yield (prev, v)
+          hasPrev <- true
+          prev <- v
           let! moven = ie.MoveNext()
           b <- moven }
 
@@ -2015,6 +2016,42 @@ module AsyncSeq =
           let! next1 = ie1.MoveNext()
           b1 <- next1 }
 
+  let unzip (source: AsyncSeq<'T1 * 'T2>) : Async<'T1[] * 'T2[]> = async {
+      let as1 = System.Collections.Generic.List<'T1>()
+      let as2 = System.Collections.Generic.List<'T2>()
+      use ie = source.GetEnumerator()
+      let! move = ie.MoveNext()
+      let mutable cur = move
+      while cur.IsSome do
+          let (a, b) = cur.Value
+          as1.Add(a)
+          as2.Add(b)
+          let! next = ie.MoveNext()
+          cur <- next
+      return (as1.ToArray(), as2.ToArray()) }
+
+  let unzip3 (source: AsyncSeq<'T1 * 'T2 * 'T3>) : Async<'T1[] * 'T2[] * 'T3[]> = async {
+      let as1 = System.Collections.Generic.List<'T1>()
+      let as2 = System.Collections.Generic.List<'T2>()
+      let as3 = System.Collections.Generic.List<'T3>()
+      use ie = source.GetEnumerator()
+      let! move = ie.MoveNext()
+      let mutable cur = move
+      while cur.IsSome do
+          let (a, b, c) = cur.Value
+          as1.Add(a)
+          as2.Add(b)
+          as3.Add(c)
+          let! next = ie.MoveNext()
+          cur <- next
+      return (as1.ToArray(), as2.ToArray(), as3.ToArray()) }
+
+  let map2 (mapping: 'T1 -> 'T2 -> 'U) (source1: AsyncSeq<'T1>) (source2: AsyncSeq<'T2>) : AsyncSeq<'U> =
+      zipWith mapping source1 source2
+
+  let map3 (mapping: 'T1 -> 'T2 -> 'T3 -> 'U) (source1: AsyncSeq<'T1>) (source2: AsyncSeq<'T2>) (source3: AsyncSeq<'T3>) : AsyncSeq<'U> =
+      zipWith3 mapping source1 source2 source3
+
   let zappAsync (fs:AsyncSeq<'T -> Async<'U>>) (s:AsyncSeq<'T>) : AsyncSeq<'U> =
       zipWithAsync (|>) s fs
 
@@ -2173,51 +2210,59 @@ module AsyncSeq =
 
   let tryTail (source: AsyncSeq<'T>) : Async<AsyncSeq<'T> option> = async {
     let ie = source.GetEnumerator()
-    let! first = ie.MoveNext()
-    match first with
-    | None ->
+    try
+        let! first = ie.MoveNext()
+        match first with
+        | None ->
+            ie.Dispose()
+            return None
+        | Some _ ->
+            return Some (asyncSeq {
+                try
+                    let! next = ie.MoveNext()
+                    let mutable b = next
+                    while b.IsSome do
+                        yield b.Value
+                        let! moven = ie.MoveNext()
+                        b <- moven
+                finally
+                    ie.Dispose() })
+    with ex ->
         ie.Dispose()
-        return None
-    | Some _ ->
-        return Some (asyncSeq {
-            try
-                let! next = ie.MoveNext()
-                let mutable b = next
-                while b.IsSome do
-                    yield b.Value
-                    let! moven = ie.MoveNext()
-                    b <- moven
-            finally
-                ie.Dispose() }) }
+        return raise ex }
 
   /// Splits an async sequence at the given index, returning the first `count` elements as an array
   /// and the remaining elements as a new AsyncSeq. The source is enumerated once.
   let splitAt (count: int) (source: AsyncSeq<'T>) : Async<'T array * AsyncSeq<'T>> = async {
       if count < 0 then invalidArg "count" "must be non-negative"
       let ie = source.GetEnumerator()
-      let ra = ResizeArray<'T>()
-      let! m = ie.MoveNext()
-      let mutable b = m
-      while b.IsSome && ra.Count < count do
-          ra.Add b.Value
-          let! next = ie.MoveNext()
-          b <- next
-      let first = ra.ToArray()
-      let rest =
-          if b.IsNone then
-              ie.Dispose()
-              empty<'T>
-          else
-              let cur = ref b
-              asyncSeq {
-                  try
-                      while cur.Value.IsSome do
-                          yield cur.Value.Value
-                          let! next = ie.MoveNext()
-                          cur.Value <- next
-                  finally
-                      ie.Dispose() }
-      return first, rest }
+      try
+          let ra = ResizeArray<'T>()
+          let! m = ie.MoveNext()
+          let mutable b = m
+          while b.IsSome && ra.Count < count do
+              ra.Add b.Value
+              let! next = ie.MoveNext()
+              b <- next
+          let first = ra.ToArray()
+          let rest =
+              if b.IsNone then
+                  ie.Dispose()
+                  empty<'T>
+              else
+                  let mutable cur = b
+                  asyncSeq {
+                      try
+                          while cur.IsSome do
+                              yield cur.Value
+                              let! next = ie.MoveNext()
+                              cur <- next
+                      finally
+                          ie.Dispose() }
+          return first, rest
+      with ex ->
+          ie.Dispose()
+          return raise ex }
 
   let toArrayAsync (source : AsyncSeq<'T>) : Async<'T[]> = async {
       let ra = (new ResizeArray<_>())
