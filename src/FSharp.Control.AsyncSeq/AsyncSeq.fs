@@ -1460,6 +1460,45 @@ module AsyncSeq =
     | None -> return raise (System.Collections.Generic.KeyNotFoundException("An element satisfying the predicate was not found in the collection."))
     | Some i -> return i }
 
+  let tryFindIndexBack f (source : AsyncSeq<'T>) = async {
+    use ie = source.GetEnumerator()
+    let! v = ie.MoveNext()
+    let mutable b = v
+    let mutable i = 0
+    let mutable res = None
+    while b.IsSome do
+        if f b.Value then res <- Some i
+        let! next = ie.MoveNext()
+        b <- next
+        i <- i + 1
+    return res }
+
+  let tryFindIndexBackAsync f (source : AsyncSeq<'T>) = async {
+    use ie = source.GetEnumerator()
+    let! v = ie.MoveNext()
+    let mutable b = v
+    let mutable i = 0
+    let mutable res = None
+    while b.IsSome do
+        let! matches = f b.Value
+        if matches then res <- Some i
+        let! next = ie.MoveNext()
+        b <- next
+        i <- i + 1
+    return res }
+
+  let findIndexBack f (source : AsyncSeq<'T>) = async {
+    let! result = tryFindIndexBack f source
+    match result with
+    | None -> return raise (System.Collections.Generic.KeyNotFoundException("An element satisfying the predicate was not found in the collection."))
+    | Some i -> return i }
+
+  let findIndexBackAsync f (source : AsyncSeq<'T>) = async {
+    let! result = tryFindIndexBackAsync f source
+    match result with
+    | None -> return raise (System.Collections.Generic.KeyNotFoundException("An element satisfying the predicate was not found in the collection."))
+    | Some i -> return i }
+
   let exists f (source : AsyncSeq<'T>) =
     source |> tryFind f |> Async.map Option.isSome
 

@@ -3491,6 +3491,71 @@ let ``AsyncSeq.tryFindIndexAsync returns None when not found`` () =
     |> Async.RunSynchronously
   Assert.AreEqual(None, result)
 
+// ===== tryFindIndexBack / findIndexBack / tryFindIndexBackAsync / findIndexBackAsync =====
+
+[<Test>]
+let ``AsyncSeq.tryFindIndexBack returns index of last matching element`` () =
+  let result = AsyncSeq.ofSeq [ 1; 2; 3; 2; 1 ] |> AsyncSeq.tryFindIndexBack (fun x -> x = 2) |> Async.RunSynchronously
+  Assert.AreEqual(Some 3, result)
+
+[<Test>]
+let ``AsyncSeq.tryFindIndexBack returns None when no match`` () =
+  let result = AsyncSeq.ofSeq [ 1; 2; 3 ] |> AsyncSeq.tryFindIndexBack (fun x -> x = 99) |> Async.RunSynchronously
+  Assert.AreEqual(None, result)
+
+[<Test>]
+let ``AsyncSeq.tryFindIndexBack returns None for empty sequence`` () =
+  let result = AsyncSeq.empty<int> |> AsyncSeq.tryFindIndexBack (fun _ -> true) |> Async.RunSynchronously
+  Assert.AreEqual(None, result)
+
+[<Test>]
+let ``AsyncSeq.tryFindIndexBack returns index of last element when all match`` () =
+  let result = AsyncSeq.ofSeq [ 1; 2; 3 ] |> AsyncSeq.tryFindIndexBack (fun _ -> true) |> Async.RunSynchronously
+  Assert.AreEqual(Some 2, result)
+
+[<Test>]
+let ``AsyncSeq.findIndexBack returns index of last matching element`` () =
+  let result = AsyncSeq.ofSeq [ 10; 20; 30; 20; 10 ] |> AsyncSeq.findIndexBack (fun x -> x = 20) |> Async.RunSynchronously
+  Assert.AreEqual(3, result)
+
+[<Test>]
+let ``AsyncSeq.findIndexBack raises KeyNotFoundException when no match`` () =
+  Assert.Throws<System.Collections.Generic.KeyNotFoundException>(fun () ->
+    AsyncSeq.ofSeq [ 1; 2; 3 ] |> AsyncSeq.findIndexBack (fun x -> x = 99) |> Async.RunSynchronously |> ignore)
+  |> ignore
+
+[<Test>]
+let ``AsyncSeq.tryFindIndexBackAsync returns index of last matching element`` () =
+  let result =
+    AsyncSeq.ofSeq [ 1; 2; 3; 2; 1 ]
+    |> AsyncSeq.tryFindIndexBackAsync (fun x -> async { return x = 2 })
+    |> Async.RunSynchronously
+  Assert.AreEqual(Some 3, result)
+
+[<Test>]
+let ``AsyncSeq.tryFindIndexBackAsync returns None when no match`` () =
+  let result =
+    AsyncSeq.ofSeq [ 1; 2; 3 ]
+    |> AsyncSeq.tryFindIndexBackAsync (fun x -> async { return x = 99 })
+    |> Async.RunSynchronously
+  Assert.AreEqual(None, result)
+
+[<Test>]
+let ``AsyncSeq.findIndexBackAsync returns index of last matching element`` () =
+  let result =
+    AsyncSeq.ofSeq [ 5; 4; 3; 4; 5 ]
+    |> AsyncSeq.findIndexBackAsync (fun x -> async { return x = 4 })
+    |> Async.RunSynchronously
+  Assert.AreEqual(3, result)
+
+[<Test>]
+let ``AsyncSeq.findIndexBackAsync raises KeyNotFoundException when no match`` () =
+  Assert.Throws<System.Collections.Generic.KeyNotFoundException>(fun () ->
+    AsyncSeq.ofSeq [ 1; 2; 3 ]
+    |> AsyncSeq.findIndexBackAsync (fun x -> async { return x = 99 })
+    |> Async.RunSynchronously |> ignore)
+  |> ignore
+
 // ===== tryFindBack / findBack / tryFindBackAsync / findBackAsync =====
 
 [<Test>]
