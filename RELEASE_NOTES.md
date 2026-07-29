@@ -1,5 +1,9 @@
 ### 4.17.0
 
+* Added `AsyncSeq.exists2` — asynchronously tests whether any corresponding pair of elements in two async sequences satisfies the predicate. Evaluates pairwise up to the shorter sequence; short-circuits on first match. Mirrors `Seq.exists2`.
+* Added `AsyncSeq.exists2Async` — asynchronous-predicate variant of `exists2`.
+* Added `AsyncSeq.forall2` — asynchronously tests whether all corresponding pairs of elements in two async sequences satisfy the predicate. Evaluates pairwise up to the shorter sequence; short-circuits on first failure. Mirrors `Seq.forall2`.
+* Added `AsyncSeq.forall2Async` — asynchronous-predicate variant of `forall2`.
 * Performance: Optimised `AsyncSeq.pairwise` to use a `hasPrev` flag and a direct `mutable` field instead of wrapping the previous element in `Some`. Previously, each iteration allocated a new `'T option` object on the heap; the new implementation eliminates that allocation entirely, reducing GC pressure for long sequences.
 * Bug fix: `AsyncSeq.splitAt` and `AsyncSeq.tryTail` now correctly dispose the underlying enumerator when an exception or cancellation occurs during the initial `MoveNext` call. Previously the enumerator could leak if the source sequence threw during the first few steps.
 * Added `AsyncSeq.tryFindIndexBack` and `AsyncSeq.findIndexBack` — return the index of the last element satisfying a predicate. Mirrors `Array.tryFindIndexBack` / `Array.findIndexBack`. Async-predicate variants `tryFindIndexBackAsync` and `findIndexBackAsync` are also included.
