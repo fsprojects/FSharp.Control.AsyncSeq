@@ -1,3 +1,7 @@
+### 4.18.0
+
+* Tests: Added comprehensive tests for `AsyncSeq.zapp`, `AsyncSeq.zappAsync`, and `AsyncSeq.compareWithAsync`, which previously had no dedicated test coverage.
+
 ### 4.17.0
 
 * Added `AsyncSeq.exists2` — asynchronously tests whether any corresponding pair of elements in two async sequences satisfies the predicate. Evaluates pairwise up to the shorter sequence; short-circuits on first match. Mirrors `Seq.exists2`.
