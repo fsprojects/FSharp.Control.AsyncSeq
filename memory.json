@@ -1,0 +1,18 @@
+{
+  "last_run": "2026-08-04T18:14:44Z",
+  "last_run_id": "30937553643",
+  "backlog_cursor": null,
+  "comments_made": [],
+  "fix_attempts": [],
+  "improvement_attempts": [
+    {
+      "desc": "Tests: add coverage for zapp, zappAsync, and compareWithAsync",
+      "pr": "#aw_pr_zapp",
+      "branch": "repo-assist/improve-test-coverage-zapp-comparewithasync",
+      "status": "open",
+      "date": "2026-08-04"
+    }
+  ],
+  "checked_off_by_maintainer": [],
+  "notes": "PRs #321, #322, #325 have been merged into main. Open Dependabot PRs #327 and #328 are security bumps awaiting merge."
+}
