@@ -1,3 +1,7 @@
+### Unreleased
+
+* Fixed Fable CI build: `Microsoft.Bcl.AsyncInterfaces` was pinned to a specific version (`10.0.7`) that was older than the version resolved transitively via `System.Threading.Channels`, causing a `NU1605` package downgrade error that made Fable's project cracker fail during `dotnet fable`. The reference now uses `Version="*"` (matching `System.Threading.Channels`) so both resolve consistently. (#334)
+
 ### 4.17.0
 
 * Added `AsyncSeq.exists2` — asynchronously tests whether any corresponding pair of elements in two async sequences satisfies the predicate. Evaluates pairwise up to the shorter sequence; short-circuits on first match. Mirrors `Seq.exists2`.
