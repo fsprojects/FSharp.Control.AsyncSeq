@@ -5087,3 +5087,102 @@ let ``AsyncSeq.forall2Async returns true with async predicate`` () =
       (AsyncSeq.ofSeq [1;2;3])
     |> Async.RunSynchronously
   Assert.IsTrue(result)
+
+// ===== zapp / zappAsync =====
+
+[<Test>]
+let ``AsyncSeq.zapp applies functions to corresponding elements`` () =
+  let fs = asyncSeq { yield (fun x -> x + 10); yield (fun x -> x * 2); yield (fun x -> x - 1) }
+  let vs = asyncSeq { yield 1; yield 2; yield 3 }
+  let result = AsyncSeq.zapp fs vs |> AsyncSeq.toArrayAsync |> Async.RunSynchronously
+  Assert.AreEqual([| 11; 4; 2 |], result)
+
+[<Test>]
+let ``AsyncSeq.zapp stops when functions run out`` () =
+  let fs = asyncSeq { yield (fun x -> x + 1); yield (fun x -> x + 2) }
+  let vs = asyncSeq { yield 10; yield 20; yield 30 }
+  let result = AsyncSeq.zapp fs vs |> AsyncSeq.toArrayAsync |> Async.RunSynchronously
+  Assert.AreEqual([| 11; 22 |], result)
+
+[<Test>]
+let ``AsyncSeq.zapp stops when values run out`` () =
+  let fs = asyncSeq { yield (fun x -> x + 1); yield (fun x -> x + 2); yield (fun x -> x + 3) }
+  let vs = asyncSeq { yield 5 }
+  let result = AsyncSeq.zapp fs vs |> AsyncSeq.toArrayAsync |> Async.RunSynchronously
+  Assert.AreEqual([| 6 |], result)
+
+[<Test>]
+let ``AsyncSeq.zapp on empty functions returns empty`` () =
+  let fs = AsyncSeq.empty<int -> int>
+  let vs = asyncSeq { yield 1; yield 2; yield 3 }
+  let result = AsyncSeq.zapp fs vs |> AsyncSeq.toArrayAsync |> Async.RunSynchronously
+  Assert.AreEqual([||], result)
+
+[<Test>]
+let ``AsyncSeq.zappAsync applies async functions to corresponding elements`` () =
+  let fs = asyncSeq {
+    yield (fun x -> async { return x + 10 })
+    yield (fun x -> async { return x * 3 })
+  }
+  let vs = asyncSeq { yield 5; yield 4 }
+  let result = AsyncSeq.zappAsync fs vs |> AsyncSeq.toArrayAsync |> Async.RunSynchronously
+  Assert.AreEqual([| 15; 12 |], result)
+
+[<Test>]
+let ``AsyncSeq.zappAsync on empty source returns empty`` () =
+  let fs = asyncSeq { yield (fun x -> async { return x + 1 }) }
+  let vs = AsyncSeq.empty<int>
+  let result = AsyncSeq.zappAsync fs vs |> AsyncSeq.toArrayAsync |> Async.RunSynchronously
+  Assert.AreEqual([||], result)
+
+// ===== compareWithAsync =====
+
+[<Test>]
+let ``AsyncSeq.compareWithAsync equal sequences returns 0`` () =
+  let result =
+    AsyncSeq.compareWithAsync
+      (fun a b -> async { return compare a b })
+      (AsyncSeq.ofSeq [1;2;3])
+      (AsyncSeq.ofSeq [1;2;3])
+    |> Async.RunSynchronously
+  Assert.AreEqual(0, result)
+
+[<Test>]
+let ``AsyncSeq.compareWithAsync shorter is less than longer`` () =
+  let result =
+    AsyncSeq.compareWithAsync
+      (fun a b -> async { return compare a b })
+      (AsyncSeq.ofSeq [1;2])
+      (AsyncSeq.ofSeq [1;2;3])
+    |> Async.RunSynchronously
+  Assert.IsTrue(result < 0)
+
+[<Test>]
+let ``AsyncSeq.compareWithAsync longer is greater than shorter`` () =
+  let result =
+    AsyncSeq.compareWithAsync
+      (fun a b -> async { return compare a b })
+      (AsyncSeq.ofSeq [1;2;3])
+      (AsyncSeq.ofSeq [1;2])
+    |> Async.RunSynchronously
+  Assert.IsTrue(result > 0)
+
+[<Test>]
+let ``AsyncSeq.compareWithAsync lexicographic difference`` () =
+  let result =
+    AsyncSeq.compareWithAsync
+      (fun a b -> async { return compare a b })
+      (AsyncSeq.ofSeq [1;3])
+      (AsyncSeq.ofSeq [1;2])
+    |> Async.RunSynchronously
+  Assert.IsTrue(result > 0)
+
+[<Test>]
+let ``AsyncSeq.compareWithAsync empty sequences returns 0`` () =
+  let result =
+    AsyncSeq.compareWithAsync
+      (fun a b -> async { return compare a b })
+      AsyncSeq.empty<int>
+      AsyncSeq.empty<int>
+    |> Async.RunSynchronously
+  Assert.AreEqual(0, result)
