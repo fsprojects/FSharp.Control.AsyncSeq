@@ -5087,3 +5087,94 @@ let ``AsyncSeq.forall2Async returns true with async predicate`` () =
       (AsyncSeq.ofSeq [1;2;3])
     |> Async.RunSynchronously
   Assert.IsTrue(result)
+
+// ===== tryFirst / firstOrDefault =====
+
+[<Test>]
+let ``AsyncSeq.tryFirst returns Some first element for non-empty sequence`` () =
+  let result = AsyncSeq.tryFirst (AsyncSeq.ofSeq [1;2;3]) |> Async.RunSynchronously
+  Assert.AreEqual(Some 1, result)
+
+[<Test>]
+let ``AsyncSeq.tryFirst returns None for empty sequence`` () =
+  let result = AsyncSeq.tryFirst (AsyncSeq.empty<int>) |> Async.RunSynchronously
+  Assert.AreEqual(None, result)
+
+[<Test>]
+let ``AsyncSeq.firstOrDefault returns first element when non-empty`` () =
+  let result = AsyncSeq.firstOrDefault -1 (AsyncSeq.ofSeq [5;6;7]) |> Async.RunSynchronously
+  Assert.AreEqual(5, result)
+
+[<Test>]
+let ``AsyncSeq.firstOrDefault returns default when empty`` () =
+  let result = AsyncSeq.firstOrDefault -1 (AsyncSeq.empty<int>) |> Async.RunSynchronously
+  Assert.AreEqual(-1, result)
+
+// ===== zipWithParallel =====
+
+[<Test>]
+let ``AsyncSeq.zipWithParallel combines values from both sequences`` () =
+  let result =
+    AsyncSeq.zipWithParallel (fun a b -> a + b) (AsyncSeq.ofSeq [1;2;3]) (AsyncSeq.ofSeq [10;20;30])
+    |> AsyncSeq.toArrayAsync
+    |> Async.RunSynchronously
+  Assert.AreEqual([| 11;22;33 |], result)
+
+[<Test>]
+let ``AsyncSeq.zipWithParallel stops at shorter sequence`` () =
+  let result =
+    AsyncSeq.zipWithParallel (fun a b -> a, b) (AsyncSeq.ofSeq [1;2]) (AsyncSeq.ofSeq ["a";"b";"c"])
+    |> AsyncSeq.toArrayAsync
+    |> Async.RunSynchronously
+  Assert.AreEqual([| (1,"a"); (2,"b") |], result)
+
+// ===== combineLatestWithAsync =====
+
+[<Test>]
+let ``AsyncSeq.combineLatestWithAsync combines initial values then emits on each new update`` () =
+  let result =
+    AsyncSeq.combineLatestWithAsync
+      (fun a b -> async { return a + b })
+      (AsyncSeq.ofSeq [1;2])
+      (AsyncSeq.ofSeq [10])
+    |> AsyncSeq.toArrayAsync
+    |> Async.RunSynchronously
+  // First combination of initial pair, then subsequent updates to source1 combined with latest source2 value.
+  Assert.AreEqual([| 11; 12 |], result)
+
+[<Test>]
+let ``AsyncSeq.combineLatestWithAsync produces empty sequence when either source is empty`` () =
+  let result =
+    AsyncSeq.combineLatestWithAsync
+      (fun a b -> async { return a + b })
+      (AsyncSeq.empty<int>)
+      (AsyncSeq.ofSeq [1;2;3])
+    |> AsyncSeq.toArrayAsync
+    |> Async.RunSynchronously
+  Assert.AreEqual([||], result)
+
+// ===== toObservable =====
+
+type private TestObserver<'T>(onNext, onCompleted) =
+  interface IObserver<'T> with
+    member _.OnNext(v) = onNext v
+    member _.OnCompleted() = onCompleted ()
+    member _.OnError(_e) = ()
+
+[<Test>]
+let ``AsyncSeq.toObservable emits all values then completes`` () =
+  let received = ResizeArray<int>()
+  let completedEvent = new System.Threading.ManualResetEventSlim(false)
+  let observer = TestObserver<int>(received.Add, completedEvent.Set)
+  use _sub = (AsyncSeq.toObservable (AsyncSeq.ofSeq [1;2;3])).Subscribe(observer)
+  Assert.IsTrue(completedEvent.Wait(2000))
+  Assert.AreEqual([| 1;2;3 |], received.ToArray())
+
+[<Test>]
+let ``AsyncSeq.toObservable on empty sequence emits nothing`` () =
+  let received = ResizeArray<int>()
+  let completedEvent = new System.Threading.ManualResetEventSlim(false)
+  let observer = TestObserver<int>(received.Add, completedEvent.Set)
+  use _sub = (AsyncSeq.toObservable (AsyncSeq.empty<int>)).Subscribe(observer)
+  Assert.IsTrue(completedEvent.Wait(2000))
+  Assert.AreEqual([||], received.ToArray())

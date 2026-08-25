@@ -1,3 +1,7 @@
+### Unreleased
+
+* Test coverage: Added tests for previously-untested public API functions `AsyncSeq.tryFirst`, `AsyncSeq.firstOrDefault`, `AsyncSeq.zipWithParallel`, `AsyncSeq.combineLatestWithAsync`, and `AsyncSeq.toObservable`. No functional changes.
+
 ### 4.17.0
 
 * Added `AsyncSeq.exists2` — asynchronously tests whether any corresponding pair of elements in two async sequences satisfies the predicate. Evaluates pairwise up to the shorter sequence; short-circuits on first match. Mirrors `Seq.exists2`.
