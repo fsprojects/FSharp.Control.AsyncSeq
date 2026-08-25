@@ -1,18 +1,35 @@
 {
-  "last_run": "2026-08-04T18:14:44Z",
-  "last_run_id": "30937553643",
+  "last_run": "2026-08-25T17:57:00Z",
+  "last_run_id": "32880131383",
   "backlog_cursor": null,
   "comments_made": [],
   "fix_attempts": [],
   "improvement_attempts": [
     {
       "desc": "Tests: add coverage for zapp, zappAsync, and compareWithAsync",
-      "pr": "#aw_pr_zapp",
+      "pr": "#329",
       "branch": "repo-assist/improve-test-coverage-zapp-comparewithasync",
       "status": "open",
-      "date": "2026-08-04"
+      "date": "2026-08-04",
+      "note": "CI failing on 'build' check, but the failure is the same NU1605/Fable crash tracked in issue #334 and fixed by PR #335 (Microsoft.Bcl.AsyncInterfaces unpin). Not caused by #329's own changes. Expect green once rebased on main after #335 merges. No action needed unless it still fails after rebase."
+    },
+    {
+      "desc": "Engineering: bump CI action major versions (checkout v4->v7, setup-dotnet v4.3.1->v6, setup-node v4->v7)",
+      "pr": "#aw_pr_ci_actions",
+      "branch": "repo-assist/eng-update-ci-actions-20260825",
+      "status": "open",
+      "date": "2026-08-25",
+      "note": "Verified 476/476 tests pass locally before submitting."
+    },
+    {
+      "desc": "Tests: add coverage for tryFirst, firstOrDefault, zipWithParallel, combineLatestWithAsync, toObservable",
+      "pr": "#aw_pr_test_coverage2",
+      "branch": "repo-assist/test-tryfirst-zipwithparallel-toobservable-20260825",
+      "status": "open",
+      "date": "2026-08-25",
+      "note": "Verified 486/486 tests pass locally (476 pre-existing + 10 new) before submitting."
     }
   ],
   "checked_off_by_maintainer": [],
-  "notes": "PRs #321, #322, #325 have been merged into main. Open Dependabot PRs #327 and #328 are security bumps awaiting merge."
+  "notes": "Issue #334 (Fable CI failure) labelled 'bug' + 'needs investigation'; already has fix PR #335 (unpins Microsoft.Bcl.AsyncInterfaces) with green build check. PR #329 (open, pre-existing) fails CI for the same root cause as #334/#335 - will likely resolve once rebased post-merge of #335; do not treat as a new regression. Dependabot PRs #327/#328 mentioned in prior memory not reverified this run - check next run."
 }
