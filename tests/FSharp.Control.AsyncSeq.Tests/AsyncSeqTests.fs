@@ -2877,6 +2877,39 @@ let ``AsyncSeq.distinctUntilChangedWith with all same elements should return sin
   Assert.AreEqual([1], result)
 
 [<Test>]
+let ``AsyncSeq.distinctUntilChanged collapses consecutive duplicates using default equality`` () =
+  let source = asyncSeq { yield 1; yield 1; yield 2; yield 2; yield 2; yield 1; yield 3 }
+  let result = AsyncSeq.distinctUntilChanged source |> AsyncSeq.toListSynchronously
+  Assert.AreEqual([1; 2; 1; 3], result)
+
+[<Test>]
+let ``AsyncSeq.distinctUntilChanged on empty sequence returns empty`` () =
+  let result = AsyncSeq.distinctUntilChanged AsyncSeq.empty<int> |> AsyncSeq.toListSynchronously
+  Assert.AreEqual([], result)
+
+[<Test>]
+let ``AsyncSeq.distinctUntilChanged on all-unique sequence returns all elements`` () =
+  let source = asyncSeq { yield 1; yield 2; yield 3 }
+  let result = AsyncSeq.distinctUntilChanged source |> AsyncSeq.toListSynchronously
+  Assert.AreEqual([1; 2; 3], result)
+
+[<Test>]
+let ``AsyncSeq.takeWhile takes elements while predicate holds`` () =
+  for ls in [ []; [1]; [1;2;3;4;5] ] do
+      let p i = i < 4
+      let actual = ls |> AsyncSeq.ofSeq |> AsyncSeq.takeWhile p
+      let expected = ls |> Seq.takeWhile p |> AsyncSeq.ofSeq
+      Assert.True(EQ expected actual)
+
+[<Test>]
+let ``AsyncSeq.skipWhile skips elements while predicate holds`` () =
+  for ls in [ []; [1]; [3]; [1;2;3;4;5] ] do
+      let p i = i <= 2
+      let actual = ls |> AsyncSeq.ofSeq |> AsyncSeq.skipWhile p
+      let expected = ls |> Seq.skipWhile p |> AsyncSeq.ofSeq
+      Assert.True(EQ expected actual)
+
+[<Test>]
 let ``AsyncSeq.append with both sequences having exceptions should propagate first`` () =
   async {
     let seq1 = asyncSeq { yield 1; failwith "error1" }
