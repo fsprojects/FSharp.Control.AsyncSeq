@@ -2740,16 +2740,18 @@ module AsyncSeq =
       use ie = source.GetEnumerator()
       let! move = ie.MoveNext()
       let mutable b = move
-      let mutable prev = None
+      // Use a flag + mutable field instead of Option to avoid per-element heap allocation
+      let mutable hasPrev = false
+      let mutable prev = Unchecked.defaultof<'T>
       while b.IsSome do
           let v = b.Value
-          match prev with
-          | None ->
+          if not hasPrev then
               yield v
-          | Some p ->
-              let! changed = f p v
+          else
+              let! changed = f prev v
               if not changed then yield v
-          prev <- Some v
+          hasPrev <- true
+          prev <- v
           let! moven = ie.MoveNext()
           b <- moven }
 
