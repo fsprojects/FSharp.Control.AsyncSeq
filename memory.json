@@ -1,6 +1,7 @@
 {
-  "last_run": "2026-08-25T17:57:00Z",
-  "last_run_id": "32880131383",
+  "last_run": "2026-09-01T17:44:03Z",
+  "last_run_id": "33539311534",
+  "monthly_issue": "TBD-2026-09",
   "backlog_cursor": null,
   "comments_made": [],
   "fix_attempts": [],
@@ -11,25 +12,30 @@
       "branch": "repo-assist/improve-test-coverage-zapp-comparewithasync",
       "status": "open",
       "date": "2026-08-04",
-      "note": "CI failing on 'build' check, but the failure is the same NU1605/Fable crash tracked in issue #334 and fixed by PR #335 (Microsoft.Bcl.AsyncInterfaces unpin). Not caused by #329's own changes. Expect green once rebased on main after #335 merges. No action needed unless it still fails after rebase."
+      "note": "Still open as of 2026-09-01. Should be rebased/green now that #335 (Fable/NU1605 fix) is merged into main. Not re-verified this run - check CI status next run."
     },
     {
-      "desc": "Engineering: bump CI action major versions (checkout v4->v7, setup-dotnet v4.3.1->v6, setup-node v4->v7)",
-      "pr": "#aw_pr_ci_actions",
-      "branch": "repo-assist/eng-update-ci-actions-20260825",
+      "desc": "Engineering: bump CI action major versions (checkout v4->v7.0.1, setup-dotnet v4.3.1->v6.0.0, setup-node v4->v7.0.0) in pull-request.yml and publish.yml",
+      "pr": "repo-assist/eng-update-ci-actions-20260901",
       "status": "open",
-      "date": "2026-08-25",
-      "note": "Verified 476/476 tests pass locally before submitting."
+      "date": "2026-09-01",
+      "note": "Verified 486/486 tests pass locally. Note: an earlier PR with the same intent (from 2026-08-25, branch repo-assist/eng-update-ci-actions-20260825) may still be open - check for duplicates/conflicts next run and close the stale one if this one supersedes it."
     },
     {
-      "desc": "Tests: add coverage for tryFirst, firstOrDefault, zipWithParallel, combineLatestWithAsync, toObservable",
-      "pr": "#aw_pr_test_coverage2",
-      "branch": "repo-assist/test-tryfirst-zipwithparallel-toobservable-20260825",
+      "desc": "Perf: eliminate Option allocation in distinctUntilChangedWithAsync (hasPrev flag + mutable field, matching pairwise pattern)",
+      "pr": "repo-assist/perf-distinctuntilchanged-20260901",
       "status": "open",
-      "date": "2026-08-25",
-      "note": "Verified 486/486 tests pass locally (476 pre-existing + 10 new) before submitting."
+      "date": "2026-09-01",
+      "note": "Verified 486/486 tests pass locally, no behavioral change."
+    },
+    {
+      "desc": "Tests: add coverage for distinctUntilChanged (default equality), takeWhile, skipWhile (sync-predicate variants)",
+      "pr": "repo-assist/test-distinctuntilchanged-takewhile-skipwhile-20260901",
+      "status": "open",
+      "date": "2026-09-01",
+      "note": "Verified 491/491 tests pass locally (486 pre-existing + 5 new)."
     }
   ],
   "checked_off_by_maintainer": [],
-  "notes": "Issue #334 (Fable CI failure) labelled 'bug' + 'needs investigation'; already has fix PR #335 (unpins Microsoft.Bcl.AsyncInterfaces) with green build check. PR #329 (open, pre-existing) fails CI for the same root cause as #334/#335 - will likely resolve once rebased post-merge of #335; do not treat as a new regression. Dependabot PRs #327/#328 mentioned in prior memory not reverified this run - check next run."
+  "notes": "Closed Monthly Activity issue #330 (August 2026) and opened a new one for September 2026. Previously-recorded 'ofList/ofArray/cycle' patch note was stale/already merged (main is at 4.17.0 with much more history) - removed from tracking. Check whether the two eng-update-ci-actions PRs (20260825 and 20260901) are duplicates and consolidate/close one next run. Dependabot PRs #327/#328 mentioned in older memory - re-verify still open next run."
 }

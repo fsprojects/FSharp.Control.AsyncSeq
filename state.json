@@ -1,11 +1,15 @@
 {
-  "last_run": "2026-08-25T17:57:00Z",
-  "last_run_id": "32880131383",
-  "monthly_issue": 330,
+  "last_run": "2026-09-01T17:44:03Z",
+  "last_run_id": "33539311534",
+  "monthly_issue": "2026-09 (see memory.json)",
   "comments_made": {},
   "fix_attempts": {},
-  "improvement_prs": [329, "aw_pr_ci_actions", "aw_pr_test_coverage2"],
-  "labels_applied": {"334": ["bug", "needs investigation"]},
-  "notes": "PRs #321, #322, #325 merged. #335 (Fable CI fix, green) and #329 (test coverage, blocked on same NU1605 issue as #334, fixed by #335) open. Created PR for CI action version bumps and PR for tryFirst/firstOrDefault/zipWithParallel/combineLatestWithAsync/toObservable test coverage this run.",
+  "improvement_prs": [
+    "repo-assist/eng-update-ci-actions-20260901",
+    "repo-assist/perf-distinctuntilchanged-20260901",
+    "repo-assist/test-distinctuntilchanged-takewhile-skipwhile-20260901"
+  ],
+  "labels_applied": {},
+  "notes": "Closed August monthly issue #330, opened September one. Tasks 4/5/8 selected this run: Task4=CI action bumps, Task8=distinctUntilChanged perf, Task5 fallback to Task9=test coverage (no low-risk coding improvement found). PR #329 (zapp/zappAsync/compareWithAsync tests) still open, not re-verified.",
   "backlog_cursor": 0
 }
