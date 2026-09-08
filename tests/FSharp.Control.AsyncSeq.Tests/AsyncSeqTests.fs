@@ -6,6 +6,8 @@
 #endif
 module AsyncSeqTests
 
+#nowarn "44" // suppress Obsolete warnings for intentional tests of obsolete API (e.g. AsyncSeq.bufferByCount)
+
 open NUnit.Framework
 open FSharp.Control
 open System
@@ -5178,3 +5180,48 @@ let ``AsyncSeq.toObservable on empty sequence emits nothing`` () =
   use _sub = (AsyncSeq.toObservable (AsyncSeq.empty<int>)).Subscribe(observer)
   Assert.IsTrue(completedEvent.Wait(2000))
   Assert.AreEqual([||], received.ToArray())
+
+// ===== bufferByCount (obsolete alias for chunkBySize) =====
+
+#if !FABLE_COMPILER
+[<Test>]
+let ``AsyncSeq.bufferByCount chunks elements into buffers of specified size`` () =
+  let result =
+    AsyncSeq.ofSeq [1;2;3;4;5]
+    |> AsyncSeq.bufferByCount 2
+    |> AsyncSeq.toListSynchronously
+  Assert.AreEqual([ [|1;2|]; [|3;4|]; [|5|] ], result)
+
+[<Test>]
+let ``AsyncSeq.bufferByCount on empty sequence returns empty`` () =
+  let result =
+    AsyncSeq.empty<int>
+    |> AsyncSeq.bufferByCount 3
+    |> AsyncSeq.toListSynchronously
+  Assert.AreEqual([], result)
+
+[<Test>]
+let ``AsyncSeq.bufferByCount matches chunkBySize behavior`` () =
+  let xs = AsyncSeq.ofSeq [1..7]
+  let viaBufferByCount = xs |> AsyncSeq.bufferByCount 3 |> AsyncSeq.toListSynchronously
+  let viaChunkBySize = xs |> AsyncSeq.chunkBySize 3 |> AsyncSeq.toListSynchronously
+  Assert.AreEqual(viaChunkBySize, viaBufferByCount)
+#pragma warning restore 0044
+
+// ===== Seq.ofAsyncSeq =====
+
+[<Test>]
+let ``Seq.ofAsyncSeq converts async sequence to blocking sequence`` () =
+  let result = AsyncSeq.ofSeq [1;2;3;4] |> Seq.ofAsyncSeq |> Seq.toList
+  Assert.AreEqual([1;2;3;4], result)
+
+[<Test>]
+let ``Seq.ofAsyncSeq on empty async sequence returns empty seq`` () =
+  let result = AsyncSeq.empty<int> |> Seq.ofAsyncSeq |> Seq.toList
+  Assert.AreEqual([], result)
+
+[<Test>]
+let ``Seq.ofAsyncSeq consumes elements lazily`` () =
+  let result = AsyncSeq.ofSeq [1;2;3] |> Seq.ofAsyncSeq |> Seq.take 2 |> Seq.toList
+  Assert.AreEqual([1;2], result)
+#endif
