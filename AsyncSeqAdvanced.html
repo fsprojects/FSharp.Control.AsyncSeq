@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en" data-root="https://fsprojects.github.io/FSharp.Control.AsyncSeq/">
+<head>
+    <meta charset="UTF-8">
+    <meta content="IE=edge" http-equiv="X-UA-Compatible">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <meta content="Tomas Petricek;Don Syme;Lev Gorodinski" name="author">
+    <!-- Opengraph properties (https://ogp.me/) -->
+    <meta property="og:site_name" content="FSharp.Control.AsyncSeq">
+    <meta property="og:title" content="Advanced AsyncSeq Operations" />
+    <meta property="og:url" content="https://fsprojects.github.io/FSharp.Control.AsyncSeq/AsyncSeqAdvanced.html">
+    <meta property="og:type" content="website" />
+    <!-- Twitter cards (https://developer.twitter.com/en/docs/twitter-for-websites/cards/overview/summary-card-with-large-image) -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="https://fsprojects.github.io/FSharp.Control.AsyncSeq/">
+    <meta name="twitter:title" content="Advanced AsyncSeq Operations">
+    <meta name="description" content="Advanced F# asynchronous sequence operations including groupBy, distinct-until-changed and time-or-count buffering.">
+<meta name="twitter:site" content="Advanced F# asynchronous sequence operations including groupBy, distinct-until-changed and time-or-count buffering.">
+<meta name="og:description" content="Advanced F# asynchronous sequence operations including groupBy, distinct-until-changed and time-or-count buffering.">
+<meta name="keywords" content="F#, asynchronous sequences, AsyncSeq, groupBy, distinctUntilChanged, bufferByCountAndTime">
+    <title>Advanced AsyncSeq Operations | FSharp.Control.AsyncSeq</title>
+    <link href="https://fonts.googleapis.com" rel="preconnect">
+    <link crossorigin href="https://fonts.gstatic.com" rel="preconnect">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code&display=swap" rel="stylesheet">
+    <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+    <link href="https://fsprojects.github.io/FSharp.Control.AsyncSeq/img/favicon.ico" rel="icon" sizes="32x32" type="image/png"/>
+    <script type="application/javascript" src="https://fsprojects.github.io/FSharp.Control.AsyncSeq/content/fsdocs-theme-set-dark.js"></script>
+    <script type="application/javascript" src="https://fsprojects.github.io/FSharp.Control.AsyncSeq/content/fsdocs-details-set-expanded.js"></script>
+    <link href="https://fsprojects.github.io/FSharp.Control.AsyncSeq/content/fsdocs-default.css" rel="stylesheet" type="text/css"/>
+    <link href="https://fsprojects.github.io/FSharp.Control.AsyncSeq/content/fsdocs-theme.css" rel="stylesheet" type="text/css"/>
+    
+    
+</head>
+<body class="content">
+<header>
+    <div class="start">
+        <div id="menu-toggle">
+            <iconify-icon class="icon closed" height="22" icon="eva:menu-fill" width="22"></iconify-icon>
+            <iconify-icon class="icon open" height="22" icon="mi:close" width="22"></iconify-icon>
+            <input type="checkbox" name="mobile-menu" />
+            <ul class="menu">
+                <li class="nav-header">Links</li>
+                <li class="license-menu-item builtin-menu-item nav-item"><a class="nav-link" href="https://github.com/fsprojects/FSharp.Control.AsyncSeq/blob/main/LICENSE.md">License</a>
+                </li>
+                <li class="release-notes-menu-item builtin-menu-item nav-item"><a class="nav-link"
+                                        href="https://github.com/fsprojects/FSharp.Control.AsyncSeq/blob/main/RELEASE_NOTES.md">Release
+                    Notes</a></li>
+                <li class="repository-menu-item builtin-menu-item nav-item"><a class="nav-link" href="https://github.com/fsprojects/FSharp.Control.AsyncSeq/">Source
+                    Repository</a></li>
+                <li class="nav-header active">
+  Documentation
+</li>             
+<li class="nav-item ">
+  <a class="nav-link" href="https://fsprojects.github.io/FSharp.Control.AsyncSeq/AsyncSeqGenerating.html">
+    Generating Asynchronous Sequences
+  </a>
+</li>             
+<li class="nav-item ">
+  <a class="nav-link" href="https://fsprojects.github.io/FSharp.Control.AsyncSeq/AsyncSeqTransforming.html">
+    Transforming and Reducing Sequences
+  </a>
+</li>             
+<li class="nav-item ">
+  <a class="nav-link" href="https://fsprojects.github.io/FSharp.Control.AsyncSeq/AsyncSeqConsuming.html">
+    Consuming Asynchronous Sequences
+  </a>
+</li>             
+<li class="nav-item ">
+  <a class="nav-link" href="https://fsprojects.github.io/FSharp.Control.AsyncSeq/AsyncSeqCombining.html">
+    Combining Asynchronous Sequences
+  </a>
+</li>             
+<li class="nav-item active">
+  <a class="nav-link" href="https://fsprojects.github.io/FSharp.Control.AsyncSeq/AsyncSeqAdvanced.html">
+    Advanced AsyncSeq Operations
+  </a>
+</li>
+                <li class="nav-header">
+  API Reference
+</li>             
+<li class="nav-item">
+  <a class="nav-link" href="https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/index.html">
+    All Namespaces
+  </a>
+</li>
+            </ul>
+        </div>
+        <a href="https://fsprojects.github.io/FSharp.Control.AsyncSeq/">
+            <img alt="Logo" src="https://fsprojects.github.io/FSharp.Control.AsyncSeq/img/logo.png">
+            <strong>FSharp.Control.AsyncSeq</strong>
+        </a>
+    </div>
+    <div class="end">
+        <a href="https://github.com/fsprojects/FSharp.Control.AsyncSeq/" target="_blank">
+            <iconify-icon icon="uil:github" width="26" height="26"></iconify-icon>
+        </a>
+        <iconify-icon id="search-btn" icon="carbon:search" class="search" width="24" height="24"></iconify-icon>
+        <fsdocs-theme-toggle></fsdocs-theme-toggle>
+    </div>
+</header>
+<aside id="fsdocs-main-menu">
+    <ul class="menu">
+        <li class="nav-header">Links</li>
+        <li class="license-menu-item builtin-menu-item nav-item"><a class="nav-link" href="https://github.com/fsprojects/FSharp.Control.AsyncSeq/blob/main/LICENSE.md">License</a>
+        </li>
+        <li class="release-notes-menu-item builtin-menu-item nav-item"><a class="nav-link"
+                                href="https://github.com/fsprojects/FSharp.Control.AsyncSeq/blob/main/RELEASE_NOTES.md">Release
+            Notes</a></li>
+        <li class="repository-menu-item builtin-menu-item nav-item"><a class="nav-link" href="https://github.com/fsprojects/FSharp.Control.AsyncSeq/">Source
+            Repository</a></li>
+        <li class="nav-header active">
+  Documentation
+</li>             
+<li class="nav-item ">
+  <a class="nav-link" href="https://fsprojects.github.io/FSharp.Control.AsyncSeq/AsyncSeqGenerating.html">
+    Generating Asynchronous Sequences
+  </a>
+</li>             
+<li class="nav-item ">
+  <a class="nav-link" href="https://fsprojects.github.io/FSharp.Control.AsyncSeq/AsyncSeqTransforming.html">
+    Transforming and Reducing Sequences
+  </a>
+</li>             
+<li class="nav-item ">
+  <a class="nav-link" href="https://fsprojects.github.io/FSharp.Control.AsyncSeq/AsyncSeqConsuming.html">
+    Consuming Asynchronous Sequences
+  </a>
+</li>             
+<li class="nav-item ">
+  <a class="nav-link" href="https://fsprojects.github.io/FSharp.Control.AsyncSeq/AsyncSeqCombining.html">
+    Combining Asynchronous Sequences
+  </a>
+</li>             
+<li class="nav-item active">
+  <a class="nav-link" href="https://fsprojects.github.io/FSharp.Control.AsyncSeq/AsyncSeqAdvanced.html">
+    Advanced AsyncSeq Operations
+  </a>
+</li>
+        <li class="nav-header">
+  API Reference
+</li>             
+<li class="nav-item">
+  <a class="nav-link" href="https://fsprojects.github.io/FSharp.Control.AsyncSeq/reference/index.html">
+    All Namespaces
+  </a>
+</li>
+    </ul>
+</aside>
+<main>
+    <div id="content">
+        
+<p><a href="https://mybinder.org/v2/gh/fsprojects/FSharp.Control.AsyncSeq/gh-pages?filepath=AsyncSeqAdvanced.ipynb"><img src="https://mybinder.org/badge_logo.svg" alt="Binder" /></a></p>
+<h1><a name="Advanced-AsyncSeq-Operations" class="anchor" href="#Advanced-AsyncSeq-Operations">Advanced AsyncSeq Operations</a></h1>
+<p>This document covers advanced <code>AsyncSeq&lt;'T&gt;</code> operations: partitioning a sequence into keyed
+sub-streams with <code>groupBy</code>, deduplication with <code>distinctUntilChanged</code>, and accumulating
+elements into time-or-count-bounded batches with <code>bufferByCountAndTime</code>.</p>
+<pre class="fssnip highlighted"><code lang="fsharp"><span class="k">open</span> <span data-fsdocs-tip="fs1" data-fsdocs-tip-unique="1" class="id">System</span>
+<span class="k">open</span> <span data-fsdocs-tip="fs2" data-fsdocs-tip-unique="2" class="id">FSharp</span><span class="pn">.</span><span data-fsdocs-tip="fs3" data-fsdocs-tip-unique="3" class="id">Control</span>
+</code></pre>
+<h2><a name="Group-By" class="anchor" href="#Group-By">Group By</a></h2>
+<p><code>AsyncSeq.groupBy</code> partitions a sequence into sub-sequences based on a key, analogous to
+<code>Seq.groupBy</code>. Each key appears at most once in the output, paired with an <code>AsyncSeq</code> of the
+elements that share that key.</p>
+<blockquote>
+<p><strong>Important:</strong> the sub-sequences <em>must</em> be consumed in parallel. Sequential consumption will
+deadlock because no sub-sequence can complete until all others are also being consumed.</p>
+</blockquote>
+<pre class="fssnip highlighted"><code lang="fsharp"><span class="o">--------------------------------------------------</span>
+<span class="pn">|</span> <span class="id">source</span>  <span class="pn">|</span> <span class="id">e1</span> <span class="pn">|</span> <span class="id">e2</span> <span class="pn">|</span> <span class="id">e3</span> <span class="pn">|</span> <span class="id">e4</span> <span class="pn">|</span>                  <span class="pn">|</span>
+<span class="pn">|</span> <span class="id">key</span>     <span class="pn">|</span> <span class="id">k1</span> <span class="pn">|</span> <span class="id">k2</span> <span class="pn">|</span> <span class="id">k1</span> <span class="pn">|</span> <span class="id">k2</span> <span class="pn">|</span>                  <span class="pn">|</span>
+<span class="pn">|</span> <span class="id">result</span>  <span class="pn">|</span> <span class="id">k1</span> 
+<span class="o">--------------------------------------------------</span>
+</code></pre>
+<p>A common use case is processing a stream of domain events where events for the same entity must
+be handled in order, but events for different entities are independent and can be handled in
+parallel:</p>
+<pre class="fssnip highlighted"><code lang="fsharp"><span class="k">type</span> <span data-fsdocs-tip="fs4" data-fsdocs-tip-unique="4" class="rt">Event</span> <span class="o">=</span> <span class="pn">{</span>
+    <span class="prop">entityId</span> <span class="pn">:</span> <span data-fsdocs-tip="fs5" data-fsdocs-tip-unique="5" class="vt">int64</span>
+    <span class="prop">data</span>     <span class="pn">:</span> <span data-fsdocs-tip="fs6" data-fsdocs-tip-unique="6" class="rt">string</span>
+<span class="pn">}</span>
+
+<span class="k">let</span> <span data-fsdocs-tip="fs7" data-fsdocs-tip-unique="7" class="id">stream</span> <span class="pn">:</span> <span data-fsdocs-tip="fs8" data-fsdocs-tip-unique="8" class="if">AsyncSeq</span><span class="pn">&lt;</span><span data-fsdocs-tip="fs4" data-fsdocs-tip-unique="9" class="rt">Event</span><span class="pn">&gt;</span> <span class="o">=</span> <span data-fsdocs-tip="fs9" data-fsdocs-tip-unique="10" class="fn">failwith</span> <span class="s">&quot;TODO: connect to message bus&quot;</span>
+
+<span class="k">let</span> <span data-fsdocs-tip="fs10" data-fsdocs-tip-unique="11" class="fn">action</span> <span class="pn">(</span><span data-fsdocs-tip="fs11" data-fsdocs-tip-unique="12" class="fn">e</span><span class="pn">:</span> <span data-fsdocs-tip="fs4" data-fsdocs-tip-unique="13" class="rt">Event</span><span class="pn">)</span> <span class="pn">:</span> <span data-fsdocs-tip="fs12" data-fsdocs-tip-unique="14" class="rt">Async</span><span class="pn">&lt;</span><span data-fsdocs-tip="fs13" data-fsdocs-tip-unique="15" class="rt">unit</span><span class="pn">&gt;</span> <span class="o">=</span> <span data-fsdocs-tip="fs9" data-fsdocs-tip-unique="16" class="fn">failwith</span> <span class="s">&quot;TODO: process event&quot;</span>
+
+<span class="c">// Process each entity&#39;s events sequentially, but different entities in parallel.</span>
+<span data-fsdocs-tip="fs7" data-fsdocs-tip-unique="17" class="id">stream</span>
+<span class="o">|&gt;</span> <span data-fsdocs-tip="fs8" data-fsdocs-tip-unique="18" class="m">AsyncSeq</span><span class="pn">.</span><span data-fsdocs-tip="fs14" data-fsdocs-tip-unique="19" class="id">groupBy</span> <span class="pn">(</span><span class="k">fun</span> <span data-fsdocs-tip="fs11" data-fsdocs-tip-unique="20" class="fn">e</span> <span class="k">-&gt;</span> <span data-fsdocs-tip="fs15" data-fsdocs-tip-unique="21" class="fn">int</span> <span data-fsdocs-tip="fs11" data-fsdocs-tip-unique="22" class="fn">e</span><span class="pn">.</span><span data-fsdocs-tip="fs16" data-fsdocs-tip-unique="23" class="id">entityId</span> <span class="o">%</span> <span class="n">4</span><span class="pn">)</span>  <span class="c">// hash into 4 buckets</span>
+<span class="o">|&gt;</span> <span data-fsdocs-tip="fs8" data-fsdocs-tip-unique="24" class="m">AsyncSeq</span><span class="pn">.</span><span data-fsdocs-tip="fs17" data-fsdocs-tip-unique="25" class="id">mapAsyncParallel</span> <span class="pn">(</span><span data-fsdocs-tip="fs18" data-fsdocs-tip-unique="26" class="fn">snd</span> <span class="o">&gt;</span><span class="pn">&gt;</span> <span data-fsdocs-tip="fs8" data-fsdocs-tip-unique="27" class="m">AsyncSeq</span><span class="pn">.</span><span data-fsdocs-tip="fs19" data-fsdocs-tip-unique="28" class="id">iterAsync</span> <span data-fsdocs-tip="fs10" data-fsdocs-tip-unique="29" class="fn">action</span><span class="pn">)</span>
+<span class="o">|&gt;</span> <span data-fsdocs-tip="fs8" data-fsdocs-tip-unique="30" class="m">AsyncSeq</span><span class="pn">.</span><span data-fsdocs-tip="fs20" data-fsdocs-tip-unique="31" class="id">iter</span> <span data-fsdocs-tip="fs21" data-fsdocs-tip-unique="32" class="fn">ignore</span>
+</code></pre>
+<p>We can combine this with batching for higher throughput. For example, when writing events to a
+full-text search index, batching writes improves performance while the <code>groupBy</code> ensures ordering
+within each entity:</p>
+<pre class="fssnip highlighted"><code lang="fsharp"><span class="k">let</span> <span data-fsdocs-tip="fs22" data-fsdocs-tip-unique="33" class="id">batchStream</span> <span class="pn">:</span> <span data-fsdocs-tip="fs8" data-fsdocs-tip-unique="34" class="if">AsyncSeq</span><span class="pn">&lt;</span><span data-fsdocs-tip="fs4" data-fsdocs-tip-unique="35" class="rt">Event</span><span class="pn">[</span><span class="pn">]</span><span class="pn">&gt;</span> <span class="o">=</span> <span data-fsdocs-tip="fs9" data-fsdocs-tip-unique="36" class="fn">failwith</span> <span class="s">&quot;TODO: connect to batched source&quot;</span>
+
+<span class="k">let</span> <span data-fsdocs-tip="fs23" data-fsdocs-tip-unique="37" class="fn">batchAction</span> <span class="pn">(</span><span data-fsdocs-tip="fs24" data-fsdocs-tip-unique="38" class="fn">es</span><span class="pn">:</span> <span data-fsdocs-tip="fs4" data-fsdocs-tip-unique="39" class="rt">Event</span><span class="pn">[</span><span class="pn">]</span><span class="pn">)</span> <span class="pn">:</span> <span data-fsdocs-tip="fs12" data-fsdocs-tip-unique="40" class="rt">Async</span><span class="pn">&lt;</span><span data-fsdocs-tip="fs13" data-fsdocs-tip-unique="41" class="rt">unit</span><span class="pn">&gt;</span> <span class="o">=</span> <span data-fsdocs-tip="fs9" data-fsdocs-tip-unique="42" class="fn">failwith</span> <span class="s">&quot;TODO: bulk index&quot;</span>
+
+<span data-fsdocs-tip="fs22" data-fsdocs-tip-unique="43" class="id">batchStream</span>
+<span class="o">|&gt;</span> <span data-fsdocs-tip="fs8" data-fsdocs-tip-unique="44" class="m">AsyncSeq</span><span class="pn">.</span><span data-fsdocs-tip="fs25" data-fsdocs-tip-unique="45" class="id">concatSeq</span>                              <span class="c">// flatten batches to individual events</span>
+<span class="o">|&gt;</span> <span data-fsdocs-tip="fs8" data-fsdocs-tip-unique="46" class="m">AsyncSeq</span><span class="pn">.</span><span data-fsdocs-tip="fs14" data-fsdocs-tip-unique="47" class="id">groupBy</span> <span class="pn">(</span><span class="k">fun</span> <span data-fsdocs-tip="fs11" data-fsdocs-tip-unique="48" class="fn">e</span> <span class="k">-&gt;</span> <span data-fsdocs-tip="fs15" data-fsdocs-tip-unique="49" class="fn">int</span> <span data-fsdocs-tip="fs11" data-fsdocs-tip-unique="50" class="fn">e</span><span class="pn">.</span><span data-fsdocs-tip="fs16" data-fsdocs-tip-unique="51" class="id">entityId</span> <span class="o">%</span> <span class="n">4</span><span class="pn">)</span> <span class="c">// partition into 4 groups</span>
+<span class="o">|&gt;</span> <span data-fsdocs-tip="fs8" data-fsdocs-tip-unique="52" class="m">AsyncSeq</span><span class="pn">.</span><span data-fsdocs-tip="fs17" data-fsdocs-tip-unique="53" class="id">mapAsyncParallel</span> <span class="pn">(</span><span data-fsdocs-tip="fs18" data-fsdocs-tip-unique="54" class="fn">snd</span>
+    <span class="o">&gt;</span><span class="pn">&gt;</span> <span data-fsdocs-tip="fs8" data-fsdocs-tip-unique="55" class="m">AsyncSeq</span><span class="pn">.</span><span data-fsdocs-tip="fs26" data-fsdocs-tip-unique="56" class="id">bufferByCountAndTime</span> <span class="n">500</span> <span class="n">1000</span>      <span class="c">// re-batch per sub-sequence</span>
+    <span class="o">&gt;</span><span class="pn">&gt;</span> <span data-fsdocs-tip="fs8" data-fsdocs-tip-unique="57" class="m">AsyncSeq</span><span class="pn">.</span><span data-fsdocs-tip="fs19" data-fsdocs-tip-unique="58" class="id">iterAsync</span> <span data-fsdocs-tip="fs23" data-fsdocs-tip-unique="59" class="fn">batchAction</span><span class="pn">)</span>             <span class="c">// bulk index each batch</span>
+<span class="o">|&gt;</span> <span data-fsdocs-tip="fs8" data-fsdocs-tip-unique="60" class="m">AsyncSeq</span><span class="pn">.</span><span data-fsdocs-tip="fs20" data-fsdocs-tip-unique="61" class="id">iter</span> <span data-fsdocs-tip="fs21" data-fsdocs-tip-unique="62" class="fn">ignore</span>
+</code></pre>
+<p>The above workflow: (1) reads events in batches, (2) flattens them, (3) partitions by entity into
+mutually-exclusive sub-sequences, (4) re-batches each sub-sequence by size/time, and (5) processes
+the batches in parallel while preserving per-entity ordering.</p>
+<h2><a name="Distinct-Until-Changed" class="anchor" href="#Distinct-Until-Changed">Distinct Until Changed</a></h2>
+<p><code>AsyncSeq.distinctUntilChanged</code> passes through every element of the source sequence but drops
+consecutive duplicates, so downstream consumers only see values that are genuinely new.</p>
+<pre class="fssnip highlighted"><code lang="fsharp"><span class="o">-----------------------------------</span>
+<span class="pn">|</span> <span class="id">source</span>  <span class="pn">|</span> <span class="id">a</span> <span class="pn">|</span> <span class="id">a</span> <span class="pn">|</span> <span class="id">b</span> <span class="pn">|</span> <span class="id">b</span> <span class="pn">|</span> <span class="id">b</span> <span class="pn">|</span> <span class="id">a</span> <span class="pn">|</span>
+<span class="pn">|</span> <span class="id">result</span>  <span class="pn">|</span> <span class="id">a</span> <span class="pn">|</span>   <span class="pn">|</span> <span class="id">b</span> <span class="pn">|</span>   <span class="pn">|</span>   <span class="pn">|</span> <span class="id">a</span> <span class="pn">|</span>
+<span class="o">-----------------------------------</span>
+</code></pre>
+<p>A natural use case is polling a resource on a fixed schedule and reacting only when its state
+actually changes. Consider a background job whose progress is exposed via a <code>getStatus</code> call:</p>
+<pre class="fssnip highlighted"><code lang="fsharp"><span class="k">type</span> <span data-fsdocs-tip="fs27" data-fsdocs-tip-unique="63" class="rt">Status</span> <span class="o">=</span> <span class="pn">{</span>
+    <span class="prop">completed</span> <span class="pn">:</span> <span data-fsdocs-tip="fs15" data-fsdocs-tip-unique="64" class="vt">int</span>
+    <span class="prop">finished</span>  <span class="pn">:</span> <span data-fsdocs-tip="fs28" data-fsdocs-tip-unique="65" class="vt">bool</span>
+    <span class="prop">result</span>    <span class="pn">:</span> <span data-fsdocs-tip="fs6" data-fsdocs-tip-unique="66" class="rt">string</span>
+<span class="pn">}</span>
+
+<span class="k">let</span> <span data-fsdocs-tip="fs29" data-fsdocs-tip-unique="67" class="id">getStatus</span> <span class="pn">:</span> <span data-fsdocs-tip="fs12" data-fsdocs-tip-unique="68" class="rt">Async</span><span class="pn">&lt;</span><span data-fsdocs-tip="fs27" data-fsdocs-tip-unique="69" class="rt">Status</span><span class="pn">&gt;</span> <span class="o">=</span> <span data-fsdocs-tip="fs9" data-fsdocs-tip-unique="70" class="fn">failwith</span> <span class="s">&quot;TODO: call job API&quot;</span>
+
+<span class="c">/// Poll every second and emit each status reading.</span>
+<span class="k">let</span> <span data-fsdocs-tip="fs30" data-fsdocs-tip-unique="71" class="id">statuses</span> <span class="pn">:</span> <span data-fsdocs-tip="fs8" data-fsdocs-tip-unique="72" class="if">AsyncSeq</span><span class="pn">&lt;</span><span data-fsdocs-tip="fs27" data-fsdocs-tip-unique="73" class="rt">Status</span><span class="pn">&gt;</span> <span class="o">=</span> <span data-fsdocs-tip="fs31" data-fsdocs-tip-unique="74" class="k">asyncSeq</span> <span class="pn">{</span>
+    <span class="k">while</span> <span class="k">true</span> <span class="k">do</span>
+        <span class="k">let!</span> <span data-fsdocs-tip="fs32" data-fsdocs-tip-unique="75" class="fn">s</span> <span class="o">=</span> <span data-fsdocs-tip="fs29" data-fsdocs-tip-unique="76" class="id">getStatus</span>
+        <span class="k">yield</span> <span data-fsdocs-tip="fs32" data-fsdocs-tip-unique="77" class="fn">s</span>
+        <span class="k">do!</span> <span data-fsdocs-tip="fs12" data-fsdocs-tip-unique="78" class="rt">Async</span><span class="pn">.</span><span data-fsdocs-tip="fs33" data-fsdocs-tip-unique="79" class="id">Sleep</span> <span class="n">1000</span>
+<span class="pn">}</span>
+
+<span class="c">/// Only emit when the status has actually changed.</span>
+<span class="k">let</span> <span data-fsdocs-tip="fs34" data-fsdocs-tip-unique="80" class="id">distinctStatuses</span> <span class="pn">:</span> <span data-fsdocs-tip="fs8" data-fsdocs-tip-unique="81" class="if">AsyncSeq</span><span class="pn">&lt;</span><span data-fsdocs-tip="fs27" data-fsdocs-tip-unique="82" class="rt">Status</span><span class="pn">&gt;</span> <span class="o">=</span>
+    <span data-fsdocs-tip="fs30" data-fsdocs-tip-unique="83" class="id">statuses</span> <span class="o">|&gt;</span> <span data-fsdocs-tip="fs8" data-fsdocs-tip-unique="84" class="m">AsyncSeq</span><span class="pn">.</span><span data-fsdocs-tip="fs35" data-fsdocs-tip-unique="85" class="id">distinctUntilChanged</span>
+</code></pre>
+<p>We can now build a workflow that logs every status change and stops as soon as the job finishes:</p>
+<pre class="fssnip highlighted"><code lang="fsharp"><span class="k">let</span> <span data-fsdocs-tip="fs36" data-fsdocs-tip-unique="86" class="id">jobResult</span> <span class="pn">:</span> <span data-fsdocs-tip="fs12" data-fsdocs-tip-unique="87" class="rt">Async</span><span class="pn">&lt;</span><span data-fsdocs-tip="fs6" data-fsdocs-tip-unique="88" class="rt">string</span><span class="pn">&gt;</span> <span class="o">=</span>
+    <span data-fsdocs-tip="fs34" data-fsdocs-tip-unique="89" class="id">distinctStatuses</span>
+    <span class="o">|&gt;</span> <span data-fsdocs-tip="fs8" data-fsdocs-tip-unique="90" class="m">AsyncSeq</span><span class="pn">.</span><span data-fsdocs-tip="fs37" data-fsdocs-tip-unique="91" class="id">pick</span> <span class="pn">(</span><span class="k">fun</span> <span data-fsdocs-tip="fs38" data-fsdocs-tip-unique="92" class="fn">st</span> <span class="k">-&gt;</span>
+        <span data-fsdocs-tip="fs39" data-fsdocs-tip-unique="93" class="fn">printfn</span> <span class="s">&quot;status=</span><span class="pf">%A</span><span class="s">&quot;</span> <span data-fsdocs-tip="fs38" data-fsdocs-tip-unique="94" class="fn">st</span>
+        <span class="k">if</span> <span data-fsdocs-tip="fs38" data-fsdocs-tip-unique="95" class="fn">st</span><span class="pn">.</span><span data-fsdocs-tip="fs40" data-fsdocs-tip-unique="96" class="id">finished</span> <span class="k">then</span> <span data-fsdocs-tip="fs41" data-fsdocs-tip-unique="97" class="uc">Some</span> <span data-fsdocs-tip="fs38" data-fsdocs-tip-unique="98" class="fn">st</span><span class="pn">.</span><span data-fsdocs-tip="fs42" data-fsdocs-tip-unique="99" class="id">result</span> <span class="k">else</span> <span data-fsdocs-tip="fs43" data-fsdocs-tip-unique="100" class="uc">None</span><span class="pn">)</span>
+</code></pre>
+<h2><a name="Buffer-by-Count-and-Time" class="anchor" href="#Buffer-by-Count-and-Time">Buffer by Count and Time</a></h2>
+<p><code>AsyncSeq.bufferByCountAndTime</code> accumulates incoming elements and emits a batch whenever
+<em>either</em> the buffer reaches a given size <em>or</em> a timeout elapses — whichever comes first. If the
+buffer is empty when the timeout fires, nothing is emitted.</p>
+<pre class="fssnip highlighted"><code lang="fsharp"><span class="o">-------------------------------------------------------</span>
+<span class="pn">|</span> <span class="id">source</span>   <span class="pn">|</span>  <span class="id">a1</span> <span class="pn">|</span> <span class="id">a2</span> <span class="pn">|</span> <span class="id">a3</span>         <span class="pn">|</span> <span class="id">a4</span>      <span class="pn">|</span>        <span class="pn">|</span>
+<span class="pn">|</span> <span class="id">result</span>   <span class="pn">|</span>     <span class="pn">|</span>    <span class="pn">|</span> <span class="pn">[</span><span class="id">a1</span><span class="pn">,</span><span class="id">a2</span><span class="pn">,</span><span class="id">a3</span><span class="pn">]</span> <span class="pn">|</span>         <span class="pn">|</span>  <span class="pn">[</span><span class="id">a4</span><span class="pn">]</span>  <span class="pn">|</span>
+<span class="o">-------------------------------------------------------</span>
+           
+</code></pre>
+<p>This is useful for services that write events to a bulk API (e.g. a search index). Fixed-size
+batching with <code>AsyncSeq.bufferByCount</code> can stall when the source slows down and a partial buffer
+never fills. <code>bufferByCountAndTime</code> avoids that by guaranteeing forward progress:</p>
+<pre class="fssnip highlighted"><code lang="fsharp"><span class="k">let</span> <span data-fsdocs-tip="fs44" data-fsdocs-tip-unique="101" class="id">events</span> <span class="pn">:</span> <span data-fsdocs-tip="fs8" data-fsdocs-tip-unique="102" class="if">AsyncSeq</span><span class="pn">&lt;</span><span data-fsdocs-tip="fs4" data-fsdocs-tip-unique="103" class="rt">Event</span><span class="pn">&gt;</span> <span class="o">=</span> <span data-fsdocs-tip="fs9" data-fsdocs-tip-unique="104" class="fn">failwith</span> <span class="s">&quot;TODO: connect to event source&quot;</span>
+
+<span class="k">let</span> <span data-fsdocs-tip="fs45" data-fsdocs-tip-unique="105" class="id">bufferSize</span>    <span class="o">=</span> <span class="n">100</span>
+<span class="k">let</span> <span data-fsdocs-tip="fs46" data-fsdocs-tip-unique="106" class="id">bufferTimeout</span> <span class="o">=</span> <span class="n">1000</span> <span class="c">// milliseconds</span>
+
+<span class="k">let</span> <span data-fsdocs-tip="fs47" data-fsdocs-tip-unique="107" class="id">bufferedEvents</span> <span class="pn">:</span> <span data-fsdocs-tip="fs8" data-fsdocs-tip-unique="108" class="if">AsyncSeq</span><span class="pn">&lt;</span><span data-fsdocs-tip="fs4" data-fsdocs-tip-unique="109" class="rt">Event</span><span class="pn">[</span><span class="pn">]</span><span class="pn">&gt;</span> <span class="o">=</span>
+    <span data-fsdocs-tip="fs44" data-fsdocs-tip-unique="110" class="id">events</span> <span class="o">|&gt;</span> <span data-fsdocs-tip="fs8" data-fsdocs-tip-unique="111" class="m">AsyncSeq</span><span class="pn">.</span><span data-fsdocs-tip="fs26" data-fsdocs-tip-unique="112" class="id">bufferByCountAndTime</span> <span data-fsdocs-tip="fs45" data-fsdocs-tip-unique="113" class="id">bufferSize</span> <span data-fsdocs-tip="fs46" data-fsdocs-tip-unique="114" class="id">bufferTimeout</span>
+</code></pre>
+
+        <div popover class="fsdocs-tip" id="fs1">namespace System</div>
+<div popover class="fsdocs-tip" id="fs2">Multiple items<br />namespace FSharp<br /><br />--------------------<br />namespace Microsoft.FSharp</div>
+<div popover class="fsdocs-tip" id="fs3">Multiple items<br />namespace FSharp.Control<br /><br />--------------------<br />namespace Microsoft.FSharp.Control</div>
+<div popover class="fsdocs-tip" id="fs4">Multiple items<br />module Event
+
+from Microsoft.FSharp.Control<br /><br />--------------------<br />type Event =
+  {
+    entityId: int64
+    data: string
+  }<br /><br />--------------------<br />type Event&lt;&#39;T&gt; =
+  new: unit -&gt; Event&lt;&#39;T&gt;
+  member Trigger: arg: &#39;T -&gt; unit
+  member Publish: IEvent&lt;&#39;T&gt;<br /><br />--------------------<br />type Event&lt;&#39;Delegate,&#39;Args (requires delegate and &#39;Delegate :&gt; Delegate and reference type and &#39;Delegate: not null)&gt; =
+  new: unit -&gt; Event&lt;&#39;Delegate,&#39;Args&gt;
+  member Trigger: sender: objnull * args: &#39;Args -&gt; unit
+  member Publish: IEvent&lt;&#39;Delegate,&#39;Args&gt;<br /><br />--------------------<br />new: unit -&gt; Event&lt;&#39;T&gt;<br /><br />--------------------<br />new: unit -&gt; Event&lt;&#39;Delegate,&#39;Args&gt;</div>
+<div popover class="fsdocs-tip" id="fs5">Multiple items<br />val int64: value: &#39;T -&gt; int64 (requires member op_Explicit)<br /><br />--------------------<br />type int64 = Int64<br /><br />--------------------<br />type int64&lt;&#39;Measure&gt; =
+  int64</div>
+<div popover class="fsdocs-tip" id="fs6">Multiple items<br />val string: value: &#39;T -&gt; string<br /><br />--------------------<br />type string = String</div>
+<div popover class="fsdocs-tip" id="fs7">val stream: AsyncSeq&lt;Event&gt;</div>
+<div popover class="fsdocs-tip" id="fs8">Multiple items<br />module AsyncSeq
+
+from FSharp.Control<br /><br />--------------------<br />type AsyncSeq&lt;&#39;T&gt; = Collections.Generic.IAsyncEnumerable&lt;&#39;T&gt;<br /><em>&lt;summary&gt;
+ An asynchronous sequence; equivalent to System.Collections.Generic.IAsyncEnumerable&amp;lt;&#39;T&amp;gt;.
+ Use the asyncSeq { ... } computation expression to create values, and the AsyncSeq module
+ for combinators.
+&lt;/summary&gt;</em></div>
+<div popover class="fsdocs-tip" id="fs9">val failwith: message: string -&gt; &#39;T</div>
+<div popover class="fsdocs-tip" id="fs10">val action: e: Event -&gt; Async&lt;unit&gt;</div>
+<div popover class="fsdocs-tip" id="fs11">val e: Event</div>
+<div popover class="fsdocs-tip" id="fs12">Multiple items<br />type Async =
+  static member AsBeginEnd: computation: (&#39;Arg -&gt; Async&lt;&#39;T&gt;) -&gt; (&#39;Arg * AsyncCallback * objnull -&gt; IAsyncResult) * (IAsyncResult -&gt; &#39;T) * (IAsyncResult -&gt; unit)
+  static member AwaitEvent: event: IEvent&lt;&#39;Del,&#39;T&gt; * ?cancelAction: (unit -&gt; unit) -&gt; Async&lt;&#39;T&gt; (requires delegate and &#39;Del :&gt; Delegate and &#39;Del: not null)
+  static member AwaitIAsyncResult: iar: IAsyncResult * ?millisecondsTimeout: int -&gt; Async&lt;bool&gt;
+  static member AwaitTask: task: Task&lt;&#39;T&gt; -&gt; Async&lt;&#39;T&gt; + 1 overload
+  static member AwaitWaitHandle: waitHandle: WaitHandle * ?millisecondsTimeout: int -&gt; Async&lt;bool&gt;
+  static member CancelDefaultToken: unit -&gt; unit
+  static member Catch: computation: Async&lt;&#39;T&gt; -&gt; Async&lt;Choice&lt;&#39;T,exn&gt;&gt;
+  static member Choice: computations: Async&lt;&#39;T option&gt; seq -&gt; Async&lt;&#39;T option&gt;
+  static member FromBeginEnd: beginAction: (AsyncCallback * objnull -&gt; IAsyncResult) * endAction: (IAsyncResult -&gt; &#39;T) * ?cancelAction: (unit -&gt; unit) -&gt; Async&lt;&#39;T&gt; + 3 overloads
+  static member FromContinuations: callback: ((&#39;T -&gt; unit) * (exn -&gt; unit) * (OperationCanceledException -&gt; unit) -&gt; unit) -&gt; Async&lt;&#39;T&gt;
+  ...<br /><br />--------------------<br />type Async&lt;&#39;T&gt;</div>
+<div popover class="fsdocs-tip" id="fs13">type unit = Unit</div>
+<div popover class="fsdocs-tip" id="fs14">val groupBy: projection: (&#39;T -&gt; &#39;Key) -&gt; source: AsyncSeq&lt;&#39;T&gt; -&gt; AsyncSeq&lt;&#39;Key * AsyncSeq&lt;&#39;T&gt;&gt; (requires equality)<br /><em>&lt;summary&gt;
+ Applies a key-generating function to each element and returns an async sequence containing unique keys
+ and async sequences containing elements corresponding to the key.
+
+ Note that the resulting async sequence has to be processed in parallel (e.g AsyncSeq.mapAsyncParallel) becaused
+ completion of sub-sequences depends on completion of other sub-sequences.
+&lt;/summary&gt;</em></div>
+<div popover class="fsdocs-tip" id="fs15">Multiple items<br />val int: value: &#39;T -&gt; int (requires member op_Explicit)<br /><br />--------------------<br />type int = int32<br /><br />--------------------<br />type int&lt;&#39;Measure&gt; =
+  int</div>
+<div popover class="fsdocs-tip" id="fs16">Event.entityId: int64</div>
+<div popover class="fsdocs-tip" id="fs17">val mapAsyncParallel: mapping: (&#39;T -&gt; Async&lt;&#39;U&gt;) -&gt; s: AsyncSeq&lt;&#39;T&gt; -&gt; AsyncSeq&lt;&#39;U&gt;<br /><em>&lt;summary&gt;
+ Builds a new asynchronous sequence whose elements are generated by
+ applying the specified function to all elements of the input sequence.
+
+ The function is applied to elements in order and results are emitted in order,
+ but in parallel, without waiting for a prior mapping operation to complete.
+ Parallelism is bound by the ThreadPool.
+&lt;/summary&gt;</em></div>
+<div popover class="fsdocs-tip" id="fs18">val snd: tuple: (&#39;T1 * &#39;T2) -&gt; &#39;T2</div>
+<div popover class="fsdocs-tip" id="fs19">val iterAsync: action: (&#39;T -&gt; Async&lt;unit&gt;) -&gt; source: AsyncSeq&lt;&#39;T&gt; -&gt; Async&lt;unit&gt;<br /><em>&lt;summary&gt;
+ Iterates over the input sequence and calls the specified asynchronous function for
+ every value. The input sequence will be asked for the next element after
+ the processing of an element completes.
+&lt;/summary&gt;</em></div>
+<div popover class="fsdocs-tip" id="fs20">val iter: action: (&#39;T -&gt; unit) -&gt; source: AsyncSeq&lt;&#39;T&gt; -&gt; Async&lt;unit&gt;<br /><em>&lt;summary&gt;
+ Iterates over the input sequence and calls the specified function for
+ every value.
+&lt;/summary&gt;</em></div>
+<div popover class="fsdocs-tip" id="fs21">val ignore: value: &#39;T -&gt; unit</div>
+<div popover class="fsdocs-tip" id="fs22">val batchStream: AsyncSeq&lt;Event array&gt;</div>
+<div popover class="fsdocs-tip" id="fs23">val batchAction: es: Event array -&gt; Async&lt;unit&gt;</div>
+<div popover class="fsdocs-tip" id="fs24">val es: Event array</div>
+<div popover class="fsdocs-tip" id="fs25">val concatSeq: source: AsyncSeq&lt;#seq&lt;&#39;T&gt;&gt; -&gt; AsyncSeq&lt;&#39;T&gt;<br /><em>&lt;summary&gt;
+ Flattens an AsyncSeq of synchronous sequences.
+&lt;/summary&gt;</em></div>
+<div popover class="fsdocs-tip" id="fs26">val bufferByCountAndTime: bufferSize: int -&gt; timeoutMs: int -&gt; source: AsyncSeq&lt;&#39;T&gt; -&gt; AsyncSeq&lt;&#39;T array&gt;<br /><em>&lt;summary&gt;
+ Buffer items from the async sequence until a specified buffer size is reached or a specified amount of time is elapsed.
+&lt;/summary&gt;</em></div>
+<div popover class="fsdocs-tip" id="fs27">type Status =
+  {
+    completed: int
+    finished: bool
+    result: string
+  }</div>
+<div popover class="fsdocs-tip" id="fs28">type bool = Boolean</div>
+<div popover class="fsdocs-tip" id="fs29">val getStatus: Async&lt;Status&gt;</div>
+<div popover class="fsdocs-tip" id="fs30">val statuses: AsyncSeq&lt;Status&gt;<br /><em>&#160;Poll every second and emit each status reading.</em></div>
+<div popover class="fsdocs-tip" id="fs31">val asyncSeq: AsyncSeq.AsyncSeqBuilder<br /><em>&lt;summary&gt;
+ Builds an asynchronous sequence using the computation builder syntax
+&lt;/summary&gt;</em></div>
+<div popover class="fsdocs-tip" id="fs32">val s: Status</div>
+<div popover class="fsdocs-tip" id="fs33">static member Async.Sleep: dueTime: TimeSpan -&gt; Async&lt;unit&gt;<br />static member Async.Sleep: millisecondsDueTime: int -&gt; Async&lt;unit&gt;</div>
+<div popover class="fsdocs-tip" id="fs34">val distinctStatuses: AsyncSeq&lt;Status&gt;<br /><em>&#160;Only emit when the status has actually changed.</em></div>
+<div popover class="fsdocs-tip" id="fs35">val distinctUntilChanged: source: AsyncSeq&lt;&#39;T&gt; -&gt; AsyncSeq&lt;&#39;T&gt; (requires equality)<br /><em>&lt;summary&gt;
+ Returns an async sequence which contains no contiguous duplicate elements.
+&lt;/summary&gt;</em></div>
+<div popover class="fsdocs-tip" id="fs36">val jobResult: Async&lt;string&gt;</div>
+<div popover class="fsdocs-tip" id="fs37">val pick: chooser: (&#39;T -&gt; &#39;TResult option) -&gt; source: AsyncSeq&lt;&#39;T&gt; -&gt; Async&lt;&#39;TResult&gt;<br /><em>&lt;summary&gt;
+ Asynchronously pick a value from a sequence based on the specified chooser function.
+ Raises KeyNotFoundException if the chooser function can&#39;t find a matching key.
+&lt;/summary&gt;</em></div>
+<div popover class="fsdocs-tip" id="fs38">val st: Status</div>
+<div popover class="fsdocs-tip" id="fs39">val printfn: format: Printf.TextWriterFormat&lt;&#39;T&gt; -&gt; &#39;T</div>
+<div popover class="fsdocs-tip" id="fs40">Status.finished: bool</div>
+<div popover class="fsdocs-tip" id="fs41">union case Option.Some: Value: &#39;T -&gt; Option&lt;&#39;T&gt;</div>
+<div popover class="fsdocs-tip" id="fs42">Status.result: string</div>
+<div popover class="fsdocs-tip" id="fs43">union case Option.None: Option&lt;&#39;T&gt;</div>
+<div popover class="fsdocs-tip" id="fs44">val events: AsyncSeq&lt;Event&gt;</div>
+<div popover class="fsdocs-tip" id="fs45">val bufferSize: int</div>
+<div popover class="fsdocs-tip" id="fs46">val bufferTimeout: int</div>
+<div popover class="fsdocs-tip" id="fs47">val bufferedEvents: AsyncSeq&lt;Event array&gt;</div>
+
+    </div>
+</main>
+<aside id="fsdocs-page-menu">
+    <p id="on-this-page">On this page</p>
+    <ul>
+  <li class="level-1">
+    <a href="#Advanced-AsyncSeq-Operations">
+      Advanced AsyncSeq Operations
+    </a>
+  </li>
+  <li class="level-2">
+    <a href="#Group-By">
+      Group By
+    </a>
+  </li>
+  <li class="level-2">
+    <a href="#Distinct-Until-Changed">
+      Distinct Until Changed
+    </a>
+  </li>
+  <li class="level-2">
+    <a href="#Buffer-by-Count-and-Time">
+      Buffer by Count and Time
+    </a>
+  </li>
+</ul>
+</aside>
+<dialog>
+    <input type="search" placeholder="Search docs" />
+    <div class="results">
+        <ul></ul>
+        <p class="empty">Type something to start searching.</p>
+    </div>
+</dialog>
+<script type="module" src="https://fsprojects.github.io/FSharp.Control.AsyncSeq/content/fsdocs-tips.js"></script>
+<script type="module" src="https://fsprojects.github.io/FSharp.Control.AsyncSeq/content/fsdocs-theme-toggle.js"></script>
+<script type="module" src="https://fsprojects.github.io/FSharp.Control.AsyncSeq/content/fsdocs-details-toggle.js"></script>
+<script type="module" src="https://fsprojects.github.io/FSharp.Control.AsyncSeq/content/fsdocs-theme.js"></script>
+<script type="module" src="https://fsprojects.github.io/FSharp.Control.AsyncSeq/content/fsdocs-search.js"></script>
+<script type="module" src="https://fsprojects.github.io/FSharp.Control.AsyncSeq/content/fsdocs-copy-button.js"></script>
+
+</body>
+</html>
