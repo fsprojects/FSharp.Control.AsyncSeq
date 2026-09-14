@@ -3,6 +3,7 @@
 * Test coverage: Added tests for previously-untested public API functions `AsyncSeq.tryFirst`, `AsyncSeq.firstOrDefault`, `AsyncSeq.zipWithParallel`, `AsyncSeq.combineLatestWithAsync`, and `AsyncSeq.toObservable`. No functional changes.
 * Test coverage: Added tests for `AsyncSeq.bufferByCount` (obsolete alias of `chunkBySize`) and `Seq.ofAsyncSeq`, which previously had no dedicated test coverage. No functional changes.
 * Fixed Fable CI build: `Microsoft.Bcl.AsyncInterfaces` was pinned to a specific version (`10.0.7`) that was older than the version resolved transitively via `System.Threading.Channels`, causing a `NU1605` package downgrade error that made Fable's project cracker fail during `dotnet fable`. The reference now uses `Version="*"` (matching `System.Threading.Channels`) so both resolve consistently. (#334)
+* Tests: Added comprehensive tests for `AsyncSeq.zapp`, `AsyncSeq.zappAsync`, and `AsyncSeq.compareWithAsync`, which previously had no dedicated test coverage.
 
 ### 4.17.0
 
