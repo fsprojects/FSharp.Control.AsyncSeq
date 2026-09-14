@@ -5178,6 +5178,7 @@ let ``AsyncSeq.toObservable on empty sequence emits nothing`` () =
   use _sub = (AsyncSeq.toObservable (AsyncSeq.empty<int>)).Subscribe(observer)
   Assert.IsTrue(completedEvent.Wait(2000))
   Assert.AreEqual([||], received.ToArray())
+
 // ===== zapp / zappAsync =====
 
 [<Test>]
