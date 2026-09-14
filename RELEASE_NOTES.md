@@ -2,6 +2,7 @@
 
 * Test coverage: Added tests for previously-untested public API functions `AsyncSeq.tryFirst`, `AsyncSeq.firstOrDefault`, `AsyncSeq.zipWithParallel`, `AsyncSeq.combineLatestWithAsync`, and `AsyncSeq.toObservable`. No functional changes.
 * Fixed Fable CI build: `Microsoft.Bcl.AsyncInterfaces` was pinned to a specific version (`10.0.7`) that was older than the version resolved transitively via `System.Threading.Channels`, causing a `NU1605` package downgrade error that made Fable's project cracker fail during `dotnet fable`. The reference now uses `Version="*"` (matching `System.Threading.Channels`) so both resolve consistently. (#334)
+* Performance: Optimised `AsyncSeq.distinctUntilChangedWithAsync` (and thus `distinctUntilChangedWith` / `distinctUntilChanged`) to track the previous element with a `hasPrev` flag and a direct `mutable` field instead of wrapping it in a `'T option`. Previously each iteration heap-allocated a new `Some` box; the new implementation eliminates that allocation, matching the pattern already used by `pairwise`.
 
 ### 4.17.0
 
