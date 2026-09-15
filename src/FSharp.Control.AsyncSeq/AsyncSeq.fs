@@ -2682,8 +2682,8 @@ module AsyncSeq =
         for i in 0 .. ss.Length - 1 do
             let! task = Async.StartChildAsTask (ies.[i].MoveNext())
             do tasks.[i] <- task
-        let fin = ref n
-        while fin.Value > 0 do
+        let mutable fin = n
+        while fin > 0 do
             let! ti = Task.WhenAny (tasks) |> Async.AwaitTask
             let i  = Array.IndexOf (tasks, ti)
             let v = ti.Result
@@ -2697,7 +2697,7 @@ module AsyncSeq =
             | None ->
                 let t = System.Threading.Tasks.TaskCompletionSource()
                 tasks.[i] <- t.Task // result never gets set
-                fin.Value <- fin.Value - 1
+                fin <- fin - 1
     }
 
   let combineLatestWithAsync (f:'a -> 'b -> Async<'c>) (source1:AsyncSeq<'a>) (source2:AsyncSeq<'b>) : AsyncSeq<'c> =
