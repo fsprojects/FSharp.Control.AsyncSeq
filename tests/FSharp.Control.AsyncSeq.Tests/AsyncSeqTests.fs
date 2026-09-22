@@ -6,6 +6,8 @@
 #endif
 module AsyncSeqTests
 
+#nowarn "44" // suppress Obsolete warnings for intentional tests of obsolete API (e.g. AsyncSeq.zipWithIndexAsync)
+
 open NUnit.Framework
 open FSharp.Control
 open System
@@ -5277,3 +5279,67 @@ let ``AsyncSeq.compareWithAsync empty sequences returns 0`` () =
       AsyncSeq.empty<int>
     |> Async.RunSynchronously
   Assert.AreEqual(0, result)
+
+// ===== zipWithIndexAsync (obsolete alias for mapiAsync) =====
+
+[<Test>]
+let ``AsyncSeq.zipWithIndexAsync maps elements with their int64 index`` () =
+  let result =
+    AsyncSeq.ofSeq ["a"; "b"; "c"]
+    |> AsyncSeq.zipWithIndexAsync (fun i x -> async { return sprintf "%d:%s" i x })
+    |> AsyncSeq.toArrayAsync
+    |> Async.RunSynchronously
+  Assert.AreEqual([| "0:a"; "1:b"; "2:c" |], result)
+
+[<Test>]
+let ``AsyncSeq.zipWithIndexAsync on empty sequence returns empty`` () =
+  let result =
+    AsyncSeq.empty<string>
+    |> AsyncSeq.zipWithIndexAsync (fun i x -> async { return sprintf "%d:%s" i x })
+    |> AsyncSeq.toArrayAsync
+    |> Async.RunSynchronously
+  Assert.AreEqual([||], result)
+
+[<Test>]
+let ``AsyncSeq.zipWithIndexAsync matches mapiAsync behavior`` () =
+  let xs = AsyncSeq.ofSeq [10; 20; 30]
+  let f i x = async { return int i * x }
+  let viaZipWithIndexAsync = xs |> AsyncSeq.zipWithIndexAsync f |> AsyncSeq.toArrayAsync |> Async.RunSynchronously
+  let viaMapiAsync = xs |> AsyncSeq.mapiAsync f |> AsyncSeq.toArrayAsync |> Async.RunSynchronously
+  Assert.AreEqual(viaMapiAsync, viaZipWithIndexAsync)
+
+#if (NETSTANDARD2_1 || NETCOREAPP3_0)
+// ===== ofIQueryable =====
+
+/// Minimal IQueryable<'T> implementation that also implements IAsyncEnumerable<'T>,
+/// as required by AsyncSeq.ofIQueryable (which casts its input to IAsyncEnumerable<'T>).
+type private FakeAsyncQueryable<'T>(data: 'T[]) =
+  let inner = data.AsQueryable()
+  interface System.Collections.IEnumerable with
+    member _.GetEnumerator() : System.Collections.IEnumerator = (inner :> System.Collections.IEnumerable).GetEnumerator()
+  interface Collections.Generic.IEnumerable<'T> with
+    member _.GetEnumerator() : Collections.Generic.IEnumerator<'T> = (inner :> Collections.Generic.IEnumerable<'T>).GetEnumerator()
+  interface Linq.IQueryable<'T> with
+    member _.ElementType = inner.ElementType
+    member _.Expression = inner.Expression
+    member _.Provider = inner.Provider
+  interface Collections.Generic.IAsyncEnumerable<'T> with
+    member _.GetAsyncEnumerator(_ct: CancellationToken) : Collections.Generic.IAsyncEnumerator<'T> =
+      let e = (data :> Collections.Generic.IEnumerable<'T>).GetEnumerator()
+      { new Collections.Generic.IAsyncEnumerator<'T> with
+          member _.Current = e.Current
+          member _.MoveNextAsync() = Threading.Tasks.ValueTask<bool>(e.MoveNext())
+          member _.DisposeAsync() = e.Dispose(); Threading.Tasks.ValueTask() }
+
+[<Test>]
+let ``AsyncSeq.ofIQueryable returns elements in order`` () =
+  let query = FakeAsyncQueryable<int>([| 1; 2; 3 |]) :> Linq.IQueryable<int>
+  let result = AsyncSeq.ofIQueryable query |> AsyncSeq.toArrayAsync |> Async.RunSynchronously
+  Assert.AreEqual([| 1; 2; 3 |], result)
+
+[<Test>]
+let ``AsyncSeq.ofIQueryable on empty queryable returns empty`` () =
+  let query = FakeAsyncQueryable<int>([||]) :> Linq.IQueryable<int>
+  let result = AsyncSeq.ofIQueryable query |> AsyncSeq.toArrayAsync |> Async.RunSynchronously
+  Assert.AreEqual([||], result)
+#endif
