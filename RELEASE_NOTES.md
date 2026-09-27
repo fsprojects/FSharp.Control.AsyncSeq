@@ -4,6 +4,7 @@
 * Test coverage: Added tests for `AsyncSeq.bufferByCount` (obsolete alias of `chunkBySize`) and `Seq.ofAsyncSeq`, which previously had no dedicated test coverage. No functional changes.
 * Fixed Fable CI build: `Microsoft.Bcl.AsyncInterfaces` was pinned to a specific version (`10.0.7`) that was older than the version resolved transitively via `System.Threading.Channels`, causing a `NU1605` package downgrade error that made Fable's project cracker fail during `dotnet fable`. The reference now uses `Version="*"` (matching `System.Threading.Channels`) so both resolve consistently. (#334)
 * Tests: Added comprehensive tests for `AsyncSeq.zapp`, `AsyncSeq.zappAsync`, and `AsyncSeq.compareWithAsync`, which previously had no dedicated test coverage.
+* Performance: Replaced the last remaining `ref` cell in `AsyncSeq.mergeAll`'s internal counter with a direct `mutable` local, matching the `ref`-to-`mutable` modernisation already applied elsewhere in the codebase. Eliminates a per-call heap allocation of a `Ref<int>` wrapper; no behavioral change.
 
 ### 4.17.0
 
