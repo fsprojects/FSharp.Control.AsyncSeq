@@ -1,5 +1,6 @@
 ### Unreleased
 
+* Bug fix: `AsyncSeq.mapAsyncUnorderedParallel` and `AsyncSeq.mapAsyncUnorderedParallelThrottled` now emit results in true completion order rather than input/start order. Previously, task handles were posted to the internal mailbox in input order and awaited sequentially, so a slow-completing early item could block delivery of an already-completed later item. Results (and exceptions) are now posted to the mailbox directly from each child as soon as it finishes, so a fast-finishing later item is no longer blocked by a slower earlier one. (#354)
 * Test coverage: Added tests for `AsyncSeq.zipWithIndexAsync` (obsolete alias for `mapiAsync`) and `AsyncSeq.ofIQueryable`, which previously had no dedicated test coverage. No functional changes.
 * Test coverage: Added tests for previously-untested public API functions `AsyncSeq.tryFirst`, `AsyncSeq.firstOrDefault`, `AsyncSeq.zipWithParallel`, `AsyncSeq.combineLatestWithAsync`, and `AsyncSeq.toObservable`. No functional changes.
 * Test coverage: Added tests for `AsyncSeq.distinctUntilChanged` (default-equality variant), `AsyncSeq.takeWhile`, and `AsyncSeq.skipWhile` (sync-predicate variants), which previously had no direct tests. No functional changes.
