@@ -5258,6 +5258,7 @@ let ``Seq.ofAsyncSeq consumes elements lazily`` () =
   let result = AsyncSeq.ofSeq [1;2;3] |> Seq.ofAsyncSeq |> Seq.take 2 |> Seq.toList
   Assert.AreEqual([1;2], result)
 #endif
+
 // ===== zapp / zappAsync =====
 
 [<Test>]
