@@ -1108,25 +1108,35 @@ module AsyncSeq =
       replicateUntilNoneAsync (Task.chooseTask (err |> Task.taskFault) (async.Delay mb.Receive))
       |> mapAsync id }
 
+  // Note: results are posted to the mailbox directly from each child computation as soon as
+  // it completes (rather than posting a handle to be awaited later), so that the consumer
+  // observes true completion order instead of input/start order. A pending counter (starting
+  // at 1 to represent the enumeration of the source itself) is decremented each time a child
+  // completes or the source is fully enumerated; the "no more results" sentinel is posted only
+  // once it reaches zero, guaranteeing it is queued after every child's result.
   let mapAsyncUnorderedParallel (f:'a -> Async<'b>) (s:AsyncSeq<'a>) : AsyncSeq<'b> = asyncSeq {
     use mb = MailboxProcessor.Start (fun _ -> async.Return())
+    let! ct = Async.CancellationToken
+    let pending = ref 1
+    let complete () =
+      if Interlocked.Decrement pending = 0 then
+        mb.Post None
     let! err =
       s
       |> iterAsync (fun a -> async {
-        let! b = Async.StartChild (async {
+        Interlocked.Increment pending |> ignore
+        Async.Start (async {
           try
             let! result = f a
-            return Choice1Of2 result
+            mb.Post (Some (Choice1Of2 result))
           with ex ->
-            return Choice2Of2 ex
-        })
-        mb.Post (Some b) })
-      |> Async.map (fun _ -> mb.Post None)
+            mb.Post (Some (Choice2Of2 ex))
+          complete () }, ct) })
+      |> Async.map complete
       |> Async.StartChildAsTask
     yield!
       replicateUntilNoneAsync (Task.chooseTask (err |> Task.taskFault) (async.Delay mb.Receive))
-      |> mapAsync (fun childAsync -> async {
-        let! result = childAsync
+      |> mapAsync (fun result -> async {
         match result with
         | Choice1Of2 value -> return value
         | Choice2Of2 ex -> return raise ex })
@@ -1135,26 +1145,30 @@ module AsyncSeq =
   let mapAsyncUnorderedParallelThrottled (parallelism:int) (f:'a -> Async<'b>) (s:AsyncSeq<'a>) : AsyncSeq<'b> = asyncSeq {
     use mb = MailboxProcessor.Start (fun _ -> async.Return())
     use sm = new SemaphoreSlim(parallelism)
+    let! ct = Async.CancellationToken
+    let pending = ref 1
+    let complete () =
+      if Interlocked.Decrement pending = 0 then
+        mb.Post None
     let! err =
       s
       |> iterAsync (fun a -> async {
         do! sm.WaitAsync () |> Async.awaitTaskUnitCancellationAsError
-        let! b = Async.StartChild (async {
+        Interlocked.Increment pending |> ignore
+        Async.Start (async {
           try
             let! result = f a
             sm.Release() |> ignore
-            return Choice1Of2 result
+            mb.Post (Some (Choice1Of2 result))
           with ex ->
             sm.Release() |> ignore
-            return Choice2Of2 ex
-        })
-        mb.Post (Some b) })
-      |> Async.map (fun _ -> mb.Post None)
+            mb.Post (Some (Choice2Of2 ex))
+          complete () }, ct) })
+      |> Async.map complete
       |> Async.StartChildAsTask
     yield!
       replicateUntilNoneAsync (Task.chooseTask (err |> Task.taskFault) (async.Delay mb.Receive))
-      |> mapAsync (fun childAsync -> async {
-        let! result = childAsync
+      |> mapAsync (fun result -> async {
         match result with
         | Choice1Of2 value -> return value
         | Choice2Of2 ex -> return raise ex })

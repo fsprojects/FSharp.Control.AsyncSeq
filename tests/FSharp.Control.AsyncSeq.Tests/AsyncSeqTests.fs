@@ -1933,6 +1933,62 @@ let ``AsyncSeq.mapAsyncUnorderedParallel should not preserve order`` () =
   let allPresent = (Set.ofList resultOrder) = (Set.ofList input)
   Assert.IsTrue(allPresent, "All input elements should be present in results")
 
+[<Test>]
+let ``AsyncSeq.mapAsyncUnorderedParallel should emit in completion order not input order`` () =
+  // Regression test for https://github.com/fsprojects/FSharp.Control.AsyncSeq/issues/354
+  // Item 1 is gated behind a signal that is only released after item 2 has finished its
+  // mapper. The consumer must receive item 2 before item 1 is released.
+  use releaseFirst = new SemaphoreSlim(0)
+  use secondFinished = new SemaphoreSlim(0)
+  let emitted = System.Collections.Concurrent.ConcurrentQueue<int>()
+
+  let pipeline =
+    [1; 2]
+    |> AsyncSeq.ofSeq
+    |> AsyncSeq.mapAsyncUnorderedParallel (fun x -> async {
+      if x = 1 then
+        do! releaseFirst.WaitAsync() |> Async.AwaitTask
+      else
+        secondFinished.Release() |> ignore
+      return x
+    })
+    |> AsyncSeq.iter (fun x -> emitted.Enqueue(x))
+
+  let task = Async.StartAsTask pipeline
+  Assert.IsTrue(secondFinished.Wait(5000), "Second mapper did not complete in time")
+  // Give the consumer a moment to observe item 2's emission before item 1 is released.
+  Async.Sleep(200) |> Async.RunSynchronously
+  Assert.AreEqual([2], List.ofSeq emitted, "Item 2 should be emitted before item 1 is released")
+  releaseFirst.Release() |> ignore
+  Assert.IsTrue(task.Wait(5000), "Pipeline did not finish in time")
+  Assert.AreEqual([2; 1], List.ofSeq emitted)
+
+[<Test>]
+let ``AsyncSeq.mapAsyncUnorderedParallelThrottled should emit in completion order not input order`` () =
+  use releaseFirst = new SemaphoreSlim(0)
+  use secondFinished = new SemaphoreSlim(0)
+  let emitted = System.Collections.Concurrent.ConcurrentQueue<int>()
+
+  let pipeline =
+    [1; 2]
+    |> AsyncSeq.ofSeq
+    |> AsyncSeq.mapAsyncUnorderedParallelThrottled 2 (fun x -> async {
+      if x = 1 then
+        do! releaseFirst.WaitAsync() |> Async.AwaitTask
+      else
+        secondFinished.Release() |> ignore
+      return x
+    })
+    |> AsyncSeq.iter (fun x -> emitted.Enqueue(x))
+
+  let task = Async.StartAsTask pipeline
+  Assert.IsTrue(secondFinished.Wait(5000), "Second mapper did not complete in time")
+  Async.Sleep(200) |> Async.RunSynchronously
+  Assert.AreEqual([2], List.ofSeq emitted, "Item 2 should be emitted before item 1 is released")
+  releaseFirst.Release() |> ignore
+  Assert.IsTrue(task.Wait(5000), "Pipeline did not finish in time")
+  Assert.AreEqual([2; 1], List.ofSeq emitted)
+
 
 [<Test>]
 let ``AsyncSeq.mapAsyncUnorderedParallelThrottled should produce all results`` () =
