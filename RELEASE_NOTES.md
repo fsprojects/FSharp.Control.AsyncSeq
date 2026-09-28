@@ -1,5 +1,6 @@
 ### Unreleased
 
+* Test coverage: Added tests for `AsyncSeq.zipWithIndexAsync` (obsolete alias for `mapiAsync`) and `AsyncSeq.ofIQueryable`, which previously had no dedicated test coverage. No functional changes.
 * Test coverage: Added tests for previously-untested public API functions `AsyncSeq.tryFirst`, `AsyncSeq.firstOrDefault`, `AsyncSeq.zipWithParallel`, `AsyncSeq.combineLatestWithAsync`, and `AsyncSeq.toObservable`. No functional changes.
 * Test coverage: Added tests for `AsyncSeq.distinctUntilChanged` (default-equality variant), `AsyncSeq.takeWhile`, and `AsyncSeq.skipWhile` (sync-predicate variants), which previously had no direct tests. No functional changes.
 * Test coverage: Added tests for `AsyncSeq.bufferByCount` (obsolete alias of `chunkBySize`) and `Seq.ofAsyncSeq`, which previously had no dedicated test coverage. No functional changes.
